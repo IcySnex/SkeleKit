@@ -5,6 +5,10 @@
         <OutputType>Exe</OutputType>
         <ApplicationId>com.bareui.gallery</ApplicationId>
     </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <CodesignKey>iPhone Developer</CodesignKey>
+    </PropertyGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\..\BareUI.iOS\BareUI.iOS.csproj" />
     </ItemGroup>
