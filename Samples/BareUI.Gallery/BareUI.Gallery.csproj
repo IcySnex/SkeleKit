@@ -5,8 +5,7 @@
         <OutputType>Exe</OutputType>
         <ApplicationId>com.bareui.gallery</ApplicationId>
     </PropertyGroup>
-
     <ItemGroup>
-        <ProjectReference Include="..\..\src\BareUI.iOS\BareUI.iOS.csproj" />
+        <ProjectReference Include="..\..\BareUI.iOS\BareUI.iOS.csproj" />
     </ItemGroup>
 </Project>

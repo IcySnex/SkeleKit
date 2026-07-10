@@ -3,17 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BareUI.iOS", "BareUI.iOS\BareUI.iOS.csproj", "{7B404D73-5BC4-478C-A63E-4B22ADF739D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BareUI.iOS", "src\BareUI.iOS\BareUI.iOS.csproj", "{7B404D73-5BC4-478C-A63E-4B22ADF739D3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BareUI.Tests", "BareUI.Tests\BareUI.Tests.csproj", "{3B781A9F-E168-49A3-84E7-72DB8CE9A0D7}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{5D20AA90-6969-D8BD-9DCD-8634F4692FDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BareUI.Tests", "tests\BareUI.Tests\BareUI.Tests.csproj", "{3B781A9F-E168-49A3-84E7-72DB8CE9A0D7}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5D20AA90-6969-D8BD-9DCD-8634F4692FDA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BareUI.Gallery", "samples\BareUI.Gallery\BareUI.Gallery.csproj", "{528377F3-3829-4F6C-96A0-E4C8C5E1054A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BareUI.Gallery", "Samples\BareUI.Gallery\BareUI.Gallery.csproj", "{528377F3-3829-4F6C-96A0-E4C8C5E1054A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,8 +62,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{7B404D73-5BC4-478C-A63E-4B22ADF739D3} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{3B781A9F-E168-49A3-84E7-72DB8CE9A0D7} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{528377F3-3829-4F6C-96A0-E4C8C5E1054A} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 	EndGlobalSection
 EndGlobal

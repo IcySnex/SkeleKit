@@ -4,26 +4,26 @@ Declarative, WPF-inspired UI library for .NET for iOS (no MAUI, no XAML). Native
 controls behind C# object-initializer syntax with AOT-safe MVVM bindings. App code never
 touches `UIViewController`/`NSLayoutConstraint`.
 
-**Read first:** `PLAN.md` (milestones), `docs/architecture.md` (5-layer design),
-`docs/api-sketch.md` (target syntax), `docs/decisions.md` (ADRs — binding/layout rationale).
+**Read first:** `PLAN.md` (milestones), `Docs/architecture.md` (5-layer design),
+`Docs/api-sketch.md` (target syntax), `Docs/decisions.md` (ADRs — binding/layout rationale).
 
 **Reference app:** `../Velura` — the messy UIKit app this library exists to clean up.
 Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Structure
 
-- `src/BareUI.iOS/` — the library. Multi-targets `net10.0;net10.0-ios`: layout math and
+- `BareUI.iOS/` — the library. Multi-targets `net10.0;net10.0-ios`: layout math and
   primitives live in neutral code, UIKit-touching code behind `#if IOS`. Root namespace
   is `BareUI` (not `BareUI.iOS`).
-- `tests/BareUI.Tests/` — xunit, plain `net10.0`, references the neutral TFM. Layout
+- `BareUI.Tests/` — xunit, plain `net10.0`, references the neutral TFM. Layout
   engine must stay testable here without a simulator.
-- `samples/BareUI.Gallery/` — iOS sample app for on-the-fly testing/debugging. Currently
+- `Samples/BareUI.Gallery/` — iOS sample app for on-the-fly testing/debugging. Currently
   a manual scene-based UIKit bootstrap; gets replaced by `BareApp` in M4.
 
 ## Commands
 
-- Test: `dotnet test tests/BareUI.Tests`
-- Build app: `dotnet build samples/BareUI.Gallery -p:RuntimeIdentifier=iossimulator-arm64`
+- Test: `dotnet test BareUI.Tests`
+- Build app: `dotnet build Samples/BareUI.Gallery -p:RuntimeIdentifier=iossimulator-arm64`
 - Run app: add `-t:Run "-p:_DeviceName=:v2:udid=<UDID>"` (UDIDs: `xcrun simctl list devices available`)
 
 ## Environment gotchas

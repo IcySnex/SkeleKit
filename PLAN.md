@@ -9,9 +9,9 @@ Velura's screens can be rewritten in a fraction of the code with zero UIKit impo
 
 Related documents:
 
-- [docs/architecture.md](docs/architecture.md) — technical design of every layer
-- [docs/api-sketch.md](docs/api-sketch.md) — what app code looks like (Velura before/after)
-- [docs/decisions.md](docs/decisions.md) — ADRs: naming, layout engine, binding mechanism, AOT
+- [Docs/architecture.md](Docs/architecture.md) — technical design of every layer
+- [Docs/api-sketch.md](Docs/api-sketch.md) — what app code looks like (Velura before/after)
+- [Docs/decisions.md](Docs/decisions.md) — ADRs: naming, layout engine, binding mechanism, AOT
 
 ---
 
@@ -52,9 +52,9 @@ Related documents:
 
 ```
 BareUI.sln
-├── src/BareUI.iOS/            the library (net10.0-ios, NuGet-packable)
-├── samples/BareUI.Gallery/    control/layout gallery app, doubles as manual test bed
-└── tests/BareUI.Tests/        layout engine unit tests (measure/arrange is pure math → very testable)
+├── BareUI.iOS/            the library (net10.0-ios, NuGet-packable)
+├── Samples/BareUI.Gallery/    control/layout gallery app, doubles as manual test bed
+└── BareUI.Tests/        layout engine unit tests (measure/arrange is pure math → very testable)
 ```
 
 ---
@@ -62,7 +62,7 @@ BareUI.sln
 ## Milestones
 
 ### M0 — Scaffold (small)
-- Solution, `src/BareUI.iOS` project (net10.0-ios, nullable, trimming/AOT analyzers on:
+- Solution, `BareUI.iOS` project (net10.0-ios, nullable, trimming/AOT analyzers on:
   `IsAotCompatible=true`), Gallery sample app, test project.
 - CI-less for now; local `dotnet build` + simulator run.
 
