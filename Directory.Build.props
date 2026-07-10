@@ -1,0 +1,10 @@
+<Project>
+	<PropertyGroup>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+
+		<!-- Installed Xcode (26.6) is newer than the iOS workload expects (26.2); remove once `sudo dotnet workload update` has been run. -->
+		<ValidateXcodeVersion>false</ValidateXcodeVersion>
+	</PropertyGroup>
+</Project>
