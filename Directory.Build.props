@@ -4,7 +4,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 
-		<!-- Installed Xcode (26.6) is newer than the iOS workload expects (26.2); remove once `sudo dotnet workload update` has been run. -->
+		<!-- Xcode 26.6 is newer than the newest .NET for iOS release supports (26.5). Remove once Microsoft ships Xcode 26.6 support. -->
 		<ValidateXcodeVersion>false</ValidateXcodeVersion>
 	</PropertyGroup>
 </Project>
