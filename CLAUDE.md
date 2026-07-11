@@ -71,7 +71,30 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Status (2026-07-11)
 
-**M0 + M1 + M2 complete.** Commits land on `main` (repo history is linear there).
+**M0 + M1 + M2 complete. M3 (bindings) code-complete, exit criteria not yet verified.**
+Commits land on `main` (repo history is linear there).
+
+M3 so far:
+- Property pipeline: `View.Parent`, `InvalidateMeasure()` (bubbles to root → `SetNeedsLayout`),
+  and the `Set(ref field, value, apply)` helper. `CreateNative` now only *constructs*; every
+  property is pushed through the single `ApplyProperties()` hook (kills the old two-writer split).
+- Bindings (all neutral, unit-tested): `Bindable<T>`, `BindingExpression<T>`, `Binding<T>` runtime,
+  `BindingContext` on `View` (inherited down the tree), `BindingFactory.Bind/BindPath`. Compiled
+  getter delegates + `[CallerArgumentExpression]` path parsing, per-segment INPC subscription,
+  zero reflection. Modes + `UpdateTrigger` (TextField/TextEditor honour `FocusLost`).
+- Every control exposes `Bindable<T>` properties and pushes target→source from its native event.
+  `Button` does `ICommand` + `CanExecuteChanged`→enabled; `TapCommand`/`IsEnabled` on any `View`.
+- Minimal `ContentView<TViewModel>` (typed `ViewModel` + protected `Bind`); M4 adds lifecycle,
+  chrome and controller hosting. Gallery `BindingPage` demos one-way/two-way/converter/command.
+
+M3 gotchas found:
+- `Bindable<T>` can't take an interface `T` (C# forbids user-defined conversions from interfaces)
+  → `Picker.Items` stays a plain property.
+- User-defined conversions don't chain → `Image.Source` needs `ImageSource.Symbol(...)`/`Url(...)`,
+  not a bare string literal.
+
+**M3 exit criteria still open:** simulator check of `BindingPage`, and a Gallery publish with
+`PublishAot=true` (proves the AOT claim end to end).
 
 Done:
 - Primitives: `Thickness`, `Size`, `Point`, `Rect`, `GridLength`, `Color`, alignment enums.
