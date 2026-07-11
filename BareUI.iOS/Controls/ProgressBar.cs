@@ -10,23 +10,44 @@ public class ProgressBar : Control
 	/// <summary>
 	/// The progress value from 0 (empty) to 1 (full).
 	/// </summary>
-	public double Progress { get; set; }
+	public Bindable<double> Progress
+	{
+		get => progress;
+		set => progressBinding = Register(progressBinding, value, value => Set(ref progress, value, ApplyProgress, affectsMeasure: false));
+	}
+	double progress;
+	Binding<double>? progressBinding;
 
 	/// <summary>
 	/// The progress bar tint color, or null for the system default.
 	/// </summary>
-	public Color? Tint { get; set; }
-
-	private protected override UIView CreateNative()
+	public Bindable<Color?> Tint
 	{
-		UIProgressView progress = new(UIProgressViewStyle.Default)
-		{
-			Progress = (float)Progress
-		};
+		get => tint;
+		set => tintBinding = Register(tintBinding, value, value => Set(ref tint, value, ApplyTint, affectsMeasure: false));
+	}
+	Color? tint;
+	Binding<Color?>? tintBinding;
 
-		if (Tint is { } tint)
-			progress.ProgressTintColor = tint.ToUIColor();
 
-		return progress;
+	private protected override UIView CreateNative() =>
+		new UIProgressView(UIProgressViewStyle.Default);
+
+	private protected override void ApplyProperties()
+	{
+		ApplyProgress();
+		ApplyTint();
+	}
+
+	UIProgressView Ui =>
+		(UIProgressView)Native;
+
+	void ApplyProgress() =>
+		Ui.Progress = (float)progress;
+
+	void ApplyTint()
+	{
+		if (tint is { } color)
+			Ui.ProgressTintColor = color.ToUIColor();
 	}
 }

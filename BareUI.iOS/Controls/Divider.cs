@@ -10,15 +10,23 @@ public class Divider : View
 	/// <summary>
 	/// The divider color, or null for the system separator color.
 	/// </summary>
-	public Color? Color { get; set; }
-
-	private protected override UIView CreateNative()
+	public Bindable<Color?> Color
 	{
-		return new()
-		{
-			BackgroundColor = Color?.ToUIColor() ?? UIColor.Separator
-		};
+		get => color;
+		set => colorBinding = Register(colorBinding, value, value => Set(ref color, value, ApplyColor, affectsMeasure: false));
 	}
+	Color? color;
+	Binding<Color?>? colorBinding;
+
+
+	private protected override UIView CreateNative() =>
+		new();
+
+	private protected override void ApplyProperties() =>
+		ApplyColor();
+
+	void ApplyColor() =>
+		Native.BackgroundColor = color?.ToUIColor() ?? UIColor.Separator;
 
 	protected override Size MeasureOverride(
 		Size availableSize) =>

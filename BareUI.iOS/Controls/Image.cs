@@ -8,54 +8,87 @@ namespace BareUI;
 public class Image : Control
 {
 	/// <summary>
-	/// Where the image is loaded from. URL sources load asynchronously and do not trigger re-layout yet, so give them an explicit Width/Height (or use UniformToFill inside a sized container).
-	/// </summary>
-	public ImageSource? Source { get; set; }
-
-	/// <summary>
-	/// How the image is scaled to fill its bounds.
-	/// </summary>
-	public Stretch Stretch { get; set; } = Stretch.Uniform;
-
-	/// <summary>
 	/// The loader used for URL sources. Replace to add caching.
 	/// </summary>
 	public static IImageLoader Loader { get; set; } = new HttpImageLoader();
 
+	/// <summary>
+	/// Where the image is loaded from. URL sources load asynchronously, so give them an explicit Width/Height.
+	/// </summary>
+	public Bindable<ImageSource?> Source
+	{
+		get => source;
+		set => sourceBinding = Register(sourceBinding, value, value => Set(ref source, value, ApplySource));
+	}
+	ImageSource? source;
+	Binding<ImageSource?>? sourceBinding;
+
+	/// <summary>
+	/// How the image is scaled to fill its bounds.
+	/// </summary>
+	public Stretch Stretch
+	{
+		get => stretch;
+		set => Set(ref stretch, value, ApplyStretch, affectsMeasure: false);
+	}
+	Stretch stretch = Stretch.Uniform;
+
 	CancellationTokenSource? loadCancellation;
 
-	private protected override UIView CreateNative()
-	{
-		// set on the element, not the native view: ApplyVisualState overwrites it after CreateNative
-		ClipsToBounds |= Stretch is Stretch.UniformToFill;
 
-		UIImageView imageView = new()
+	private protected override UIView CreateNative() =>
+		new UIImageView();
+
+	private protected override void ApplyProperties()
+	{
+		ApplyStretch();
+		ApplySource();
+	}
+
+	private protected override void OnUnrealized() =>
+		CancelLoad();
+
+	UIImageView Ui =>
+		(UIImageView)Native;
+
+	void ApplyStretch()
+	{
+		Ui.ContentMode = stretch switch
 		{
-			ContentMode = Stretch switch
-			{
-				Stretch.None => UIViewContentMode.Center,
-				Stretch.Fill => UIViewContentMode.ScaleToFill,
-				Stretch.UniformToFill => UIViewContentMode.ScaleAspectFill,
-				_ => UIViewContentMode.ScaleAspectFit
-			}
+			Stretch.None => UIViewContentMode.Center,
+			Stretch.Fill => UIViewContentMode.ScaleToFill,
+			Stretch.UniformToFill => UIViewContentMode.ScaleAspectFill,
+			_ => UIViewContentMode.ScaleAspectFit
 		};
 
-		if (Source is { } source && source.Kind is not ImageSourceKind.Url)
-			imageView.Image = ResolveSync(source);
-
-		return imageView;
+		// aspect-fill spills outside the frame unless clipped
+		if (stretch is Stretch.UniformToFill)
+			Ui.ClipsToBounds = true;
 	}
 
-	private protected override void OnRealized()
+	void ApplySource()
 	{
-		if (Source is not { Kind: ImageSourceKind.Url } source)
-			return;
+		CancelLoad();
 
+		if (source is not { } current)
+		{
+			Ui.Image = null;
+			return;
+		}
+
+		if (current.Kind is not ImageSourceKind.Url)
+		{
+			Ui.Image = ResolveSync(current);
+			return;
+		}
+
+		Ui.Image = null;
 		loadCancellation = new();
-		LoadUrlAsync(source, loadCancellation.Token);
+
+		LoadUrlAsync(current, loadCancellation.Token);
 	}
 
-	private protected override void OnUnrealized()
+	void CancelLoad()
 	{
 		loadCancellation?.Cancel();
 		loadCancellation?.Dispose();
@@ -99,10 +132,12 @@ public class Image : Control
 			// still realized, still same url?
 			if (cancellationToken.IsCancellationRequested || !IsRealized)
 				return;
-			if (Source is not { Kind: ImageSourceKind.Url } current || current.Value != source.Value)
+
+			if (this.source is not { Kind: ImageSourceKind.Url } current || current.Value != source.Value)
 				return;
 
-			((UIImageView)Native).Image = image;
+			Ui.Image = image;
+			InvalidateMeasure();
 		});
 	}
 }

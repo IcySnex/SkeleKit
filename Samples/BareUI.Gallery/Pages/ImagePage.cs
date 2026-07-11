@@ -19,7 +19,7 @@ public static class ImagePage
 					Demo.Caption("SF Symbol"),
 					new Image
 					{
-						Source = "star.fill",
+						Source = ImageSource.Symbol("star.fill"),
 						Width = 60,
 						Height = 60,
 						Stretch = Stretch.Uniform
@@ -28,7 +28,7 @@ public static class ImagePage
 					Demo.Caption("URL image"),
 					new Image
 					{
-						Source = "https://picsum.photos/300/200",
+						Source = ImageSource.Url("https://picsum.photos/300/200"),
 						Width = 300,
 						Height = 200,
 						Stretch = Stretch.UniformToFill
@@ -37,7 +37,7 @@ public static class ImagePage
 					Demo.Caption("SF Symbol with fill stretch"),
 					new Image
 					{
-						Source = "heart.fill",
+						Source = ImageSource.Symbol("heart.fill"),
 						Width = 80,
 						Height = 80,
 						Stretch = Stretch.Fill
@@ -46,7 +46,7 @@ public static class ImagePage
 					Demo.Caption("SF Symbol no stretch"),
 					new Image
 					{
-						Source = "gear",
+						Source = ImageSource.Symbol("gear"),
 						Width = 50,
 						Height = 50,
 						Stretch = Stretch.None

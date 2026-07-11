@@ -10,44 +10,83 @@ public class Stepper : Control
 	/// <summary>
 	/// The current value.
 	/// </summary>
-	public double Value { get; set; }
+	public Bindable<double> Value
+	{
+		get => current;
+		set => valueBinding = Register(valueBinding, value, value => Set(ref current, value, ApplyValue, affectsMeasure: false));
+	}
+	double current;
+	Binding<double>? valueBinding;
 
 	/// <summary>
 	/// The minimum selectable value.
 	/// </summary>
-	public double Minimum { get; set; } = 0;
+	public double Minimum
+	{
+		get => minimum;
+		set => Set(ref minimum, value, ApplyRange, affectsMeasure: false);
+	}
+	double minimum = 0;
 
 	/// <summary>
 	/// The maximum selectable value.
 	/// </summary>
-	public double Maximum { get; set; } = 100;
+	public double Maximum
+	{
+		get => maximum;
+		set => Set(ref maximum, value, ApplyRange, affectsMeasure: false);
+	}
+	double maximum = 100;
 
 	/// <summary>
 	/// The amount added or subtracted per tap.
 	/// </summary>
-	public double Step { get; set; } = 1;
+	public double Step
+	{
+		get => step;
+		set => Set(ref step, value, ApplyRange, affectsMeasure: false);
+	}
+	double step = 1;
 
 	/// <summary>
 	/// Invoked with the new value whenever the user taps the stepper.
 	/// </summary>
 	public Action<double>? ValueChanged { get; set; }
 
+
 	private protected override UIView CreateNative()
 	{
-		UIStepper stepper = new()
-		{
-			MinimumValue = Minimum,
-			MaximumValue = Maximum,
-			StepValue = Step,
-			Value = Value
-		};
-
-		stepper.ValueChanged += (sender, e) =>
-		{
-			Value = stepper.Value;
-			ValueChanged?.Invoke(Value);
-		};
+		UIStepper stepper = new();
+		stepper.ValueChanged += (sender, e) => OnValueChanged();
 
 		return stepper;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyRange();
+		ApplyValue();
+	}
+
+	UIStepper Ui =>
+		(UIStepper)Native;
+
+	void ApplyRange()
+	{
+		Ui.MinimumValue = minimum;
+		Ui.MaximumValue = maximum;
+		Ui.StepValue = step;
+	}
+
+	void ApplyValue() =>
+		Ui.Value = current;
+
+	void OnValueChanged()
+	{
+		double value = Ui.Value;
+
+		Set(ref current, value, affectsMeasure: false);
+		valueBinding?.PushToSource(value);
+		ValueChanged?.Invoke(value);
 	}
 }

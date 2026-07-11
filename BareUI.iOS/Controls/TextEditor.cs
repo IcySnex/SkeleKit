@@ -9,47 +9,87 @@ namespace BareUI;
 public class TextEditor : Control
 {
 	/// <summary>
-	/// The current text.
+	/// The current text. Two-way by default.
 	/// </summary>
-	public string? Text { get; set; }
+	public Bindable<string?> Text
+	{
+		get => text;
+		set => textBinding = Register(textBinding, value, value => Set(ref text, value, ApplyText));
+	}
+	string? text;
+	Binding<string?>? textBinding;
 
 	/// <summary>
 	/// Font size in points.
 	/// </summary>
-	public double FontSize { get; set; } = 17;
+	public Bindable<double> FontSize
+	{
+		get => fontSize;
+		set => fontSizeBinding = Register(fontSizeBinding, value, value => Set(ref fontSize, value, ApplyFont));
+	}
+	double fontSize = 17;
+	Binding<double>? fontSizeBinding;
 
 	/// <summary>
 	/// Invoked with the new value whenever the text changes.
 	/// </summary>
 	public Action<string>? TextChanged { get; set; }
 
+
 	private protected override UIView CreateNative()
 	{
 		UITextView view = new()
 		{
-			Text = Text,
-			Editable = true,
-			Font = UIFont.SystemFontOfSize((nfloat)FontSize)
+			Editable = true
 		};
 
-		view.Changed += (sender, e) =>
-		{
-			Text = view.Text;
-			TextChanged?.Invoke(Text ?? "");
-		};
+		view.Changed += (sender, e) => OnChanged();
+		view.Ended += (sender, e) => OnEditingEnded();
 
 		return view;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyText();
+		ApplyFont();
+	}
+
+	UITextView Ui =>
+		(UITextView)Native;
+
+	void ApplyText() =>
+		Ui.Text = text;
+
+	void ApplyFont() =>
+		Ui.Font = UIFont.SystemFontOfSize((nfloat)fontSize);
+
+	void OnChanged()
+	{
+		string? value = Ui.Text;
+
+		Set(ref text, value);
+		TextChanged?.Invoke(value ?? "");
+
+		if (textBinding?.Trigger is UpdateTrigger.PropertyChanged)
+			textBinding.PushToSource(value);
+	}
+
+	void OnEditingEnded()
+	{
+		if (textBinding?.Trigger is UpdateTrigger.FocusLost)
+			textBinding.PushToSource(Ui.Text);
 	}
 
 	// UITextView over-reports empty height; size from content, floor at one line
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
-		UITextView view = (UITextView)Native;
+		UITextView view = Ui;
 
 		CGSize fit = view.SizeThatFits(ClampToFinite(availableSize));
 
-		UIFont font = view.Font ?? UIFont.SystemFontOfSize((nfloat)FontSize);
+		UIFont font = view.Font ?? UIFont.SystemFontOfSize((nfloat)fontSize);
 		UIEdgeInsets inset = view.TextContainerInset;
 		nfloat lineFloor = (nfloat)Math.Ceiling(font.LineHeight) + inset.Top + inset.Bottom;
 

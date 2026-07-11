@@ -11,38 +11,101 @@ public class Button : Control
 	/// <summary>
 	/// The button's title text.
 	/// </summary>
-	public string? Text { get; set; }
+	public Bindable<string?> Text
+	{
+		get => text;
+		set => textBinding = Register(textBinding, value, value => Set(ref text, value, ApplyConfiguration));
+	}
+	string? text;
+	Binding<string?>? textBinding;
 
 	/// <summary>
 	/// An SF Symbol name shown alongside the text, or null for none.
 	/// </summary>
-	public string? Icon { get; set; }
+	public Bindable<string?> Icon
+	{
+		get => icon;
+		set => iconBinding = Register(iconBinding, value, value => Set(ref icon, value, ApplyConfiguration));
+	}
+	string? icon;
+	Binding<string?>? iconBinding;
 
 	/// <summary>
 	/// The button's visual style.
 	/// </summary>
-	public ButtonStyle Style { get; set; } = ButtonStyle.Plain;
+	public ButtonStyle Style
+	{
+		get => style;
+		set => Set(ref style, value, ApplyConfiguration);
+	}
+	ButtonStyle style = ButtonStyle.Plain;
 
 	/// <summary>
 	/// Command invoked on tap; its CanExecute drives the enabled state.
 	/// </summary>
-	public ICommand? Command { get; set; }
+	public ICommand? Command
+	{
+		get => command;
+		set
+		{
+			if (ReferenceEquals(command, value))
+				return;
+
+			if (command is not null)
+				command.CanExecuteChanged -= OnCanExecuteChanged;
+
+			command = value;
+
+			if (command is not null)
+				command.CanExecuteChanged += OnCanExecuteChanged;
+
+			ApplyIsEnabled();
+		}
+	}
+	ICommand? command;
 
 	/// <summary>
 	/// The parameter passed to <see cref="Command"/>.
 	/// </summary>
-	public object? CommandParameter { get; set; }
+	public object? CommandParameter
+	{
+		get => commandParameter;
+		set => Set(ref commandParameter, value, ApplyIsEnabled, affectsMeasure: false);
+	}
+	object? commandParameter;
 
 	/// <summary>
 	/// Invoked when the button is tapped.
 	/// </summary>
 	public Action? Clicked { get; set; }
 
-	EventHandler? canExecuteHandler;
 
 	private protected override UIView CreateNative()
 	{
-		UIButtonConfiguration configuration = Style switch
+		UIButton button = new();
+		button.TouchUpInside += (sender, e) => OnClicked();
+
+		return button;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyConfiguration();
+		ApplyIsEnabled();
+	}
+
+	private protected override void OnUnrealized()
+	{
+		if (command is not null)
+			command.CanExecuteChanged -= OnCanExecuteChanged;
+	}
+
+	UIButton Ui =>
+		(UIButton)Native;
+
+	void ApplyConfiguration()
+	{
+		UIButtonConfiguration configuration = style switch
 		{
 			ButtonStyle.Gray => UIButtonConfiguration.GrayButtonConfiguration,
 			ButtonStyle.Tinted => UIButtonConfiguration.TintedButtonConfiguration,
@@ -50,62 +113,38 @@ public class Button : Control
 			_ => UIButtonConfiguration.PlainButtonConfiguration
 		};
 
-		if (Style is ButtonStyle.FilledCapsule)
+		if (style is ButtonStyle.FilledCapsule)
 			configuration.CornerStyle = UIButtonConfigurationCornerStyle.Capsule;
 
-		configuration.Title = Text;
+		configuration.Title = text;
 
-		if (Icon is not null)
+		if (icon is not null)
 		{
-			configuration.Image = UIImage.GetSystemImage(Icon);
-			if (Text is not null)
+			configuration.Image = UIImage.GetSystemImage(icon);
+			if (text is not null)
 				configuration.ImagePadding = 6;
 		}
 
-		UIButton button = new()
-		{
-			Configuration = configuration
-		};
-
-		button.TouchUpInside += (sender, e) =>
-		{
-			Clicked?.Invoke();
-			if (Command is { } command && command.CanExecute(CommandParameter))
-				command.Execute(CommandParameter);
-		};
-
-		return button;
+		Ui.Configuration = configuration;
 	}
 
-	private protected override void OnRealized()
+	void ApplyIsEnabled()
 	{
-		if (Command is null)
-			return;
-
-		canExecuteHandler = (sender, e) => UpdateEnabled();
-		Command.CanExecuteChanged += canExecuteHandler;
-		UpdateEnabled();
+		if (IsRealized)
+			Ui.Enabled = command?.CanExecute(commandParameter) ?? true;
 	}
 
-	private protected override void OnUnrealized()
+	void OnClicked()
 	{
-		if (Command is not null && canExecuteHandler is not null)
-			Command.CanExecuteChanged -= canExecuteHandler;
+		Clicked?.Invoke();
 
-		canExecuteHandler = null;
+		if (command is { } current && current.CanExecute(commandParameter))
+			current.Execute(commandParameter);
 	}
 
 	// CanExecuteChanged can fire off-thread
-	void UpdateEnabled()
-	{
-		bool enabled = Command?.CanExecute(CommandParameter) ?? true;
-
-		UIApplication.SharedApplication.BeginInvokeOnMainThread(() =>
-		{
-			if (!IsRealized)
-				return;
-
-			((UIButton)Native).Enabled = enabled;
-		});
-	}
+	void OnCanExecuteChanged(
+		object? sender,
+		EventArgs e) =>
+		UIApplication.SharedApplication.BeginInvokeOnMainThread(ApplyIsEnabled);
 }
