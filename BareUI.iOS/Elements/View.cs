@@ -5,57 +5,158 @@ namespace BareUI;
 /// </summary>
 public abstract partial class View
 {
+	/// <summary>
+	/// The panel this view sits in, or null when it is a root or unparented.
+	/// </summary>
+	public View? Parent { get; private set; }
+
+	internal void SetParent(
+		View? parent) =>
+		Parent = parent;
+
+	/// <summary>
+	/// Marks the layout stale and asks the root host for a fresh measure/arrange pass.
+	/// </summary>
+	public void InvalidateMeasure()
+	{
+		View root = this;
+		while (root.Parent is { } parent)
+			root = parent;
+
+		root.RequestLayout();
+	}
+
+	partial void RequestLayout();
+
+	// stores a property, pushes it to the native view once realized, and relayouts if it can change size
+	private protected void Set<T>(
+		ref T field,
+		T value,
+		Action? apply = null,
+		bool affectsMeasure = true)
+	{
+		if (EqualityComparer<T>.Default.Equals(field, value))
+			return;
+
+		field = value;
+
+		if (apply is not null)
+			ApplyIfRealized(apply);
+
+		if (affectsMeasure)
+			InvalidateMeasure();
+	}
+
+	partial void ApplyIfRealized(
+		Action apply);
+
+	private protected void ApplyVisualState() =>
+		ApplyVisualStateCore();
+
+	partial void ApplyVisualStateCore();
+
+
 	// Layout properties
 
 	/// <summary>
 	/// Empty space around the view, outside its bounds.
 	/// </summary>
-	public Thickness Margin { get; set; } = Thickness.Zero;
+	public Thickness Margin
+	{
+		get => margin;
+		set => Set(ref margin, value);
+	}
+	Thickness margin = Thickness.Zero;
 
 	/// <summary>
 	/// Explicit width in points, or NaN to size to content.
 	/// </summary>
-	public double Width { get; set; } = double.NaN;
+	public double Width
+	{
+		get => width;
+		set => Set(ref width, value);
+	}
+	double width = double.NaN;
 
 	/// <summary>
 	/// Explicit height in points, or NaN to size to content.
 	/// </summary>
-	public double Height { get; set; } = double.NaN;
+	public double Height
+	{
+		get => height;
+		set => Set(ref height, value);
+	}
+	double height = double.NaN;
 
 	/// <summary>
 	/// Minimum width in points.
 	/// </summary>
-	public double MinWidth { get; set; } = 0;
+	public double MinWidth
+	{
+		get => minWidth;
+		set => Set(ref minWidth, value);
+	}
+	double minWidth = 0;
 
 	/// <summary>
 	/// Maximum width in points.
 	/// </summary>
-	public double MaxWidth { get; set; } = double.PositiveInfinity;
+	public double MaxWidth
+	{
+		get => maxWidth;
+		set => Set(ref maxWidth, value);
+	}
+	double maxWidth = double.PositiveInfinity;
 
 	/// <summary>
 	/// Minimum height in points.
 	/// </summary>
-	public double MinHeight { get; set; } = 0;
+	public double MinHeight
+	{
+		get => minHeight;
+		set => Set(ref minHeight, value);
+	}
+	double minHeight = 0;
 
 	/// <summary>
 	/// Maximum height in points.
 	/// </summary>
-	public double MaxHeight { get; set; } = double.PositiveInfinity;
+	public double MaxHeight
+	{
+		get => maxHeight;
+		set => Set(ref maxHeight, value);
+	}
+	double maxHeight = double.PositiveInfinity;
 
 	/// <summary>
 	/// How the view is placed within the horizontal space its parent gives it.
 	/// </summary>
-	public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
+	public HorizontalAlignment HorizontalAlignment
+	{
+		get => horizontalAlignment;
+		set => Set(ref horizontalAlignment, value);
+	}
+	HorizontalAlignment horizontalAlignment = HorizontalAlignment.Stretch;
 
 	/// <summary>
 	/// How the view is placed within the vertical space its parent gives it.
 	/// </summary>
-	public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
+	public VerticalAlignment VerticalAlignment
+	{
+		get => verticalAlignment;
+		set => Set(ref verticalAlignment, value);
+	}
+	VerticalAlignment verticalAlignment = VerticalAlignment.Stretch;
 
 	/// <summary>
 	/// When false the view takes no space and is hidden natively.
 	/// </summary>
-	public bool IsVisible { get; set; } = true;
+	public bool IsVisible
+	{
+		get => isVisible;
+		set => Set(ref isVisible, value, ApplyVisualState);
+	}
+	bool isVisible = true;
 
 
 	// Visual properties
@@ -63,22 +164,42 @@ public abstract partial class View
 	/// <summary>
 	/// Solid background color, or null for transparent.
 	/// </summary>
-	public Color? Background { get; set; }
+	public Color? Background
+	{
+		get => background;
+		set => Set(ref background, value, ApplyVisualState, affectsMeasure: false);
+	}
+	Color? background;
 
 	/// <summary>
 	/// Opacity from 0 (transparent) to 1 (opaque).
 	/// </summary>
-	public double Opacity { get; set; } = 1.0;
+	public double Opacity
+	{
+		get => opacity;
+		set => Set(ref opacity, value, ApplyVisualState, affectsMeasure: false);
+	}
+	double opacity = 1.0;
 
 	/// <summary>
 	/// Corner radius in points applied to the layer.
 	/// </summary>
-	public double CornerRadius { get; set; } = 0;
+	public double CornerRadius
+	{
+		get => cornerRadius;
+		set => Set(ref cornerRadius, value, ApplyVisualState, affectsMeasure: false);
+	}
+	double cornerRadius = 0;
 
 	/// <summary>
 	/// When true, content is clipped to the bounds and corner radius.
 	/// </summary>
-	public bool ClipsToBounds { get; set; }
+	public bool ClipsToBounds
+	{
+		get => clipsToBounds;
+		set => Set(ref clipsToBounds, value, ApplyVisualState, affectsMeasure: false);
+	}
+	bool clipsToBounds;
 
 
 	/// <summary>

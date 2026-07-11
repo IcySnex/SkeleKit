@@ -8,11 +8,14 @@ namespace BareUI;
 public sealed class ViewCollection : IEnumerable<View>
 {
 	readonly List<View> items = [];
+	readonly View? owner;
 	readonly Action? changed;
 
 	internal ViewCollection(
+		View? owner = null,
 		Action? changed = null)
 	{
+		this.owner = owner;
 		this.changed = changed;
 	}
 
@@ -31,23 +34,30 @@ public sealed class ViewCollection : IEnumerable<View>
 		ArgumentNullException.ThrowIfNull(view);
 
 		items.Add(view);
+		view.SetParent(owner);
+
 		changed?.Invoke();
 	}
 
 	public bool Remove(
 		View view)
 	{
-		bool removed = items.Remove(view);
-		if (removed)
-			changed?.Invoke();
+		if (!items.Remove(view))
+			return false;
 
-		return removed;
+		view.SetParent(null);
+		changed?.Invoke();
+
+		return true;
 	}
 
 	public void Clear()
 	{
 		if (items.Count == 0)
 			return;
+
+		foreach (View item in items)
+			item.SetParent(null);
 
 		items.Clear();
 		changed?.Invoke();

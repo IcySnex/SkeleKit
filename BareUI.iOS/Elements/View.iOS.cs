@@ -69,7 +69,17 @@ public abstract partial class View
 	private protected virtual void OnUnrealized()
 	{ }
 
-	private protected void ApplyVisualState()
+	partial void ApplyIfRealized(
+		Action apply)
+	{
+		if (native is not null)
+			apply();
+	}
+
+	partial void RequestLayout() =>
+		native?.SetNeedsLayout();
+
+	partial void ApplyVisualStateCore()
 	{
 		if (native is null)
 			return;

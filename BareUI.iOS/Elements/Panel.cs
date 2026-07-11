@@ -12,7 +12,7 @@ public abstract partial class Panel : View
 
 	protected Panel()
 	{
-		Children = new(SyncChildren);
+		Children = new(this, SyncChildren);
 	}
 
 	void SyncChildren() =>
