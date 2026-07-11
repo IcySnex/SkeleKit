@@ -117,7 +117,7 @@ public abstract partial class View
 		if (native is null)
 			return;
 
-		native.Hidden = !IsVisible;
+		native.Hidden = !isVisible;
 		native.Alpha = (nfloat)Opacity;
 		if (Background is { } background)
 			native.BackgroundColor = background.ToUIColor();

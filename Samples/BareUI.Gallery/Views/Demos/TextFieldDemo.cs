@@ -1,12 +1,13 @@
 using BareUI;
+using BareUI.Gallery.Views;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="TextField"/> with a placeholder, the email keyboard, and
 /// <see cref="SecureField"/>.
 /// </summary>
-public static class TextFieldPage
+public static class TextFieldDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -17,13 +18,13 @@ public static class TextFieldPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					Demo.Caption("Placeholder"),
+					Theme.Caption("Placeholder"),
 					new TextField { Placeholder = "Enter some text" },
 
-					Demo.Caption("Email keyboard"),
+					Theme.Caption("Email keyboard"),
 					new TextField { Placeholder = "you@example.com", Keyboard = KeyboardType.Email },
 
-					Demo.Caption("Secure entry"),
+					Theme.Caption("Secure entry"),
 					new SecureField { Placeholder = "Password" }
 				}
 			}

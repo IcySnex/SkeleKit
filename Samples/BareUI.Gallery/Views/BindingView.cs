@@ -1,0 +1,59 @@
+using BareUI.Gallery.ViewModels;
+
+namespace BareUI.Gallery.Views;
+
+/// <summary>
+/// One-way, two-way, converted and command bindings against a CommunityToolkit.Mvvm ViewModel.
+/// </summary>
+public class BindingView : ContentView<BindingViewModel>
+{
+	protected override View Build()
+	{
+		Title = "Bindings";
+
+		return new ScrollView
+		{
+			Content = new VStack
+			{
+				Spacing = 20,
+				Margin = new Thickness(16),
+				Children =
+				{
+					Theme.Caption("Two-way: type here"),
+					new TextField
+					{
+						Placeholder = "Name",
+						Text = Bind(vm => vm.Name, (vm, value) => vm.Name = value ?? "")
+					},
+
+					Theme.Caption("One-way: mirrors the field above"),
+					new Label { Text = Bind(vm => vm.Name), Bold = true },
+
+					Theme.Caption("Converter: length as text"),
+					new Label { Text = Bind(vm => vm.Name, name => $"{name.Length} characters") },
+
+					Theme.Caption("Two-way switch, one-way label"),
+					new Switch { IsOn = Bind(vm => vm.IsSubscribed, (vm, value) => vm.IsSubscribed = value) },
+					new Label { Text = Bind(vm => vm.IsSubscribed, on => on ? "Subscribed" : "Not subscribed") },
+
+					Theme.Caption("Two-way slider, converted label"),
+					new Slider
+					{
+						Minimum = 0,
+						Maximum = 100,
+						Value = Bind(vm => vm.Volume, (vm, value) => vm.Volume = value)
+					},
+					new Label { Text = Bind(vm => vm.Volume, volume => $"Volume {volume:F0}") },
+
+					Theme.Caption("Command: disabled while the name is empty"),
+					new Button
+					{
+						Text = "Clear name",
+						Style = ButtonStyle.Filled,
+						Command = ViewModel!.ClearNameCommand
+					}
+				}
+			}
+		};
+	}
+}

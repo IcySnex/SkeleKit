@@ -1,13 +1,14 @@
 using BareUI;
+using BareUI.Gallery.Views;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates every <see cref="ButtonStyle"/>, an icon-only button, an icon+text combo, and the
 /// <c>Clicked</c> callback (logged to the console — properties are create-only pre-M3, so there's
 /// no live label to update here).
 /// </summary>
-public static class ButtonPage
+public static class ButtonDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -20,19 +21,19 @@ public static class ButtonPage
 				{
 					new Label { Text = "Styles", FontSize = 20, Bold = true },
 
-					Demo.Caption("Plain"),
+					Theme.Caption("Plain"),
 					new Button { Text = "Plain", Style = ButtonStyle.Plain },
 
-					Demo.Caption("Gray"),
+					Theme.Caption("Gray"),
 					new Button { Text = "Gray", Style = ButtonStyle.Gray },
 
-					Demo.Caption("Tinted"),
+					Theme.Caption("Tinted"),
 					new Button { Text = "Tinted", Style = ButtonStyle.Tinted },
 
-					Demo.Caption("Filled"),
+					Theme.Caption("Filled"),
 					new Button { Text = "Filled", Style = ButtonStyle.Filled },
 
-					Demo.Caption("FilledCapsule"),
+					Theme.Caption("FilledCapsule"),
 					new Button { Text = "Filled Capsule", Style = ButtonStyle.FilledCapsule },
 
 					new Label { Text = "Icon only", FontSize = 20, Bold = true },
@@ -46,7 +47,7 @@ public static class ButtonPage
 					{
 						Text = "Tap me (check console)",
 						Style = ButtonStyle.Filled,
-						Clicked = () => Console.WriteLine("ButtonPage: tapped")
+						Clicked = () => Console.WriteLine("ButtonDemo: tapped")
 					}
 				}
 			}

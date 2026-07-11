@@ -1,12 +1,13 @@
 using BareUI;
+using BareUI.Gallery.Views;
 using UIKit;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="NativeView"/> wrapping native UIKit controls (escape hatch for controls not yet in BareUI).
 /// </summary>
-public static class NativeViewPage
+public static class NativeViewDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -17,13 +18,13 @@ public static class NativeViewPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					Demo.Caption("UISegmentedControl"),
+					Theme.Caption("UISegmentedControl"),
 					new NativeView(CreateSegmentedControl()),
 
-					Demo.Caption("UIDatePicker"),
+					Theme.Caption("UIDatePicker"),
 					new NativeView(CreateDatePicker()),
 
-					Demo.Caption("UISlider (native)"),
+					Theme.Caption("UISlider (native)"),
 					new NativeView(CreateNativeSlider())
 				}
 			}
@@ -36,7 +37,7 @@ public static class NativeViewPage
 			SelectedSegment = 0
 		};
 		segmented.ValueChanged += (sender, e) =>
-			Console.WriteLine($"NativeViewPage: segmented control changed to {segmented.SelectedSegment}");
+			Console.WriteLine($"NativeViewDemo: segmented control changed to {segmented.SelectedSegment}");
 		return segmented;
 	}
 
@@ -48,7 +49,7 @@ public static class NativeViewPage
 			Date = NSDate.Now
 		};
 		datePicker.ValueChanged += (sender, e) =>
-			Console.WriteLine($"NativeViewPage: date changed to {datePicker.Date}");
+			Console.WriteLine($"NativeViewDemo: date changed to {datePicker.Date}");
 		return datePicker;
 	}
 
@@ -61,7 +62,7 @@ public static class NativeViewPage
 			Value = 50
 		};
 		slider.ValueChanged += (sender, e) =>
-			Console.WriteLine($"NativeViewPage: native slider changed to {slider.Value}");
+			Console.WriteLine($"NativeViewDemo: native slider changed to {slider.Value}");
 		return slider;
 	}
 }

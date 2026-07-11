@@ -1,11 +1,13 @@
 using BareUI;
+using BareUI.Gallery.Views;
+using BareUI.Gallery.Views;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="ActivityIndicator"/> in medium and large sizes, animating and stopped, with and without custom color.
 /// </summary>
-public static class ActivityIndicatorPage
+public static class ActivityIndicatorDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -16,19 +18,19 @@ public static class ActivityIndicatorPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					Demo.Caption("Medium, animating"),
+					Theme.Caption("Medium, animating"),
 					new ActivityIndicator { IsAnimating = true, IsLarge = false },
 
-					Demo.Caption("Medium, stopped"),
+					Theme.Caption("Medium, stopped"),
 					new ActivityIndicator { IsAnimating = false, IsLarge = false },
 
-					Demo.Caption("Large, animating"),
+					Theme.Caption("Large, animating"),
 					new ActivityIndicator { IsAnimating = true, IsLarge = true },
 
-					Demo.Caption("Large, stopped"),
+					Theme.Caption("Large, stopped"),
 					new ActivityIndicator { IsAnimating = false, IsLarge = true },
 
-					Demo.Caption("Custom color"),
+					Theme.Caption("Custom color"),
 					new ActivityIndicator
 					{
 						IsAnimating = true,

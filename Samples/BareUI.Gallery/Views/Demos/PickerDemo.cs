@@ -1,11 +1,12 @@
 using BareUI;
+using BareUI.Gallery.Views;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="Picker"/> with sample items, a placeholder, different selections, and the <c>SelectionChanged</c> callback.
 /// </summary>
-public static class PickerPage
+public static class PickerDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -16,7 +17,7 @@ public static class PickerPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					Demo.Caption("With placeholder"),
+					Theme.Caption("With placeholder"),
 					new Picker
 					{
 						Items = ["Red", "Green", "Blue"],
@@ -24,14 +25,14 @@ public static class PickerPage
 						Placeholder = "Select a color"
 					},
 
-					Demo.Caption("Pre-selected"),
+					Theme.Caption("Pre-selected"),
 					new Picker
 					{
 						Items = ["Small", "Medium", "Large"],
 						SelectedIndex = 1
 					},
 
-					Demo.Caption("Fruits"),
+					Theme.Caption("Fruits"),
 					new Picker
 					{
 						Items = ["Apple", "Banana", "Cherry", "Date"],
@@ -39,13 +40,13 @@ public static class PickerPage
 						Placeholder = "Choose a fruit"
 					},
 
-					Demo.Caption("With callback"),
+					Theme.Caption("With callback"),
 					new Picker
 					{
 						Items = ["Option A", "Option B", "Option C"],
 						SelectedIndex = -1,
 						Placeholder = "Select an option",
-						SelectionChanged = index => Console.WriteLine($"PickerPage: selected index {index}")
+						SelectionChanged = index => Console.WriteLine($"PickerDemo: selected index {index}")
 					}
 				}
 			}

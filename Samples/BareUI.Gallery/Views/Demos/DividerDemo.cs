@@ -1,11 +1,12 @@
 using BareUI;
+using BareUI.Gallery.Views;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="Divider"/> with default and custom colors between labeled sections.
 /// </summary>
-public static class DividerPage
+public static class DividerDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -17,22 +18,22 @@ public static class DividerPage
 				Children =
 				{
 					new Label { Text = "Section 1", FontSize = 17, Bold = true },
-					Demo.Caption("Content here"),
+					Theme.Caption("Content here"),
 
 					new Divider { },
 
 					new Label { Text = "Section 2", FontSize = 17, Bold = true },
-					Demo.Caption("More content"),
+					Theme.Caption("More content"),
 
 					new Divider { Color = Color.FromHex(0x8E8E93) },
 
 					new Label { Text = "Section 3", FontSize = 17, Bold = true },
-					Demo.Caption("Even more content"),
+					Theme.Caption("Even more content"),
 
 					new Divider { Color = Color.FromHex(0xFF3B30) },
 
 					new Label { Text = "Section 4", FontSize = 17, Bold = true },
-					Demo.Caption("Final section")
+					Theme.Caption("Final section")
 				}
 			}
 		};

@@ -16,7 +16,7 @@ public class Overlay : Panel
 		{
 			child.Measure(availableSize);
 
-			if (!child.IsVisible)
+			if (!child.IsVisible.Value)
 				continue;
 
 			width = Math.Max(width, child.DesiredSize.Width);

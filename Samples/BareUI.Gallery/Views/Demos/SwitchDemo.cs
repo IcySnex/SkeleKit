@@ -1,11 +1,12 @@
 using BareUI;
+using BareUI.Gallery.Views;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="Switch"/> in on and off states, and the <c>Toggled</c> callback.
 /// </summary>
-public static class SwitchPage
+public static class SwitchDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -16,17 +17,17 @@ public static class SwitchPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					Demo.Caption("Off"),
+					Theme.Caption("Off"),
 					new Switch { IsOn = false },
 
-					Demo.Caption("On"),
+					Theme.Caption("On"),
 					new Switch { IsOn = true },
 
-					Demo.Caption("With callback"),
+					Theme.Caption("With callback"),
 					new Switch
 					{
 						IsOn = false,
-						Toggled = isOn => Console.WriteLine($"SwitchPage: toggled to {isOn}")
+						Toggled = isOn => Console.WriteLine($"SwitchDemo: toggled to {isOn}")
 					}
 				}
 			}

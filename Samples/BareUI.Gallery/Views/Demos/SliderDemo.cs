@@ -1,11 +1,12 @@
 using BareUI;
+using BareUI.Gallery.Views;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="Slider"/> with different ranges and the <c>ValueChanged</c> callback.
 /// </summary>
-public static class SliderPage
+public static class SliderDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -16,22 +17,22 @@ public static class SliderPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					Demo.Caption("0–1 range"),
+					Theme.Caption("0–1 range"),
 					new Slider { Minimum = 0, Maximum = 1, Value = 0.5 },
 
-					Demo.Caption("0–100 range"),
+					Theme.Caption("0–100 range"),
 					new Slider { Minimum = 0, Maximum = 100, Value = 50 },
 
-					Demo.Caption("1–10 range"),
+					Theme.Caption("1–10 range"),
 					new Slider { Minimum = 1, Maximum = 10, Value = 5 },
 
-					Demo.Caption("With callback"),
+					Theme.Caption("With callback"),
 					new Slider
 					{
 						Minimum = 0,
 						Maximum = 100,
 						Value = 25,
-						ValueChanged = value => Console.WriteLine($"SliderPage: value changed to {value}")
+						ValueChanged = value => Console.WriteLine($"SliderDemo: value changed to {value}")
 					}
 				}
 			}

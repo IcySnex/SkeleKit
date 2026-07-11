@@ -34,7 +34,7 @@ public class StackPanel : Panel
 
 			child.Measure(childAvailable);
 
-			if (!child.IsVisible)
+			if (!child.IsVisible.Value)
 				continue;
 
 			Size desired = child.DesiredSize;
@@ -69,7 +69,7 @@ public class StackPanel : Panel
 
 		foreach (View child in Children)
 		{
-			if (!child.IsVisible)
+			if (!child.IsVisible.Value)
 			{
 				child.Arrange(new(Point.Zero, Size.Zero));
 				continue;

@@ -1,11 +1,12 @@
 using BareUI;
+using BareUI.Gallery.Views;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="Image"/> with SF Symbols, URL images, and different stretch modes.
 /// </summary>
-public static class ImagePage
+public static class ImageDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -16,7 +17,7 @@ public static class ImagePage
 				Margin = new Thickness(16),
 				Children =
 				{
-					Demo.Caption("SF Symbol"),
+					Theme.Caption("SF Symbol"),
 					new Image
 					{
 						Source = ImageSource.Symbol("star.fill"),
@@ -25,7 +26,7 @@ public static class ImagePage
 						Stretch = Stretch.Uniform
 					},
 
-					Demo.Caption("URL image"),
+					Theme.Caption("URL image"),
 					new Image
 					{
 						Source = ImageSource.Url("https://picsum.photos/300/200"),
@@ -34,7 +35,7 @@ public static class ImagePage
 						Stretch = Stretch.UniformToFill
 					},
 
-					Demo.Caption("SF Symbol with fill stretch"),
+					Theme.Caption("SF Symbol with fill stretch"),
 					new Image
 					{
 						Source = ImageSource.Symbol("heart.fill"),
@@ -43,7 +44,7 @@ public static class ImagePage
 						Stretch = Stretch.Fill
 					},
 
-					Demo.Caption("SF Symbol no stretch"),
+					Theme.Caption("SF Symbol no stretch"),
 					new Image
 					{
 						Source = ImageSource.Symbol("gear"),

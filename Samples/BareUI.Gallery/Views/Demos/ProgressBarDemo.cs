@@ -1,11 +1,12 @@
 using BareUI;
+using BareUI.Gallery.Views;
 
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="ProgressBar"/> at different progress values and with a custom tint.
 /// </summary>
-public static class ProgressBarPage
+public static class ProgressBarDemo
 {
 	public static View Build() =>
 		new ScrollView
@@ -16,19 +17,19 @@ public static class ProgressBarPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					Demo.Caption("0% progress"),
+					Theme.Caption("0% progress"),
 					new ProgressBar { Progress = 0 },
 
-					Demo.Caption("30% progress"),
+					Theme.Caption("30% progress"),
 					new ProgressBar { Progress = 0.3 },
 
-					Demo.Caption("70% progress"),
+					Theme.Caption("70% progress"),
 					new ProgressBar { Progress = 0.7 },
 
-					Demo.Caption("100% progress"),
+					Theme.Caption("100% progress"),
 					new ProgressBar { Progress = 1 },
 
-					Demo.Caption("With tint"),
+					Theme.Caption("With tint"),
 					new ProgressBar { Progress = 0.5, Tint = Color.FromHex(0x34C759) }
 				}
 			}

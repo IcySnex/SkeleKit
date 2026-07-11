@@ -254,12 +254,13 @@ public abstract partial class View
 	/// <summary>
 	/// When false the view takes no space and is hidden natively.
 	/// </summary>
-	public bool IsVisible
+	public Bindable<bool> IsVisible
 	{
 		get => isVisible;
-		set => Set(ref isVisible, value, ApplyVisualState);
+		set => isVisibleBinding = Register(isVisibleBinding, value, value => Set(ref isVisible, value, ApplyVisualState));
 	}
 	bool isVisible = true;
+	Binding<bool>? isVisibleBinding;
 
 
 	// Visual properties
@@ -330,7 +331,7 @@ public abstract partial class View
 	public void Measure(
 		Size available)
 	{
-		if (!IsVisible)
+		if (!isVisible)
 		{
 			DesiredSize = Size.Zero;
 			return;
@@ -360,7 +361,7 @@ public abstract partial class View
 	public void Arrange(
 		Rect finalRect)
 	{
-		if (!IsVisible)
+		if (!isVisible)
 		{
 			ArrangedBounds = new(finalRect.Location, Size.Zero);
 			ApplyFrame(ArrangedBounds);

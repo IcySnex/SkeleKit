@@ -1,9 +1,9 @@
-namespace BareUI.Gallery;
+namespace BareUI.Gallery.Views;
 
 /// <summary>
 /// Shared styling for the demo pages.
 /// </summary>
-static class Demo
+public static class Theme
 {
 	/// <summary>
 	/// Muted gray matching the iOS secondary label color.

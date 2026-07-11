@@ -23,4 +23,8 @@
     <ItemGroup>
         <ProjectReference Include="..\..\BareUI.iOS\BareUI.iOS.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    </ItemGroup>
 </Project>
