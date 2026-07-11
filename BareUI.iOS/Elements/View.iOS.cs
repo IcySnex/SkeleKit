@@ -42,6 +42,7 @@ public abstract partial class View
 		native.TranslatesAutoresizingMaskIntoConstraints = true;
 
 		ApplyVisualState();
+		ApplyInteraction();
 		ApplyProperties();
 		OnBindingContextChanged();
 		OnRealized();
@@ -85,6 +86,31 @@ public abstract partial class View
 
 	partial void RequestLayout() =>
 		native?.SetNeedsLayout();
+
+	UITapGestureRecognizer? tapRecognizer;
+
+	partial void ApplyInteractionCore()
+	{
+		if (native is null)
+			return;
+
+		native.UserInteractionEnabled = IsEnabled;
+
+		if (TapCommand is not null && tapRecognizer is null)
+		{
+			tapRecognizer = new(OnTapped);
+			native.AddGestureRecognizer(tapRecognizer);
+		}
+
+		if (tapRecognizer is not null)
+			tapRecognizer.Enabled = TapCommand is not null && IsEnabled;
+	}
+
+	void OnTapped()
+	{
+		if (TapCommand is { } command && command.CanExecute(TapCommandParameter))
+			command.Execute(TapCommandParameter);
+	}
 
 	partial void ApplyVisualStateCore()
 	{

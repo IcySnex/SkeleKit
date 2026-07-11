@@ -1,3 +1,5 @@
+using System.Windows.Input;
+
 namespace BareUI;
 
 /// <summary>
@@ -122,6 +124,39 @@ public abstract partial class View
 		ApplyVisualStateCore();
 
 	partial void ApplyVisualStateCore();
+
+	private protected void ApplyInteraction() =>
+		ApplyInteractionCore();
+
+	partial void ApplyInteractionCore();
+
+
+	// Interaction
+
+	/// <summary>
+	/// Whether the view responds to touches.
+	/// </summary>
+	public bool IsEnabled
+	{
+		get => isEnabled;
+		set => Set(ref isEnabled, value, ApplyInteraction, affectsMeasure: false);
+	}
+	bool isEnabled = true;
+
+	/// <summary>
+	/// Command invoked when the view is tapped.
+	/// </summary>
+	public ICommand? TapCommand
+	{
+		get => tapCommand;
+		set => Set(ref tapCommand, value, ApplyInteraction, affectsMeasure: false);
+	}
+	ICommand? tapCommand;
+
+	/// <summary>
+	/// The parameter passed to <see cref="TapCommand"/>.
+	/// </summary>
+	public object? TapCommandParameter { get; set; }
 
 
 	// Layout properties

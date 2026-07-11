@@ -12,6 +12,7 @@ public static class MenuPage
 {
 	static readonly (string Title, Func<View> Build)[] entries =
 	[
+		("Binding", () => new BindingPage { ViewModel = new() }),
 		("MovieInfo", MovieInfoPage.Build),
 		("Button", ButtonPage.Build),
 		("TextField", TextFieldPage.Build),
