@@ -80,90 +80,47 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Status (2026-07-11)
 
-**M0–M4 complete** (M4 pending a tap-through of push/pop on the sim).
-Commits land on `main` (repo history is linear there).
+**M0–M4 complete.** Commits land on `main` (linear history). Next: **M5 — `CollectionView`**.
 
-M4:
-- `BareApp.Create().UseServices(...).Map<TVm,TView>().Tabs(...).Run(args)` replaces
-  `Main`/`AppDelegate`/`SceneDelegate`. Ships `BareAppDelegate` + `BareSceneDelegate`; the app's
-  `Info.plist` must name `BareSceneDelegate` as `UISceneDelegateClassName`.
-- `ContentView` (non-generic: `Title`, `SafeAreaEdges`, `OnAppearing`/`OnDisappearing`) +
-  `ContentView<TViewModel>`. `PageHost` is the hidden `UIViewController`: consumes `SafeAreaEdges`,
-  full-bleeds a scrolling root so the bars blur, taps dismiss the keyboard.
-- `INavigator`: push/pop/present (sheets + detents) + alert/confirm/action sheet. `ViewRegistry.Map`
-  uses a `new()` constraint — no scanning, no reflection. `Navigator` holds managed refs to its
-  `PageHost`s (see the peer-rooting rule; UIKit retains VCs natively only).
-- Gallery is one `Program.cs`, zero UIKit outside `NativeViewPage` (which demos the escape hatch).
-- **`SafeAreaEdges` is consumed by `PageHost`, not by arrange** — panels take `Size`, not `Rect`, so
-  threading insets through the engine would change every panel signature. Matches architecture §2
-  ("the root host reads SafeAreaInsets").
-- DI (`Microsoft.Extensions.DependencyInjection`) is the one reflection surface in the stack — watch
-  it in the next `MtouchLink=Full` publish.
+Shape of the thing now:
+- **Element model**: `View` (lazy realize, WPF measure/arrange, `Parent`, `InvalidateMeasure`),
+  `Panel`/`ViewCollection`, `LayoutHost`. Property pipeline is `Set(ref field, value, apply)`;
+  `CreateNative` only *constructs*, every property is pushed through one `ApplyProperties()` hook.
+- **Panels**: `StackPanel` (+`VStack`/`HStack`), `Grid` (auto/star/px + spans + spacing), `Overlay`,
+  `Border`, `ScrollView` (+`KeyboardDismiss`). Layout math unit-tested in the neutral TFM.
+- **Controls**: `Label`, `Button`, `Image`, `TextField`/`SecureField`/`TextEditor`, `Switch`,
+  `Slider`, `Stepper`, `ProgressBar`, `ActivityIndicator`, `Divider`, `Picker`, `NativeView`.
+  All expose `Bindable<T>` properties and push target→source from their own native events.
+- **Bindings** (neutral, unit-tested): `Bindable<T>`, `BindingExpression<T>`, `Binding<T>` runtime,
+  `BindingContext` inherited down the tree, `BindingFactory.Bind/BindPath`. Compiled getter
+  delegates + `[CallerArgumentExpression]` paths, per-segment INPC subscription, zero reflection.
+  Commands are bindable (`Bindable<ICommand?>`).
+- **App model**: `BareApp.Create().UseServices(...).UsePages(...).Tabs(...).Run(args)`.
+  `ContentView<TVm>` composes its tree in the **constructor** (XAML-compatible); `PageHost` is the
+  hidden `UIViewController`. `INavigator` = push/pop/present + alert/confirm/action sheet,
+  **ViewModel-first only**. Registration is one path: `UsePages` (`AddTransient`/`AddSingleton`).
+- **Gallery**: `Program.cs` + `Views/ViewModels/Models/Services`, CommunityToolkit.Mvvm VMs, zero
+  UIKit outside `NativeViewDemo`.
 
-M3 so far:
-- Property pipeline: `View.Parent`, `InvalidateMeasure()` (bubbles to root → `SetNeedsLayout`),
-  and the `Set(ref field, value, apply)` helper. `CreateNative` now only *constructs*; every
-  property is pushed through the single `ApplyProperties()` hook (kills the old two-writer split).
-- Bindings (all neutral, unit-tested): `Bindable<T>`, `BindingExpression<T>`, `Binding<T>` runtime,
-  `BindingContext` on `View` (inherited down the tree), `BindingFactory.Bind/BindPath`. Compiled
-  getter delegates + `[CallerArgumentExpression]` path parsing, per-segment INPC subscription,
-  zero reflection. Modes + `UpdateTrigger` (TextField/TextEditor honour `FocusLost`).
-- Every control exposes `Bindable<T>` properties and pushes target→source from its native event.
-  `Button` does `ICommand` + `CanExecuteChanged`→enabled; `TapCommand`/`IsEnabled` on any `View`.
-- Minimal `ContentView<TViewModel>` (typed `ViewModel` + protected `Bind`); M4 adds lifecycle,
-  chrome and controller hosting. Gallery `BindingPage` demos one-way/two-way/converter/command.
+Hard-won rules (don't relearn these):
+- **Native peers must be rooted** — see the convention above. It caused the black-screen/SIGABRT bug.
+- **`InvalidateMeasure` dirties every host up to the root**, not just the root: UIKit skips
+  `LayoutSubviews` on a view whose bounds didn't change, so a `ScrollView` would keep stale content.
+- **`Bindable<T>` can't take an interface `T`** (C# forbids user-defined conversions from
+  interfaces) → `Picker.Items` stays plain; literals need `Bindable.From<ICommand?>(cmd)`.
+- User-defined conversions don't chain → `Image.Source` needs `ImageSource.Symbol(...)`/`Url(...)`.
+- `[RelayCommand]` generates `IRelayCommand`, and `Bindable<T>` isn't covariant → bind with an
+  explicit type arg: `Bind<ICommand?>(vm => vm.SaveCommand)`.
 
-M3 gotchas found:
-- `Bindable<T>` can't take an interface `T` (C# forbids user-defined conversions from interfaces)
-  → `Picker.Items` stays a plain property.
-- User-defined conversions don't chain → `Image.Source` needs `ImageSource.Symbol(...)`/`Url(...)`,
-  not a bare string literal.
-
-**M3 exit criteria met:** binding unit tests (68 green) incl. two-way round-trips and nested-path
-re-subscription; Gallery published for device (Release, `ios-arm64`, `MtouchLink=Full` → Mono full
-AOT, everything trimmed) at ~7 MB, running on a physical iPhone with the binding page working.
-
-Done:
-- Primitives: `Thickness`, `Size`, `Point`, `Rect`, `GridLength`, `Color`, alignment enums.
-- `View` base (lazy realize, WPF measure/arrange), `Panel`/`ViewCollection`, `LayoutHost`.
-- Panels: `StackPanel` (+`VStack`/`HStack`), `Grid` (auto/star/px + spans + spacing), `Overlay`,
-  `Border`, `ScrollView`. Layout math unit-tested in neutral TFM (41 tests green).
-- First controls: `Control` base (measures via native `SizeThatFits`) + `Label`.
-- Gallery `MovieInfoPage` reproduces Velura's MovieInfo top section in pure BareUI = **M1 exit,
-  verified on simulator**. Hosted by a temporary `BareHostController` (replaced by `BareApp` in M4).
-
-- M2 controls (all thin native wrappers, verified on simulator via Gallery pages): `Button`
-  (UIButtonConfiguration styles, SF-symbol `Icon`, plain `ICommand` + CanExecuteChanged→enabled),
-  `Image` (`ImageSource` struct — Url/Bundle/Symbol/Auto, implicit from string; pluggable static
-  `Image.Loader : IImageLoader`, cancellable async URL loads), `TextField`/`SecureField`/`TextEditor`,
-  `Switch`, `Slider`, `Stepper`, `ProgressBar`, `ActivityIndicator`, `Divider`, `Picker`
-  (UIButton+UIMenu), `NativeView` escape hatch (`OwnsNative=false` — caller-owned view not disposed).
-  Pre-M3 pattern: properties are create-only (applied in `CreateNative`); interactive controls sync
-  native→managed and expose settable `Action` callback props (`Toggled`, `TextChanged`, `Clicked`, …).
-- All primitives now live in `namespace BareUI` (`BareUI.Primitives` namespace removed; folder kept).
-- Gallery: 13 demo pages in `Pages/` (shared caption scaffold on `Demo`). Since M4 the shell is
-  `BareApp` (tabs + nav), so the old `GALLERY_PAGE` env shortcut is gone.
-- **Native-peer lifetime bug fixed** (was: random black screen / SIGABRT after navigating). `LayoutHost`,
-  `ScrollHost`, `BareHostController` had no `(NativeHandle)` ctor and no managed root, so the GC
-  collected their peers while UIKit still held the native objects. Fixed by rooting + ctors; the image
-  loader moved to `SocketsHttpHandler` (the default `NSUrlSessionHandler`'s delegate peer dies
-  mid-redirect). See the peer-rooting convention above — M4's `BareApp` must keep doing this.
-- Library is now **`#if`-free**: iOS-only files excluded from `net10.0` by csproj glob, mixed files
-  split into `Foo.cs` + `Foo.iOS.cs` partials.
-
-Known shortcuts to revisit:
-- Safe-area is handled ad-hoc by `BareHostController` (sets host frame to the safe-area guide);
-  the planned `SafeAreaEdges`-in-arrange support (enum exists) is not wired into the engine yet.
-- Layout has no dirty-flag/invalidation yet — `LayoutHost.LayoutSubviews` re-measures the whole
-  subtree each pass. Fine for now; optimize when a screen gets heavy.
+Known debt, roughly in priority order:
+- No **measure caching**: `LayoutHost.LayoutSubviews` re-measures the whole subtree each pass, and
+  invalidation now dirties every ancestor. Fine today; profile before M5's lists.
 - `Panel.RealizeChildren` rebuilds all native subviews on any `Children` change (no diffing).
-
-- Reviewer follow-up still open: `Image.Loader` is static mutable global state (decide in M3/M4 if
-  it becomes `BareApp` config).
-- Packaging: the `net10.0` TFM is a test shim but would still ship in a NuGet package as a hollow
-  lib. Exclude it from `pack` before publishing.
-- M3 structural note from review: `CreateNative` and `View.ApplyVisualState` are two uncoordinated
-  writers of native state (an `Image` clipping bug came from this). M3 should introduce one
-  property-application pipeline (base visual state, then control state).
-
-Next — M3 bindings (see PLAN.md). M2 is committed on `main`.
+- `MenuView`/`PickerDemo` still need `OnViewModelAttached` (lists + `Picker.Items`). `CollectionView`
+  + `ItemsSource` should kill the first.
+- DI (`Microsoft.Extensions.DependencyInjection`) is the only reflection surface in the stack —
+  re-check it under `MtouchLink=Full` before shipping.
+- `Image.Loader` is static mutable global state (make it `BareApp` config?).
+- M4 leftovers: `ToolbarItems`, large-title-on-scroll, iPadOS sidebar.
+- Packaging: the `net10.0` TFM is a test shim but would still ship as a hollow lib — exclude from
+  `pack` before publishing.

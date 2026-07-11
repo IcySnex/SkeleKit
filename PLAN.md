@@ -88,7 +88,7 @@ BareUI.sln
   measure invalidation / dirty flags yet; trait/bounds re-layout relies on UIKit calling
   `LayoutSubviews`. `Control` base + `Label` were pulled forward (the exit page needed text).
 
-### M2 — Controls
+### M2 — Controls — ✅ DONE (2026-07-11)
 - v1 set (each a thin native wrapper): `Label` ✅ (done in M1), `Button`, `Image` (async source loading
   hook), `TextField`, `SecureField`, `TextEditor`, `Switch`, `Slider`, `Stepper`,
   `ProgressBar`, `ActivityIndicator`, `Divider`, `Picker` (menu-style selection —
@@ -98,7 +98,7 @@ BareUI.sln
 - **Exit criteria:** Gallery page per control; Velura's custom `UINumberField`,
   `UISelectionButton`, `UIPaddedView` all expressible without custom code.
 
-### M3 — Binding system (AOT-safe)
+### M3 — Binding system (AOT-safe) — ✅ DONE (2026-07-11)
 - `Bindable<T>` value wrapper with implicit conversions so `Text = Bind(vm => vm.Title)`
   and `Text = "literal"` both compile (see ADR-003).
 - Typed-delegate bindings: getter delegate + property-name extraction via
@@ -115,19 +115,25 @@ BareUI.sln
   `IL2xxx` warnings, and the binding page working on-device (trim failures surface at runtime, when
   a binding first fires — a clean build alone proves nothing).
 
-### M4 — MVVM + navigation + app bootstrap
-- `ContentView<TViewModel>`: the user's "code-behind" — sets `Content` tree in `Build()`,
-  gets typed `ViewModel`, lifecycle hooks (`OnAppearing`/`OnDisappearing`/`OnLoaded`).
-  Internally hosted by a hidden `UIViewController`.
-- ViewModel-first navigation: explicit AOT-safe registry
-  (`app.Map<MovieInfoViewModel, MovieInfoView>()`), `INavigator` with
-  `PushAsync<TVm>()`, `PopAsync()`, modals + sheets (detents), alerts/action sheets/confirm
-  dialogs (absorbs Velura's `IDialogHandler` + `INavigation`).
-- Shell primitives: `NavigationHost` (nav stack, large titles, toolbar items),
-  `TabsHost` (tab bar / iPadOS sidebar mode — covers Velura's `MainViewController`).
-- `BareApp` bootstrap hiding `AppDelegate`/`UIWindow`/`Main.cs`; integrates
-  `Microsoft.Extensions.DependencyInjection` (Velura already uses it).
-- **Exit criteria:** Gallery restructured as tabs + pushable pages with zero UIKit code.
+### M4 — MVVM + navigation + app bootstrap — ✅ DONE (2026-07-11)
+- `ContentView<TViewModel>`: composes its tree into `Content` **in its constructor** (no `Build()`
+  — that keeps it XAML-compatible, where `InitializeComponent()` runs in the ctor and the VM is
+  attached afterwards). Typed `ViewModel`, `OnAppearing`/`OnDisappearing`, `OnViewModelAttached`.
+  Hosted by a hidden `PageHost : UIViewController`.
+- ViewModel-first navigation, one path only. Explicit AOT-safe registry via
+  `UsePages(pages => pages.AddTransient<TView>() / .AddSingleton<TView>())`; a view reports its own
+  ViewModel type, so registration takes one type param. `INavigator`: `PushAsync<TVm>()`,
+  `PopAsync()`, modals + sheets (detents), alert/confirm/action sheet.
+- Shell: `Tabs(...)`, `Stack<TView>()`, `SinglePage<TView>()`. Tabs/stacks only *reference*
+  registered pages.
+- `BareApp` bootstrap hides `AppDelegate`/`UIWindow`/`Main.cs`; ships `BareAppDelegate` +
+  `BareSceneDelegate` (the app's `Info.plist` names the latter). DI via
+  `Microsoft.Extensions.DependencyInjection`.
+- **Exit criteria met:** Gallery is one `Program.cs` + Views/ViewModels/Models/Services, zero UIKit
+  outside `NativeViewDemo` (which demos the escape hatch). ViewModels use CommunityToolkit.Mvvm,
+  proving no BareUI VM base class is needed.
+- **Not done, deferred:** `ToolbarItems`, `LargeTitles`-on-scroll (`TitleRevealOnScroll`),
+  iPadOS sidebar (`SidebarOnIPad`).
 
 ### M5 — CollectionView (virtualization)
 - One `CollectionView` control over `UICollectionView` + diffable data source:

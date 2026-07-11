@@ -17,17 +17,17 @@ BareApp.Create()
         services.AddSingleton<IThemeManager, ThemeManager>();
         // ... existing Velura service registrations unchanged
     })
-    .Map<HomeViewModel, HomeView>()
-    .Map<SearchViewModel, SearchView>()
-    .Map<SettingsViewModel, SettingsView>()
-    .Map<MovieInfoViewModel, MovieInfoView>()
+    .UsePages(pages => pages
+        .AddSingleton<HomeView>()          // keeps its state across navigations
+        .AddSingleton<SearchView>()
+        .AddSingleton<SettingsView>()
+        .AddTransient<MovieInfoView>())    // fresh instance per push
     .Tabs(tabs => tabs
         .LargeTitles()
-        .SidebarOnIPad()
-        .Tab<HomeViewModel>("home_title", icon: "house")
-        .Tab<SearchViewModel>("search_title", icon: "magnifyingglass")
-        .Tab<SettingsViewModel>("settings_title", icon: "gear"))
-    .Run();
+        .Tab<HomeView>("home_title", icon: "house")
+        .Tab<SearchView>("search_title", icon: "magnifyingglass")
+        .Tab<SettingsView>("settings_title", icon: "gear"))
+    .Run(args);
 ```
 
 ## 2. A settings-style page
@@ -38,7 +38,7 @@ What `SettingsGroupViewController` + `SettingsGroupItemViewCell` +
 ```csharp
 public class SettingsGroupView : ContentView<SettingsGroupViewModel>
 {
-    protected override View Build() => new CollectionView<SettingsEntry>
+    public SettingsGroupView() => Content = new CollectionView<SettingsEntry>
     {
         Layout = CollectionLayout.List(grouped: true),
         Header = new SettingsHeader(),                       // reusable ContentView fragment

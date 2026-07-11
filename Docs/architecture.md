@@ -164,8 +164,11 @@ Command = ViewModel.PlayCommand;                                  // commands bi
 ```csharp
 public class MovieInfoView : ContentView<MovieInfoViewModel>
 {
-    protected override View Build() => new Grid { ... };   // called once at realize
+    public MovieInfoView() => Content = new Grid { ... };   // composed in the ctor (XAML-compatible)
 }
+
+// The ViewModel is attached *after* construction, so bind values/commands rather than reading
+// ViewModel directly. Anything that truly needs the instance goes in OnViewModelAttached().
 ```
 
 - Typed `ViewModel` injected via constructor (DI) or set by the navigator.
