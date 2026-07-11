@@ -1,0 +1,24 @@
+using BareUI;
+using BareUI.Primitives;
+
+namespace BareUI.Tests.Elements;
+
+/// <summary>
+/// A leaf view with a fixed content size, standing in for a native control when unit-testing
+/// panel layout math in the neutral target framework.
+/// </summary>
+internal sealed class StubLeaf : View
+{
+	private readonly Size content;
+
+	public StubLeaf(
+		double width,
+		double height)
+	{
+		content = new Size(width, height);
+	}
+
+	protected override Size MeasureOverride(
+		Size availableSize) =>
+		content;
+}
