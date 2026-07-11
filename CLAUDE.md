@@ -13,11 +13,11 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Structure
 
-- `BareUI.iOS/` — the library. Multi-targets `net10.0;net10.0-ios`: layout math and
-  primitives live in neutral code, UIKit-touching code behind `#if IOS`. Root namespace
-  is `BareUI` (not `BareUI.iOS`). Folders: `Primitives/` (structs+enums), `Elements/`
-  (`View`, `Panel`, `ViewCollection`, `LayoutHost`), `Layout/` (panels), `Controls/`
-  (native wrappers).
+- `BareUI.iOS/` — the library. Multi-targets `net10.0;net10.0-ios`, but **iOS is the only
+  platform**: `net10.0` is a test shim so the layout engine unit-tests without a simulator.
+  Root namespace is `BareUI` (not `BareUI.iOS`). Folders: `Primitives/` (structs+enums),
+  `Elements/` (`View`, `Panel`, `ViewCollection`, `LayoutHost`), `Layout/` (panels),
+  `Controls/` (native wrappers).
 - `BareUI.Tests/` — xunit, plain `net10.0`, references the neutral TFM. Layout
   engine must stay testable here without a simulator.
 - `Samples/BareUI.Gallery/` — iOS sample app for on-the-fly testing/debugging. Currently
@@ -46,12 +46,24 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 - Tabs, file-scoped namespaces, each ctor/method parameter on its own line (matches Velura style).
 - Doc comments: standard `/// <summary>` block, summary text on **one line** (never wrap into
-  multiple `///` lines). Keep them terse. Non-public helpers use a plain `//` line.
+  multiple `///` lines). Keep them terse.
+- Inline `//` comments: short fragments, lowercase, only when the code can't say it itself. No
+  full-sentence prose, no multi-line blocks, no explaining a bugfix inline — that goes in the
+  commit body.
 - Omit redundant modifiers/types: no `private` where it's already the default; target-typed
   `new(...)` (no redundant type name); collection expressions `[]`. Matches Velura.
-- **Single platform.** The neutral `net10.0` TFM exists *only* so the layout engine unit-tests
-  without a simulator — this is not a cross-platform library. Put UIKit code inline behind
-  `#if IOS` in the same file; do **not** split into separate `.iOS.cs` partial files.
+- **No `#if IOS`. Ever.** The library has zero preprocessor directives and stays that way. A
+  wholly-iOS file goes in `Controls/` (or is named in the csproj's `net10.0` `Compile Remove`
+  glob) and just uses UIKit directly. A file that mixes layout math with UIKit splits: neutral
+  half in `Foo.cs`, native half in `Foo.iOS.cs` (`partial`, excluded from `net10.0` by glob).
+  Neutral code calls into native via `partial void` hooks (see `View.ApplyFrame`,
+  `Panel.OnChildrenChanged`).
+- **Native peers must be rooted.** Every `NSObject` subclass we define needs (a) a
+  `(NativeHandle handle)` ctor and (b) something *managed* holding it for as long as UIKit holds
+  the native object. UIKit's own retain does **not** keep the managed peer alive — the GC will
+  take it and the app either aborts in the marshaller or silently stops laying out (black screen).
+  Beware weak native refs (`UINavigationController.Delegate`). Don't use `NSTimer` +
+  `Action` or the default `NSUrlSessionHandler`: both have peers that die the same way.
 - Commits: Conventional Commits, subject ≤50 chars, body only when the why isn't obvious.
 - Everything must be AOT/trim-safe: no reflection, no `Expression<>`, no assembly scanning
   (consumer ships `PublishAot=true`). `IsAotCompatible=true` keeps analyzers on.
@@ -79,8 +91,16 @@ Done:
   Pre-M3 pattern: properties are create-only (applied in `CreateNative`); interactive controls sync
   native→managed and expose settable `Action` callback props (`Toggled`, `TextChanged`, `Clicked`, …).
 - All primitives now live in `namespace BareUI` (`BareUI.Primitives` namespace removed; folder kept).
-- Gallery: `UINavigationController` shell, `MenuPage` + 13 demo pages, `GALLERY_PAGE` env var
-  (via `SIMCTL_CHILD_GALLERY_PAGE`) auto-pushes a page on launch — use it for screenshots.
+- Gallery: `UINavigationController` shell, `MenuPage` + 13 demo pages (in `Pages/`, shared caption
+  scaffold on `Demo`), `GALLERY_PAGE` env var (via `SIMCTL_CHILD_GALLERY_PAGE`) auto-pushes a page
+  on launch — use it for screenshots.
+- **Native-peer lifetime bug fixed** (was: random black screen / SIGABRT after navigating). `LayoutHost`,
+  `ScrollHost`, `BareHostController` had no `(NativeHandle)` ctor and no managed root, so the GC
+  collected their peers while UIKit still held the native objects. Fixed by rooting + ctors; the image
+  loader moved to `SocketsHttpHandler` (the default `NSUrlSessionHandler`'s delegate peer dies
+  mid-redirect). See the peer-rooting convention above — M4's `BareApp` must keep doing this.
+- Library is now **`#if`-free**: iOS-only files excluded from `net10.0` by csproj glob, mixed files
+  split into `Foo.cs` + `Foo.iOS.cs` partials.
 
 Known shortcuts to revisit:
 - Safe-area is handled ad-hoc by `BareHostController` (sets host frame to the safe-area guide);
@@ -91,6 +111,8 @@ Known shortcuts to revisit:
 
 - Reviewer follow-up still open: `Image.Loader` is static mutable global state (decide in M3/M4 if
   it becomes `BareApp` config).
+- Packaging: the `net10.0` TFM is a test shim but would still ship in a NuGet package as a hollow
+  lib. Exclude it from `pack` before publishing.
 - M3 structural note from review: `CreateNative` and `View.ApplyVisualState` are two uncoordinated
   writers of native state (an `Image` clipping bug came from this). M3 should introduce one
   property-application pipeline (base visual state, then control state).
