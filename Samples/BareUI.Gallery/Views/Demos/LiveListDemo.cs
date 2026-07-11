@@ -56,6 +56,47 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 		};
 	}
 
-	protected override void OnViewModelAttached() =>
+	protected override void OnViewModelAttached()
+	{
 		items.ItemsSource = Bindable.From<IReadOnlyList<TodoItem>?>(ViewModel!.Items);
+		items.RefreshCommand = ViewModel.RefreshAsync;
+
+		// native swipe: UIKit owns the gesture and the full-swipe-to-delete
+		items.SwipeActions.Add(new()
+		{
+			Text = "Delete",
+			Icon = "trash",
+			IsDestructive = true,
+			Command = ViewModel.DeleteCommand
+		});
+
+		items.ContextMenu.Add(new()
+		{
+			Text = "Duplicate",
+			Icon = "plus.square.on.square",
+			Command = ViewModel.DuplicateCommand
+		});
+
+		items.ContextMenu.Add(new()
+		{
+			Text = "Delete",
+			Icon = "trash",
+			IsDestructive = true,
+			Command = ViewModel.DeleteCommand
+		});
+
+		ToolbarItems.Add(new()
+		{
+			Icon = "plus",
+			IsPrimary = true,
+			Command = ViewModel.AddCommand
+		});
+
+		ToolbarItems.Add(new()
+		{
+			Text = "Clear",
+			Side = ToolbarSide.Leading,
+			Command = ViewModel.ClearCommand
+		});
+	}
 }

@@ -37,6 +37,30 @@ public partial class LiveListDemoViewModel : ObservableObject
 	void Clear() =>
 		Items.Clear();
 
+	[RelayCommand]
+	void Delete(
+		TodoItem item)
+	{
+		Items.Remove(item);
+		Haptics.Notify(success: false);
+	}
+
+	[RelayCommand]
+	void Duplicate(
+		TodoItem item)
+	{
+		Items.Insert(Items.IndexOf(item), item with { Title = $"{item.Title} (copy)" });
+		Haptics.Impact(HapticStyle.Light);
+	}
+
+	public async Task RefreshAsync()
+	{
+		await Task.Delay(700);
+
+		Add();
+		Haptics.Selection();
+	}
+
 	public LiveListDemoViewModel()
 	{
 		for (int index = 0; index < 3; index++)
