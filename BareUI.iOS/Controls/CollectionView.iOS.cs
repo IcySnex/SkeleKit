@@ -85,6 +85,9 @@ public partial class CollectionView<TItem>
 				}
 			},
 			_ => ApplyEmptyView());
+
+		// an interrupted animation can drop the completion, so never depend on it alone
+		ApplyEmptyView();
 	}
 
 	static NSIndexPath[] Paths(
@@ -99,12 +102,19 @@ public partial class CollectionView<TItem>
 		return paths;
 	}
 
+	// attach it once and just hide it: nulling BackgroundView detaches the view, and re-attaching the
+	// same instance from a batch-update completion does not reliably come back
 	void ApplyEmptyView()
 	{
 		if (EmptyView is not { } empty)
 			return;
 
-		Ui.BackgroundView = IsEmpty ? empty.Realize() : null;
+		UIView native = empty.Realize();
+
+		if (!ReferenceEquals(Ui.BackgroundView, native))
+			Ui.BackgroundView = native;
+
+		native.Hidden = !IsEmpty;
 	}
 
 	internal ItemView<TItem> CreateItemView() =>
