@@ -23,6 +23,9 @@ public enum CarouselSnap
 	/// <summary>Free scrolling; stops wherever the drag ends.</summary>
 	None,
 
+	/// <summary>Free scrolling, but the resting offset lands on an item's leading edge.</summary>
+	LeadingBoundary,
+
 	/// <summary>Settles on an item, leading edge aligned.</summary>
 	Item,
 

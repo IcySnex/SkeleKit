@@ -18,9 +18,9 @@ public partial class ScrollView
 		host.AlwaysBounceVertical = vertical;
 		host.AlwaysBounceHorizontal = !vertical;
 
-		// nested inside the safe area UIKit reports zero insets; reaching a bar it insets the content
-		// and lets it scroll under the bar, which is what SwiftUI does
-		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Always;
+		// ScrollableAxes: inset only along the axis that scrolls, so content still slides under the
+		// bars but a vertical scroll view never gains a horizontal scrollable range
+		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.ScrollableAxes;
 
 		ApplyKeyboardDismiss();
 	}

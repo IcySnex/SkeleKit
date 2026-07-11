@@ -93,7 +93,7 @@ sealed class PageHost : UIViewController
 		if (ScrollRoot is { } scroll)
 			scroll.ContentInsetAdjustmentBehavior = page.SafeAreaEdges is SafeAreaEdges.None
 				? UIScrollViewContentInsetAdjustmentBehavior.Never
-				: UIScrollViewContentInsetAdjustmentBehavior.Always;
+				: UIScrollViewContentInsetAdjustmentBehavior.ScrollableAxes;
 	}
 
 	public override void ViewDidLayoutSubviews()

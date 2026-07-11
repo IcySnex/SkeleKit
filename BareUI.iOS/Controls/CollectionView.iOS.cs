@@ -35,11 +35,12 @@ public partial class CollectionView<TItem>
 			AlwaysBounceVertical = !carousel,
 			AlwaysBounceHorizontal = carousel,
 
-			// a nested collection sits inside the safe area, so UIKit gives it zero insets; one that
-			// reaches a bar gets the inset it needs and its content scrolls under the bar
+			// ScrollableAxes, not Always: Always also insets left/right for the safe area, which makes a
+			// vertical list horizontally scrollable even when its rows fit. A carousel ignores the safe
+			// area entirely so its items run edge to edge instead of stopping at the inset.
 			ContentInsetAdjustmentBehavior = carousel
 				? UIScrollViewContentInsetAdjustmentBehavior.Never
-				: UIScrollViewContentInsetAdjustmentBehavior.Always
+				: UIScrollViewContentInsetAdjustmentBehavior.ScrollableAxes
 		};
 
 		collection.RegisterClassForCell(typeof(BareCell), CellId);
@@ -307,6 +308,7 @@ public partial class CollectionView<TItem>
 		section.InterGroupSpacing = spacing;
 		section.OrthogonalScrollingBehavior = layout.Snap switch
 		{
+			CarouselSnap.LeadingBoundary => UICollectionLayoutSectionOrthogonalScrollingBehavior.ContinuousGroupLeadingBoundary,
 			CarouselSnap.Item => UICollectionLayoutSectionOrthogonalScrollingBehavior.GroupPaging,
 			CarouselSnap.ItemCentered => UICollectionLayoutSectionOrthogonalScrollingBehavior.GroupPagingCentered,
 			CarouselSnap.Page => UICollectionLayoutSectionOrthogonalScrollingBehavior.Paging,
