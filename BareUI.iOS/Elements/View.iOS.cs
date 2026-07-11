@@ -85,7 +85,15 @@ public abstract partial class View
 	partial void ApplyFrame(
 		Rect frame)
 	{
-		if (native is not null)
-			native.Frame = new CGRect(frame.X, frame.Y, frame.Width, frame.Height);
+		if (native is null)
+			return;
+
+		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
+		bool resized = native.Frame.Size != next.Size;
+
+		native.Frame = next;
+
+		if (resized)
+			native.SetNeedsLayout();
 	}
 }
