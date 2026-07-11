@@ -8,7 +8,7 @@ public abstract partial class Panel
 		new LayoutHost(this);
 
 	private protected override void OnRealized() =>
-		RealizeChildren();
+		SyncNativeChildren();
 
 	private protected override void OnUnrealized()
 	{
@@ -19,19 +19,38 @@ public abstract partial class Panel
 	partial void OnChildrenChanged()
 	{
 		if (IsRealized)
-			RealizeChildren();
+			SyncNativeChildren();
 	}
 
-	// rebuild native subviews from Children
-	void RealizeChildren()
+	// diff the host's subviews against Children: keep what is still there, only add/remove/move
+	void SyncNativeChildren()
 	{
 		UIView host = Native;
 
-		foreach (UIView existing in host.Subviews)
-			existing.RemoveFromSuperview();
-
+		HashSet<UIView> wanted = [];
 		foreach (View child in Children)
-			host.AddSubview(child.Realize());
+			if (child.IsRealized)
+				wanted.Add(child.Native);
+
+		foreach (UIView existing in host.Subviews)
+			if (!wanted.Contains(existing))
+				existing.RemoveFromSuperview();
+
+		UIView[] subviews = host.Subviews;
+
+		for (int index = 0; index < Children.Count; index++)
+		{
+			UIView native = Children[index].Realize();
+
+			// already in the right slot: leave it alone. Re-inserting a UITextField would make it
+			// resign first responder, so never touch a subview that has not moved
+			if (index < subviews.Length && subviews[index] == native)
+				continue;
+
+			// InsertSubview moves a view that is already a subview, so this fixes order too
+			host.InsertSubview(native, index);
+			subviews = host.Subviews;
+		}
 
 		host.SetNeedsLayout();
 	}

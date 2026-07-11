@@ -107,6 +107,8 @@ Hard-won rules (don't relearn these):
 - **Measure is cached per available-size** (`View.measureValid` + `lastAvailable`).
   `InvalidateMeasure()` clears the flag up the ancestor chain (stopping at an already-stale parent)
   and asks the **root** host for one layout pass.
+- **A `Panel` diffs its native subviews** on a `Children` change (add/remove/move only). Never
+  re-insert an unchanged subview: that makes a focused `UITextField` resign first responder.
 - **A `Panel` must lay out its own content, not wait for UIKit.** UIKit only calls `LayoutSubviews`
   on a view whose bounds changed, so `ScrollView` kept stale content after a binding update — it now
   arranges its content in `ArrangeOverride`.
@@ -117,7 +119,6 @@ Hard-won rules (don't relearn these):
   explicit type arg: `Bind<ICommand?>(vm => vm.SaveCommand)`.
 
 Known debt, roughly in priority order:
-- `Panel.RealizeChildren` rebuilds all native subviews on any `Children` change (no diffing).
 - `MenuView`/`PickerDemo` still need `OnViewModelAttached` (lists + `Picker.Items`). `CollectionView`
   + `ItemsSource` should kill the first.
 - DI (`Microsoft.Extensions.DependencyInjection`) is the only reflection surface in the stack —
