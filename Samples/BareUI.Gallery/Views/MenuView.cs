@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using BareUI.Gallery.Models;
 using BareUI.Gallery.ViewModels;
 
@@ -15,27 +16,25 @@ public class MenuView : ContentView<MenuViewModel>
 	{
 		Title = "BareUI Gallery";
 
-		Content = new ScrollView { Content = list };
-	}
-
-	// the demo list comes from the ViewModel, which arrives after construction
-	protected override void OnViewModelAttached()
-	{
-		list.Children.Clear();
-
 		list.Children.Add(new Button
 		{
 			Text = "MovieInfo",
 			Style = ButtonStyle.Filled,
-			Command = ViewModel!.OpenMovieCommand
+			Command = Bind<ICommand?>(vm => vm.OpenMovieCommand)
 		});
 
-		foreach (DemoEntry demo in ViewModel.Demos)
+		Content = new ScrollView { Content = list };
+	}
+
+	// the demo list needs the ViewModel instance; CollectionView's ItemsSource replaces this in M5
+	protected override void OnViewModelAttached()
+	{
+		foreach (DemoEntry demo in ViewModel!.Demos)
 			list.Children.Add(new Button
 			{
 				Text = demo.Title,
 				Style = ButtonStyle.Gray,
-				Command = ViewModel.OpenDemoCommand,
+				Command = Bindable.From<ICommand?>(ViewModel.OpenDemoCommand),
 				CommandParameter = demo
 			});
 	}

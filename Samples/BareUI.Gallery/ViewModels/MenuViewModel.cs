@@ -14,7 +14,7 @@ public partial class MenuViewModel(
 	[RelayCommand]
 	Task OpenDemo(
 		DemoEntry demo) =>
-		navigator.PushAsync(demo.Create());
+		navigator.PushAsync(demo.ViewModel);
 
 	[RelayCommand]
 	Task OpenMovie() =>

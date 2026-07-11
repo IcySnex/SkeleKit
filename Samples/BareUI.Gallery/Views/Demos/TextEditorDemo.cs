@@ -1,14 +1,40 @@
-using BareUI;
+using BareUI.Gallery.ViewModels.Demos;
 using BareUI.Gallery.Views;
 
 namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
-/// Demonstrates <see cref="TextEditor"/> with different font sizes and the <c>TextChanged</c> callback.
+/// Demonstrates <see cref="TextEditor"/> bound two-way inside a bordered box.
 /// </summary>
-public class TextEditorDemo : StaticView
+public class TextEditorDemo : ContentView<TextEditorDemoViewModel>
 {
 	static readonly Color Separator = Color.FromHex(0xC7C7CC);
+
+	public TextEditorDemo()
+	{
+		Title = "TextEditor";
+
+		Content = new ScrollView
+		{
+			Content = new VStack
+			{
+				Spacing = 20,
+				Margin = new Thickness(16),
+				Children =
+				{
+					Theme.Caption("Two-way, grows with its content"),
+					Boxed(new TextEditor
+					{
+						FontSize = 16,
+						Text = Bind(vm => vm.Text, (vm, value) => vm.Text = value ?? "")
+					}),
+
+					Theme.Caption("Character count"),
+					new Label { Text = Bind(vm => vm.Text, text => $"{text.Length} characters"), TextColor = Theme.Secondary }
+				}
+			}
+		};
+	}
 
 	// box it so measured bounds are visible
 	static Border Boxed(
@@ -21,35 +47,4 @@ public class TextEditorDemo : StaticView
 			Padding = new Thickness(4),
 			Child = editor
 		};
-
-	public TextEditorDemo()
-	{
-		Title = "TextEditor";
-
-		Content =
-			new ScrollView
-			{
-				Content = new VStack
-				{
-					Spacing = 20,
-					Margin = new Thickness(16),
-					Children =
-					{
-						Theme.Caption("Default"),
-						Boxed(new TextEditor { }),
-
-						Theme.Caption("Custom font size"),
-						Boxed(new TextEditor { FontSize = 14 }),
-
-						Theme.Caption("With callback"),
-						Boxed(new TextEditor
-						{
-							Text = "Type here",
-							FontSize = 16,
-							TextChanged = text => Console.WriteLine($"TextEditorDemo: text changed to '{text}'")
-						})
-					}
-				}
-			};
-	}
 }

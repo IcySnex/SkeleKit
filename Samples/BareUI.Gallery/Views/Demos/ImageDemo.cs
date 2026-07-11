@@ -1,12 +1,13 @@
 using BareUI;
 using BareUI.Gallery.Views;
+using BareUI.Gallery.ViewModels.Demos;
 
 namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="Image"/> with SF Symbols, URL images, and different stretch modes.
 /// </summary>
-public class ImageDemo : StaticView
+public class ImageDemo : ContentView<ImageDemoViewModel>
 {
 	public ImageDemo()
 	{

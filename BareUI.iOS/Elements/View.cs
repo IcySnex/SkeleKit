@@ -146,12 +146,13 @@ public abstract partial class View
 	/// <summary>
 	/// Command invoked when the view is tapped.
 	/// </summary>
-	public ICommand? TapCommand
+	public Bindable<ICommand?> TapCommand
 	{
-		get => tapCommand;
-		set => Set(ref tapCommand, value, ApplyInteraction, affectsMeasure: false);
+		get => Bindable.From(tapCommand);
+		set => tapCommandBinding = Register(tapCommandBinding, value, value => Set(ref tapCommand, value, ApplyInteraction, affectsMeasure: false));
 	}
 	ICommand? tapCommand;
+	Binding<ICommand?>? tapCommandBinding;
 
 	/// <summary>
 	/// The parameter passed to <see cref="TapCommand"/>.

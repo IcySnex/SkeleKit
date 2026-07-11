@@ -50,12 +50,12 @@ public sealed class BareApp
 	}
 
 	/// <summary>
-	/// Maps a page so a ViewModel can navigate to it. Shell roots (tabs, stack, single page) map themselves.
+	/// Registers the pages the app can show. Every navigable page goes here, once.
 	/// </summary>
-	public BareApp Map<TView>()
-		where TView : ContentView, new()
+	public BareApp UsePages(
+		Action<PagesBuilder> configure)
 	{
-		Register<TView>();
+		configure(new(registry));
 
 		return this;
 	}
@@ -64,14 +64,14 @@ public sealed class BareApp
 	/// A single page with no navigation bar.
 	/// </summary>
 	public BareApp SinglePage<TView>()
-		where TView : ContentView, new() =>
+		where TView : ContentView =>
 		Root<TView>(ShellKind.SinglePage);
 
 	/// <summary>
 	/// One navigation stack rooted at <typeparamref name="TView"/>.
 	/// </summary>
 	public BareApp Stack<TView>()
-		where TView : ContentView, new() =>
+		where TView : ContentView =>
 		Root<TView>(ShellKind.Stack);
 
 	/// <summary>
@@ -80,7 +80,7 @@ public sealed class BareApp
 	public BareApp Tabs(
 		Action<TabsBuilder> configure)
 	{
-		tabs = new(this);
+		tabs = new(registry);
 		configure(tabs);
 
 		shell = ShellKind.Tabs;
@@ -100,10 +100,6 @@ public sealed class BareApp
 	}
 
 
-	internal Type? Register<TView>()
-		where TView : ContentView, new() =>
-		registry.Map<TView>();
-
 	internal IServiceProvider Services =>
 		provider ??= services.BuildServiceProvider();
 
@@ -112,19 +108,13 @@ public sealed class BareApp
 
 	BareApp Root<TView>(
 		ShellKind kind)
-		where TView : ContentView, new()
+		where TView : ContentView
 	{
-		rootViewModel = Register<TView>();
+		rootViewModel = registry.ViewModelOf<TView>();
 		shell = kind;
-
-		// a page with no ViewModel still needs to be creatable
-		if (rootViewModel is null)
-			rootPage = () => new TView();
 
 		return this;
 	}
-
-	Func<ContentView>? rootPage;
 
 	// the shell is rooted by the window; navigator + hosts are rooted by this static app
 	internal UIViewController BuildShell() =>
@@ -137,9 +127,7 @@ public sealed class BareApp
 		};
 
 	ContentView RootPage() =>
-		rootViewModel is { } viewModel
-			? registry.CreatePage(registry.CreateViewModel(viewModel, Services))
-			: rootPage!();
+		registry.CreatePage(registry.CreateViewModel(rootViewModel!, Services));
 
 	UIViewController BuildTabs(
 		TabsBuilder definition)

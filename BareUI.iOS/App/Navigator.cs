@@ -15,15 +15,8 @@ sealed class Navigator(
 		PushAsync(registry.CreateViewModel(typeof(TViewModel), services));
 
 	public Task PushAsync(
-		ContentView page)
-	{
-		if (currentStack() is not { } stack)
-			throw new InvalidOperationException("There is no navigation stack to push onto.");
-
-		stack.PushViewController(Track(page), true);
-
-		return Task.CompletedTask;
-	}
+		Type viewModel) =>
+		PushAsync(registry.CreateViewModel(viewModel, services));
 
 	public Task PushAsync(
 		object viewModel)

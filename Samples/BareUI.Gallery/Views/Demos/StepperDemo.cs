@@ -1,46 +1,37 @@
-using BareUI;
+using BareUI.Gallery.ViewModels.Demos;
 using BareUI.Gallery.Views;
 
 namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
-/// Demonstrates <see cref="Stepper"/> with different ranges and steps, and the <c>ValueChanged</c> callback.
+/// Demonstrates <see cref="Stepper"/> bound two-way.
 /// </summary>
-public class StepperDemo : StaticView
+public class StepperDemo : ContentView<StepperDemoViewModel>
 {
 	public StepperDemo()
 	{
 		Title = "Stepper";
 
-		Content =
-			new ScrollView
+		Content = new ScrollView
+		{
+			Content = new VStack
 			{
-				Content = new VStack
+				Spacing = 20,
+				Margin = new Thickness(16),
+				Children =
 				{
-					Spacing = 20,
-					Margin = new Thickness(16),
-					Children =
+					Theme.Caption("1–10, step 1"),
+					new Stepper
 					{
-						Theme.Caption("Default (0–9)"),
-						new Stepper { Minimum = 0, Maximum = 9, Value = 5, Step = 1 },
-
-						Theme.Caption("0–100 with step 10"),
-						new Stepper { Minimum = 0, Maximum = 100, Value = 50, Step = 10 },
-
-						Theme.Caption("0.0–1.0 with step 0.1"),
-						new Stepper { Minimum = 0, Maximum = 1, Value = 0.5, Step = 0.1 },
-
-						Theme.Caption("With callback"),
-						new Stepper
-						{
-							Minimum = 0,
-							Maximum = 10,
-							Value = 5,
-							Step = 1,
-							ValueChanged = value => Console.WriteLine($"StepperDemo: value changed to {value}")
-						}
-					}
+						Minimum = 1,
+						Maximum = 10,
+						Step = 1,
+						Value = Bind(vm => vm.Count, (vm, value) => vm.Count = value),
+						HorizontalAlignment = HorizontalAlignment.Start
+					},
+					new Label { Text = Bind(vm => vm.Count, count => $"Count: {count:F0}"), Bold = true }
 				}
-			};
+			}
+		};
 	}
 }

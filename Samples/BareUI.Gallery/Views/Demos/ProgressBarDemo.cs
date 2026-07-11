@@ -1,12 +1,13 @@
 using BareUI;
 using BareUI.Gallery.Views;
+using BareUI.Gallery.ViewModels.Demos;
 
 namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="ProgressBar"/> at different progress values and with a custom tint.
 /// </summary>
-public class ProgressBarDemo : StaticView
+public class ProgressBarDemo : ContentView<ProgressBarDemoViewModel>
 {
 	public ProgressBarDemo()
 	{

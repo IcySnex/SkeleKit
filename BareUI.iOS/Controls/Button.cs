@@ -43,26 +43,30 @@ public class Button : Control
 	/// <summary>
 	/// Command invoked on tap; its CanExecute drives the enabled state.
 	/// </summary>
-	public ICommand? Command
+	public Bindable<ICommand?> Command
 	{
-		get => command;
-		set
-		{
-			if (ReferenceEquals(command, value))
-				return;
-
-			if (command is not null)
-				command.CanExecuteChanged -= OnCanExecuteChanged;
-
-			command = value;
-
-			if (command is not null)
-				command.CanExecuteChanged += OnCanExecuteChanged;
-
-			ApplyIsEnabled();
-		}
+		get => Bindable.From(command);
+		set => commandBinding = Register(commandBinding, value, SetCommand);
 	}
 	ICommand? command;
+	Binding<ICommand?>? commandBinding;
+
+	void SetCommand(
+		ICommand? value)
+	{
+		if (ReferenceEquals(command, value))
+			return;
+
+		if (command is not null)
+			command.CanExecuteChanged -= OnCanExecuteChanged;
+
+		command = value;
+
+		if (command is not null)
+			command.CanExecuteChanged += OnCanExecuteChanged;
+
+		ApplyIsEnabled();
+	}
 
 	/// <summary>
 	/// The parameter passed to <see cref="Command"/>.

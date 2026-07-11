@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using BareUI.Gallery.ViewModels;
 
 namespace BareUI.Gallery.Views;
@@ -7,12 +8,6 @@ namespace BareUI.Gallery.Views;
 /// </summary>
 public class BindingView : ContentView<BindingViewModel>
 {
-	readonly Button clear = new()
-	{
-		Text = "Clear name",
-		Style = ButtonStyle.Filled
-	};
-
 	public BindingView()
 	{
 		Title = "Bindings";
@@ -52,13 +47,14 @@ public class BindingView : ContentView<BindingViewModel>
 					new Label { Text = Bind(vm => vm.Volume, volume => $"Volume {volume:F0}") },
 
 					Theme.Caption("Command: disabled while the name is empty"),
-					clear
+					new Button
+					{
+						Text = "Clear name",
+						Style = ButtonStyle.Filled,
+						Command = Bind<ICommand?>(vm => vm.ClearNameCommand)
+					}
 				}
 			}
 		};
 	}
-
-	// commands need the ViewModel instance, which arrives after construction
-	protected override void OnViewModelAttached() =>
-		clear.Command = ViewModel!.ClearNameCommand;
 }

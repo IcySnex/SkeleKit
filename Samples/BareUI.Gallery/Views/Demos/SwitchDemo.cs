@@ -1,40 +1,35 @@
-using BareUI;
+using BareUI.Gallery.ViewModels.Demos;
 using BareUI.Gallery.Views;
 
 namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
-/// Demonstrates <see cref="Switch"/> in on and off states, and the <c>Toggled</c> callback.
+/// Demonstrates <see cref="Switch"/> bound two-way to the ViewModel.
 /// </summary>
-public class SwitchDemo : StaticView
+public class SwitchDemo : ContentView<SwitchDemoViewModel>
 {
 	public SwitchDemo()
 	{
 		Title = "Switch";
 
-		Content =
-			new ScrollView
+		Content = new ScrollView
+		{
+			Content = new VStack
 			{
-				Content = new VStack
+				Spacing = 20,
+				Margin = new Thickness(16),
+				Children =
 				{
-					Spacing = 20,
-					Margin = new Thickness(16),
-					Children =
-					{
-						Theme.Caption("Off"),
-						new Switch { IsOn = false },
+					Theme.Caption("Two-way"),
+					new Switch { IsOn = Bind(vm => vm.IsOn, (vm, value) => vm.IsOn = value) },
 
-						Theme.Caption("On"),
-						new Switch { IsOn = true },
+					Theme.Caption("Mirrors the switch"),
+					new Label { Text = Bind(vm => vm.IsOn, on => on ? "On" : "Off"), Bold = true },
 
-						Theme.Caption("With callback"),
-						new Switch
-						{
-							IsOn = false,
-							Toggled = isOn => Console.WriteLine($"SwitchDemo: toggled to {isOn}")
-						}
-					}
+					Theme.Caption("Disabled"),
+					new Switch { IsOn = true, IsEnabled = false }
 				}
-			};
+			}
+		};
 	}
 }

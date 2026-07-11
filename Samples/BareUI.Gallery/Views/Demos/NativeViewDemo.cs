@@ -1,5 +1,6 @@
 using BareUI;
 using BareUI.Gallery.Views;
+using BareUI.Gallery.ViewModels.Demos;
 using UIKit;
 
 namespace BareUI.Gallery.Views.Demos;
@@ -7,7 +8,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="NativeView"/> wrapping native UIKit controls (escape hatch for controls not yet in BareUI).
 /// </summary>
-public class NativeViewDemo : StaticView
+public class NativeViewDemo : ContentView<NativeViewDemoViewModel>
 {
 	public NativeViewDemo()
 	{

@@ -1,8 +1,8 @@
 namespace BareUI.Gallery.Models;
 
 /// <summary>
-/// One control demo: its title and how to create its page.
+/// One control demo: its title and the ViewModel that opens it.
 /// </summary>
 public record DemoEntry(
 	string Title,
-	Func<ContentView> Create);
+	Type ViewModel);

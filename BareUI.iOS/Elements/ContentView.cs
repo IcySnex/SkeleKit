@@ -66,7 +66,7 @@ public abstract partial class ContentView : Panel
 	internal abstract void AttachViewModel(
 		object viewModel);
 
-	internal abstract Type? ViewModelType { get; }
+	internal abstract Type ViewModelType { get; }
 
 	void ApplyTitle() =>
 		ApplyTitleCore();
@@ -95,19 +95,6 @@ public abstract partial class ContentView : Panel
 }
 
 /// <summary>
-/// A page with no ViewModel. Compose <see cref="ContentView.Content"/> in the constructor.
-/// </summary>
-public abstract class StaticView : ContentView
-{
-	internal override Type? ViewModelType =>
-		null;
-
-	internal override void AttachViewModel(
-		object viewModel)
-	{ }
-}
-
-/// <summary>
 /// A page bound to a typed ViewModel: bind with <c>Bind(...)</c>.
 /// </summary>
 public abstract class ContentView<TViewModel> : ContentView
@@ -122,7 +109,7 @@ public abstract class ContentView<TViewModel> : ContentView
 		set => BindingContext = value;
 	}
 
-	internal override Type? ViewModelType =>
+	internal override Type ViewModelType =>
 		typeof(TViewModel);
 
 	internal override void AttachViewModel(

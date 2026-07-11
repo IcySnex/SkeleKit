@@ -12,7 +12,10 @@ public readonly struct Bindable<T>
 
 	internal BindingExpression<T>? Expression { get; }
 
-	Bindable(
+	/// <summary>
+	/// Wraps a literal value. Needed for interface-typed properties: C# forbids an implicit conversion from an interface.
+	/// </summary>
+	public Bindable(
 		T? value)
 	{
 		Value = value;
@@ -34,4 +37,17 @@ public readonly struct Bindable<T>
 	public static implicit operator Bindable<T>(
 		BindingExpression<T> expression) =>
 		new(expression);
+}
+
+/// <summary>
+/// Creates <see cref="Bindable{T}"/> values from literals.
+/// </summary>
+public static class Bindable
+{
+	/// <summary>
+	/// Wraps a literal, for property types C# will not implicitly convert (interfaces).
+	/// </summary>
+	public static Bindable<T> From<T>(
+		T? value) =>
+		new(value);
 }

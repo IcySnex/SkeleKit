@@ -96,19 +96,19 @@ public abstract partial class View
 
 		native.UserInteractionEnabled = IsEnabled;
 
-		if (TapCommand is not null && tapRecognizer is null)
+		if (tapCommand is not null && tapRecognizer is null)
 		{
 			tapRecognizer = new(OnTapped);
 			native.AddGestureRecognizer(tapRecognizer);
 		}
 
 		if (tapRecognizer is not null)
-			tapRecognizer.Enabled = TapCommand is not null && IsEnabled;
+			tapRecognizer.Enabled = tapCommand is not null && IsEnabled;
 	}
 
 	void OnTapped()
 	{
-		if (TapCommand is { } command && command.CanExecute(TapCommandParameter))
+		if (tapCommand is { } command && command.CanExecute(TapCommandParameter))
 			command.Execute(TapCommandParameter);
 	}
 

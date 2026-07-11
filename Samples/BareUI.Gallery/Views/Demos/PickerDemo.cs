@@ -1,59 +1,43 @@
-using BareUI;
+using BareUI.Gallery.ViewModels.Demos;
 using BareUI.Gallery.Views;
 
 namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
-/// Demonstrates <see cref="Picker"/> with sample items, a placeholder, different selections, and the <c>SelectionChanged</c> callback.
+/// Demonstrates <see cref="Picker"/> with a bound selection.
 /// </summary>
-public class PickerDemo : StaticView
+public class PickerDemo : ContentView<PickerDemoViewModel>
 {
+	readonly Picker picker = new()
+	{
+		Placeholder = "Pick a genre",
+		SelectedIndex = Bind(vm => vm.SelectedIndex, (vm, value) => vm.SelectedIndex = value),
+		HorizontalAlignment = HorizontalAlignment.Start
+	};
+
 	public PickerDemo()
 	{
 		Title = "Picker";
 
-		Content =
-			new ScrollView
+		Content = new ScrollView
+		{
+			Content = new VStack
 			{
-				Content = new VStack
+				Spacing = 20,
+				Margin = new Thickness(16),
+				Children =
 				{
-					Spacing = 20,
-					Margin = new Thickness(16),
-					Children =
-					{
-						Theme.Caption("With placeholder"),
-						new Picker
-						{
-							Items = ["Red", "Green", "Blue"],
-							SelectedIndex = -1,
-							Placeholder = "Select a color"
-						},
+					Theme.Caption("Menu-style selection"),
+					picker,
 
-						Theme.Caption("Pre-selected"),
-						new Picker
-						{
-							Items = ["Small", "Medium", "Large"],
-							SelectedIndex = 1
-						},
-
-						Theme.Caption("Fruits"),
-						new Picker
-						{
-							Items = ["Apple", "Banana", "Cherry", "Date"],
-							SelectedIndex = 0,
-							Placeholder = "Choose a fruit"
-						},
-
-						Theme.Caption("With callback"),
-						new Picker
-						{
-							Items = ["Option A", "Option B", "Option C"],
-							SelectedIndex = -1,
-							Placeholder = "Select an option",
-							SelectionChanged = index => Console.WriteLine($"PickerDemo: selected index {index}")
-						}
-					}
+					Theme.Caption("Selection"),
+					new Label { Text = Bind(vm => vm.Selection), Bold = true }
 				}
-			};
+			}
+		};
 	}
+
+	// Items is a plain property: C# forbids implicit conversion from an interface, so it cannot be Bindable
+	protected override void OnViewModelAttached() =>
+		picker.Items = ViewModel!.Options;
 }

@@ -18,10 +18,10 @@ public interface INavigator
 		object viewModel);
 
 	/// <summary>
-	/// Pushes a page directly. For pages with no ViewModel.
+	/// Pushes the page for a ViewModel type resolved from services.
 	/// </summary>
 	Task PushAsync(
-		ContentView page);
+		Type viewModel);
 
 	/// <summary>
 	/// Pops the top page.

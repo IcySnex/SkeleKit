@@ -2,27 +2,49 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BareUI;
 
+sealed record PageRegistration(
+	Func<object, ContentView> Create,
+	bool Singleton)
+{
+	public ContentView? Instance { get; set; }
+}
+
 // ViewModel type -> page factory. Explicit, so no scanning and no reflection.
 sealed class ViewRegistry
 {
-	readonly Dictionary<Type, Func<object, ContentView>> factories = [];
+	readonly Dictionary<Type, PageRegistration> byViewModel = [];
+	readonly Dictionary<Type, Type> viewModelByView = [];
 
-	// a probe instance reports its ViewModel type, so Map needs only the view's type
-	public Type? Map<TView>()
+	// a probe instance reports its ViewModel type, so registration needs only the view's type
+	public void Add<TView>(
+		bool singleton)
 		where TView : ContentView, new()
 	{
 		TView probe = new();
+		Type viewModel = probe.ViewModelType;
 
-		if (probe.ViewModelType is not { } viewModel)
-			return null;
+		byViewModel[viewModel] = new(
+			instance =>
+			{
+				TView view = new();
+				view.AttachViewModel(instance);
 
-		factories[viewModel] = instance =>
-		{
-			TView view = new();
-			view.AttachViewModel(instance);
+				return view;
+			},
+			singleton);
 
-			return view;
-		};
+		viewModelByView[typeof(TView)] = viewModel;
+	}
+
+	/// <summary>
+	/// The ViewModel a registered view renders.
+	/// </summary>
+	public Type ViewModelOf<TView>()
+		where TView : ContentView
+	{
+		if (!viewModelByView.TryGetValue(typeof(TView), out Type? viewModel))
+			throw new InvalidOperationException(
+				$"'{typeof(TView).Name}' is not registered. Add it in UsePages(...).");
 
 		return viewModel;
 	}
@@ -32,11 +54,14 @@ sealed class ViewRegistry
 	{
 		Type type = viewModel.GetType();
 
-		if (!factories.TryGetValue(type, out Func<object, ContentView>? factory))
+		if (!byViewModel.TryGetValue(type, out PageRegistration? registration))
 			throw new InvalidOperationException(
-				$"No page is mapped to '{type.Name}'. Call BareApp.Map<YourView>() during startup.");
+				$"No page is registered for '{type.Name}'. Add its view in UsePages(...).");
 
-		return factory(viewModel);
+		if (!registration.Singleton)
+			return registration.Create(viewModel);
+
+		return registration.Instance ??= registration.Create(viewModel);
 	}
 
 	public object CreateViewModel(

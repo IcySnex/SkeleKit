@@ -1,12 +1,13 @@
 using BareUI;
 using BareUI.Gallery.Views;
+using BareUI.Gallery.ViewModels.Demos;
 
 namespace BareUI.Gallery.Views.Demos;
 
 /// <summary>
 /// Demonstrates <see cref="ActivityIndicator"/> in medium and large sizes, animating and stopped, with and without custom color.
 /// </summary>
-public class ActivityIndicatorDemo : StaticView
+public class ActivityIndicatorDemo : ContentView<ActivityIndicatorDemoViewModel>
 {
 	public ActivityIndicatorDemo()
 	{
