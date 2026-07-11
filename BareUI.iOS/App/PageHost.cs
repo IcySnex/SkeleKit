@@ -31,6 +31,11 @@ sealed class PageHost : UIViewController
 	public ContentView? Page =>
 		page;
 
+	// UIViewController.Title also rewrites the tab bar item, which would clobber the tab's own label
+	public void SetTitle(
+		string? title) =>
+		NavigationItem.Title = title;
+
 	// a scrolling root fills the bounds so UIKit can blur the bars behind it, and insets the content itself
 	UIScrollView? ScrollRoot =>
 		page?.IsRealized is true ? page.Native.Subviews.FirstOrDefault() as UIScrollView : null;
@@ -43,7 +48,7 @@ sealed class PageHost : UIViewController
 			return;
 
 		View!.BackgroundColor = UIColor.SystemBackground;
-		Title = page.Title.Value;
+		SetTitle(page.Title.Value);
 
 		View.AddSubview(page.Realize());
 

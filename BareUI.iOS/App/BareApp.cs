@@ -114,7 +114,9 @@ public sealed class BareApp
 		foreach (TabDefinition tab in definition.Definitions)
 		{
 			UINavigationController stack = BuildStack(tab.ViewModel, definition.UseLargeTitles);
-			stack.TabBarItem = new(tab.Title, UIImage.GetSystemImage(tab.Icon), null);
+
+			// a nav controller takes its tab item from its root page, so the page Title would win
+			stack.ViewControllers![0].TabBarItem = new(tab.Title, UIImage.GetSystemImage(tab.Icon), null);
 
 			stacks.Add(stack);
 		}
