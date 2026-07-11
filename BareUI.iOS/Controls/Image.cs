@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -19,7 +17,6 @@ public class Image : Control
 	/// </summary>
 	public Stretch Stretch { get; set; } = Stretch.Uniform;
 
-#if IOS
 	/// <summary>
 	/// The loader used for URL sources. Replace to add caching.
 	/// </summary>
@@ -108,5 +105,4 @@ public class Image : Control
 			((UIImageView)Native).Image = image;
 		});
 	}
-#endif
 }

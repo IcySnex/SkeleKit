@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -14,7 +12,6 @@ public class Divider : View
 	/// </summary>
 	public Color? Color { get; set; }
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		return new()
@@ -26,5 +23,4 @@ public class Divider : View
 	protected override Size MeasureOverride(
 		Size availableSize) =>
 		new(0, 1.0 / UIScreen.MainScreen.Scale);
-#endif
 }

@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -19,7 +17,6 @@ public class Switch : Control
 	/// </summary>
 	public Action<bool>? Toggled { get; set; }
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UISwitch @switch = new()
@@ -35,5 +32,4 @@ public class Switch : Control
 
 		return @switch;
 	}
-#endif
 }

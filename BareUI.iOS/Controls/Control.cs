@@ -1,6 +1,4 @@
-#if IOS
 using CoreGraphics;
-#endif
 
 namespace BareUI;
 
@@ -9,7 +7,6 @@ namespace BareUI;
 /// </summary>
 public abstract class Control : View
 {
-#if IOS
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
@@ -26,5 +23,4 @@ public abstract class Control : View
 
 		return new(width, height);
 	}
-#endif
 }

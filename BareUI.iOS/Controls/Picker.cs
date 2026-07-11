@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -29,7 +27,6 @@ public class Picker : Control
 	/// </summary>
 	public Action<int>? SelectionChanged { get; set; }
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UIButton button = new(UIButtonType.System)
@@ -64,5 +61,4 @@ public class Picker : Control
 
 		return button;
 	}
-#endif
 }

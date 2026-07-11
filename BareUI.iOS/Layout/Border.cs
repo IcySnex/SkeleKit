@@ -4,7 +4,7 @@ namespace BareUI;
 /// <summary>
 /// Wraps a single child with padding and an optional stroke; also the generic padding container.
 /// </summary>
-public class Border : Panel
+public partial class Border : Panel
 {
 	/// <summary>
 	/// Empty space between the border edge and the child.
@@ -65,16 +65,4 @@ public class Border : Panel
 		return finalSize;
 	}
 
-#if IOS
-	private protected override void OnRealized()
-	{
-		base.OnRealized();
-
-		if (Stroke is { } stroke && StrokeThickness > 0)
-		{
-			Native.Layer.BorderWidth = (nfloat)StrokeThickness;
-			Native.Layer.BorderColor = stroke.ToUIColor().CGColor;
-		}
-	}
-#endif
 }

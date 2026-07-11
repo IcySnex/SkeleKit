@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -39,7 +37,6 @@ public class Label : Control
 	/// </summary>
 	public TextAlignment TextAlignment { get; set; } = TextAlignment.Leading;
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UILabel label = new()
@@ -63,5 +60,4 @@ public class Label : Control
 
 		return label;
 	}
-#endif
 }

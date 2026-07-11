@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -19,7 +17,6 @@ public class ProgressBar : Control
 	/// </summary>
 	public Color? Tint { get; set; }
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UIProgressView progress = new(UIProgressViewStyle.Default)
@@ -32,5 +29,4 @@ public class ProgressBar : Control
 
 		return progress;
 	}
-#endif
 }

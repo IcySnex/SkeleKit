@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -9,7 +7,6 @@ namespace BareUI;
 /// </summary>
 public class SecureField : TextField
 {
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UITextField field = (UITextField)base.CreateNative();
@@ -17,5 +14,4 @@ public class SecureField : TextField
 
 		return field;
 	}
-#endif
 }

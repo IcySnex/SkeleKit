@@ -1,4 +1,3 @@
-#if IOS
 using CoreGraphics;
 using ObjCRuntime;
 using UIKit;
@@ -41,4 +40,3 @@ sealed class LayoutHost : UIView
 		element?.HostLayout(new(Bounds.Width, Bounds.Height));
 	}
 }
-#endif

@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -29,7 +27,6 @@ public class Slider : Control
 	/// </summary>
 	public Action<double>? ValueChanged { get; set; }
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UISlider slider = new()
@@ -47,5 +44,4 @@ public class Slider : Control
 
 		return slider;
 	}
-#endif
 }

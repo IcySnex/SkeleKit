@@ -12,4 +12,12 @@
     <PropertyGroup Condition=" '$(TargetFramework)' == 'net10.0-ios' ">
         <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
     </PropertyGroup>
+
+    <!-- net10.0 is a test shim, not a platform: it exists so BareUI.Tests can run the layout
+         engine without a simulator. UIKit-touching code is compiled out of it by file, not by #if. -->
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
+        <Compile Remove="Controls/**" />
+        <Compile Remove="**/*.iOS.cs" />
+        <Compile Remove="Elements/LayoutHost.cs" />
+    </ItemGroup>
 </Project>

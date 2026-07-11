@@ -1,4 +1,3 @@
-#if IOS
 using Foundation;
 using UIKit;
 
@@ -40,4 +39,3 @@ sealed class HttpImageLoader : IImageLoader
 		}
 	}
 }
-#endif

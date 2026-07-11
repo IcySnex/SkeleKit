@@ -1,7 +1,5 @@
 using System.Windows.Input;
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -40,7 +38,6 @@ public class Button : Control
 	/// </summary>
 	public Action? Clicked { get; set; }
 
-#if IOS
 	EventHandler? canExecuteHandler;
 
 	private protected override UIView CreateNative()
@@ -111,5 +108,4 @@ public class Button : Control
 			((UIButton)Native).Enabled = enabled;
 		});
 	}
-#endif
 }

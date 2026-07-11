@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -34,7 +32,6 @@ public class Stepper : Control
 	/// </summary>
 	public Action<double>? ValueChanged { get; set; }
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UIStepper stepper = new()
@@ -53,5 +50,4 @@ public class Stepper : Control
 
 		return stepper;
 	}
-#endif
 }

@@ -1,7 +1,5 @@
-#if IOS
 using CoreGraphics;
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -25,7 +23,6 @@ public class TextEditor : Control
 	/// </summary>
 	public Action<string>? TextChanged { get; set; }
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UITextView view = new()
@@ -62,5 +59,4 @@ public class TextEditor : Control
 
 		return new(fit.Width, resultHeight);
 	}
-#endif
 }

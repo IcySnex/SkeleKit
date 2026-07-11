@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -44,7 +42,6 @@ public class TextField : Control
 	/// </summary>
 	public Action? OnSubmit { get; set; }
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UITextField field = new()
@@ -88,5 +85,4 @@ public class TextField : Control
 
 		return field;
 	}
-#endif
 }

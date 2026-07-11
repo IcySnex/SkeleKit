@@ -1,4 +1,3 @@
-#if IOS
 using UIKit;
 
 namespace BareUI;
@@ -26,4 +25,3 @@ public class NativeView : Control
 	private protected override bool OwnsNative =>
 		false;
 }
-#endif

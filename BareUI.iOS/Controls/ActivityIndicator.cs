@@ -1,6 +1,4 @@
-#if IOS
 using UIKit;
-#endif
 
 namespace BareUI;
 
@@ -24,7 +22,6 @@ public class ActivityIndicator : Control
 	/// </summary>
 	public Color? Color { get; set; }
 
-#if IOS
 	private protected override UIView CreateNative()
 	{
 		UIActivityIndicatorView indicator = new(
@@ -41,5 +38,4 @@ public class ActivityIndicator : Control
 
 		return indicator;
 	}
-#endif
 }
