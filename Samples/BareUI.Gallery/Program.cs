@@ -14,11 +14,8 @@ BareApp.Create()
 		services.AddTransient<MovieInfoViewModel>();
 		services.AddTransient<BindingViewModel>();
 	})
-	.Map<MenuViewModel, MenuView>()
-	.Map<DemoViewModel, DemoView>()
-	.Map<MovieInfoViewModel, MovieInfoView>()
-	.Map<BindingViewModel, BindingView>()
+	.Map<MovieInfoView>()
 	.Tabs(tabs => tabs
-		.Tab<MenuViewModel>("Controls", icon: "square.grid.2x2")
-		.Tab<BindingViewModel>("Bindings", icon: "link"))
+		.Tab<MenuView>("Controls", icon: "square.grid.2x2")
+		.Tab<BindingView>("Bindings", icon: "link"))
 	.Run(args);

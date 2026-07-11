@@ -12,7 +12,18 @@ sealed class Navigator(
 
 	public Task PushAsync<TViewModel>()
 		where TViewModel : class =>
-		PushAsync(registry.CreateViewModel<TViewModel>(services));
+		PushAsync(registry.CreateViewModel(typeof(TViewModel), services));
+
+	public Task PushAsync(
+		ContentView page)
+	{
+		if (currentStack() is not { } stack)
+			throw new InvalidOperationException("There is no navigation stack to push onto.");
+
+		stack.PushViewController(Track(page), true);
+
+		return Task.CompletedTask;
+	}
 
 	public Task PushAsync(
 		object viewModel)
@@ -45,7 +56,7 @@ sealed class Navigator(
 	public Task PresentAsync<TViewModel>(
 		ModalStyle style)
 		where TViewModel : class =>
-		PresentAsync(registry.CreateViewModel<TViewModel>(services), style);
+		PresentAsync(registry.CreateViewModel(typeof(TViewModel), services), style);
 
 	public Task PresentAsync(
 		object viewModel,

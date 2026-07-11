@@ -3,21 +3,26 @@ namespace BareUI;
 /// <summary>
 /// Declares the app's tabs. Each tab hosts its own navigation stack.
 /// </summary>
-public sealed class TabsBuilder
+public sealed class TabsBuilder(
+	BareApp app)
 {
 	internal List<TabDefinition> Definitions { get; } = [];
 
 	internal bool UseLargeTitles { get; private set; }
 
 	/// <summary>
-	/// Adds a tab rooted at the page mapped to <typeparamref name="TViewModel"/>.
+	/// Adds a tab rooted at <typeparamref name="TView"/>. Mapping it is implied.
 	/// </summary>
-	public TabsBuilder Tab<TViewModel>(
+	public TabsBuilder Tab<TView>(
 		string title,
 		string icon)
-		where TViewModel : class
+		where TView : ContentView, new()
 	{
-		Definitions.Add(new(typeof(TViewModel), title, icon));
+		if (app.Register<TView>() is not { } viewModel)
+			throw new InvalidOperationException(
+				$"'{typeof(TView).Name}' is a tab root, so it needs a ViewModel: derive it from ContentView<TViewModel>.");
+
+		Definitions.Add(new(viewModel, title, icon));
 
 		return this;
 	}

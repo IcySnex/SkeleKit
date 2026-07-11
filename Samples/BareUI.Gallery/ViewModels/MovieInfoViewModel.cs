@@ -29,10 +29,10 @@ public partial class MovieInfoViewModel(
 		Movie is { } movie ? string.Join(" · ", movie.Genres) : "";
 
 	public ImageSource? Poster =>
-		Movie is { } movie ? ImageSource.Url(movie.PosterUrl) : null;
+		Movie is { } movie ? ImageSource.Url(movie.PosterUrl) : (ImageSource?)null;
 
 	public ImageSource? Backdrop =>
-		Movie is { } movie ? ImageSource.Url(movie.BackdropUrl) : null;
+		Movie is { } movie ? ImageSource.Url(movie.BackdropUrl) : (ImageSource?)null;
 
 	public async Task LoadAsync()
 	{

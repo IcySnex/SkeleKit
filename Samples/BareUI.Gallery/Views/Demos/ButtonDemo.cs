@@ -8,48 +8,53 @@ namespace BareUI.Gallery.Views.Demos;
 /// <c>Clicked</c> callback (logged to the console — properties are create-only pre-M3, so there's
 /// no live label to update here).
 /// </summary>
-public static class ButtonDemo
+public class ButtonDemo : StaticView
 {
-	public static View Build() =>
-		new ScrollView
-		{
-			Content = new VStack
+	public ButtonDemo()
+	{
+		Title = "Button";
+
+		Content =
+			new ScrollView
 			{
-				Spacing = 20,
-				Margin = new Thickness(16),
-				Children =
+				Content = new VStack
 				{
-					new Label { Text = "Styles", FontSize = 20, Bold = true },
-
-					Theme.Caption("Plain"),
-					new Button { Text = "Plain", Style = ButtonStyle.Plain },
-
-					Theme.Caption("Gray"),
-					new Button { Text = "Gray", Style = ButtonStyle.Gray },
-
-					Theme.Caption("Tinted"),
-					new Button { Text = "Tinted", Style = ButtonStyle.Tinted },
-
-					Theme.Caption("Filled"),
-					new Button { Text = "Filled", Style = ButtonStyle.Filled },
-
-					Theme.Caption("FilledCapsule"),
-					new Button { Text = "Filled Capsule", Style = ButtonStyle.FilledCapsule },
-
-					new Label { Text = "Icon only", FontSize = 20, Bold = true },
-					new Button { Icon = "play.fill", Style = ButtonStyle.Filled },
-
-					new Label { Text = "Text + icon", FontSize = 20, Bold = true },
-					new Button { Text = "Play", Icon = "play.fill", Style = ButtonStyle.Tinted },
-
-					new Label { Text = "Clicked", FontSize = 20, Bold = true },
-					new Button
+					Spacing = 20,
+					Margin = new Thickness(16),
+					Children =
 					{
-						Text = "Tap me (check console)",
-						Style = ButtonStyle.Filled,
-						Clicked = () => Console.WriteLine("ButtonDemo: tapped")
+						new Label { Text = "Styles", FontSize = 20, Bold = true },
+
+						Theme.Caption("Plain"),
+						new Button { Text = "Plain", Style = ButtonStyle.Plain },
+
+						Theme.Caption("Gray"),
+						new Button { Text = "Gray", Style = ButtonStyle.Gray },
+
+						Theme.Caption("Tinted"),
+						new Button { Text = "Tinted", Style = ButtonStyle.Tinted },
+
+						Theme.Caption("Filled"),
+						new Button { Text = "Filled", Style = ButtonStyle.Filled },
+
+						Theme.Caption("FilledCapsule"),
+						new Button { Text = "Filled Capsule", Style = ButtonStyle.FilledCapsule },
+
+						new Label { Text = "Icon only", FontSize = 20, Bold = true },
+						new Button { Icon = "play.fill", Style = ButtonStyle.Filled },
+
+						new Label { Text = "Text + icon", FontSize = 20, Bold = true },
+						new Button { Text = "Play", Icon = "play.fill", Style = ButtonStyle.Tinted },
+
+						new Label { Text = "Clicked", FontSize = 20, Bold = true },
+						new Button
+						{
+							Text = "Tap me (check console)",
+							Style = ButtonStyle.Filled,
+							Clicked = () => Console.WriteLine("ButtonDemo: tapped")
+						}
 					}
 				}
-			}
-		};
+			};
+	}
 }

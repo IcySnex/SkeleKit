@@ -10,11 +10,11 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
 	protected override void OnAppearing() =>
 		_ = ViewModel!.LoadAsync();
 
-	protected override View Build()
+	public MovieInfoView()
 	{
 		Title = "MovieInfo";
 
-		return new ScrollView
+		Content = new ScrollView
 		{
 			Content = new VStack
 			{

@@ -7,17 +7,17 @@ public sealed class DemoCatalog : IDemoCatalog
 {
 	public IReadOnlyList<DemoEntry> Demos { get; } =
 	[
-		new("Button", ButtonDemo.Build),
-		new("TextField", TextFieldDemo.Build),
-		new("TextEditor", TextEditorDemo.Build),
-		new("Switch", SwitchDemo.Build),
-		new("Slider", SliderDemo.Build),
-		new("Stepper", StepperDemo.Build),
-		new("ProgressBar", ProgressBarDemo.Build),
-		new("ActivityIndicator", ActivityIndicatorDemo.Build),
-		new("Divider", DividerDemo.Build),
-		new("Picker", PickerDemo.Build),
-		new("Image", ImageDemo.Build),
-		new("NativeView", NativeViewDemo.Build)
+		new("Button", () => new ButtonDemo()),
+		new("TextField", () => new TextFieldDemo()),
+		new("TextEditor", () => new TextEditorDemo()),
+		new("Switch", () => new SwitchDemo()),
+		new("Slider", () => new SliderDemo()),
+		new("Stepper", () => new StepperDemo()),
+		new("ProgressBar", () => new ProgressBarDemo()),
+		new("ActivityIndicator", () => new ActivityIndicatorDemo()),
+		new("Divider", () => new DividerDemo()),
+		new("Picker", () => new PickerDemo()),
+		new("Image", () => new ImageDemo()),
+		new("NativeView", () => new NativeViewDemo())
 	];
 }

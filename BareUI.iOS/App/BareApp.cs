@@ -4,6 +4,14 @@ using UIKit;
 
 namespace BareUI;
 
+enum ShellKind
+{
+	None,
+	SinglePage,
+	Stack,
+	Tabs
+}
+
 /// <summary>
 /// The app entry point: registers services, maps ViewModels to pages, builds the shell, and runs.
 /// </summary>
@@ -12,6 +20,7 @@ public sealed class BareApp
 	readonly ServiceCollection services = [];
 	readonly ViewRegistry registry = new();
 
+	ShellKind shell = ShellKind.None;
 	TabsBuilder? tabs;
 	Type? rootViewModel;
 
@@ -41,36 +50,40 @@ public sealed class BareApp
 	}
 
 	/// <summary>
-	/// Maps a ViewModel to the page that renders it.
+	/// Maps a page so a ViewModel can navigate to it. Shell roots (tabs, stack, single page) map themselves.
 	/// </summary>
-	public BareApp Map<TViewModel, TView>()
-		where TViewModel : class
-		where TView : ContentView<TViewModel>, new()
+	public BareApp Map<TView>()
+		where TView : ContentView, new()
 	{
-		registry.Map<TViewModel, TView>();
+		Register<TView>();
 
 		return this;
 	}
 
 	/// <summary>
-	/// Builds a tab bar shell.
+	/// A single page with no navigation bar.
+	/// </summary>
+	public BareApp SinglePage<TView>()
+		where TView : ContentView, new() =>
+		Root<TView>(ShellKind.SinglePage);
+
+	/// <summary>
+	/// One navigation stack rooted at <typeparamref name="TView"/>.
+	/// </summary>
+	public BareApp Stack<TView>()
+		where TView : ContentView, new() =>
+		Root<TView>(ShellKind.Stack);
+
+	/// <summary>
+	/// A tab bar; each tab gets its own navigation stack.
 	/// </summary>
 	public BareApp Tabs(
 		Action<TabsBuilder> configure)
 	{
-		tabs = new();
+		tabs = new(this);
 		configure(tabs);
 
-		return this;
-	}
-
-	/// <summary>
-	/// Uses a single navigation stack rooted at <typeparamref name="TViewModel"/>.
-	/// </summary>
-	public BareApp Root<TViewModel>()
-		where TViewModel : class
-	{
-		rootViewModel = typeof(TViewModel);
+		shell = ShellKind.Tabs;
 
 		return this;
 	}
@@ -87,23 +100,46 @@ public sealed class BareApp
 	}
 
 
+	internal Type? Register<TView>()
+		where TView : ContentView, new() =>
+		registry.Map<TView>();
+
 	internal IServiceProvider Services =>
 		provider ??= services.BuildServiceProvider();
 
 	internal Navigator Navigator =>
 		navigator ??= new(registry, Services, CurrentStack);
 
-	// the shell is rooted by the window; navigator + hosts are rooted by this static app
-	internal UIViewController BuildShell()
+	BareApp Root<TView>(
+		ShellKind kind)
+		where TView : ContentView, new()
 	{
-		if (tabs is { } definition)
-			return BuildTabs(definition);
+		rootViewModel = Register<TView>();
+		shell = kind;
 
+		// a page with no ViewModel still needs to be creatable
 		if (rootViewModel is null)
-			throw new InvalidOperationException("Call Tabs(...) or Root<TViewModel>() before Run().");
+			rootPage = () => new TView();
 
-		return BuildStack(rootViewModel);
+		return this;
 	}
+
+	Func<ContentView>? rootPage;
+
+	// the shell is rooted by the window; navigator + hosts are rooted by this static app
+	internal UIViewController BuildShell() =>
+		shell switch
+		{
+			ShellKind.Tabs => BuildTabs(tabs!),
+			ShellKind.Stack => BuildStack(RootPage(), largeTitles: false),
+			ShellKind.SinglePage => new PageHost(RootPage()),
+			_ => throw new InvalidOperationException("Call Tabs(...), Stack<TView>() or SinglePage<TView>() before Run().")
+		};
+
+	ContentView RootPage() =>
+		rootViewModel is { } viewModel
+			? registry.CreatePage(registry.CreateViewModel(viewModel, Services))
+			: rootPage!();
 
 	UIViewController BuildTabs(
 		TabsBuilder definition)
@@ -113,7 +149,8 @@ public sealed class BareApp
 		List<UIViewController> stacks = [];
 		foreach (TabDefinition tab in definition.Definitions)
 		{
-			UINavigationController stack = BuildStack(tab.ViewModel, definition.UseLargeTitles);
+			ContentView page = registry.CreatePage(registry.CreateViewModel(tab.ViewModel, Services));
+			UINavigationController stack = BuildStack(page, definition.UseLargeTitles);
 
 			// a nav controller takes its tab item from its root page, so the page Title would win
 			stack.ViewControllers![0].TabBarItem = new(tab.Title, UIImage.GetSystemImage(tab.Icon), null);
@@ -126,13 +163,11 @@ public sealed class BareApp
 		return controller;
 	}
 
-	UINavigationController BuildStack(
-		Type viewModel,
-		bool largeTitles = false)
+	static UINavigationController BuildStack(
+		ContentView page,
+		bool largeTitles)
 	{
-		object instance = Services.GetRequiredService(viewModel);
-
-		UINavigationController stack = new(new PageHost(registry.CreatePage(instance)));
+		UINavigationController stack = new(new PageHost(page));
 		stack.NavigationBar.PrefersLargeTitles = largeTitles;
 
 		return stack;

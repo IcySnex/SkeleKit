@@ -7,26 +7,31 @@ namespace BareUI.Gallery.Views.Demos;
 /// Demonstrates <see cref="TextField"/> with a placeholder, the email keyboard, and
 /// <see cref="SecureField"/>.
 /// </summary>
-public static class TextFieldDemo
+public class TextFieldDemo : StaticView
 {
-	public static View Build() =>
-		new ScrollView
-		{
-			Content = new VStack
+	public TextFieldDemo()
+	{
+		Title = "TextField";
+
+		Content =
+			new ScrollView
 			{
-				Spacing = 20,
-				Margin = new Thickness(16),
-				Children =
+				Content = new VStack
 				{
-					Theme.Caption("Placeholder"),
-					new TextField { Placeholder = "Enter some text" },
+					Spacing = 20,
+					Margin = new Thickness(16),
+					Children =
+					{
+						Theme.Caption("Placeholder"),
+						new TextField { Placeholder = "Enter some text" },
 
-					Theme.Caption("Email keyboard"),
-					new TextField { Placeholder = "you@example.com", Keyboard = KeyboardType.Email },
+						Theme.Caption("Email keyboard"),
+						new TextField { Placeholder = "you@example.com", Keyboard = KeyboardType.Email },
 
-					Theme.Caption("Secure entry"),
-					new SecureField { Placeholder = "Password" }
+						Theme.Caption("Secure entry"),
+						new SecureField { Placeholder = "Password" }
+					}
 				}
-			}
-		};
+			};
+	}
 }

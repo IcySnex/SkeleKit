@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 namespace BareUI;
 
 /// <summary>
-/// A full screen: builds an element tree in <see cref="Build"/> and carries the page chrome.
+/// A full screen: compose its tree into <see cref="Content"/> in the constructor.
 /// </summary>
 public abstract partial class ContentView : Panel
 {
@@ -24,7 +24,28 @@ public abstract partial class ContentView : Panel
 	public SafeAreaEdges SafeAreaEdges { get; set; } = SafeAreaEdges.All;
 
 	/// <summary>
-	/// Raised after the tree is built and the page is on screen.
+	/// The page's element tree.
+	/// </summary>
+	public View? Content
+	{
+		get => Children.Count > 0 ? Children[0] : null;
+		set
+		{
+			Children.Clear();
+
+			if (value is not null)
+				Children.Add(value);
+		}
+	}
+
+	/// <summary>
+	/// Raised once the ViewModel is attached, after construction.
+	/// </summary>
+	protected virtual void OnViewModelAttached()
+	{ }
+
+	/// <summary>
+	/// Raised after the page appears on screen.
 	/// </summary>
 	protected virtual void OnAppearing()
 	{ }
@@ -35,28 +56,17 @@ public abstract partial class ContentView : Panel
 	protected virtual void OnDisappearing()
 	{ }
 
-	/// <summary>
-	/// The element tree. Called once, the first time the page is measured or realized.
-	/// </summary>
-	protected abstract View Build();
-
-	// the host controller drives these
+	// the host controller and the registry drive these
 	internal void NotifyAppearing() =>
 		OnAppearing();
 
 	internal void NotifyDisappearing() =>
 		OnDisappearing();
 
-	internal View? Content
-	{
-		get
-		{
-			if (Children.Count == 0)
-				Children.Add(Build());
+	internal abstract void AttachViewModel(
+		object viewModel);
 
-			return Children[0];
-		}
-	}
+	internal abstract Type? ViewModelType { get; }
 
 	void ApplyTitle() =>
 		ApplyTitleCore();
@@ -85,7 +95,20 @@ public abstract partial class ContentView : Panel
 }
 
 /// <summary>
-/// A <see cref="ContentView"/> bound to a typed ViewModel: bind with <c>Bind(...)</c>.
+/// A page with no ViewModel. Compose <see cref="ContentView.Content"/> in the constructor.
+/// </summary>
+public abstract class StaticView : ContentView
+{
+	internal override Type? ViewModelType =>
+		null;
+
+	internal override void AttachViewModel(
+		object viewModel)
+	{ }
+}
+
+/// <summary>
+/// A page bound to a typed ViewModel: bind with <c>Bind(...)</c>.
 /// </summary>
 public abstract class ContentView<TViewModel> : ContentView
 	where TViewModel : class
@@ -99,10 +122,22 @@ public abstract class ContentView<TViewModel> : ContentView
 		set => BindingContext = value;
 	}
 
+	internal override Type? ViewModelType =>
+		typeof(TViewModel);
+
+	internal override void AttachViewModel(
+		object viewModel)
+	{
+		ViewModel = (TViewModel)viewModel;
+
+		OnViewModelAttached();
+	}
+
+
 	/// <summary>
 	/// Binds one way to a ViewModel property.
 	/// </summary>
-	protected static BindingExpression<T> Bind<T>(
+	protected static BindingExpression<T?> Bind<T>(
 		Func<TViewModel, T> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
 		BindingFactory.Bind(getter, path);
@@ -110,7 +145,7 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds two ways; <paramref name="setter"/> writes the control's value back.
 	/// </summary>
-	protected static BindingExpression<T> Bind<T>(
+	protected static BindingExpression<T?> Bind<T>(
 		Func<TViewModel, T> getter,
 		Action<TViewModel, T?> setter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
@@ -119,7 +154,7 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds one way through a converter.
 	/// </summary>
-	protected static BindingExpression<T> Bind<TValue, T>(
+	protected static BindingExpression<T?> Bind<TValue, T>(
 		Func<TViewModel, TValue> getter,
 		Func<TValue, T> format,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>

@@ -49,7 +49,7 @@ public static class BindingFactory
 	/// <summary>
 	/// A one-way binding reading <paramref name="getter"/> from the source.
 	/// </summary>
-	public static BindingExpression<T> Bind<TSource, T>(
+	public static BindingExpression<T?> Bind<TSource, T>(
 		Func<TSource, T> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null)
 		where TSource : class =>
@@ -62,7 +62,7 @@ public static class BindingFactory
 	/// <summary>
 	/// A two-way binding: <paramref name="setter"/> writes the control's value back to the source.
 	/// </summary>
-	public static BindingExpression<T> Bind<TSource, T>(
+	public static BindingExpression<T?> Bind<TSource, T>(
 		Func<TSource, T> getter,
 		Action<TSource, T?> setter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null)
@@ -76,7 +76,7 @@ public static class BindingFactory
 	/// <summary>
 	/// A one-way binding that converts the source value with <paramref name="format"/>.
 	/// </summary>
-	public static BindingExpression<T> Bind<TSource, TValue, T>(
+	public static BindingExpression<T?> Bind<TSource, TValue, T>(
 		Func<TSource, TValue> getter,
 		Func<TValue, T> format,
 		[CallerArgumentExpression(nameof(getter))] string? path = null)
@@ -90,7 +90,7 @@ public static class BindingFactory
 	/// <summary>
 	/// A two-way binding that converts both ways: <paramref name="format"/> out, <paramref name="parse"/> back in.
 	/// </summary>
-	public static BindingExpression<T> Bind<TSource, TValue, T>(
+	public static BindingExpression<T?> Bind<TSource, TValue, T>(
 		Func<TSource, TValue> getter,
 		Action<TSource, TValue> setter,
 		Func<TValue, T> format,
@@ -106,7 +106,7 @@ public static class BindingFactory
 	/// <summary>
 	/// A nested one-way binding. Each segment is subscribed on its own, so replacing an intermediate re-resolves the rest.
 	/// </summary>
-	public static BindingExpression<T> BindPath<TSource, TMiddle, T>(
+	public static BindingExpression<T?> BindPath<TSource, TMiddle, T>(
 		Func<TSource, TMiddle?> first,
 		Func<TMiddle, T> second,
 		[CallerArgumentExpression(nameof(first))] string? firstPath = null,
@@ -125,7 +125,7 @@ public static class BindingFactory
 	/// <summary>
 	/// A nested two-way binding; <paramref name="setter"/> runs against the resolved intermediate.
 	/// </summary>
-	public static BindingExpression<T> BindPath<TSource, TMiddle, T>(
+	public static BindingExpression<T?> BindPath<TSource, TMiddle, T>(
 		Func<TSource, TMiddle?> first,
 		Func<TMiddle, T> second,
 		Action<TMiddle, T?> setter,

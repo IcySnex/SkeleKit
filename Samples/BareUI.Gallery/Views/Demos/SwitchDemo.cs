@@ -6,30 +6,35 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="Switch"/> in on and off states, and the <c>Toggled</c> callback.
 /// </summary>
-public static class SwitchDemo
+public class SwitchDemo : StaticView
 {
-	public static View Build() =>
-		new ScrollView
-		{
-			Content = new VStack
+	public SwitchDemo()
+	{
+		Title = "Switch";
+
+		Content =
+			new ScrollView
 			{
-				Spacing = 20,
-				Margin = new Thickness(16),
-				Children =
+				Content = new VStack
 				{
-					Theme.Caption("Off"),
-					new Switch { IsOn = false },
-
-					Theme.Caption("On"),
-					new Switch { IsOn = true },
-
-					Theme.Caption("With callback"),
-					new Switch
+					Spacing = 20,
+					Margin = new Thickness(16),
+					Children =
 					{
-						IsOn = false,
-						Toggled = isOn => Console.WriteLine($"SwitchDemo: toggled to {isOn}")
+						Theme.Caption("Off"),
+						new Switch { IsOn = false },
+
+						Theme.Caption("On"),
+						new Switch { IsOn = true },
+
+						Theme.Caption("With callback"),
+						new Switch
+						{
+							IsOn = false,
+							Toggled = isOn => Console.WriteLine($"SwitchDemo: toggled to {isOn}")
+						}
 					}
 				}
-			}
-		};
+			};
+	}
 }

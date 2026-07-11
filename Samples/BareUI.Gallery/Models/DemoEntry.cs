@@ -1,8 +1,8 @@
 namespace BareUI.Gallery.Models;
 
 /// <summary>
-/// One control demo: its title and the tree that shows it off.
+/// One control demo: its title and how to create its page.
 /// </summary>
 public record DemoEntry(
 	string Title,
-	Func<View> Build);
+	Func<ContentView> Create);

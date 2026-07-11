@@ -7,28 +7,33 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="NativeView"/> wrapping native UIKit controls (escape hatch for controls not yet in BareUI).
 /// </summary>
-public static class NativeViewDemo
+public class NativeViewDemo : StaticView
 {
-	public static View Build() =>
-		new ScrollView
-		{
-			Content = new VStack
+	public NativeViewDemo()
+	{
+		Title = "NativeView";
+
+		Content =
+			new ScrollView
 			{
-				Spacing = 20,
-				Margin = new Thickness(16),
-				Children =
+				Content = new VStack
 				{
-					Theme.Caption("UISegmentedControl"),
-					new NativeView(CreateSegmentedControl()),
+					Spacing = 20,
+					Margin = new Thickness(16),
+					Children =
+					{
+						Theme.Caption("UISegmentedControl"),
+						new NativeView(CreateSegmentedControl()),
 
-					Theme.Caption("UIDatePicker"),
-					new NativeView(CreateDatePicker()),
+						Theme.Caption("UIDatePicker"),
+						new NativeView(CreateDatePicker()),
 
-					Theme.Caption("UISlider (native)"),
-					new NativeView(CreateNativeSlider())
+						Theme.Caption("UISlider (native)"),
+						new NativeView(CreateNativeSlider())
+					}
 				}
-			}
-		};
+			};
+	}
 
 	static UIView CreateSegmentedControl()
 	{

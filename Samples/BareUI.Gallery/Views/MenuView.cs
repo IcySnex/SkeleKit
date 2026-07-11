@@ -5,24 +5,30 @@ namespace BareUI.Gallery.Views;
 
 public class MenuView : ContentView<MenuViewModel>
 {
-	protected override View Build()
+	readonly VStack list = new()
+	{
+		Spacing = 12,
+		Margin = new Thickness(16)
+	};
+
+	public MenuView()
 	{
 		Title = "BareUI Gallery";
 
-		VStack list = new()
+		Content = new ScrollView { Content = list };
+	}
+
+	// the demo list comes from the ViewModel, which arrives after construction
+	protected override void OnViewModelAttached()
+	{
+		list.Children.Clear();
+
+		list.Children.Add(new Button
 		{
-			Spacing = 12,
-			Margin = new Thickness(16),
-			Children =
-			{
-				new Button
-				{
-					Text = "MovieInfo",
-					Style = ButtonStyle.Filled,
-					Command = ViewModel!.OpenMovieCommand
-				}
-			}
-		};
+			Text = "MovieInfo",
+			Style = ButtonStyle.Filled,
+			Command = ViewModel!.OpenMovieCommand
+		});
 
 		foreach (DemoEntry demo in ViewModel.Demos)
 			list.Children.Add(new Button
@@ -32,7 +38,5 @@ public class MenuView : ContentView<MenuViewModel>
 				Command = ViewModel.OpenDemoCommand,
 				CommandParameter = demo
 			});
-
-		return new ScrollView { Content = list };
 	}
 }

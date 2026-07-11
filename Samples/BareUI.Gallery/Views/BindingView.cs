@@ -7,11 +7,17 @@ namespace BareUI.Gallery.Views;
 /// </summary>
 public class BindingView : ContentView<BindingViewModel>
 {
-	protected override View Build()
+	readonly Button clear = new()
+	{
+		Text = "Clear name",
+		Style = ButtonStyle.Filled
+	};
+
+	public BindingView()
 	{
 		Title = "Bindings";
 
-		return new ScrollView
+		Content = new ScrollView
 		{
 			Content = new VStack
 			{
@@ -46,14 +52,13 @@ public class BindingView : ContentView<BindingViewModel>
 					new Label { Text = Bind(vm => vm.Volume, volume => $"Volume {volume:F0}") },
 
 					Theme.Caption("Command: disabled while the name is empty"),
-					new Button
-					{
-						Text = "Clear name",
-						Style = ButtonStyle.Filled,
-						Command = ViewModel!.ClearNameCommand
-					}
+					clear
 				}
 			}
 		};
 	}
+
+	// commands need the ViewModel instance, which arrives after construction
+	protected override void OnViewModelAttached() =>
+		clear.Command = ViewModel!.ClearNameCommand;
 }
