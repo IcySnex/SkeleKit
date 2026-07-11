@@ -9,6 +9,17 @@ public partial class ScrollView
 	private protected override UIView CreateNative() =>
 		new ScrollHost(this);
 
+	private protected override void ApplyProperties() =>
+		ApplyKeyboardDismiss();
+
+	partial void ApplyKeyboardDismissCore() =>
+		((UIScrollView)Native).KeyboardDismissMode = keyboardDismiss switch
+		{
+			KeyboardDismiss.OnDrag => UIScrollViewKeyboardDismissMode.OnDrag,
+			KeyboardDismiss.Interactive => UIScrollViewKeyboardDismissMode.Interactive,
+			_ => UIScrollViewKeyboardDismissMode.None
+		};
+
 	// lay out content, report scrollable size
 	internal void LayoutContent(
 		Size viewport)

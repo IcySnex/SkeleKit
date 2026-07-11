@@ -11,6 +11,21 @@ public partial class ScrollView : Panel
 	public Orientation Orientation { get; set; } = Orientation.Vertical;
 
 	/// <summary>
+	/// How dragging the scroll view dismisses the keyboard.
+	/// </summary>
+	public KeyboardDismiss KeyboardDismiss
+	{
+		get => keyboardDismiss;
+		set => Set(ref keyboardDismiss, value, ApplyKeyboardDismiss, affectsMeasure: false);
+	}
+	KeyboardDismiss keyboardDismiss = KeyboardDismiss.Interactive;
+
+	void ApplyKeyboardDismiss() =>
+		ApplyKeyboardDismissCore();
+
+	partial void ApplyKeyboardDismissCore();
+
+	/// <summary>
 	/// The single scrollable child.
 	/// </summary>
 	public View? Content

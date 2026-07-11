@@ -5,13 +5,15 @@ using UIKit;
 namespace BareUI.Gallery;
 
 /// <summary>
-/// Minimal host that drops a BareUI element tree into a view controller's safe area. A stand-in
-/// until M4 ships <c>ContentView</c>/<c>BareApp</c>.
+/// Minimal host that drops a BareUI element tree into a view controller. A stand-in until M4 ships
+/// <c>ContentView</c>/<c>BareApp</c>.
 /// </summary>
 public class BareHostController : UIViewController
 {
 	readonly View? root;
 	readonly string? title;
+
+	UITapGestureRecognizer? dismissKeyboard;
 
 	public BareHostController(
 		View root,
@@ -26,6 +28,10 @@ public class BareHostController : UIViewController
 		NativeHandle handle) : base(handle)
 	{ }
 
+	// a scrolling root must sit under the nav bar, or the bar has nothing to blur
+	UIScrollView? ScrollRoot =>
+		root?.IsRealized is true ? root.Native as UIScrollView : null;
+
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
@@ -33,17 +39,33 @@ public class BareHostController : UIViewController
 		Title = title;
 		View!.BackgroundColor = UIColor.SystemBackground;
 
-		if (root is not null)
-			View.AddSubview(root.Realize());
+		if (root is null)
+			return;
+
+		View.AddSubview(root.Realize());
+
+		// numeric keyboards have no return key, so tapping outside is the only way out
+		dismissKeyboard = new(() => View.EndEditing(true))
+		{
+			CancelsTouchesInView = false
+		};
+		View.AddGestureRecognizer(dismissKeyboard);
+
+		if (ScrollRoot is { } scroll)
+			scroll.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Always;
 	}
 
 	public override void ViewDidLayoutSubviews()
 	{
 		base.ViewDidLayoutSubviews();
 
+		if (root is null)
+			return;
+
 		// frame set drives measure/arrange via LayoutSubviews
-		if (root is not null)
-			root.Native.Frame = View!.SafeAreaLayoutGuide.LayoutFrame;
+		root.Native.Frame = ScrollRoot is not null
+			? View!.Bounds
+			: View!.SafeAreaLayoutGuide.LayoutFrame;
 	}
 
 	public override void ViewDidDisappear(
