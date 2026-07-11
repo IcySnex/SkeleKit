@@ -69,14 +69,12 @@ public partial class PickerDemoViewModel : ObservableObject
 		["Action", "Comedy", "Drama", "Science Fiction"];
 
 	[ObservableProperty]
-	public partial int SelectedIndex { get; set; } = -1;
+	public partial string? Genre { get; set; }
 
 	public string Selection =>
-		SelectedIndex >= 0 && SelectedIndex < Options.Count
-			? Options[SelectedIndex]
-			: "Nothing selected";
+		Genre ?? "Nothing selected";
 
-	partial void OnSelectedIndexChanged(
-		int value) =>
+	partial void OnGenreChanged(
+		string? value) =>
 		OnPropertyChanged(nameof(Selection));
 }

@@ -5,31 +5,38 @@ namespace BareUI;
 /// <summary>
 /// A menu-style selection button wrapping <c>UIButton</c> + <c>UIMenu</c>.
 /// </summary>
-public class Picker : Control
+public class Picker<TItem> : Control
+	where TItem : class
 {
 	/// <summary>
-	/// The selectable items. Not bindable: C# forbids implicit conversions from interface types.
+	/// The selectable items. Interface-typed, so a literal needs <c>Bindable.From(...)</c>.
 	/// </summary>
-	public IReadOnlyList<string> Items
+	public Bindable<IReadOnlyList<TItem>?> ItemsSource
 	{
-		get => items;
-		set => Set(ref items, value, ApplyMenu);
+		get => Bindable.From<IReadOnlyList<TItem>?>(items);
+		set => itemsBinding = Register(itemsBinding, value, value => Set(ref items, value ?? [], ApplyMenu));
 	}
-	IReadOnlyList<string> items = [];
+	IReadOnlyList<TItem> items = [];
+	Binding<IReadOnlyList<TItem>?>? itemsBinding;
 
 	/// <summary>
-	/// Index of the selected item, or -1 for none.
+	/// The selected item, or null for none.
 	/// </summary>
-	public Bindable<int> SelectedIndex
+	public Bindable<TItem?> SelectedItem
 	{
-		get => selectedIndex;
-		set => selectedIndexBinding = Register(selectedIndexBinding, value, value => Set(ref selectedIndex, value, ApplyMenu));
+		get => selected;
+		set => selectedBinding = Register(selectedBinding, value, value => Set(ref selected, value, ApplyMenu));
 	}
-	int selectedIndex = -1;
-	Binding<int>? selectedIndexBinding;
+	TItem? selected;
+	Binding<TItem?>? selectedBinding;
 
 	/// <summary>
-	/// Text shown when no item is selected.
+	/// How an item is labelled in the menu. Defaults to <c>ToString()</c>.
+	/// </summary>
+	public Func<TItem, string> ItemTitle { get; set; } = item => item.ToString() ?? "";
+
+	/// <summary>
+	/// Text shown when nothing is selected.
 	/// </summary>
 	public Bindable<string?> Placeholder
 	{
@@ -40,9 +47,9 @@ public class Picker : Control
 	Binding<string?>? placeholderBinding;
 
 	/// <summary>
-	/// Invoked with the new index whenever the user picks an item.
+	/// Invoked with the newly selected item.
 	/// </summary>
-	public Action<int>? SelectionChanged { get; set; }
+	public Action<TItem>? SelectionChanged { get; set; }
 
 
 	private protected override UIView CreateNative() =>
@@ -63,27 +70,26 @@ public class Picker : Control
 	{
 		UIAction[] actions = new UIAction[items.Count];
 
-		for (int i = 0; i < items.Count; i++)
+		for (int index = 0; index < items.Count; index++)
 		{
-			int index = i;
+			TItem item = items[index];
 
-			actions[index] = UIAction.Create(items[index], null, null, action => OnSelected(index));
+			actions[index] = UIAction.Create(ItemTitle(item), null, null, action => OnSelected(item));
 
-			if (index == selectedIndex)
+			if (ReferenceEquals(item, selected))
 				actions[index].State = UIMenuElementState.On;
 		}
 
 		Ui.Menu = UIMenu.Create(actions);
-		Ui.SetTitle(
-			selectedIndex >= 0 && selectedIndex < items.Count ? items[selectedIndex] : placeholder,
-			UIControlState.Normal);
+		Ui.SetTitle(selected is { } current ? ItemTitle(current) : placeholder, UIControlState.Normal);
 	}
 
 	void OnSelected(
-		int index)
+		TItem item)
 	{
-		Set(ref selectedIndex, index, affectsMeasure: false);
-		selectedIndexBinding?.PushToSource(index);
-		SelectionChanged?.Invoke(index);
+		Set(ref selected, item, ApplyMenu, affectsMeasure: false);
+
+		selectedBinding?.PushToSource(item);
+		SelectionChanged?.Invoke(item);
 	}
 }

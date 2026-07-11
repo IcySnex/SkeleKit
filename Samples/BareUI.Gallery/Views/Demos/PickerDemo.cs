@@ -8,10 +8,10 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class PickerDemo : ContentView<PickerDemoViewModel>
 {
-	readonly Picker picker = new()
+	readonly Picker<string> picker = new()
 	{
 		Placeholder = "Pick a genre",
-		SelectedIndex = Bind(vm => vm.SelectedIndex, (vm, value) => vm.SelectedIndex = value),
+		SelectedItem = Bind(vm => vm.Genre, (vm, value) => vm.Genre = value),
 		HorizontalAlignment = HorizontalAlignment.Start
 	};
 
@@ -37,7 +37,7 @@ public class PickerDemo : ContentView<PickerDemoViewModel>
 		};
 	}
 
-	// Items is a plain property: C# forbids implicit conversion from an interface, so it cannot be Bindable
+	// interface-typed, so a literal needs Bindable.From
 	protected override void OnViewModelAttached() =>
-		picker.Items = ViewModel!.Options;
+		picker.ItemsSource = Bindable.From<IReadOnlyList<string>?>(ViewModel!.Options);
 }
