@@ -37,6 +37,9 @@ Acceptance target: rewrite its screens with zero UIKit imports.
   `-t:Run` can relaunch a *stale* binary). Sanity-check the bundle's `BareUI.iOS.dll`
   mtime vs your edits. `simctl launch` no-ops if the app is already running — `simctl
   terminate <UDID> com.bareui.gallery` first, then `install` the fresh `.app` + `launch`.
+- **Incremental builds do not recopy `Info.plist`.** A plist edit silently does nothing until you
+  `rm -rf Samples/BareUI.Gallery/bin obj`. This cost an hour: the bundle still named the deleted
+  `SceneDelegate`, so no window was made and the app launched to a black screen with no crash.
 
 ## Environment gotchas
 
@@ -77,8 +80,25 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Status (2026-07-11)
 
-**M0 + M1 + M2 complete. M3 (bindings) code-complete, exit criteria not yet verified.**
+**M0–M4 complete** (M4 pending a tap-through of push/pop on the sim).
 Commits land on `main` (repo history is linear there).
+
+M4:
+- `BareApp.Create().UseServices(...).Map<TVm,TView>().Tabs(...).Run(args)` replaces
+  `Main`/`AppDelegate`/`SceneDelegate`. Ships `BareAppDelegate` + `BareSceneDelegate`; the app's
+  `Info.plist` must name `BareSceneDelegate` as `UISceneDelegateClassName`.
+- `ContentView` (non-generic: `Title`, `SafeAreaEdges`, `OnAppearing`/`OnDisappearing`) +
+  `ContentView<TViewModel>`. `PageHost` is the hidden `UIViewController`: consumes `SafeAreaEdges`,
+  full-bleeds a scrolling root so the bars blur, taps dismiss the keyboard.
+- `INavigator`: push/pop/present (sheets + detents) + alert/confirm/action sheet. `ViewRegistry.Map`
+  uses a `new()` constraint — no scanning, no reflection. `Navigator` holds managed refs to its
+  `PageHost`s (see the peer-rooting rule; UIKit retains VCs natively only).
+- Gallery is one `Program.cs`, zero UIKit outside `NativeViewPage` (which demos the escape hatch).
+- **`SafeAreaEdges` is consumed by `PageHost`, not by arrange** — panels take `Size`, not `Rect`, so
+  threading insets through the engine would change every panel signature. Matches architecture §2
+  ("the root host reads SafeAreaInsets").
+- DI (`Microsoft.Extensions.DependencyInjection`) is the one reflection surface in the stack — watch
+  it in the next `MtouchLink=Full` publish.
 
 M3 so far:
 - Property pipeline: `View.Parent`, `InvalidateMeasure()` (bubbles to root → `SetNeedsLayout`),
@@ -121,9 +141,8 @@ Done:
   Pre-M3 pattern: properties are create-only (applied in `CreateNative`); interactive controls sync
   native→managed and expose settable `Action` callback props (`Toggled`, `TextChanged`, `Clicked`, …).
 - All primitives now live in `namespace BareUI` (`BareUI.Primitives` namespace removed; folder kept).
-- Gallery: `UINavigationController` shell, `MenuPage` + 13 demo pages (in `Pages/`, shared caption
-  scaffold on `Demo`), `GALLERY_PAGE` env var (via `SIMCTL_CHILD_GALLERY_PAGE`) auto-pushes a page
-  on launch — use it for screenshots.
+- Gallery: 13 demo pages in `Pages/` (shared caption scaffold on `Demo`). Since M4 the shell is
+  `BareApp` (tabs + nav), so the old `GALLERY_PAGE` env shortcut is gone.
 - **Native-peer lifetime bug fixed** (was: random black screen / SIGABRT after navigating). `LayoutHost`,
   `ScrollHost`, `BareHostController` had no `(NativeHandle)` ctor and no managed root, so the GC
   collected their peers while UIKit still held the native objects. Fixed by rooting + ctors; the image
