@@ -10,17 +10,21 @@ namespace BareUI.Gallery;
 public class BareHostController : UIViewController
 {
 	readonly View root;
+	readonly string? title;
 
 	public BareHostController(
-		View root)
+		View root,
+		string? title = null)
 	{
 		this.root = root;
+		this.title = title;
 	}
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
 
+		Title = title;
 		View!.BackgroundColor = UIColor.SystemBackground;
 		View.AddSubview(root.Realize());
 	}
