@@ -29,6 +29,10 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 - Build app: `dotnet build Samples/BareUI.Gallery -p:RuntimeIdentifier=iossimulator-arm64`
 - Run app: add `-t:Run "-p:_DeviceName=:v2:udid=<UDID>"` (UDIDs: `xcrun simctl list devices available`)
 - Screenshot to verify layout: `xcrun simctl io <UDID> screenshot out.png` then Read it.
+- Release build on device (Mono full AOT + full trim; settings live in the Gallery csproj under
+  `Release`+`ios-arm64`, so Rider picks them up by switching the config dropdown to Release with a
+  device selected): `dotnet publish Samples/BareUI.Gallery -p:PublishProfile=iOS-Device`, then
+  `xcrun devicectl device install app --device <UDID> <path>.app`. Watch for `IL2xxx` warnings.
 - **Iterating on the sim:** after editing library code, rebuild the whole app (a bare
   `-t:Run` can relaunch a *stale* binary). Sanity-check the bundle's `BareUI.iOS.dll`
   mtime vs your edits. `simctl launch` no-ops if the app is already running — `simctl
@@ -65,8 +69,10 @@ Acceptance target: rewrite its screens with zero UIKit imports.
   Beware weak native refs (`UINavigationController.Delegate`). Don't use `NSTimer` +
   `Action` or the default `NSUrlSessionHandler`: both have peers that die the same way.
 - Commits: Conventional Commits, subject ≤50 chars, body only when the why isn't obvious.
-- Everything must be AOT/trim-safe: no reflection, no `Expression<>`, no assembly scanning
-  (consumer ships `PublishAot=true`). `IsAotCompatible=true` keeps analyzers on.
+- Everything must be AOT/trim-safe: no reflection, no `Expression<>`, no assembly scanning.
+  iOS device builds are **Mono full AOT** + trimmed (the platform forbids JIT).
+  `IsAotCompatible=true` keeps analyzers on. **`PublishAot`/NativeAOT does not exist for iOS** —
+  ILCompiler ships no `ios-*` RID (`NETSDK1203`); Velura sets it, but it is inert.
 - Public API stays UIKit-free except explicit escape hatches (`NativeView`, `.Native`).
 
 ## Status (2026-07-11)
@@ -93,8 +99,9 @@ M3 gotchas found:
 - User-defined conversions don't chain → `Image.Source` needs `ImageSource.Symbol(...)`/`Url(...)`,
   not a bare string literal.
 
-**M3 exit criteria still open:** simulator check of `BindingPage`, and a Gallery publish with
-`PublishAot=true` (proves the AOT claim end to end).
+**M3 exit criteria met:** binding unit tests (68 green) incl. two-way round-trips and nested-path
+re-subscription; Gallery published for device (Release, `ios-arm64`, `MtouchLink=Full` → Mono full
+AOT, everything trimmed) at ~7 MB, running on a physical iPhone with the binding page working.
 
 Done:
 - Primitives: `Thickness`, `Size`, `Point`, `Rect`, `GridLength`, `Color`, alignment enums.

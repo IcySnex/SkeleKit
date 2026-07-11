@@ -5,8 +5,17 @@
         <OutputType>Exe</OutputType>
         <ApplicationId>com.bareui.gallery</ApplicationId>
     </PropertyGroup>
+
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <CodesignKey>iPhone Developer</CodesignKey>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <CodesignKey>Apple Development</CodesignKey>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' And '$(RuntimeIdentifier)' == 'ios-arm64' ">
+      <MtouchLink>Full</MtouchLink>
+      <TrimmerSingleWarn>false</TrimmerSingleWarn>
+      <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
     </PropertyGroup>
 
     <ItemGroup>

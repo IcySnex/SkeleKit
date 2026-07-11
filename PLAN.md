@@ -23,8 +23,12 @@ Related documents:
    `Grid`/`StackPanel`/`Margin`/`Padding`/`Alignment`, MVVM with bindings and commands.
 3. **100% native look & feel**: every BareUI control wraps the real UIKit control 1:1.
    BareUI only owns *composition and layout*, never rendering.
-4. **AOT-safe by construction**: Velura ships with `PublishAot=true`. No reflection,
-   no expression trees, no runtime code generation anywhere in the binding or navigation path.
+4. **AOT-safe by construction**: iOS device builds are **Mono full AOT** — the platform forbids
+   JIT, so everything is AOT-compiled and trimmed. No reflection, no expression trees, no runtime
+   code generation anywhere in the binding or navigation path.
+   (NativeAOT/`PublishAot` does *not* exist for iOS: ILCompiler ships no `ios-*` RID, and the iOS
+   workload has no NativeAOT runtime pack. Velura sets `PublishAot=true` but it is inert — the iOS
+   SDK only honours it on `publish`, which would fail with NETSDK1203.)
 5. **Performant lists**: virtualized `CollectionView` (grid, list, carousel) because the
    reference app is media-heavy.
 
@@ -41,7 +45,7 @@ Related documents:
 
 | Constraint | Consequence |
 |---|---|
-| `PublishAot=true` + trimming in consumer app | Typed-delegate bindings, explicit view registration, no assembly scanning, no `Expression<>` |
+| Mono full AOT + trimming on device (no JIT allowed) | Typed-delegate bindings, explicit view registration, no assembly scanning, no `Expression<>` |
 | net10.0-ios, iOS 18 minimum (matches Velura) | Can use compositional layout, `UICollectionLayoutListConfiguration`, modern APIs freely |
 | Native look & feel is non-negotiable | Controls are thin wrappers; BareUI never re-implements a control's drawing |
 | CommunityToolkit.Mvvm already used for ViewModels | Bindings target plain `INotifyPropertyChanged` + `ICommand`; no BareUI-specific VM base class required |
@@ -106,8 +110,10 @@ BareUI.sln
 - `ICommand` support on `Button`, tap gestures on any view; `CanExecuteChanged` → enabled state.
 - Deterministic teardown: bindings owned by the view, disposed on unload (fixes the leak
   class Velura's `BindingSet` finalizer hints at).
-- **Exit criteria:** binding unit tests incl. two-way round-trips; simulator run of the
-  Gallery published with `PublishAot=true` (proves the AOT claim end to end).
+- **Exit criteria:** binding unit tests incl. two-way round-trips; Gallery published for a device
+  (`-c Release -r ios-arm64`, `MtouchLink=Full` → Mono full AOT + trims *our* assemblies) with zero
+  `IL2xxx` warnings, and the binding page working on-device (trim failures surface at runtime, when
+  a binding first fires — a clean build alone proves nothing).
 
 ### M4 — MVVM + navigation + app bootstrap
 - `ContentView<TViewModel>`: the user's "code-behind" — sets `Content` tree in `Build()`,

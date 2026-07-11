@@ -49,7 +49,8 @@ path string for INPC matching comes from `[CallerArgumentExpression]` parsed onc
 binding creation. TwoWay requires an explicit setter delegate. No `Expression<>`, no
 reflection, no source generator in v1.
 
-**Context:** Velura ships `PublishAot=true`. Expression trees under NativeAOT fall back to
+**Context:** iOS device builds are Mono full AOT with trimming (the platform forbids JIT), so the
+same constraints apply as under NativeAOT. Expression trees fall back to
 an interpreter and are trim-hostile; reflection-based path walking (the existing
 `BindingSet` + `PropertyBindingMapper` design) is trim-fragile and stringly-typed.
 
