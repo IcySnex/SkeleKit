@@ -19,6 +19,8 @@ public sealed class DemoCatalog : IDemoCatalog
 		new("Picker", typeof(PickerDemoViewModel)),
 		new("Image", typeof(ImageDemoViewModel)),
 		new("NativeView", typeof(NativeViewDemoViewModel)),
-		new("Keyboard (no scroll)", typeof(KeyboardDemoViewModel))
+		new("Keyboard (no scroll)", typeof(KeyboardDemoViewModel)),
+		new("CollectionView grid", typeof(GridDemoViewModel)),
+		new("CollectionView list", typeof(ListDemoViewModel))
 	];
 }

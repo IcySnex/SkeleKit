@@ -16,6 +16,7 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 		{
 			Margin = new Thickness(16),
 			Spacing = 12,
+			VerticalAlignment = VerticalAlignment.End,
 			Children =
 			{
 				Theme.Caption("No ScrollView on this page. The field below sits at the bottom."),
@@ -32,7 +33,6 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 				{
 					Placeholder = "Type here",
 					ReturnKey = ReturnKeyType.Done,
-					VerticalAlignment = VerticalAlignment.End,
 					Text = Bind(vm => vm.Message, (vm, value) => vm.Message = value ?? "")
 				}
 			}

@@ -29,6 +29,8 @@ BareApp.Create()
 		services.AddTransient<ImageDemoViewModel>();
 		services.AddTransient<NativeViewDemoViewModel>();
 		services.AddTransient<KeyboardDemoViewModel>();
+		services.AddTransient<GridDemoViewModel>();
+		services.AddTransient<ListDemoViewModel>();
 	})
 	.UsePages(pages =>
 	{
@@ -48,6 +50,7 @@ BareApp.Create()
 		pages.AddTransient<PickerDemo>();
 		pages.AddTransient<ImageDemo>();
 		pages.AddTransient<NativeViewDemo>();
+		pages.AddTransient<KeyboardDemo>();
 	})
 	.Tabs(tabs => tabs
 		.Tab<MenuView>("Controls", icon: "square.grid.2x2")

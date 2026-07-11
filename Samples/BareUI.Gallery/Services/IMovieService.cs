@@ -8,4 +8,6 @@ namespace BareUI.Gallery.Services;
 public interface IMovieService
 {
 	Task<Movie> GetFeaturedAsync();
+
+	Task<IReadOnlyList<Movie>> GetPopularAsync();
 }
