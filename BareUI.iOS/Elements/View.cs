@@ -158,6 +158,11 @@ public abstract partial class View
 	partial void ApplyIfRealized(
 		Action apply);
 
+	// scroll views clip by default in UIKit; forcing ClipsToBounds=false would let their content
+	// paint over everything around them
+	private protected virtual bool ClipsByDefault =>
+		false;
+
 	private protected void ApplyVisualState() =>
 		ApplyVisualStateCore();
 

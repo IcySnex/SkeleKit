@@ -10,6 +10,9 @@ public partial class ScrollView : Panel
 	/// </summary>
 	public Orientation Orientation { get; set; } = Orientation.Vertical;
 
+	private protected override bool ClipsByDefault =>
+		true;
+
 	/// <summary>
 	/// Whether the content is inset so the keyboard never covers the focused control. On by default.
 	/// </summary>

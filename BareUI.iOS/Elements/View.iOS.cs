@@ -121,7 +121,7 @@ public abstract partial class View
 		native.Alpha = (nfloat)Opacity;
 		if (Background is { } background)
 			native.BackgroundColor = background.ToUIColor();
-		native.ClipsToBounds = ClipsToBounds || CornerRadius > 0;
+		native.ClipsToBounds = ClipsToBounds || CornerRadius > 0 || ClipsByDefault;
 		native.Layer.CornerRadius = (nfloat)CornerRadius;
 	}
 

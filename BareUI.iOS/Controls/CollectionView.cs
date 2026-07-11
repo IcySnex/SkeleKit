@@ -57,6 +57,9 @@ public partial class CollectionView<TItem> : View
 	public View? EmptyView { get; set; }
 
 
+	private protected override bool ClipsByDefault =>
+		true;
+
 	// it scrolls itself, so it takes the space it is offered rather than sizing to its content
 	protected override Size MeasureOverride(
 		Size availableSize) =>
