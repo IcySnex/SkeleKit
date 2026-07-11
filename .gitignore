@@ -6,3 +6,4 @@ obj/
 .idea/
 *.binlog
 TestResults/
+.claude/
