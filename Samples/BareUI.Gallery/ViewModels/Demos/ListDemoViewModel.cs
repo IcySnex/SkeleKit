@@ -7,16 +7,27 @@ namespace BareUI.Gallery.ViewModels.Demos;
 public partial class ListDemoViewModel(
 	INavigator navigator) : ObservableObject
 {
-	public IReadOnlyList<SettingsEntry> Entries { get; } =
+	public IReadOnlyList<Section<SettingsEntry>> Sections { get; } =
 	[
-		new("Appearance", "paintbrush", "System"),
-		new("Playback", "play.circle", "Auto"),
-		new("Downloads", "arrow.down.circle", "Wi-Fi only"),
-		new("Notifications", "bell", "On"),
-		new("Storage", "internaldrive", "2.4 GB"),
-		new("Privacy", "hand.raised", ""),
-		new("Language", "globe", "English"),
-		new("About", "info.circle", "1.0.0")
+		new("General",
+		[
+			new("Appearance", "paintbrush", "System"),
+			new("Language", "globe", "English"),
+			new("Notifications", "bell", "On")
+		]),
+
+		new("Playback",
+		[
+			new("Quality", "play.circle", "Auto"),
+			new("Downloads", "arrow.down.circle", "Wi-Fi only"),
+			new("Storage", "internaldrive", "2.4 GB")
+		]),
+
+		new("About",
+		[
+			new("Privacy", "hand.raised", ""),
+			new("Version", "info.circle", "1.0.0")
+		])
 	];
 
 	[RelayCommand]

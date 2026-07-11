@@ -12,7 +12,8 @@ public class ListDemo : ContentView<ListDemoViewModel>
 	readonly CollectionView<SettingsEntry> entries = new()
 	{
 		Layout = CollectionLayout.List(grouped: true),
-		ItemTemplate = () => new SettingsCell()
+		ItemTemplate = () => new SettingsCell(),
+		HeaderTemplate = () => new SectionHeader()
 	};
 
 	public ListDemo()
@@ -24,7 +25,7 @@ public class ListDemo : ContentView<ListDemoViewModel>
 
 	protected override void OnViewModelAttached()
 	{
-		entries.ItemsSource = Bindable.From<IReadOnlyList<SettingsEntry>?>(ViewModel!.Entries);
+		entries.GroupedItemsSource = Bindable.From<IReadOnlyList<Section<SettingsEntry>>?>(ViewModel!.Sections);
 		entries.SelectionCommand = ViewModel.OpenCommand;
 	}
 }

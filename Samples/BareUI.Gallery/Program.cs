@@ -51,6 +51,8 @@ BareApp.Create()
 		pages.AddTransient<ImageDemo>();
 		pages.AddTransient<NativeViewDemo>();
 		pages.AddTransient<KeyboardDemo>();
+		pages.AddTransient<GridDemo>();
+		pages.AddTransient<ListDemo>();
 	})
 	.Tabs(tabs => tabs
 		.Tab<MenuView>("Controls", icon: "square.grid.2x2")
