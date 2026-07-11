@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using CoreFoundation;
 using CoreGraphics;
 using Foundation;
 using ObjCRuntime;
@@ -11,7 +12,15 @@ public partial class CollectionView<TItem>
 	internal const string CellId = "BareCell";
 	internal const string HeaderId = "BareHeader";
 
-	CollectionSource<TItem>? source;
+	// one key per item, reused across snapshots: no allocation per update, and it roots the managed
+	// peers so the GC cannot collect an identifier the data source still holds
+	readonly Dictionary<object, ItemKey> keys = new(ReferenceEqualityComparer.Instance);
+	readonly List<NSNumber> sectionKeys = [];
+
+	UICollectionViewDiffableDataSource<NSNumber, ItemKey>? data;
+	CollectionDelegate<TItem>? selection;
+
+	bool snapshotQueued;
 
 	private protected override UIView CreateNative()
 	{
@@ -26,8 +35,13 @@ public partial class CollectionView<TItem>
 			UICollectionElementKindSection.Header,
 			HeaderId);
 
-		source = new(this);
-		collection.Source = source;
+		data = new(collection, CellFor)
+		{
+			SupplementaryViewProvider = HeaderFor
+		};
+
+		selection = new(this);
+		collection.Delegate = selection;
 
 		return collection;
 	}
@@ -38,68 +52,133 @@ public partial class CollectionView<TItem>
 	UICollectionView Ui =>
 		(UICollectionView)Native;
 
-	partial void ReloadItems()
+	// UIKit does the diffing. A burst of changes (an Add loop over an ObservableCollection) collapses
+	// into one snapshot on the next turn of the run loop instead of N separate updates.
+	partial void ReloadItems() =>
+		QueueSnapshot();
+
+	partial void ApplyChange(
+		NotifyCollectionChangedEventArgs change) =>
+		QueueSnapshot();
+
+	void QueueSnapshot()
 	{
-		if (!IsRealized)
+		if (!IsRealized || snapshotQueued)
 			return;
 
-		Ui.ReloadData();
+		snapshotQueued = true;
+
+		DispatchQueue.MainQueue.DispatchAsync(() =>
+		{
+			snapshotQueued = false;
+
+			if (IsRealized)
+				ApplySnapshot();
+		});
 	}
 
-	// an ObservableCollection change becomes the matching animated batch update, not a full reload
-	partial void ApplyChange(
-		NotifyCollectionChangedEventArgs change)
+	void ApplySnapshot()
 	{
-		if (!IsRealized)
+		if (data is null)
 			return;
 
-		if (IsGrouped || change.Action is NotifyCollectionChangedAction.Reset)
+		NSDiffableDataSourceSnapshot<NSNumber, ItemKey> snapshot = new();
+
+		int sections = SectionCount;
+		while (sectionKeys.Count < sections)
+			sectionKeys.Add(NSNumber.FromInt32(sectionKeys.Count));
+
+		for (int section = 0; section < sections; section++)
 		{
-			ReloadItems();
-			return;
+			NSNumber sectionKey = sectionKeys[section];
+			snapshot.AppendSections([sectionKey]);
+
+			int count = CountIn(section);
+			if (count == 0)
+				continue;
+
+			ItemKey[] items = new ItemKey[count];
+			for (int index = 0; index < count; index++)
+				items[index] = KeyFor(ItemAt(section, index)!);
+
+			snapshot.AppendItems(items, sectionKey);
 		}
 
-		Ui.PerformBatchUpdates(
-			() =>
-			{
-				switch (change.Action)
-				{
-					case NotifyCollectionChangedAction.Add:
-						Ui.InsertItems(Paths(change.NewStartingIndex, change.NewItems?.Count ?? 0));
-						break;
+		Prune();
 
-					case NotifyCollectionChangedAction.Remove:
-						Ui.DeleteItems(Paths(change.OldStartingIndex, change.OldItems?.Count ?? 0));
-						break;
-
-					case NotifyCollectionChangedAction.Replace:
-						Ui.ReloadItems(Paths(change.NewStartingIndex, change.NewItems?.Count ?? 0));
-						break;
-
-					case NotifyCollectionChangedAction.Move:
-						Ui.MoveItem(
-							NSIndexPath.FromRowSection(change.OldStartingIndex, 0),
-							NSIndexPath.FromRowSection(change.NewStartingIndex, 0));
-						break;
-				}
-			},
-			null);
+		// animating an off-screen collection is wasted work
+		data.ApplySnapshot(snapshot, Ui.Window is not null);
 	}
 
-	static NSIndexPath[] Paths(
-		int start,
-		int count)
+	ItemKey KeyFor(
+		object item)
 	{
-		NSIndexPath[] paths = new NSIndexPath[Math.Max(0, count)];
+		if (!keys.TryGetValue(item, out ItemKey? key))
+			keys[item] = key = new(item);
 
-		for (int offset = 0; offset < paths.Length; offset++)
-			paths[offset] = NSIndexPath.FromRowSection(start + offset, 0);
-
-		return paths;
+		return key;
 	}
 
-	// UIKit re-runs layout after every reload and batch update, so this is the one place that cannot
-	// be missed by an update path or dropped by an interrupted animation
+	// drop keys for items that left, so the cache cannot grow without bound
+	void Prune()
+	{
+		int live = 0;
+		for (int section = 0; section < SectionCount; section++)
+			live += CountIn(section);
+
+		if (keys.Count <= live)
+			return;
+
+		HashSet<object> current = new(ReferenceEqualityComparer.Instance);
+
+		for (int section = 0; section < SectionCount; section++)
+			for (int index = 0; index < CountIn(section); index++)
+				if (ItemAt(section, index) is { } item)
+					current.Add(item);
+
+		foreach (object item in keys.Keys.ToArray())
+			if (!current.Contains(item))
+				keys.Remove(item);
+	}
+
+	UICollectionViewCell CellFor(
+		UICollectionView collectionView,
+		NSIndexPath indexPath,
+		NSObject identifier)
+	{
+		BareCell cell = (BareCell)collectionView.DequeueReusableCell(CellId, indexPath);
+
+		// the tree is built once per recycled cell, then only rebound
+		if (cell.Hosted is null)
+			cell.Attach(CreateItemView());
+
+		if (cell.Hosted is ItemView<TItem> view && identifier is ItemKey { Item: TItem item })
+			view.Item = item;
+
+		return cell;
+	}
+
+	UICollectionReusableView HeaderFor(
+		UICollectionView collectionView,
+		string kind,
+		NSIndexPath indexPath)
+	{
+		BareHeader header = (BareHeader)collectionView.DequeueReusableSupplementaryView(
+			new NSString(kind),
+			HeaderId,
+			indexPath);
+
+		if (header.Hosted is null && CreateHeaderView() is { } view)
+			header.Attach(view);
+
+		if (header.Hosted is ItemView<Section<TItem>> hosted)
+			hosted.Item = SectionAt(indexPath.Section);
+
+		return header;
+	}
+
+	// UIKit re-runs layout after every snapshot, so this is the one place that cannot be missed by an
+	// update path or dropped by an interrupted animation
 	void ICollectionHost.SyncEmptyState() =>
 		SyncEmptyState();
 
@@ -218,57 +297,11 @@ public partial class CollectionView<TItem>
 	}
 }
 
-// the data source keeps the element side generic; cells stay plain UIKit
-sealed class CollectionSource<TItem>(
-	CollectionView<TItem> element) : UICollectionViewSource
+// only selection: the diffable data source owns the data side
+sealed class CollectionDelegate<TItem>(
+	CollectionView<TItem> element) : UICollectionViewDelegate
 	where TItem : class
 {
-	public override nint NumberOfSections(
-		UICollectionView collectionView) =>
-		element.SectionCount;
-
-	public override nint GetItemsCount(
-		UICollectionView collectionView,
-		nint section) =>
-		element.CountIn((int)section);
-
-	public override UICollectionViewCell GetCell(
-		UICollectionView collectionView,
-		NSIndexPath indexPath)
-	{
-		BareCell cell = (BareCell)collectionView.DequeueReusableCell(
-			CollectionView<TItem>.CellId,
-			indexPath);
-
-		// the tree is built once per recycled cell, then only rebound
-		if (cell.Hosted is null)
-			cell.Attach(element.CreateItemView());
-
-		if (cell.Hosted is ItemView<TItem> view)
-			view.Item = element.ItemAt(indexPath.Section, indexPath.Row);
-
-		return cell;
-	}
-
-	public override UICollectionReusableView GetViewForSupplementaryElement(
-		UICollectionView collectionView,
-		NSString elementKind,
-		NSIndexPath indexPath)
-	{
-		BareHeader header = (BareHeader)collectionView.DequeueReusableSupplementaryView(
-			elementKind,
-			CollectionView<TItem>.HeaderId,
-			indexPath);
-
-		if (header.Hosted is null && element.CreateHeaderView() is { } view)
-			header.Attach(view);
-
-		if (header.Hosted is ItemView<Section<TItem>> hosted)
-			hosted.Item = element.SectionAt(indexPath.Section);
-
-		return header;
-	}
-
 	public override void ItemSelected(
 		UICollectionView collectionView,
 		NSIndexPath indexPath)
