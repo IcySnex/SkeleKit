@@ -13,6 +13,9 @@ public partial class ScrollView : Panel
 	private protected override bool ClipsByDefault =>
 		true;
 
+	internal override bool Scrolls =>
+		true;
+
 	/// <summary>
 	/// Whether the content is inset so the keyboard never covers the focused control. On by default.
 	/// </summary>

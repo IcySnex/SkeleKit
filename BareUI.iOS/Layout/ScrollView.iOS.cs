@@ -9,6 +9,8 @@ public partial class ScrollView
 	private protected override UIView CreateNative() =>
 		new ScrollHost(this);
 
+	nfloat keyboardCover;
+
 	private protected override void ApplyProperties()
 	{
 		UIScrollView host = (UIScrollView)Native;
@@ -18,14 +20,34 @@ public partial class ScrollView
 		host.AlwaysBounceVertical = vertical;
 		host.AlwaysBounceHorizontal = !vertical;
 
-		// bleeding: Always, so UIKit insets the content back inside the safe area while the scroll view
-		// itself extends under the bar. Otherwise ScrollableAxes, since Always would also inset
-		// left/right and give a vertical scroll view a horizontal scrollable range
-		host.ContentInsetAdjustmentBehavior = IgnoresSafeArea is not SafeAreaEdges.None
-			? UIScrollViewContentInsetAdjustmentBehavior.Always
-			: UIScrollViewContentInsetAdjustmentBehavior.ScrollableAxes;
+		// we own the insets: UIKit's adjustment guesses which edges to inset, and every guess it makes
+		// is wrong for us — Always insets across the scroll axis (phantom horizontal scrolling),
+		// ScrollableAxes drops the cross-axis inset entirely (content under the notch)
+		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never;
 
 		ApplyKeyboardDismiss();
+	}
+
+	// insets along the scroll axis let the content pass under the bar; the cross axis is handled as
+	// layout padding in LayoutContent, because a cross-axis inset is what makes a scroll view drift
+	void ApplyContentInsets()
+	{
+		UIScrollView host = (UIScrollView)Native;
+		Thickness bled = BledInsets;
+		bool vertical = Orientation == Orientation.Vertical;
+
+		UIEdgeInsets insets = new(
+			vertical ? (nfloat)bled.Top : 0,
+			vertical ? 0 : (nfloat)bled.Left,
+			(vertical ? (nfloat)bled.Bottom : 0) + keyboardCover,
+			vertical ? 0 : (nfloat)bled.Right);
+
+		if (host.ContentInset != insets)
+		{
+			host.ContentInset = insets;
+			host.VerticalScrollIndicatorInsets = insets;
+			host.HorizontalScrollIndicatorInsets = insets;
+		}
 	}
 
 	partial void ApplyKeyboardDismissCore() =>
@@ -53,14 +75,21 @@ public partial class ScrollView
 			return;
 		}
 
-		// the scroll view fills the bounds, but UIKit insets the content by the safe area — laying
-		// out against the raw bounds makes the content wider than what is visible
-		UIEdgeInsets inset = host.AdjustedContentInset;
-		viewport = new(
-			Math.Max(0, viewport.Width - inset.Left - inset.Right),
-			Math.Max(0, viewport.Height - inset.Top - inset.Bottom));
+		ApplyContentInsets();
 
 		bool vertical = Orientation == Orientation.Vertical;
+		Thickness bled = BledInsets;
+
+		// across the scroll axis the bleed becomes padding, so content never sits under the notch
+		double padLeft = vertical ? bled.Left : 0;
+		double padRight = vertical ? bled.Right : 0;
+		double padTop = vertical ? 0 : bled.Top;
+		double padBottom = vertical ? 0 : bled.Bottom;
+
+		viewport = new(
+			Math.Max(0, viewport.Width - padLeft - padRight),
+			Math.Max(0, viewport.Height - padTop - padBottom));
+
 		Size probe = vertical
 			? new(viewport.Width, double.PositiveInfinity)
 			: new(double.PositiveInfinity, viewport.Height);
@@ -71,8 +100,8 @@ public partial class ScrollView
 		double width = vertical ? viewport.Width : desired.Width;
 		double height = vertical ? desired.Height : viewport.Height;
 
-		content.Arrange(new(0, 0, width, height));
-		host.ContentSize = new CGSize(width, height);
+		content.Arrange(new(padLeft, padTop, width, height));
+		host.ContentSize = new CGSize(width + padLeft + padRight, height + padTop + padBottom);
 	}
 
 	// UIKit never moves anything for the keyboard: inset the content by however much it covers,
@@ -106,19 +135,12 @@ public partial class ScrollView
 				hostInWindow.GetMaxY() - keyboard.GetMinY() - host.SafeAreaInsets.Bottom);
 		}
 
-		UIEdgeInsets content = host.ContentInset;
-		content.Bottom = covered;
-
-		UIEdgeInsets indicator = host.VerticalScrollIndicatorInsets;
-		indicator.Bottom = covered;
+		keyboardCover = covered;
 
 		double duration = UIKeyboard.AnimationDurationFromNotification(notification);
 
-		UIView.Animate(duration, () =>
-		{
-			host.ContentInset = content;
-			host.VerticalScrollIndicatorInsets = indicator;
-		});
+		// composed with the safe-area insets, never replacing them
+		UIView.Animate(duration, ApplyContentInsets);
 
 		if (hiding || focused is null)
 			return;

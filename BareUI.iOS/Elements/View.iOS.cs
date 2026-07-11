@@ -138,26 +138,35 @@ public abstract partial class View
 		}
 	}
 
-	// a bleeding view grows outward into the safe area; a scrolling one then insets its own content
-	// back inside, so the scroll passes under the bar but the content never does
+	// how far this view has grown past the safe area. A scrolling view insets its own content by
+	// exactly this, so the scroll passes under the bar but the content never does
+	internal Thickness BledInsets
+	{
+		get
+		{
+			if (IgnoresSafeArea is SafeAreaEdges.None)
+				return Thickness.Zero;
+
+			Thickness insets = PageSafeArea;
+
+			return new(
+				IgnoresSafeArea.HasFlag(SafeAreaEdges.Leading) ? insets.Left : 0,
+				IgnoresSafeArea.HasFlag(SafeAreaEdges.Top) ? insets.Top : 0,
+				IgnoresSafeArea.HasFlag(SafeAreaEdges.Trailing) ? insets.Right : 0,
+				IgnoresSafeArea.HasFlag(SafeAreaEdges.Bottom) ? insets.Bottom : 0);
+		}
+	}
+
 	Rect Bleed(
 		Rect frame)
 	{
-		if (IgnoresSafeArea is SafeAreaEdges.None)
-			return frame;
-
-		Thickness insets = PageSafeArea;
-
-		double left = IgnoresSafeArea.HasFlag(SafeAreaEdges.Leading) ? insets.Left : 0;
-		double right = IgnoresSafeArea.HasFlag(SafeAreaEdges.Trailing) ? insets.Right : 0;
-		double top = IgnoresSafeArea.HasFlag(SafeAreaEdges.Top) ? insets.Top : 0;
-		double bottom = IgnoresSafeArea.HasFlag(SafeAreaEdges.Bottom) ? insets.Bottom : 0;
+		Thickness bled = BledInsets;
 
 		return new(
-			frame.X - left,
-			frame.Y - top,
-			frame.Width + left + right,
-			frame.Height + top + bottom);
+			frame.X - bled.Left,
+			frame.Y - bled.Top,
+			frame.Width + bled.Left + bled.Right,
+			frame.Height + bled.Top + bled.Bottom);
 	}
 
 	partial void ApplyFrame(

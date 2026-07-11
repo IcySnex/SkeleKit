@@ -90,10 +90,6 @@ sealed class PageHost : UIViewController
 		};
 		View.AddGestureRecognizer(dismissKeyboard);
 
-		if (ScrollRoot is { } scroll)
-			scroll.ContentInsetAdjustmentBehavior = page.SafeAreaEdges is SafeAreaEdges.None
-				? UIScrollViewContentInsetAdjustmentBehavior.Never
-				: UIScrollViewContentInsetAdjustmentBehavior.ScrollableAxes;
 	}
 
 	public override void ViewDidLayoutSubviews()
@@ -106,15 +102,9 @@ sealed class PageHost : UIViewController
 		UIEdgeInsets safe = View!.SafeAreaInsets;
 		page.PageSafeArea = new(safe.Left, safe.Top, safe.Right, safe.Bottom);
 
-		// a scrolling root insets its own content for the keyboard; anything else has to shrink
-		if (ScrollRoot is not null)
-		{
-			// frame set drives measure/arrange via LayoutSubviews
-			page.Native.Frame = View!.Bounds;
-			return;
-		}
-
-		CGRect frame = Inset(View!.Bounds, View.SafeAreaInsets, page.SafeAreaEdges);
+		// one regime: the page always sits inside the safe area. A view that wants to escape it says
+		// so with IgnoresSafeArea and grows back out — nothing depends on what the root happens to be.
+		CGRect frame = Inset(View.Bounds, safe, page.SafeAreaEdges);
 		CGRect shrunk = new(
 			frame.X,
 			frame.Y,

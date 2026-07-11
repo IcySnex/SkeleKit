@@ -10,6 +10,8 @@ namespace BareUI;
 interface ICollectionHost
 {
 	void SyncEmptyState();
+
+	void SyncInsets();
 }
 
 public partial class CollectionView<TItem> : View, ICollectionHost
@@ -64,6 +66,9 @@ public partial class CollectionView<TItem> : View, ICollectionHost
 
 
 	private protected override bool ClipsByDefault =>
+		true;
+
+	internal override bool Scrolls =>
 		true;
 
 	// it scrolls itself, so it takes the space it is offered rather than sizing to its content

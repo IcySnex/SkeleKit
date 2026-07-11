@@ -13,7 +13,10 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 	{
 		Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12, snap: CarouselSnap.LeadingBoundary),
 		ItemTemplate = () => new MovieCell(),
-		Height = 260
+		Height = 260,
+
+		// only the row bleeds: it scrolls under the notch, the posters stay inside the safe area
+		IgnoresSafeArea = SafeAreaEdges.Leading | SafeAreaEdges.Trailing
 	};
 
 	public CarouselDemo()

@@ -163,6 +163,10 @@ public abstract partial class View
 	private protected virtual bool ClipsByDefault =>
 		false;
 
+	// a scrolling view manages its own content insets, and a page lets it slide under the bars
+	internal virtual bool Scrolls =>
+		false;
+
 	private protected void ApplyVisualState() =>
 		ApplyVisualStateCore();
 

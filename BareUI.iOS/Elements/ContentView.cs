@@ -24,6 +24,11 @@ public abstract partial class ContentView : Panel
 	public SafeAreaEdges SafeAreaEdges { get; set; } = SafeAreaEdges.All;
 
 	/// <summary>
+	/// Whether scrolling content passes under the navigation and tab bars, so they blur over it. On by default.
+	/// </summary>
+	public bool ScrollsUnderBars { get; set; } = true;
+
+	/// <summary>
 	/// The page's element tree.
 	/// </summary>
 	public View? Content

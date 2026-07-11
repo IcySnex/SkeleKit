@@ -35,12 +35,8 @@ public partial class CollectionView<TItem>
 			AlwaysBounceVertical = !carousel,
 			AlwaysBounceHorizontal = carousel,
 
-			// A bleeding view overlaps the unsafe area, so Always makes UIKit inset its content back
-			// inside it: the scroll passes under the bar, the items never do. Otherwise ScrollableAxes,
-			// since Always would also inset left/right and make a vertical list scroll sideways.
-			ContentInsetAdjustmentBehavior = IgnoresSafeArea is not SafeAreaEdges.None
-				? UIScrollViewContentInsetAdjustmentBehavior.Always
-				: UIScrollViewContentInsetAdjustmentBehavior.ScrollableAxes
+			// we own the insets; UIKit's guessing is what made a vertical list drift sideways
+			ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never
 		};
 
 		collection.RegisterClassForCell(typeof(BareCell), CellId);
@@ -195,6 +191,31 @@ public partial class CollectionView<TItem>
 	// update path or dropped by an interrupted animation
 	void ICollectionHost.SyncEmptyState() =>
 		SyncEmptyState();
+
+	void ICollectionHost.SyncInsets() =>
+		SyncInsets();
+
+	// the bleed becomes a content inset along the scroll axis: items start inside the safe area and
+	// scroll under the bar. Nothing is ever inset across the axis, so the view cannot drift.
+	void SyncInsets()
+	{
+		if (!IsRealized)
+			return;
+
+		Thickness bled = BledInsets;
+		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
+
+		UIEdgeInsets insets = horizontal
+			? new(0, (nfloat)bled.Left, 0, (nfloat)bled.Right)
+			: new((nfloat)bled.Top, 0, (nfloat)bled.Bottom, 0);
+
+		if (Ui.ContentInset == insets)
+			return;
+
+		Ui.ContentInset = insets;
+		Ui.VerticalScrollIndicatorInsets = insets;
+		Ui.HorizontalScrollIndicatorInsets = insets;
+	}
 
 	void SyncEmptyState()
 	{
@@ -356,6 +377,8 @@ sealed class CollectionHost : UICollectionView
 
 	public override void LayoutSubviews()
 	{
+		element?.SyncInsets();
+
 		base.LayoutSubviews();
 
 		element?.SyncEmptyState();
