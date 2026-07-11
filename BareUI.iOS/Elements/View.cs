@@ -11,8 +11,76 @@ public abstract partial class View
 	public View? Parent { get; private set; }
 
 	internal void SetParent(
-		View? parent) =>
+		View? parent)
+	{
 		Parent = parent;
+		OnBindingContextChanged();
+	}
+
+
+	readonly List<BindingBase> bindings = [];
+
+	object? bindingContext;
+
+	/// <summary>
+	/// The object bindings resolve against. Inherited from the parent unless set explicitly.
+	/// </summary>
+	public object? BindingContext
+	{
+		get => bindingContext ?? Parent?.BindingContext;
+		set
+		{
+			if (ReferenceEquals(bindingContext, value))
+				return;
+
+			bindingContext = value;
+			OnBindingContextChanged();
+		}
+	}
+
+	internal void OnBindingContextChanged()
+	{
+		object? context = BindingContext;
+
+		foreach (BindingBase binding in bindings)
+			binding.Attach(context);
+
+		PropagateBindingContext();
+	}
+
+	private protected virtual void PropagateBindingContext()
+	{ }
+
+	// literal -> apply now; expression -> keep a live binding the context can feed
+	private protected Binding<T>? Register<T>(
+		Binding<T>? existing,
+		Bindable<T> value,
+		Action<T?> apply)
+	{
+		if (existing is not null)
+		{
+			existing.Detach();
+			bindings.Remove(existing);
+		}
+
+		if (value.Expression is not { } expression)
+		{
+			apply(value.Value);
+			return null;
+		}
+
+		Binding<T> binding = new(expression, apply);
+		bindings.Add(binding);
+		binding.Attach(BindingContext);
+
+		return binding;
+	}
+
+	private protected void DetachBindings()
+	{
+		foreach (BindingBase binding in bindings)
+			binding.Detach();
+	}
 
 	/// <summary>
 	/// Marks the layout stale and asks the root host for a fresh measure/arrange pass.

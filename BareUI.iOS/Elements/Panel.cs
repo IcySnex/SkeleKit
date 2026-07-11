@@ -19,4 +19,10 @@ public abstract partial class Panel : View
 		OnChildrenChanged();
 
 	partial void OnChildrenChanged();
+
+	private protected override void PropagateBindingContext()
+	{
+		foreach (View child in Children)
+			child.OnBindingContextChanged();
+	}
 }

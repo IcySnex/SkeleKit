@@ -42,6 +42,7 @@ public abstract partial class View
 		native.TranslatesAutoresizingMaskIntoConstraints = true;
 
 		ApplyVisualState();
+		OnBindingContextChanged();
 		OnRealized();
 
 		return native;
@@ -56,6 +57,7 @@ public abstract partial class View
 			return;
 
 		OnUnrealized();
+		DetachBindings();
 
 		native.RemoveFromSuperview();
 		if (OwnsNative)
