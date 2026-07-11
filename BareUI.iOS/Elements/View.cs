@@ -85,15 +85,14 @@ public abstract partial class View
 	}
 
 	/// <summary>
-	/// Marks the layout stale and asks the root host for a fresh measure/arrange pass.
+	/// Marks the layout stale from here to the root, so every host re-measures and re-arranges.
 	/// </summary>
 	public void InvalidateMeasure()
 	{
-		View root = this;
-		while (root.Parent is { } parent)
-			root = parent;
-
-		root.RequestLayout();
+		// every host on the way up must be dirtied: UIKit only calls LayoutSubviews on a view it
+		// thinks is stale, and a ScrollView whose frame did not change would keep its old content
+		for (View? view = this; view is not null; view = view.Parent)
+			view.RequestLayout();
 	}
 
 	partial void RequestLayout();
