@@ -37,6 +37,13 @@ public partial class ScrollView
 			return;
 		}
 
+		// the scroll view fills the bounds, but UIKit insets the content by the safe area — laying
+		// out against the raw bounds makes the content wider than what is visible
+		UIEdgeInsets inset = host.AdjustedContentInset;
+		viewport = new(
+			Math.Max(0, viewport.Width - inset.Left - inset.Right),
+			Math.Max(0, viewport.Height - inset.Top - inset.Bottom));
+
 		bool vertical = Orientation == Orientation.Vertical;
 		Size probe = vertical
 			? new(viewport.Width, double.PositiveInfinity)
