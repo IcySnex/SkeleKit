@@ -9,8 +9,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class MovieInfoPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	public static View Build() =>
 		new ScrollView
 		{
@@ -50,8 +48,8 @@ public static class MovieInfoPage
 								Children =
 								{
 									new Label { Text = "Interstellar", FontSize = 28, Bold = true },
-									new Label { Text = "2014 · 2h 49m · PG-13", FontSize = 15, TextColor = Secondary },
-									new Label { Text = "Adventure · Drama · Science Fiction", FontSize = 15, TextColor = Secondary },
+									new Label { Text = "2014 · 2h 49m · PG-13", FontSize = 15, TextColor = Demo.Secondary },
+									new Label { Text = "Adventure · Drama · Science Fiction", FontSize = 15, TextColor = Demo.Secondary },
 									new Label
 									{
 										Text = "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",

@@ -7,8 +7,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class ImagePage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	public static View Build() =>
 		new ScrollView
 		{
@@ -18,7 +16,7 @@ public static class ImagePage
 				Margin = new Thickness(16),
 				Children =
 				{
-					new Label { Text = "SF Symbol", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("SF Symbol"),
 					new Image
 					{
 						Source = "star.fill",
@@ -27,7 +25,7 @@ public static class ImagePage
 						Stretch = Stretch.Uniform
 					},
 
-					new Label { Text = "URL image", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("URL image"),
 					new Image
 					{
 						Source = "https://picsum.photos/300/200",
@@ -36,7 +34,7 @@ public static class ImagePage
 						Stretch = Stretch.UniformToFill
 					},
 
-					new Label { Text = "SF Symbol with fill stretch", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("SF Symbol with fill stretch"),
 					new Image
 					{
 						Source = "heart.fill",
@@ -45,7 +43,7 @@ public static class ImagePage
 						Stretch = Stretch.Fill
 					},
 
-					new Label { Text = "SF Symbol no stretch", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("SF Symbol no stretch"),
 					new Image
 					{
 						Source = "gear",

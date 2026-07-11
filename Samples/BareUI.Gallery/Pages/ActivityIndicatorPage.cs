@@ -7,8 +7,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class ActivityIndicatorPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	public static View Build() =>
 		new ScrollView
 		{
@@ -18,19 +16,19 @@ public static class ActivityIndicatorPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					new Label { Text = "Medium, animating", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Medium, animating"),
 					new ActivityIndicator { IsAnimating = true, IsLarge = false },
 
-					new Label { Text = "Medium, stopped", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Medium, stopped"),
 					new ActivityIndicator { IsAnimating = false, IsLarge = false },
 
-					new Label { Text = "Large, animating", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Large, animating"),
 					new ActivityIndicator { IsAnimating = true, IsLarge = true },
 
-					new Label { Text = "Large, stopped", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Large, stopped"),
 					new ActivityIndicator { IsAnimating = false, IsLarge = true },
 
-					new Label { Text = "Custom color", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Custom color"),
 					new ActivityIndicator
 					{
 						IsAnimating = true,

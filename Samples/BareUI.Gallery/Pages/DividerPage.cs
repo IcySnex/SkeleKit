@@ -7,8 +7,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class DividerPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	public static View Build() =>
 		new ScrollView
 		{
@@ -19,22 +17,22 @@ public static class DividerPage
 				Children =
 				{
 					new Label { Text = "Section 1", FontSize = 17, Bold = true },
-					new Label { Text = "Content here", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Content here"),
 
 					new Divider { },
 
 					new Label { Text = "Section 2", FontSize = 17, Bold = true },
-					new Label { Text = "More content", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("More content"),
 
 					new Divider { Color = Color.FromHex(0x8E8E93) },
 
 					new Label { Text = "Section 3", FontSize = 17, Bold = true },
-					new Label { Text = "Even more content", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Even more content"),
 
 					new Divider { Color = Color.FromHex(0xFF3B30) },
 
 					new Label { Text = "Section 4", FontSize = 17, Bold = true },
-					new Label { Text = "Final section", FontSize = 13, TextColor = Secondary }
+					Demo.Caption("Final section")
 				}
 			}
 		};

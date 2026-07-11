@@ -7,8 +7,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class SliderPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	public static View Build() =>
 		new ScrollView
 		{
@@ -18,16 +16,16 @@ public static class SliderPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					new Label { Text = "0–1 range", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("0–1 range"),
 					new Slider { Minimum = 0, Maximum = 1, Value = 0.5 },
 
-					new Label { Text = "0–100 range", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("0–100 range"),
 					new Slider { Minimum = 0, Maximum = 100, Value = 50 },
 
-					new Label { Text = "1–10 range", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("1–10 range"),
 					new Slider { Minimum = 1, Maximum = 10, Value = 5 },
 
-					new Label { Text = "With callback", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("With callback"),
 					new Slider
 					{
 						Minimum = 0,

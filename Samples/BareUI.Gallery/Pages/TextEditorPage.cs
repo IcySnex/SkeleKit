@@ -7,7 +7,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class TextEditorPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
 	static readonly Color Separator = Color.FromHex(0xC7C7CC);
 
 	// Wraps an editor in a visible bordered box so its measured bounds are apparent.
@@ -31,13 +30,13 @@ public static class TextEditorPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					new Label { Text = "Default", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Default"),
 					Boxed(new TextEditor { }),
 
-					new Label { Text = "Custom font size", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Custom font size"),
 					Boxed(new TextEditor { FontSize = 14 }),
 
-					new Label { Text = "With callback", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("With callback"),
 					Boxed(new TextEditor
 					{
 						Text = "Type here",

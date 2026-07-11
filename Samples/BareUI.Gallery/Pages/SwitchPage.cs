@@ -7,8 +7,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class SwitchPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	public static View Build() =>
 		new ScrollView
 		{
@@ -18,13 +16,13 @@ public static class SwitchPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					new Label { Text = "Off", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Off"),
 					new Switch { IsOn = false },
 
-					new Label { Text = "On", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("On"),
 					new Switch { IsOn = true },
 
-					new Label { Text = "With callback", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("With callback"),
 					new Switch
 					{
 						IsOn = false,

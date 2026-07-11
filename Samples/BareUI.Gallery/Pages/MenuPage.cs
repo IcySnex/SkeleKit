@@ -10,8 +10,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class MenuPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	static readonly (string Title, Func<View> Build)[] entries =
 	[
 		("MovieInfo", MovieInfoPage.Build),

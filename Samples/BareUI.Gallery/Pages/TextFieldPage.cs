@@ -8,8 +8,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class TextFieldPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	public static View Build() =>
 		new ScrollView
 		{
@@ -19,13 +17,13 @@ public static class TextFieldPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					new Label { Text = "Placeholder", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Placeholder"),
 					new TextField { Placeholder = "Enter some text" },
 
-					new Label { Text = "Email keyboard", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Email keyboard"),
 					new TextField { Placeholder = "you@example.com", Keyboard = KeyboardType.Email },
 
-					new Label { Text = "Secure entry", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Secure entry"),
 					new SecureField { Placeholder = "Password" }
 				}
 			}

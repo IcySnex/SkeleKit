@@ -8,8 +8,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class NativeViewPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	public static View Build() =>
 		new ScrollView
 		{
@@ -19,13 +17,13 @@ public static class NativeViewPage
 				Margin = new Thickness(16),
 				Children =
 				{
-					new Label { Text = "UISegmentedControl", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("UISegmentedControl"),
 					new NativeView(CreateSegmentedControl()),
 
-					new Label { Text = "UIDatePicker", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("UIDatePicker"),
 					new NativeView(CreateDatePicker()),
 
-					new Label { Text = "UISlider (native)", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("UISlider (native)"),
 					new NativeView(CreateNativeSlider())
 				}
 			}

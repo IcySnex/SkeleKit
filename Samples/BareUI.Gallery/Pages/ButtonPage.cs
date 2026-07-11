@@ -9,8 +9,6 @@ namespace BareUI.Gallery;
 /// </summary>
 public static class ButtonPage
 {
-	static readonly Color Secondary = Color.FromHex(0x8E8E93);
-
 	public static View Build() =>
 		new ScrollView
 		{
@@ -22,19 +20,19 @@ public static class ButtonPage
 				{
 					new Label { Text = "Styles", FontSize = 20, Bold = true },
 
-					new Label { Text = "Plain", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Plain"),
 					new Button { Text = "Plain", Style = ButtonStyle.Plain },
 
-					new Label { Text = "Gray", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Gray"),
 					new Button { Text = "Gray", Style = ButtonStyle.Gray },
 
-					new Label { Text = "Tinted", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Tinted"),
 					new Button { Text = "Tinted", Style = ButtonStyle.Tinted },
 
-					new Label { Text = "Filled", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("Filled"),
 					new Button { Text = "Filled", Style = ButtonStyle.Filled },
 
-					new Label { Text = "FilledCapsule", FontSize = 13, TextColor = Secondary },
+					Demo.Caption("FilledCapsule"),
 					new Button { Text = "Filled Capsule", Style = ButtonStyle.FilledCapsule },
 
 					new Label { Text = "Icon only", FontSize = 20, Bold = true },
