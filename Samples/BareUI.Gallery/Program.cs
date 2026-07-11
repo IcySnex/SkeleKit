@@ -28,23 +28,27 @@ BareApp.Create()
 		services.AddTransient<PickerDemoViewModel>();
 		services.AddTransient<ImageDemoViewModel>();
 		services.AddTransient<NativeViewDemoViewModel>();
+		services.AddTransient<KeyboardDemoViewModel>();
 	})
-	.UsePages(pages => pages
-		.AddSingleton<MenuView>()
-		.AddSingleton<BindingView>()
-		.AddTransient<MovieInfoView>()
-		.AddTransient<ButtonDemo>()
-		.AddTransient<TextFieldDemo>()
-		.AddTransient<TextEditorDemo>()
-		.AddTransient<SwitchDemo>()
-		.AddTransient<SliderDemo>()
-		.AddTransient<StepperDemo>()
-		.AddTransient<ProgressBarDemo>()
-		.AddTransient<ActivityIndicatorDemo>()
-		.AddTransient<DividerDemo>()
-		.AddTransient<PickerDemo>()
-		.AddTransient<ImageDemo>()
-		.AddTransient<NativeViewDemo>())
+	.UsePages(pages =>
+	{
+		pages.AddSingleton<MenuView>();
+		pages.AddTransient<MovieInfoView>();
+		pages.AddSingleton<BindingView>();
+
+		pages.AddTransient<ButtonDemo>();
+		pages.AddTransient<TextFieldDemo>();
+		pages.AddTransient<TextEditorDemo>();
+		pages.AddTransient<SwitchDemo>();
+		pages.AddTransient<SliderDemo>();
+		pages.AddTransient<StepperDemo>();
+		pages.AddTransient<ProgressBarDemo>();
+		pages.AddTransient<ActivityIndicatorDemo>();
+		pages.AddTransient<DividerDemo>();
+		pages.AddTransient<PickerDemo>();
+		pages.AddTransient<ImageDemo>();
+		pages.AddTransient<NativeViewDemo>();
+	})
 	.Tabs(tabs => tabs
 		.Tab<MenuView>("Controls", icon: "square.grid.2x2")
 		.Tab<BindingView>("Bindings", icon: "link"))

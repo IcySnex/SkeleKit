@@ -16,7 +16,7 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 		{
 			Content = new VStack
 			{
-				Spacing = 20,
+				Spacing = 200,
 				Margin = new Thickness(16),
 				Children =
 				{
