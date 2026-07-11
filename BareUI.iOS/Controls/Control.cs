@@ -17,7 +17,7 @@ public abstract class Control : View
 		return new(fit.Width, fit.Height);
 	}
 
-	// Converts a possibly-infinite available size into a finite CGSize UIKit's SizeThatFits accepts.
+	// SizeThatFits needs finite sizes
 	private protected static CGSize ClampToFinite(
 		Size availableSize)
 	{

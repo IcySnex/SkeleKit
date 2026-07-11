@@ -44,8 +44,7 @@ public class TextEditor : Control
 		return view;
 	}
 
-	// UITextView.SizeThatFits over-reports height for empty text under an unbounded
-	// height constraint; derive the height from content with a one-line floor instead.
+	// UITextView over-reports empty height; size from content, floor at one line
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{

@@ -3,7 +3,7 @@ using UIKit;
 
 namespace BareUI.Gallery;
 
-// Temporary manual bootstrap — replaced by BareApp once the app model (M4) exists.
+// temp bootstrap, replaced by BareApp in M4
 [Register(nameof(AppDelegate))]
 public class AppDelegate : UIApplicationDelegate
 {

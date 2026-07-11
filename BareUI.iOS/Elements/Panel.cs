@@ -38,7 +38,7 @@ public abstract class Panel : View
 			RealizeChildren();
 	}
 
-	// Rebuilds the host's native subviews from the current children.
+	// rebuild native subviews from Children
 	void RealizeChildren()
 	{
 		UIView host = Native;

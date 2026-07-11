@@ -8,7 +8,7 @@ public class SceneDelegate : UIWindowSceneDelegate
 {
 	public override UIWindow? Window { get; set; }
 
-	// nav retains its VCs natively only — without a managed ref the GC eats the peers. BareApp takes over in M4.
+	// nav retains VCs natively only, GC eats the peers. BareApp takes this over in M4.
 	readonly List<BareHostController> hosts = [];
 
 	// nav.Delegate is weak
@@ -24,8 +24,7 @@ public class SceneDelegate : UIWindowSceneDelegate
 
 		UINavigationController? navigation = null;
 
-		// Pushes a demo page onto the nav stack; captured by the pure-BareUI MenuPage tree so its
-		// buttons never need to see UIKit.
+		// push a page; keeps MenuPage free of UIKit
 		void Push(
 			string title,
 			View page)
@@ -50,7 +49,7 @@ public class SceneDelegate : UIWindowSceneDelegate
 		};
 		Window.MakeKeyAndVisible();
 
-		// Debug convenience: launch straight into a page via `SIMCTL_CHILD_GALLERY_PAGE=<Title>`.
+		// SIMCTL_CHILD_GALLERY_PAGE=<Title> jumps straight to a page
 		string? autoPage = Environment.GetEnvironmentVariable("GALLERY_PAGE");
 		if (autoPage is not null && MenuPage.TryBuild(autoPage, out View? page))
 			Push(autoPage, page);

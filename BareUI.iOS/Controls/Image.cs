@@ -29,8 +29,7 @@ public class Image : Control
 
 	private protected override UIView CreateNative()
 	{
-		// ClipsToBounds is set on the element, not the native view: ApplyVisualState overwrites the
-		// native flag from this property right after CreateNative returns.
+		// set on the element, not the native view: ApplyVisualState overwrites it after CreateNative
 		ClipsToBounds |= Stretch is Stretch.UniformToFill;
 
 		UIImageView imageView = new()
@@ -66,7 +65,7 @@ public class Image : Control
 		loadCancellation = null;
 	}
 
-	// Resolves a non-URL source: under Auto a bundle asset shadows an SF symbol of the same name.
+	// Auto: bundle asset beats symbol of same name
 	static UIImage? ResolveSync(
 		ImageSource source) =>
 		source.Kind switch
@@ -91,7 +90,7 @@ public class Image : Control
 		}
 		catch
 		{
-			// Loader is public/pluggable; a throwing custom loader must not crash the process.
+			// custom loader must not kill the process
 			return;
 		}
 
@@ -100,7 +99,7 @@ public class Image : Control
 
 		UIApplication.SharedApplication.BeginInvokeOnMainThread(() =>
 		{
-			// Apply only if still realized and still pointed at the same URL.
+			// still realized, still same url?
 			if (cancellationToken.IsCancellationRequested || !IsRealized)
 				return;
 			if (Source is not { Kind: ImageSourceKind.Url } current || current.Value != source.Value)

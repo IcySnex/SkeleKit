@@ -22,8 +22,7 @@ public interface IImageLoader
 /// </summary>
 sealed class HttpImageLoader : IImageLoader
 {
-	// SocketsHttpHandler, not the default NSUrlSessionHandler: its delegate's managed peer gets
-	// collected mid-redirect and takes the process down.
+	// not NSUrlSessionHandler: its delegate peer dies mid-redirect and kills the process
 	static readonly HttpClient client = new(new SocketsHttpHandler());
 
 	public async Task<UIImage?> LoadAsync(

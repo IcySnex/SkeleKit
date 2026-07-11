@@ -9,7 +9,7 @@ public static class TextEditorPage
 {
 	static readonly Color Separator = Color.FromHex(0xC7C7CC);
 
-	// Wraps an editor in a visible bordered box so its measured bounds are apparent.
+	// box it so measured bounds are visible
 	static Border Boxed(
 		TextEditor editor) =>
 		new()

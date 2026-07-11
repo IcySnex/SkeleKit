@@ -46,7 +46,7 @@ public class ScrollView : Panel
 		content.Measure(probe);
 		Size desired = content.DesiredSize;
 
-		// Fill the finite dimension when the parent offers one; otherwise size to content.
+		// fill finite dimension, else size to content
 		double width = vertical
 			? Fill(availableSize.Width, desired.Width)
 			: desired.Width;
@@ -66,7 +66,7 @@ public class ScrollView : Panel
 	private protected override UIView CreateNative() =>
 		new ScrollHost(this);
 
-	// Lays out the content in a viewport of the given size and reports the scrollable content size.
+	// lay out content, report scrollable size
 	internal void LayoutContent(
 		Size viewport)
 	{

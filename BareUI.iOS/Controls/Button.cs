@@ -98,8 +98,7 @@ public class Button : Control
 		canExecuteHandler = null;
 	}
 
-	// Reflects the command's CanExecute onto the native button's enabled state. CanExecuteChanged
-	// can fire from a background thread, so hop to the main thread before touching UIKit.
+	// CanExecuteChanged can fire off-thread
 	void UpdateEnabled()
 	{
 		bool enabled = Command?.CanExecute(CommandParameter) ?? true;

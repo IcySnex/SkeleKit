@@ -22,7 +22,7 @@ public class NativeView : Control
 	private protected override UIView CreateNative() =>
 		view;
 
-	// The wrapped view is caller-owned; Unrealize must not dispose it.
+	// caller owns it, don't dispose
 	private protected override bool OwnsNative =>
 		false;
 }

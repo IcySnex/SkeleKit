@@ -27,7 +27,7 @@ public class Grid : Panel
 	public double ColumnSpacing { get; set; } = 0;
 
 
-	// Resolved track sizes, kept between measure and arrange (arrange follows measure).
+	// resolved tracks, shared measure -> arrange
 	double[] columnWidths = [];
 	double[] rowHeights = [];
 
@@ -44,7 +44,7 @@ public class Grid : Panel
 		columnWidths = ResolveTracks(columns, availableSize.Width - columnGaps, horizontal: true);
 		rowHeights = ResolveTracks(rows, availableSize.Height - rowGaps, horizontal: false);
 
-		// Final measure of each child at its resolved cell size so DesiredSize is ready for arrange.
+		// remeasure at final cell size so arrange has DesiredSize
 		foreach (View child in Children)
 		{
 			GridChild placement = PlacementOf(child, columns.Count, rows.Count);
@@ -86,7 +86,7 @@ public class Grid : Panel
 	}
 
 
-	// Sizes one axis: absolute tracks take their value, auto tracks fit their children, star tracks share the rest.
+	// one axis: absolute = value, auto = fit children, star = split rest
 	double[] ResolveTracks(
 		IReadOnlyList<GridLength> tracks,
 		double available,
@@ -110,7 +110,7 @@ public class Grid : Panel
 			}
 		}
 
-		// Auto tracks: measure single-span children in that track unconstrained on this axis.
+		// auto: fit single-span children, unconstrained on this axis
 		for (int i = 0; i < tracks.Count; i++)
 		{
 			if (!tracks[i].IsAuto)
@@ -123,8 +123,7 @@ public class Grid : Panel
 				if (start != i || span != 1)
 					continue;
 
-				// When sizing auto rows, columns are already resolved, so constrain the
-				// child to its column width — that lets wrapping content report a real height.
+				// columns already resolved: constrain width so wrapping content reports real height
 				Size probe = horizontal
 					? Size.Infinity
 					: new(CellWidth(child), double.PositiveInfinity);
@@ -137,7 +136,7 @@ public class Grid : Panel
 			used += max;
 		}
 
-		// Star tracks: split the remainder by weight.
+		// star: split remainder by weight
 		double remaining = Math.Max(0, available - used);
 		if (totalStars > 0)
 		{
@@ -214,7 +213,7 @@ public class Grid : Panel
 		return total;
 	}
 
-	// The resolved width of the column span a child sits in (uses already-resolved columnWidths).
+	// width of the column span a child sits in
 	double CellWidth(
 		View child)
 	{

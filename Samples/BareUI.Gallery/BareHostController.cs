@@ -41,7 +41,7 @@ public class BareHostController : UIViewController
 	{
 		base.ViewDidLayoutSubviews();
 
-		// Setting the host frame drives the measure/arrange engine via LayoutSubviews.
+		// frame set drives measure/arrange via LayoutSubviews
 		if (root is not null)
 			root.Native.Frame = View!.SafeAreaLayoutGuide.LayoutFrame;
 	}

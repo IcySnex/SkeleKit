@@ -190,7 +190,7 @@ public abstract class View
 		finalSize;
 
 
-	// Host hooks: the native LayoutHost drives these on the element it hosts.
+	// LayoutHost drives these
 
 	internal Size HostMeasure(
 		Size available) =>
@@ -210,7 +210,7 @@ public abstract class View
 		double max) =>
 		Math.Max(min, Math.Min(value, max));
 
-	// Folds an explicit length into the min/max window (WPF semantics).
+	// fold explicit length into min/max (WPF)
 	static (double Min, double Max) MinMax(
 		double explicitLength,
 		double min,
