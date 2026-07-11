@@ -17,7 +17,16 @@ internal sealed class StubLeaf : View
 		content = new Size(width, height);
 	}
 
+	/// <summary>
+	/// How often MeasureOverride actually ran — the measure cache should keep this down.
+	/// </summary>
+	public int MeasureCount { get; private set; }
+
 	protected override Size MeasureOverride(
-		Size availableSize) =>
-		content;
+		Size availableSize)
+	{
+		MeasureCount++;
+
+		return content;
+	}
 }

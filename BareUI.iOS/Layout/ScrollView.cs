@@ -66,9 +66,21 @@ public partial class ScrollView : Panel
 		return new(width, height);
 	}
 
+	// the engine lays the content out itself: UIKit only calls ScrollHost.LayoutSubviews when the
+	// scroll view's own bounds change, which would leave content stale after a binding update
+	protected override Size ArrangeOverride(
+		Size finalSize)
+	{
+		ArrangeContent(finalSize);
+
+		return finalSize;
+	}
+
+	partial void ArrangeContent(
+		Size viewport);
+
 	static double Fill(
 		double available,
 		double desired) =>
 		double.IsFinite(available) ? available : desired;
-
 }

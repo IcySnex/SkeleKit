@@ -15,8 +15,11 @@ public abstract partial class Panel : View
 		Children = new(this, SyncChildren);
 	}
 
-	void SyncChildren() =>
+	void SyncChildren()
+	{
+		InvalidateMeasure();
 		OnChildrenChanged();
+	}
 
 	partial void OnChildrenChanged();
 

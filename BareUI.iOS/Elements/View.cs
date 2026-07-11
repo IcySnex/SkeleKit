@@ -85,14 +85,39 @@ public abstract partial class View
 	}
 
 	/// <summary>
-	/// Marks the layout stale from here to the root, so every host re-measures and re-arranges.
+	/// Drops the cached measurement here and up the tree, and asks the root host for a layout pass.
 	/// </summary>
 	public void InvalidateMeasure()
 	{
-		// every host on the way up must be dirtied: UIKit only calls LayoutSubviews on a view it
-		// thinks is stale, and a ScrollView whose frame did not change would keep its old content
-		for (View? view = this; view is not null; view = view.Parent)
-			view.RequestLayout();
+		View view = this;
+
+		while (true)
+		{
+			view.measureValid = false;
+
+			if (view.Parent is not { } parent)
+				break;
+
+			// an already-stale parent has stale ancestors too
+			if (!parent.measureValid)
+			{
+				view = Root();
+				break;
+			}
+
+			view = parent;
+		}
+
+		view.RequestLayout();
+	}
+
+	View Root()
+	{
+		View root = this;
+		while (root.Parent is { } parent)
+			root = parent;
+
+		return root;
 	}
 
 	partial void RequestLayout();
@@ -147,7 +172,7 @@ public abstract partial class View
 	/// </summary>
 	public Bindable<ICommand?> TapCommand
 	{
-		get => Bindable.From(tapCommand);
+		get => Bindable.From<ICommand?>(tapCommand);
 		set => tapCommandBinding = Register(tapCommandBinding, value, value => Set(ref tapCommand, value, ApplyInteraction, affectsMeasure: false));
 	}
 	ICommand? tapCommand;
@@ -325,12 +350,22 @@ public abstract partial class View
 	public Rect ArrangedBounds { get; private set; }
 
 
+	bool measureValid;
+	Size lastAvailable;
+
 	/// <summary>
 	/// First pass: computes <see cref="DesiredSize"/> for the space the parent offers.
 	/// </summary>
 	public void Measure(
 		Size available)
 	{
+		// same slot and nothing changed since: DesiredSize still holds
+		if (measureValid && lastAvailable == available)
+			return;
+
+		lastAvailable = available;
+		measureValid = true;
+
 		if (!isVisible)
 		{
 			DesiredSize = Size.Zero;

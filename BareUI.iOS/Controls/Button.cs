@@ -45,7 +45,7 @@ public class Button : Control
 	/// </summary>
 	public Bindable<ICommand?> Command
 	{
-		get => Bindable.From(command);
+		get => Bindable.From<ICommand?>(command);
 		set => commandBinding = Register(commandBinding, value, SetCommand);
 	}
 	ICommand? command;

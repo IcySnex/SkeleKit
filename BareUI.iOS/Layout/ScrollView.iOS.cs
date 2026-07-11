@@ -20,6 +20,10 @@ public partial class ScrollView
 			_ => UIScrollViewKeyboardDismissMode.None
 		};
 
+	partial void ArrangeContent(
+		Size viewport) =>
+		LayoutContent(viewport);
+
 	// lay out content, report scrollable size
 	internal void LayoutContent(
 		Size viewport)

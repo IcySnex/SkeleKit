@@ -104,8 +104,12 @@ Shape of the thing now:
 
 Hard-won rules (don't relearn these):
 - **Native peers must be rooted** — see the convention above. It caused the black-screen/SIGABRT bug.
-- **`InvalidateMeasure` dirties every host up to the root**, not just the root: UIKit skips
-  `LayoutSubviews` on a view whose bounds didn't change, so a `ScrollView` would keep stale content.
+- **Measure is cached per available-size** (`View.measureValid` + `lastAvailable`).
+  `InvalidateMeasure()` clears the flag up the ancestor chain (stopping at an already-stale parent)
+  and asks the **root** host for one layout pass.
+- **A `Panel` must lay out its own content, not wait for UIKit.** UIKit only calls `LayoutSubviews`
+  on a view whose bounds changed, so `ScrollView` kept stale content after a binding update — it now
+  arranges its content in `ArrangeOverride`.
 - **`Bindable<T>` can't take an interface `T`** (C# forbids user-defined conversions from
   interfaces) → `Picker.Items` stays plain; literals need `Bindable.From<ICommand?>(cmd)`.
 - User-defined conversions don't chain → `Image.Source` needs `ImageSource.Symbol(...)`/`Url(...)`.
@@ -113,8 +117,6 @@ Hard-won rules (don't relearn these):
   explicit type arg: `Bind<ICommand?>(vm => vm.SaveCommand)`.
 
 Known debt, roughly in priority order:
-- No **measure caching**: `LayoutHost.LayoutSubviews` re-measures the whole subtree each pass, and
-  invalidation now dirties every ancestor. Fine today; profile before M5's lists.
 - `Panel.RealizeChildren` rebuilds all native subviews on any `Children` change (no diffing).
 - `MenuView`/`PickerDemo` still need `OnViewModelAttached` (lists + `Picker.Items`). `CollectionView`
   + `ItemsSource` should kill the first.
