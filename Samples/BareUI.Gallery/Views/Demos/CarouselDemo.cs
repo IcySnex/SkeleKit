@@ -11,7 +11,7 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 {
 	readonly CollectionView<Movie> movies = new()
 	{
-		Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12, snap: CarouselSnap.ItemCentered),
+		Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12, snap: CarouselSnap.LeadingBoundary),
 		ItemTemplate = () => new MovieCell(),
 		Height = 260
 	};
@@ -19,10 +19,6 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 	public CarouselDemo()
 	{
 		Title = "Carousel";
-
-		// the row runs edge to edge: without this the page insets it and the carousel stops dead at
-		// the safe-area border in landscape instead of scrolling past it
-		SafeAreaEdges = SafeAreaEdges.Top | SafeAreaEdges.Bottom;
 
 		Content = new VStack
 		{

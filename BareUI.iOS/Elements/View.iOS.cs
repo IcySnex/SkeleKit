@@ -125,11 +125,48 @@ public abstract partial class View
 		native.Layer.CornerRadius = (nfloat)CornerRadius;
 	}
 
+	// the page's insets, walked up the tree
+	Thickness PageSafeArea
+	{
+		get
+		{
+			for (View? view = this; view is not null; view = view.Parent)
+				if (view is ContentView page)
+					return page.PageSafeArea;
+
+			return Thickness.Zero;
+		}
+	}
+
+	// a bleeding view grows outward into the safe area; a scrolling one then insets its own content
+	// back inside, so the scroll passes under the bar but the content never does
+	Rect Bleed(
+		Rect frame)
+	{
+		if (IgnoresSafeArea is SafeAreaEdges.None)
+			return frame;
+
+		Thickness insets = PageSafeArea;
+
+		double left = IgnoresSafeArea.HasFlag(SafeAreaEdges.Leading) ? insets.Left : 0;
+		double right = IgnoresSafeArea.HasFlag(SafeAreaEdges.Trailing) ? insets.Right : 0;
+		double top = IgnoresSafeArea.HasFlag(SafeAreaEdges.Top) ? insets.Top : 0;
+		double bottom = IgnoresSafeArea.HasFlag(SafeAreaEdges.Bottom) ? insets.Bottom : 0;
+
+		return new(
+			frame.X - left,
+			frame.Y - top,
+			frame.Width + left + right,
+			frame.Height + top + bottom);
+	}
+
 	partial void ApplyFrame(
 		Rect frame)
 	{
 		if (native is null)
 			return;
+
+		frame = Bleed(frame);
 
 		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
 		bool resized = native.Frame.Size != next.Size;

@@ -35,11 +35,11 @@ public partial class CollectionView<TItem>
 			AlwaysBounceVertical = !carousel,
 			AlwaysBounceHorizontal = carousel,
 
-			// ScrollableAxes, not Always: Always also insets left/right for the safe area, which makes a
-			// vertical list horizontally scrollable even when its rows fit. A carousel ignores the safe
-			// area entirely so its items run edge to edge instead of stopping at the inset.
-			ContentInsetAdjustmentBehavior = carousel
-				? UIScrollViewContentInsetAdjustmentBehavior.Never
+			// A bleeding view overlaps the unsafe area, so Always makes UIKit inset its content back
+			// inside it: the scroll passes under the bar, the items never do. Otherwise ScrollableAxes,
+			// since Always would also inset left/right and make a vertical list scroll sideways.
+			ContentInsetAdjustmentBehavior = IgnoresSafeArea is not SafeAreaEdges.None
+				? UIScrollViewContentInsetAdjustmentBehavior.Always
 				: UIScrollViewContentInsetAdjustmentBehavior.ScrollableAxes
 		};
 

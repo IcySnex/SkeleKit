@@ -18,9 +18,12 @@ public partial class ScrollView
 		host.AlwaysBounceVertical = vertical;
 		host.AlwaysBounceHorizontal = !vertical;
 
-		// ScrollableAxes: inset only along the axis that scrolls, so content still slides under the
-		// bars but a vertical scroll view never gains a horizontal scrollable range
-		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.ScrollableAxes;
+		// bleeding: Always, so UIKit insets the content back inside the safe area while the scroll view
+		// itself extends under the bar. Otherwise ScrollableAxes, since Always would also inset
+		// left/right and give a vertical scroll view a horizontal scrollable range
+		host.ContentInsetAdjustmentBehavior = IgnoresSafeArea is not SafeAreaEdges.None
+			? UIScrollViewContentInsetAdjustmentBehavior.Always
+			: UIScrollViewContentInsetAdjustmentBehavior.ScrollableAxes;
 
 		ApplyKeyboardDismiss();
 	}

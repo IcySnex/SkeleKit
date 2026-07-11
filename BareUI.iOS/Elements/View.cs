@@ -206,6 +206,16 @@ public abstract partial class View
 	// Layout properties
 
 	/// <summary>
+	/// Edges this view is allowed to extend past the safe area. A scrolling view still keeps its content inside it, so only the scroll passes under the bar.
+	/// </summary>
+	public SafeAreaEdges IgnoresSafeArea
+	{
+		get => ignoresSafeArea;
+		set => Set(ref ignoresSafeArea, value);
+	}
+	SafeAreaEdges ignoresSafeArea = SafeAreaEdges.None;
+
+	/// <summary>
 	/// Empty space around the view, outside its bounds.
 	/// </summary>
 	public Thickness Margin

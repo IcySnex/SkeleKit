@@ -103,6 +103,9 @@ sealed class PageHost : UIViewController
 		if (page is null)
 			return;
 
+		UIEdgeInsets safe = View!.SafeAreaInsets;
+		page.PageSafeArea = new(safe.Left, safe.Top, safe.Right, safe.Bottom);
+
 		// a scrolling root insets its own content for the keyboard; anything else has to shrink
 		if (ScrollRoot is not null)
 		{

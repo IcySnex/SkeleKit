@@ -15,6 +15,9 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 	{
 		Layout = CollectionLayout.List(),
 		ItemTemplate = () => new TodoCell(),
+
+		// the list scrolls under the tab bar; its content stays above it
+		IgnoresSafeArea = SafeAreaEdges.Bottom,
 		EmptyView = new Label
 		{
 			Text = "Nothing here yet — tap Add",
@@ -27,10 +30,6 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 	public LiveListDemo()
 	{
 		Title = "Live list";
-
-		// let the list run under the tab bar; the collection insets its own content, so the last row
-		// stays reachable while the content scrolls beneath the bar
-		SafeAreaEdges = SafeAreaEdges.Top | SafeAreaEdges.Leading | SafeAreaEdges.Trailing;
 
 		Content = new Grid
 		{
