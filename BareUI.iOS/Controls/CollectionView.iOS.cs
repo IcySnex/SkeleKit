@@ -15,7 +15,7 @@ public partial class CollectionView<TItem>
 
 	private protected override UIView CreateNative()
 	{
-		UICollectionView collection = new(CGRect.Empty, CreateLayout(Layout, HeaderTemplate is not null))
+		CollectionHost collection = new(this, CreateLayout(Layout, HeaderTemplate is not null))
 		{
 			BackgroundColor = UIColor.Clear
 		};
@@ -44,7 +44,6 @@ public partial class CollectionView<TItem>
 			return;
 
 		Ui.ReloadData();
-		ApplyEmptyView();
 	}
 
 	// an ObservableCollection change becomes the matching animated batch update, not a full reload
@@ -84,10 +83,7 @@ public partial class CollectionView<TItem>
 						break;
 				}
 			},
-			_ => ApplyEmptyView());
-
-		// an interrupted animation can drop the completion, so never depend on it alone
-		ApplyEmptyView();
+			null);
 	}
 
 	static NSIndexPath[] Paths(
@@ -102,11 +98,14 @@ public partial class CollectionView<TItem>
 		return paths;
 	}
 
-	// attach it once and just hide it: nulling BackgroundView detaches the view, and re-attaching the
-	// same instance from a batch-update completion does not reliably come back
-	void ApplyEmptyView()
+	// UIKit re-runs layout after every reload and batch update, so this is the one place that cannot
+	// be missed by an update path or dropped by an interrupted animation
+	void ICollectionHost.SyncEmptyState() =>
+		SyncEmptyState();
+
+	void SyncEmptyState()
 	{
-		if (EmptyView is not { } empty)
+		if (EmptyView is not { } empty || !IsRealized)
 			return;
 
 		UIView native = empty.Realize();
@@ -277,6 +276,33 @@ sealed class CollectionSource<TItem>(
 		collectionView.DeselectItem(indexPath, true);
 
 		element.Select(indexPath.Section, indexPath.Row);
+	}
+}
+
+/// <summary>
+/// The native <c>UICollectionView</c>, which drives the empty state from its own layout pass.
+/// </summary>
+sealed class CollectionHost : UICollectionView
+{
+	readonly ICollectionHost? element;
+
+	public CollectionHost(
+		ICollectionHost element,
+		UICollectionViewLayout layout) : base(CGRect.Empty, layout)
+	{
+		this.element = element;
+	}
+
+	// see LayoutHost
+	public CollectionHost(
+		NativeHandle handle) : base(handle)
+	{ }
+
+	public override void LayoutSubviews()
+	{
+		base.LayoutSubviews();
+
+		element?.SyncEmptyState();
 	}
 }
 

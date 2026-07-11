@@ -6,7 +6,13 @@ namespace BareUI;
 /// <summary>
 /// A virtualized list, grid or carousel over <c>UICollectionView</c>. Cells are recycled: the element tree is built once per cell and rebound on reuse.
 /// </summary>
-public partial class CollectionView<TItem> : View
+// the native host is not generic, so it talks to the element through this
+interface ICollectionHost
+{
+	void SyncEmptyState();
+}
+
+public partial class CollectionView<TItem> : View, ICollectionHost
 	where TItem : class
 {
 	/// <summary>
