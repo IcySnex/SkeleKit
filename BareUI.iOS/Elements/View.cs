@@ -265,6 +265,12 @@ public abstract class View
 	private protected abstract UIView CreateNative();
 
 	/// <summary>
+	/// Whether Unrealize disposes the native view. False for wrappers around caller-owned views.
+	/// </summary>
+	private protected virtual bool OwnsNative =>
+		true;
+
+	/// <summary>
 	/// Builds the native view (if needed) and realizes children and bindings.
 	/// </summary>
 	public UIView Realize() =>
@@ -292,7 +298,8 @@ public abstract class View
 		OnUnrealized();
 
 		native.RemoveFromSuperview();
-		native.Dispose();
+		if (OwnsNative)
+			native.Dispose();
 		native = null;
 	}
 

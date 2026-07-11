@@ -13,11 +13,18 @@ public abstract class Control : View
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
+		CGSize fit = Native.SizeThatFits(ClampToFinite(availableSize));
+		return new(fit.Width, fit.Height);
+	}
+
+	// Converts a possibly-infinite available size into a finite CGSize UIKit's SizeThatFits accepts.
+	private protected static CGSize ClampToFinite(
+		Size availableSize)
+	{
 		nfloat width = double.IsFinite(availableSize.Width) ? (nfloat)availableSize.Width : nfloat.MaxValue;
 		nfloat height = double.IsFinite(availableSize.Height) ? (nfloat)availableSize.Height : nfloat.MaxValue;
 
-		CGSize fit = Native.SizeThatFits(new(width, height));
-		return new(fit.Width, fit.Height);
+		return new(width, height);
 	}
 #endif
 }
