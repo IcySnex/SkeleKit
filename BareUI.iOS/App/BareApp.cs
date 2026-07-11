@@ -148,6 +148,10 @@ public sealed class BareApp
 
 		controller.ViewControllers = [.. stacks];
 
+		// iPadOS 18 shows the same tabs as a sidebar
+		if (definition.UseSidebar && OperatingSystem.IsIOSVersionAtLeast(18))
+			controller.Mode = UITabBarControllerMode.TabSidebar;
+
 		return controller;
 	}
 

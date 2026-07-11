@@ -29,6 +29,44 @@ public abstract partial class ContentView : Panel
 	public bool ScrollsUnderBars { get; set; } = true;
 
 	/// <summary>
+	/// Whether the title is shown large and collapses as the content scrolls.
+	/// </summary>
+	public TitleStyle TitleStyle { get; set; } = TitleStyle.Inline;
+
+	/// <summary>
+	/// Hides the navigation bar for this page.
+	/// </summary>
+	public bool HidesNavigationBar { get; set; }
+
+	/// <summary>
+	/// The page's background style.
+	/// </summary>
+	public PageBackground BackgroundStyle { get; set; } = PageBackground.Default;
+
+	/// <summary>
+	/// Buttons in the navigation bar.
+	/// </summary>
+	public IList<ToolbarItem> ToolbarItems { get; } = [];
+
+	/// <summary>
+	/// Raised once, the first time the page is realized.
+	/// </summary>
+	protected virtual void OnLoaded()
+	{ }
+
+	/// <summary>
+	/// Raised when the page's tree is torn down.
+	/// </summary>
+	protected virtual void OnUnloaded()
+	{ }
+
+	internal void NotifyLoaded() =>
+		OnLoaded();
+
+	internal void NotifyUnloaded() =>
+		OnUnloaded();
+
+	/// <summary>
 	/// The page's element tree.
 	/// </summary>
 	public View? Content

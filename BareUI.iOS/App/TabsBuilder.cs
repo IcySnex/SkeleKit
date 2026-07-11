@@ -17,6 +17,8 @@ public sealed class TabsBuilder
 
 	internal bool UseLargeTitles { get; private set; }
 
+	internal bool UseSidebar { get; private set; }
+
 	/// <summary>
 	/// Adds a tab rooted at <typeparamref name="TView"/>, which must be registered in UsePages.
 	/// </summary>
@@ -36,6 +38,16 @@ public sealed class TabsBuilder
 	public TabsBuilder LargeTitles()
 	{
 		UseLargeTitles = true;
+
+		return this;
+	}
+
+	/// <summary>
+	/// On iPad, shows the tabs as a sidebar instead of a tab bar.
+	/// </summary>
+	public TabsBuilder SidebarOnIPad()
+	{
+		UseSidebar = true;
 
 		return this;
 	}

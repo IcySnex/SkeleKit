@@ -78,10 +78,9 @@ sealed class PageHost : UIViewController
 		if (page is null)
 			return;
 
-		View!.BackgroundColor = UIColor.SystemBackground;
-		SetTitle(page.Title.Value);
+		ApplyChrome(page);
 
-		View.AddSubview(page.Realize());
+		View!.AddSubview(page.Realize());
 
 		// numeric keyboards have no return key, so tapping outside is the only way out
 		dismissKeyboard = new(() => View.EndEditing(true))
@@ -90,6 +89,79 @@ sealed class PageHost : UIViewController
 		};
 		View.AddGestureRecognizer(dismissKeyboard);
 
+	}
+
+	void ApplyChrome(
+		ContentView page)
+	{
+		View!.BackgroundColor = page.BackgroundStyle switch
+		{
+			PageBackground.Grouped => UIColor.SystemGroupedBackground,
+			PageBackground.None => UIColor.Clear,
+			_ => UIColor.SystemBackground
+		};
+
+		SetTitle(page.Title.Value);
+
+		NavigationItem.LargeTitleDisplayMode = page.TitleStyle is TitleStyle.Large
+			? UINavigationItemLargeTitleDisplayMode.Always
+			: UINavigationItemLargeTitleDisplayMode.Never;
+
+		// the stack owns large titles; a page asking for one turns them on for the bar
+		if (page.TitleStyle is TitleStyle.Large && NavigationController is { } stack)
+			stack.NavigationBar.PrefersLargeTitles = true;
+
+		ApplyToolbar(page);
+	}
+
+	void ApplyToolbar(
+		ContentView page)
+	{
+		List<UIBarButtonItem> leading = [];
+		List<UIBarButtonItem> trailing = [];
+
+		foreach (ToolbarItem item in page.ToolbarItems)
+		{
+			UIBarButtonItem native = Bar(item);
+
+			(item.Side is ToolbarSide.Leading ? leading : trailing).Add(native);
+		}
+
+		NavigationItem.LeftBarButtonItems = [.. leading];
+		NavigationItem.RightBarButtonItems = [.. trailing];
+	}
+
+	static UIBarButtonItem Bar(
+		ToolbarItem item)
+	{
+		UIAction action = UIAction.Create(
+			item.Text ?? "",
+			item.Icon is { } icon ? UIImage.GetSystemImage(icon) : null,
+			null,
+			_ =>
+			{
+				if (item.Command is { } command && command.CanExecute(item.CommandParameter))
+					command.Execute(item.CommandParameter);
+			});
+
+		UIBarButtonItem native = new(action)
+		{
+			Enabled = item.Command?.CanExecute(item.CommandParameter) ?? true
+		};
+
+		if (item.IsPrimary)
+			native.Style = UIBarButtonItemStyle.Done;
+
+		return native;
+	}
+
+	public override void ViewWillAppear(
+		bool animated)
+	{
+		base.ViewWillAppear(animated);
+
+		if (page is not null)
+			NavigationController?.SetNavigationBarHidden(page.HidesNavigationBar, animated);
 	}
 
 	public override void ViewDidLayoutSubviews()
