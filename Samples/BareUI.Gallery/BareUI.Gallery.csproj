@@ -10,7 +10,9 @@
       <CodesignKey>iPhone Developer</CodesignKey>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <CodesignKey>Apple Development</CodesignKey>
+      <CodesignKey>iPhone Developer</CodesignKey>
+      <MtouchLink>Full</MtouchLink>
+      <DeviceSpecificBuild>true</DeviceSpecificBuild>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' And '$(RuntimeIdentifier)' == 'ios-arm64' ">
       <MtouchLink>Full</MtouchLink>

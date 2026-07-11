@@ -1,66 +1,73 @@
-using System.Diagnostics.CodeAnalysis;
-using BareUI;
+using System.Windows.Input;
 
 namespace BareUI.Gallery;
 
 /// <summary>
-/// Root menu listing every control demo. Tapping an entry invokes <paramref name="push"/> to show
-/// its page — the actual navigation controller lives in the bootstrap layer (<c>SceneDelegate</c>),
-/// keeping this page tree pure BareUI.
+/// Lists every control demo; tapping one pushes it. Navigation goes through <see cref="INavigator"/>,
+/// so no UIKit is involved.
 /// </summary>
-public static class MenuPage
+public class MenuViewModel(
+	INavigator navigator)
 {
-	static readonly (string Title, Func<View> Build)[] entries =
+	public IReadOnlyList<DemoViewModel> Demos { get; } =
 	[
-		("Binding", () => new BindingPage { ViewModel = new() }),
-		("MovieInfo", MovieInfoPage.Build),
-		("Button", ButtonPage.Build),
-		("TextField", TextFieldPage.Build),
-		("TextEditor", TextEditorPage.Build),
-		("Switch", SwitchPage.Build),
-		("Slider", SliderPage.Build),
-		("Stepper", StepperPage.Build),
-		("ProgressBar", ProgressBarPage.Build),
-		("ActivityIndicator", ActivityIndicatorPage.Build),
-		("Divider", DividerPage.Build),
-		("Picker", PickerPage.Build),
-		("Image", ImagePage.Build),
-		("NativeView", NativeViewPage.Build)
+		new("MovieInfo", MovieInfoPage.Build),
+		new("Button", ButtonPage.Build),
+		new("TextField", TextFieldPage.Build),
+		new("TextEditor", TextEditorPage.Build),
+		new("Switch", SwitchPage.Build),
+		new("Slider", SliderPage.Build),
+		new("Stepper", StepperPage.Build),
+		new("ProgressBar", ProgressBarPage.Build),
+		new("ActivityIndicator", ActivityIndicatorPage.Build),
+		new("Divider", DividerPage.Build),
+		new("Picker", PickerPage.Build),
+		new("Image", ImagePage.Build),
+		new("NativeView", NativeViewPage.Build)
 	];
 
-	public static View Build(
-		Action<string, View> push)
+	public ICommand OpenCommand { get; } =
+		new OpenDemoCommand(navigator);
+}
+
+class OpenDemoCommand(
+	INavigator navigator) : ICommand
+{
+	public event EventHandler? CanExecuteChanged;
+
+	public bool CanExecute(
+		object? parameter) =>
+		parameter is DemoViewModel;
+
+	public async void Execute(
+		object? parameter)
 	{
+		if (parameter is DemoViewModel demo)
+			await navigator.PushAsync(demo);
+	}
+}
+
+public class MenuPage : ContentView<MenuViewModel>
+{
+	protected override View Build()
+	{
+		Title = "BareUI Gallery";
+
 		VStack list = new()
 		{
 			Spacing = 12,
 			Margin = new Thickness(16)
 		};
 
-		foreach ((string title, Func<View> build) in entries)
+		foreach (DemoViewModel demo in ViewModel!.Demos)
 			list.Children.Add(new Button
 			{
-				Text = title,
+				Text = demo.Title,
 				Style = ButtonStyle.Gray,
-				Clicked = () => push(title, build())
+				Command = ViewModel.OpenCommand,
+				CommandParameter = demo
 			});
 
 		return new ScrollView { Content = list };
-	}
-
-	/// <summary>Builds the page whose title matches <paramref name="title"/>, if any.</summary>
-	public static bool TryBuild(
-		string title,
-		[NotNullWhen(true)] out View? page)
-	{
-		foreach ((string entryTitle, Func<View> build) in entries)
-			if (entryTitle == title)
-			{
-				page = build();
-				return true;
-			}
-
-		page = null;
-		return false;
 	}
 }

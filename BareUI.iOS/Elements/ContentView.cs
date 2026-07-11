@@ -3,26 +3,51 @@ using System.Runtime.CompilerServices;
 namespace BareUI;
 
 /// <summary>
-/// A view built from a typed ViewModel: override <see cref="Build"/> and bind with <c>Bind(...)</c>.
+/// A full screen: builds an element tree in <see cref="Build"/> and carries the page chrome.
 /// </summary>
-public abstract class ContentView<TViewModel> : Panel
-	where TViewModel : class
+public abstract partial class ContentView : Panel
 {
 	/// <summary>
-	/// The ViewModel bindings resolve against.
+	/// The navigation bar title.
 	/// </summary>
-	public TViewModel? ViewModel
+	public Bindable<string?> Title
 	{
-		get => BindingContext as TViewModel;
-		set => BindingContext = value;
+		get => title;
+		set => titleBinding = Register(titleBinding, value, value => Set(ref title, value, ApplyTitle, affectsMeasure: false));
 	}
+	string? title;
+	Binding<string?>? titleBinding;
 
 	/// <summary>
-	/// The element tree. Called once, the first time the view is measured or realized.
+	/// Which edges the page keeps clear of the safe area. Defaults to all of them.
+	/// </summary>
+	public SafeAreaEdges SafeAreaEdges { get; set; } = SafeAreaEdges.All;
+
+	/// <summary>
+	/// Raised after the tree is built and the page is on screen.
+	/// </summary>
+	protected virtual void OnAppearing()
+	{ }
+
+	/// <summary>
+	/// Raised as the page leaves the screen.
+	/// </summary>
+	protected virtual void OnDisappearing()
+	{ }
+
+	/// <summary>
+	/// The element tree. Called once, the first time the page is measured or realized.
 	/// </summary>
 	protected abstract View Build();
 
-	View? Content
+	// the host controller drives these
+	internal void NotifyAppearing() =>
+		OnAppearing();
+
+	internal void NotifyDisappearing() =>
+		OnDisappearing();
+
+	internal View? Content
 	{
 		get
 		{
@@ -33,6 +58,11 @@ public abstract class ContentView<TViewModel> : Panel
 		}
 	}
 
+	void ApplyTitle() =>
+		ApplyTitleCore();
+
+	partial void ApplyTitleCore();
+
 
 	protected override Size MeasureOverride(
 		Size availableSize)
@@ -41,6 +71,7 @@ public abstract class ContentView<TViewModel> : Panel
 			return Size.Zero;
 
 		content.Measure(availableSize);
+
 		return content.DesiredSize;
 	}
 
@@ -51,7 +82,22 @@ public abstract class ContentView<TViewModel> : Panel
 
 		return finalSize;
 	}
+}
 
+/// <summary>
+/// A <see cref="ContentView"/> bound to a typed ViewModel: bind with <c>Bind(...)</c>.
+/// </summary>
+public abstract class ContentView<TViewModel> : ContentView
+	where TViewModel : class
+{
+	/// <summary>
+	/// The ViewModel bindings resolve against.
+	/// </summary>
+	public TViewModel? ViewModel
+	{
+		get => BindingContext as TViewModel;
+		set => BindingContext = value;
+	}
 
 	/// <summary>
 	/// Binds one way to a ViewModel property.

@@ -17,6 +17,14 @@
         <InternalsVisibleTo Include="BareUI.Tests" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
+        <Compile Remove="App/**" />
+    </ItemGroup>
+
     <!-- net10.0 is a test shim, not a platform: it exists so BareUI.Tests can run the layout
          engine without a simulator. UIKit-touching code is compiled out of it by file, not by #if. -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
