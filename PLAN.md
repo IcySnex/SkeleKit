@@ -66,7 +66,7 @@ BareUI.sln
   `IsAotCompatible=true`), Gallery sample app, test project.
 - CI-less for now; local `dotnet build` + simulator run.
 
-### M1 — Core element model + layout engine (the foundation, biggest single chunk)
+### M1 — Core element model + layout engine (the foundation, biggest single chunk) — ✅ DONE (2026-07-11)
 - `View` base class: wraps one `UIView`, exposes `Margin`, `Width`/`Height` (+ min/max),
   `HorizontalAlignment`/`VerticalAlignment`, `IsVisible`, `Opacity`, `Background`,
   `CornerRadius`.
@@ -79,9 +79,13 @@ BareUI.sln
   re-layout via trait/bounds observation in the root container.
 - **Exit criteria:** Gallery page reproducing the poster+title+info layout of Velura's
   `MovieInfoViewController` top section, in pure BareUI, pixel-plausible on iPhone + iPad.
+- **Deferred out of M1** (not blocking exit, revisit in M2/later): `SafeAreaEdges` is defined
+  as an enum but not yet consumed in arrange (Gallery uses a host-frame shortcut); no
+  measure invalidation / dirty flags yet; trait/bounds re-layout relies on UIKit calling
+  `LayoutSubviews`. `Control` base + `Label` were pulled forward (the exit page needed text).
 
 ### M2 — Controls
-- v1 set (each a thin native wrapper): `Label`, `Button`, `Image` (async source loading
+- v1 set (each a thin native wrapper): `Label` ✅ (done in M1), `Button`, `Image` (async source loading
   hook), `TextField`, `SecureField`, `TextEditor`, `Switch`, `Slider`, `Stepper`,
   `ProgressBar`, `ActivityIndicator`, `Divider`, `Picker` (menu-style selection —
   replaces Velura's `UISelectionButton`).

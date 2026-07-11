@@ -14,7 +14,9 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 - `BareUI.iOS/` — the library. Multi-targets `net10.0;net10.0-ios`: layout math and
   primitives live in neutral code, UIKit-touching code behind `#if IOS`. Root namespace
-  is `BareUI` (not `BareUI.iOS`).
+  is `BareUI` (not `BareUI.iOS`). Folders: `Primitives/` (structs+enums), `Elements/`
+  (`View`, `Panel`, `ViewCollection`, `LayoutHost`), `Layout/` (panels), `Controls/`
+  (native wrappers).
 - `BareUI.Tests/` — xunit, plain `net10.0`, references the neutral TFM. Layout
   engine must stay testable here without a simulator.
 - `Samples/BareUI.Gallery/` — iOS sample app for on-the-fly testing/debugging. Currently
@@ -25,6 +27,11 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 - Test: `dotnet test BareUI.Tests`
 - Build app: `dotnet build Samples/BareUI.Gallery -p:RuntimeIdentifier=iossimulator-arm64`
 - Run app: add `-t:Run "-p:_DeviceName=:v2:udid=<UDID>"` (UDIDs: `xcrun simctl list devices available`)
+- Screenshot to verify layout: `xcrun simctl io <UDID> screenshot out.png` then Read it.
+- **Iterating on the sim:** after editing library code, rebuild the whole app (a bare
+  `-t:Run` can relaunch a *stale* binary). Sanity-check the bundle's `BareUI.iOS.dll`
+  mtime vs your edits. `simctl launch` no-ops if the app is already running — `simctl
+  terminate <UDID> com.bareui.gallery` first, then `install` the fresh `.app` + `launch`.
 
 ## Environment gotchas
 
@@ -51,14 +58,23 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Status (2026-07-11)
 
-Done — M0 scaffold + most of M1:
-- Solution, three projects, Gallery runs on simulator. Toolchain verified.
+**M0 + M1 complete.** Commits land on `main` (repo history is linear there).
+
+Done:
 - Primitives: `Thickness`, `Size`, `Point`, `Rect`, `GridLength`, `Color`, alignment enums.
 - `View` base (lazy realize, WPF measure/arrange), `Panel`/`ViewCollection`, `LayoutHost`.
-- Panels: `StackPanel` (+`VStack`/`HStack`), `Grid` (auto/star/px + spans), `Overlay`, `Border`,
-  `ScrollView`. Layout math unit-tested in neutral TFM (41 tests green).
+- Panels: `StackPanel` (+`VStack`/`HStack`), `Grid` (auto/star/px + spans + spacing), `Overlay`,
+  `Border`, `ScrollView`. Layout math unit-tested in neutral TFM (41 tests green).
+- First controls: `Control` base (measures via native `SizeThatFits`) + `Label`.
+- Gallery `MovieInfoPage` reproduces Velura's MovieInfo top section in pure BareUI = **M1 exit,
+  verified on simulator**. Hosted by a temporary `BareHostController` (replaced by `BareApp` in M4).
 
-Next — finish M1:
-- Gallery page reproducing Velura `MovieInfoViewController` top section (poster+title+info) in
-  pure BareUI = M1 exit criteria. Then M2 controls (`Label`, `Image`, `Button`, …) so the page
-  has real content to lay out.
+Known shortcuts to revisit:
+- Safe-area is handled ad-hoc by `BareHostController` (sets host frame to the safe-area guide);
+  the planned `SafeAreaEdges`-in-arrange support (enum exists) is not wired into the engine yet.
+- Layout has no dirty-flag/invalidation yet — `LayoutHost.LayoutSubviews` re-measures the whole
+  subtree each pass. Fine for now; optimize when a screen gets heavy.
+- `Panel.RealizeChildren` rebuilds all native subviews on any `Children` change (no diffing).
+
+Next — M2 controls (`Image`, `Button`, `TextField`, `Switch`, …; see PLAN.md), then M3 bindings.
+`Label` already landed as the M1 exit needed it — fold the rest of M2 in from here.
