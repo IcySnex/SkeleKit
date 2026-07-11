@@ -1,3 +1,4 @@
+
 # BareUI.iOS
 
 Declarative, WPF-inspired UI library for .NET for iOS (no MAUI, no XAML). Native UIKit
@@ -58,7 +59,7 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Status (2026-07-11)
 
-**M0 + M1 complete.** Commits land on `main` (repo history is linear there).
+**M0 + M1 + M2 complete.** Commits land on `main` (repo history is linear there).
 
 Done:
 - Primitives: `Thickness`, `Size`, `Point`, `Rect`, `GridLength`, `Color`, alignment enums.
@@ -69,6 +70,18 @@ Done:
 - Gallery `MovieInfoPage` reproduces Velura's MovieInfo top section in pure BareUI = **M1 exit,
   verified on simulator**. Hosted by a temporary `BareHostController` (replaced by `BareApp` in M4).
 
+- M2 controls (all thin native wrappers, verified on simulator via Gallery pages): `Button`
+  (UIButtonConfiguration styles, SF-symbol `Icon`, plain `ICommand` + CanExecuteChanged→enabled),
+  `Image` (`ImageSource` struct — Url/Bundle/Symbol/Auto, implicit from string; pluggable static
+  `Image.Loader : IImageLoader`, cancellable async URL loads), `TextField`/`SecureField`/`TextEditor`,
+  `Switch`, `Slider`, `Stepper`, `ProgressBar`, `ActivityIndicator`, `Divider`, `Picker`
+  (UIButton+UIMenu), `NativeView` escape hatch (`OwnsNative=false` — caller-owned view not disposed).
+  Pre-M3 pattern: properties are create-only (applied in `CreateNative`); interactive controls sync
+  native→managed and expose settable `Action` callback props (`Toggled`, `TextChanged`, `Clicked`, …).
+- All primitives now live in `namespace BareUI` (`BareUI.Primitives` namespace removed; folder kept).
+- Gallery: `UINavigationController` shell, `MenuPage` + 13 demo pages, `GALLERY_PAGE` env var
+  (via `SIMCTL_CHILD_GALLERY_PAGE`) auto-pushes a page on launch — use it for screenshots.
+
 Known shortcuts to revisit:
 - Safe-area is handled ad-hoc by `BareHostController` (sets host frame to the safe-area guide);
   the planned `SafeAreaEdges`-in-arrange support (enum exists) is not wired into the engine yet.
@@ -76,5 +89,12 @@ Known shortcuts to revisit:
   subtree each pass. Fine for now; optimize when a screen gets heavy.
 - `Panel.RealizeChildren` rebuilds all native subviews on any `Children` change (no diffing).
 
-Next — M2 controls (`Image`, `Button`, `TextField`, `Switch`, …; see PLAN.md), then M3 bindings.
-`Label` already landed as the M1 exit needed it — fold the rest of M2 in from here.
+- Reviewer follow-ups not yet done: Gallery pages sit flat in the project root (move to `Pages/`
+  + extract the copy-pasted `Secondary` color/caption scaffold); no unit tests for `ImageSource`
+  string-conversion heuristic; `Image.Loader` is static mutable global state (decide in M3/M4 if
+  it becomes `BareApp` config).
+- M3 structural note from review: `CreateNative` and `View.ApplyVisualState` are two uncoordinated
+  writers of native state (an `Image` clipping bug came from this). M3 should introduce one
+  property-application pipeline (base visual state, then control state).
+
+Next — M3 bindings (see PLAN.md). M2 work is uncommitted on `main` as of this writing.
