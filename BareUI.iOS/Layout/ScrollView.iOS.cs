@@ -58,6 +58,71 @@ public partial class ScrollView
 		content.Arrange(new(0, 0, width, height));
 		host.ContentSize = new CGSize(width, height);
 	}
+
+	// UIKit never moves anything for the keyboard: inset the content by however much it covers,
+	// then scroll the focused control back into view
+	internal void OnKeyboardChanged(
+		NSNotification notification,
+		bool hiding)
+	{
+		if (!AvoidsKeyboard || !IsRealized)
+			return;
+
+		UIScrollView host = (UIScrollView)Native;
+		if (host.Window is null)
+			return;
+
+		// the keyboard may belong to a field in some other scroll view
+		UIView? focused = FirstResponder(host);
+		if (!hiding && focused is null)
+			return;
+
+		nfloat covered = 0;
+
+		if (!hiding)
+		{
+			CGRect keyboard = UIKeyboard.FrameEndFromNotification(notification);
+			CGRect hostInWindow = host.ConvertRectToView(host.Bounds, null);
+
+			// the safe-area bottom is already in the adjusted inset, so do not count it twice
+			covered = (nfloat)Math.Max(
+				0,
+				hostInWindow.GetMaxY() - keyboard.GetMinY() - host.SafeAreaInsets.Bottom);
+		}
+
+		UIEdgeInsets content = host.ContentInset;
+		content.Bottom = covered;
+
+		UIEdgeInsets indicator = host.VerticalScrollIndicatorInsets;
+		indicator.Bottom = covered;
+
+		double duration = UIKeyboard.AnimationDurationFromNotification(notification);
+
+		UIView.Animate(duration, () =>
+		{
+			host.ContentInset = content;
+			host.VerticalScrollIndicatorInsets = indicator;
+		});
+
+		if (hiding || focused is null)
+			return;
+
+		CGRect target = focused.ConvertRectToView(focused.Bounds, host);
+		host.ScrollRectToVisible(target.Inset(0, -8), true);
+	}
+
+	static UIView? FirstResponder(
+		UIView view)
+	{
+		if (view.IsFirstResponder)
+			return view;
+
+		foreach (UIView child in view.Subviews)
+			if (FirstResponder(child) is { } found)
+				return found;
+
+		return null;
+	}
 }
 
 /// <summary>
@@ -71,6 +136,19 @@ sealed class ScrollHost : UIScrollView
 		ScrollView element)
 	{
 		this.element = element;
+
+		// selector-based, not block-based: a block observer's dispatcher peer can be collected
+		NSNotificationCenter.DefaultCenter.AddObserver(
+			this,
+			new Selector("keyboardFrameChanged:"),
+			UIKeyboard.WillChangeFrameNotification,
+			null);
+
+		NSNotificationCenter.DefaultCenter.AddObserver(
+			this,
+			new Selector("keyboardHidden:"),
+			UIKeyboard.WillHideNotification,
+			null);
 	}
 
 	// see LayoutHost
@@ -83,5 +161,24 @@ sealed class ScrollHost : UIScrollView
 		base.LayoutSubviews();
 
 		element?.LayoutContent(new(Bounds.Width, Bounds.Height));
+	}
+
+	[Export("keyboardFrameChanged:")]
+	void KeyboardFrameChanged(
+		NSNotification notification) =>
+		element?.OnKeyboardChanged(notification, hiding: false);
+
+	[Export("keyboardHidden:")]
+	void KeyboardHidden(
+		NSNotification notification) =>
+		element?.OnKeyboardChanged(notification, hiding: true);
+
+	protected override void Dispose(
+		bool disposing)
+	{
+		if (disposing)
+			NSNotificationCenter.DefaultCenter.RemoveObserver(this);
+
+		base.Dispose(disposing);
 	}
 }

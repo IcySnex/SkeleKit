@@ -11,6 +11,11 @@ public partial class ScrollView : Panel
 	public Orientation Orientation { get; set; } = Orientation.Vertical;
 
 	/// <summary>
+	/// Whether the content is inset so the keyboard never covers the focused control. On by default.
+	/// </summary>
+	public bool AvoidsKeyboard { get; set; } = true;
+
+	/// <summary>
 	/// How dragging the scroll view dismisses the keyboard.
 	/// </summary>
 	public KeyboardDismiss KeyboardDismiss
