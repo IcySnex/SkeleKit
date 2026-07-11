@@ -53,7 +53,129 @@ public partial class CollectionView<TItem>
 		selection = new(this);
 		collection.Delegate = selection;
 
+		ApplyRefresh(collection);
+
 		return collection;
+	}
+
+	UIRefreshControl? refresh;
+
+	void ApplyRefresh(
+		UICollectionView collection)
+	{
+		if (RefreshCommand is null)
+			return;
+
+		refresh = new();
+		refresh.ValueChanged += async (sender, e) =>
+		{
+			try
+			{
+				if (RefreshCommand is { } command)
+					await command();
+			}
+			finally
+			{
+				refresh.EndRefreshing();
+			}
+		};
+
+		collection.RefreshControl = refresh;
+	}
+
+	/// <summary>
+	/// Scrolls the item into view.
+	/// </summary>
+	public void ScrollTo(
+		TItem item,
+		bool animated = true)
+	{
+		if (!IsRealized || data is null || !keys.TryGetValue(item, out ItemKey? key))
+			return;
+
+		if (data.GetIndexPath(key) is { } path)
+			Ui.ScrollToItem(path, UICollectionViewScrollPosition.Top, animated);
+	}
+
+	internal void OnScrolled(
+		double offset) =>
+		Scrolled?.Invoke(offset);
+
+	// swipe actions and context menus are per-row, so they resolve the item behind the index path
+	internal UISwipeActionsConfiguration? SwipeConfiguration(
+		NSIndexPath indexPath,
+		SwipeSide side)
+	{
+		if (ItemAt(indexPath.Section, indexPath.Row) is not { } item)
+			return null;
+
+		List<UIContextualAction> actions = [];
+
+		foreach (SwipeAction action in SwipeActions)
+		{
+			if (action.Side != side)
+				continue;
+
+			UIContextualAction native = UIContextualAction.FromContextualActionStyle(
+				action.IsDestructive
+					? UIContextualActionStyle.Destructive
+					: UIContextualActionStyle.Normal,
+				action.Text,
+				(_, _, done) =>
+				{
+					if (action.Command is { } command && command.CanExecute(item))
+						command.Execute(item);
+
+					done(true);
+				});
+
+			if (action.Icon is { } icon)
+				native.Image = UIImage.GetSystemImage(icon);
+
+			if (action.Background is { } background)
+				native.BackgroundColor = background.ToUIColor();
+
+			actions.Add(native);
+		}
+
+		return actions.Count == 0
+			? null
+			: UISwipeActionsConfiguration.FromActions([.. actions]);
+	}
+
+	internal UIContextMenuConfiguration? MenuConfiguration(
+		NSIndexPath indexPath)
+	{
+		if (ContextMenu.Count == 0 || ItemAt(indexPath.Section, indexPath.Row) is not { } item)
+			return null;
+
+		return UIContextMenuConfiguration.Create(
+			null,
+			null,
+			_ =>
+			{
+				UIAction[] entries = new UIAction[ContextMenu.Count];
+
+				for (int index = 0; index < ContextMenu.Count; index++)
+				{
+					MenuAction entry = ContextMenu[index];
+
+					entries[index] = UIAction.Create(
+						entry.Text,
+						entry.Icon is { } icon ? UIImage.GetSystemImage(icon) : null,
+						null,
+						_ =>
+						{
+							if (entry.Command is { } command && command.CanExecute(item))
+								command.Execute(item);
+						});
+
+					if (entry.IsDestructive)
+						entries[index].Attributes = UIMenuElementAttributes.Destructive;
+				}
+
+				return UIMenu.Create(entries);
+			});
 	}
 
 	private protected override void ApplyProperties() =>
@@ -249,16 +371,21 @@ public partial class CollectionView<TItem>
 			command.Execute(item);
 	}
 
-	static UICollectionViewLayout CreateLayout(
+	UICollectionViewLayout CreateLayout(
 		CollectionLayout layout,
-		bool headers) =>
-		layout.Kind switch
+		bool headers)
+	{
+		switch (layout.Kind)
 		{
-			CollectionLayoutKind.Grid => new UICollectionViewCompositionalLayout(GridSection(layout, headers)),
-			CollectionLayoutKind.Carousel => new UICollectionViewCompositionalLayout(CarouselSection(layout)),
-			// a list configuration paints its own opaque background, which would cover the empty view
-			_ => UICollectionViewCompositionalLayout.GetLayout(
-				new UICollectionLayoutListConfiguration(
+			case CollectionLayoutKind.Grid:
+				return new UICollectionViewCompositionalLayout(GridSection(layout, headers));
+
+			case CollectionLayoutKind.Carousel:
+				return new UICollectionViewCompositionalLayout(CarouselSection(layout));
+
+			default:
+				// a list configuration paints its own opaque background, which would cover the empty view
+				UICollectionLayoutListConfiguration configuration = new(
 					layout.Grouped
 						? UICollectionLayoutListAppearance.InsetGrouped
 						: UICollectionLayoutListAppearance.Plain)
@@ -267,8 +394,21 @@ public partial class CollectionView<TItem>
 					HeaderMode = headers
 						? UICollectionLayoutListHeaderMode.Supplementary
 						: UICollectionLayoutListHeaderMode.None
-				})
-		};
+				};
+
+				// native swipe actions: UIKit owns the gesture, the animation and the full-swipe
+				if (SwipeActions.Count > 0)
+				{
+					configuration.TrailingSwipeActionsConfigurationProvider =
+						path => SwipeConfiguration(path, SwipeSide.Trailing)!;
+
+					configuration.LeadingSwipeActionsConfigurationProvider =
+						path => SwipeConfiguration(path, SwipeSide.Leading)!;
+				}
+
+				return UICollectionViewCompositionalLayout.GetLayout(configuration);
+		}
+	}
 
 	static NSCollectionLayoutBoundarySupplementaryItem Header() =>
 		NSCollectionLayoutBoundarySupplementaryItem.Create(
@@ -354,6 +494,16 @@ sealed class CollectionDelegate<TItem>(
 
 		element.Select(indexPath.Section, indexPath.Row);
 	}
+
+	public override void Scrolled(
+		UIScrollView scrollView) =>
+		element.OnScrolled(scrollView.ContentOffset.Y + scrollView.AdjustedContentInset.Top);
+
+	public override UIContextMenuConfiguration? GetContextMenuConfiguration(
+		UICollectionView collectionView,
+		NSIndexPath indexPath,
+		CGPoint point) =>
+		element.MenuConfiguration(indexPath);
 }
 
 /// <summary>

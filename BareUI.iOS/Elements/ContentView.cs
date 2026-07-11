@@ -49,6 +49,20 @@ public abstract partial class ContentView : Panel
 	public IList<ToolbarItem> ToolbarItems { get; } = [];
 
 	/// <summary>
+	/// Placeholder for the navigation bar's search field. Setting it shows the search bar.
+	/// </summary>
+	public string? SearchPlaceholder { get; set; }
+
+	/// <summary>
+	/// Invoked as the user types in the search field.
+	/// </summary>
+	public Action<string>? SearchChanged { get; set; }
+
+	internal void NotifySearch(
+		string text) =>
+		SearchChanged?.Invoke(text);
+
+	/// <summary>
 	/// Raised once, the first time the page is realized.
 	/// </summary>
 	protected virtual void OnLoaded()

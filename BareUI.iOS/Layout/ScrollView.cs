@@ -22,6 +22,16 @@ public partial class ScrollView : Panel
 	public bool AvoidsKeyboard { get; set; } = true;
 
 	/// <summary>
+	/// Invoked when the user pulls to refresh. Setting it enables the refresh control; the spinner stops when the task completes.
+	/// </summary>
+	public Func<Task>? RefreshCommand { get; set; }
+
+	/// <summary>
+	/// Invoked as the view scrolls, with the offset in points.
+	/// </summary>
+	public Action<double>? Scrolled { get; set; }
+
+	/// <summary>
 	/// How dragging the scroll view dismisses the keyboard.
 	/// </summary>
 	public KeyboardDismiss KeyboardDismiss

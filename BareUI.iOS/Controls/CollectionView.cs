@@ -64,6 +64,26 @@ public partial class CollectionView<TItem> : View, ICollectionHost
 	/// </summary>
 	public View? EmptyView { get; set; }
 
+	/// <summary>
+	/// Invoked when the user pulls to refresh. Setting it enables the refresh control; the spinner stops when the task completes.
+	/// </summary>
+	public Func<Task>? RefreshCommand { get; set; }
+
+	/// <summary>
+	/// Actions revealed by swiping a row. List layouts only.
+	/// </summary>
+	public IList<SwipeAction> SwipeActions { get; } = [];
+
+	/// <summary>
+	/// Entries in a row's long-press context menu.
+	/// </summary>
+	public IList<MenuAction> ContextMenu { get; } = [];
+
+	/// <summary>
+	/// Invoked as the collection scrolls, with the vertical offset in points.
+	/// </summary>
+	public Action<double>? Scrolled { get; set; }
+
 
 	private protected override bool ClipsByDefault =>
 		true;

@@ -26,6 +26,32 @@ public partial class ScrollView
 		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never;
 
 		ApplyKeyboardDismiss();
+		ApplyRefresh(host);
+	}
+
+	UIRefreshControl? refresh;
+
+	void ApplyRefresh(
+		UIScrollView host)
+	{
+		if (RefreshCommand is null || refresh is not null)
+			return;
+
+		refresh = new();
+		refresh.ValueChanged += async (sender, e) =>
+		{
+			try
+			{
+				if (RefreshCommand is { } command)
+					await command();
+			}
+			finally
+			{
+				refresh.EndRefreshing();
+			}
+		};
+
+		host.RefreshControl = refresh;
 	}
 
 	// insets along the scroll axis let the content pass under the bar; the cross axis is handled as
@@ -149,6 +175,10 @@ public partial class ScrollView
 		host.ScrollRectToVisible(target.Inset(0, -8), true);
 	}
 
+	internal void OnScrolled(
+		double offset) =>
+		Scrolled?.Invoke(offset);
+
 	static UIView? FirstResponder(
 		UIView view)
 	{
@@ -199,6 +229,17 @@ sealed class ScrollHost : UIScrollView
 		base.LayoutSubviews();
 
 		element?.LayoutContent(new(Bounds.Width, Bounds.Height));
+	}
+
+	public override CGPoint ContentOffset
+	{
+		get => base.ContentOffset;
+		set
+		{
+			base.ContentOffset = value;
+
+			element?.OnScrolled(value.Y + AdjustedContentInset.Top);
+		}
 	}
 
 	[Export("keyboardFrameChanged:")]

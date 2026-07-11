@@ -112,6 +112,30 @@ sealed class PageHost : UIViewController
 			stack.NavigationBar.PrefersLargeTitles = true;
 
 		ApplyToolbar(page);
+		ApplySearch(page);
+	}
+
+	UISearchController? search;
+
+	void ApplySearch(
+		ContentView page)
+	{
+		if (page.SearchPlaceholder is not { } placeholder)
+			return;
+
+		search = new((UIViewController?)null)
+		{
+			ObscuresBackgroundDuringPresentation = false
+		};
+
+		search.SearchBar.Placeholder = placeholder;
+		search.SearchBar.TextChanged += (sender, e) => page.NotifySearch(e.SearchText ?? "");
+
+		NavigationItem.SearchController = search;
+		NavigationItem.HidesSearchBarWhenScrolling = false;
+
+		// the search controller is retained natively only
+		DefinesPresentationContext = true;
 	}
 
 	void ApplyToolbar(
