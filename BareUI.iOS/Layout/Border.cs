@@ -7,11 +7,6 @@ namespace BareUI;
 public partial class Border : Panel
 {
 	/// <summary>
-	/// Empty space between the border edge and the child.
-	/// </summary>
-	public Thickness Padding { get; set; } = Thickness.Zero;
-
-	/// <summary>
 	/// The stroke color, or null (default) for no stroke.
 	/// </summary>
 	public Color? Stroke { get; set; }

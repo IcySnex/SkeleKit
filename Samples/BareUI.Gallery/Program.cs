@@ -31,6 +31,8 @@ BareApp.Create()
 		services.AddTransient<KeyboardDemoViewModel>();
 		services.AddTransient<GridDemoViewModel>();
 		services.AddTransient<ListDemoViewModel>();
+		services.AddTransient<CarouselDemoViewModel>();
+		services.AddTransient<LiveListDemoViewModel>();
 	})
 	.UsePages(pages =>
 	{

@@ -14,7 +14,7 @@ public partial class CollectionView<TItem> : View
 	/// </summary>
 	public Bindable<IReadOnlyList<TItem>?> ItemsSource
 	{
-		get => Bindable.From(itemsSource);
+		get => Bindable.From<IReadOnlyList<TItem>?>(itemsSource);
 		set => itemsSourceBinding = Register(itemsSourceBinding, value, SetItemsSource);
 	}
 	IReadOnlyList<TItem>? itemsSource;
@@ -25,7 +25,7 @@ public partial class CollectionView<TItem> : View
 	/// </summary>
 	public Bindable<IReadOnlyList<Section<TItem>>?> GroupedItemsSource
 	{
-		get => Bindable.From(sections);
+		get => Bindable.From<IReadOnlyList<Section<TItem>>?>(sections);
 		set => sectionsBinding = Register(sectionsBinding, value, SetSections);
 	}
 	IReadOnlyList<Section<TItem>>? sections;
@@ -56,6 +56,13 @@ public partial class CollectionView<TItem> : View
 	/// </summary>
 	public View? EmptyView { get; set; }
 
+
+	// it scrolls itself, so it takes the space it is offered rather than sizing to its content
+	protected override Size MeasureOverride(
+		Size availableSize) =>
+		new(
+			double.IsFinite(availableSize.Width) ? availableSize.Width : 0,
+			double.IsFinite(availableSize.Height) ? availableSize.Height : 0);
 
 	void SetItemsSource(
 		IReadOnlyList<TItem>? value)
