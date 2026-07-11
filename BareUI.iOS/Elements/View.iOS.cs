@@ -42,11 +42,16 @@ public abstract partial class View
 		native.TranslatesAutoresizingMaskIntoConstraints = true;
 
 		ApplyVisualState();
+		ApplyProperties();
 		OnBindingContextChanged();
 		OnRealized();
 
 		return native;
 	}
+
+	// controls push their whole property set here; CreateNative only constructs
+	private protected virtual void ApplyProperties()
+	{ }
 
 	/// <summary>
 	/// Tears down the native view and children deterministically (no finalizers).
