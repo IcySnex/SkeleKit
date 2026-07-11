@@ -1,4 +1,4 @@
-namespace BareUI.Primitives;
+namespace BareUI;
 
 /// <summary>
 /// Describes the thickness of a frame around a rectangle: margins and paddings.

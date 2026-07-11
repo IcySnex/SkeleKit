@@ -2,7 +2,7 @@
 using UIKit;
 #endif
 
-namespace BareUI.Primitives;
+namespace BareUI;
 
 /// <summary>
 /// A straight (non-premultiplied) RGBA color with each channel in the range 0..1.

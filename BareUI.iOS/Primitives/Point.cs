@@ -1,4 +1,4 @@
-namespace BareUI.Primitives;
+namespace BareUI;
 
 /// <summary>
 /// A point in the layout coordinate space (origin top-left, y grows downward).

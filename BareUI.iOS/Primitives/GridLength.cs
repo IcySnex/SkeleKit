@@ -1,4 +1,4 @@
-namespace BareUI.Primitives;
+namespace BareUI;
 
 /// <summary>
 /// How a <see cref="GridLength"/> is interpreted by the grid layout.

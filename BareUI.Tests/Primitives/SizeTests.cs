@@ -1,4 +1,3 @@
-using BareUI.Primitives;
 using Xunit;
 
 namespace BareUI.Tests.Primitives;

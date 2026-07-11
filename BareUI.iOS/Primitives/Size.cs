@@ -1,4 +1,4 @@
-namespace BareUI.Primitives;
+namespace BareUI;
 
 /// <summary>
 /// A width/height pair used throughout the measure/arrange layout engine.

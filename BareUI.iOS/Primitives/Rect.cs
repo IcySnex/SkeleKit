@@ -1,4 +1,4 @@
-namespace BareUI.Primitives;
+namespace BareUI;
 
 /// <summary>
 /// An axis-aligned rectangle (location plus size), produced by the arrange pass.

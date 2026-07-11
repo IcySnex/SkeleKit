@@ -1,5 +1,4 @@
 using BareUI;
-using BareUI.Primitives;
 using Xunit;
 
 namespace BareUI.Tests.Elements;
