@@ -137,19 +137,25 @@ Hard-won rules (don't relearn these):
 - `[RelayCommand]` generates `IRelayCommand`, and `Bindable<T>` isn't covariant → bind with an
   explicit type arg: `Bind<ICommand?>(vm => vm.SaveCommand)`.
 
-Deliberately deferred (not blocking M5, listed so they don't get "forgotten" again):
-- `Label`: `FontWeight`/`FontDesign`/`Truncation` (only `Bold` exists).
-- `OneWayToSource` is in the `BindingMode` enum but no factory creates one.
-- Escape hatches from architecture §Interop: `ContentView.Controller`, `View.GestureRecognizers`.
-- Page chrome: `ToolbarItems`, `LargeTitle`, `HidesNavigationBar`, `BackgroundStyle`, iPad sidebar.
-- `Picker` API drift: docs say `ItemsSource`/`SelectedItem`, code has `Items`/`SelectedIndex`.
+Framework surface (completion pass — every previously deferred item is now implemented):
+- **Text**: `Label.FontWeight` (9 weights), `FontDesign` (system/rounded/serif/mono), `Truncation`,
+  `MaxLines`. All `UIFontMetrics`-scaled, so Dynamic Type works.
+- **Visual**: `View.Shadow`, `Colors` (system palette), `CornerRadius`, `Opacity`, `ClipsToBounds`.
+- **Bindings**: all four modes (`BindToSource` = OneWayToSource, `BindOnce` = OneTime), converters
+  both ways (`format:`/`parse:`), `UpdateTrigger.FocusLost`. `View.Focus()/Unfocus()/IsFocused`.
+- **Page chrome**: `ToolbarItems`, `TitleStyle.Large`, `HidesNavigationBar`, `BackgroundStyle`,
+  `SearchPlaceholder`/`SearchChanged`; lifecycle `OnLoaded`/`OnUnloaded` alongside
+  `OnAppearing`/`OnDisappearing`; `ContentView.Controller` escape hatch.
+- **Lists**: pull-to-refresh, native swipe actions, context menus, `ScrollTo(item)`, `Scrolled`.
+- **Shell**: `Tabs`/`Stack`/`SinglePage`, `SidebarOnIPad()`.
+- **Misc**: `Haptics`, `View.Animate`, `View.AddGesture`, `BareApp.UseImageLoader` (no more static
+  mutable loader).
+- `Picker<TItem>` is typed: `ItemsSource`/`SelectedItem`, not `Items`/`SelectedIndex`.
+- Package ships **iOS only**; the `net10.0` shim is excluded from `pack` (`IncludeBuildOutput=false`).
 
-Known debt, roughly in priority order:
-- `MenuView`/`PickerDemo` still need `OnViewModelAttached` (lists + `Picker.Items`). `CollectionView`
-  + `ItemsSource` should kill the first.
+Known debt:
 - DI (`Microsoft.Extensions.DependencyInjection`) is the only reflection surface in the stack —
   re-check it under `MtouchLink=Full` before shipping.
-- `Image.Loader` is static mutable global state (make it `BareApp` config?).
-- M4 leftovers: `ToolbarItems`, large-title-on-scroll, iPadOS sidebar.
-- Packaging: the `net10.0` TFM is a test shim but would still ship as a hollow lib — exclude from
-  `pack` before publishing.
+- `MenuView` still needs `OnViewModelAttached` for its button list (a `CollectionView` would remove it).
+- v1 non-goals (see PLAN): theming/styles system, animation *framework*, RTL, XAML. Accessibility
+  (`AccessibilityLabel`/traits) was explicitly skipped — worth revisiting before 1.0.
