@@ -221,12 +221,14 @@ public partial class CollectionView<TItem>
 		{
 			CollectionLayoutKind.Grid => new UICollectionViewCompositionalLayout(GridSection(layout, headers)),
 			CollectionLayoutKind.Carousel => new UICollectionViewCompositionalLayout(CarouselSection(layout)),
+			// a list configuration paints its own opaque background, which would cover the empty view
 			_ => UICollectionViewCompositionalLayout.GetLayout(
 				new UICollectionLayoutListConfiguration(
 					layout.Grouped
 						? UICollectionLayoutListAppearance.InsetGrouped
 						: UICollectionLayoutListAppearance.Plain)
 				{
+					BackgroundColor = UIColor.Clear,
 					HeaderMode = headers
 						? UICollectionLayoutListHeaderMode.Supplementary
 						: UICollectionLayoutListHeaderMode.None
