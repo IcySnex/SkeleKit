@@ -8,6 +8,12 @@ public class SceneDelegate : UIWindowSceneDelegate
 {
 	public override UIWindow? Window { get; set; }
 
+	// nav retains its VCs natively only — without a managed ref the GC eats the peers. BareApp takes over in M4.
+	readonly List<BareHostController> hosts = [];
+
+	// nav.Delegate is weak
+	HostKeeper? keeper;
+
 	public override void WillConnect(
 		UIScene scene,
 		UISceneSession session,
@@ -22,10 +28,21 @@ public class SceneDelegate : UIWindowSceneDelegate
 		// buttons never need to see UIKit.
 		void Push(
 			string title,
-			View page) =>
-			navigation!.PushViewController(new BareHostController(page, title), true);
+			View page)
+		{
+			BareHostController host = new(page, title);
 
-		navigation = new UINavigationController(new BareHostController(MenuPage.Build(Push), "BareUI Gallery"));
+			hosts.Add(host);
+			navigation!.PushViewController(host, true);
+		}
+
+		BareHostController menu = new(MenuPage.Build(Push), "BareUI Gallery");
+		hosts.Add(menu);
+
+		keeper = new(hosts);
+
+		navigation = new UINavigationController(menu);
+		navigation.Delegate = keeper;
 
 		Window = new(windowScene)
 		{
@@ -37,5 +54,20 @@ public class SceneDelegate : UIWindowSceneDelegate
 		string? autoPage = Environment.GetEnvironmentVariable("GALLERY_PAGE");
 		if (autoPage is not null && MenuPage.TryBuild(autoPage, out View? page))
 			Push(autoPage, page);
+	}
+
+	// drops refs to popped hosts
+	sealed class HostKeeper(
+		List<BareHostController> hosts) : UINavigationControllerDelegate
+	{
+		public override void DidShowViewController(
+			UINavigationController navigationController,
+			UIViewController viewController,
+			bool animated)
+		{
+			UIViewController[] stack = navigationController.ViewControllers ?? [];
+
+			hosts.RemoveAll(host => !stack.Contains(host));
+		}
 	}
 }
