@@ -75,7 +75,11 @@ public class Label : Control
 
 
 	private protected override UIView CreateNative() =>
-		new UILabel { BackgroundColor = UIColor.Clear };
+		new UILabel
+		{
+			BackgroundColor = UIColor.Clear,
+			AdjustsFontForContentSizeCategory = true
+		};
 
 	private protected override void ApplyProperties()
 	{
@@ -92,10 +96,9 @@ public class Label : Control
 	void ApplyText() =>
 		Ui.Text = text;
 
+	// scaled by UIFontMetrics so the user's text-size setting is honoured
 	void ApplyFont() =>
-		Ui.Font = bold
-			? UIFont.BoldSystemFontOfSize((nfloat)fontSize)
-			: UIFont.SystemFontOfSize((nfloat)fontSize);
+		Ui.Font = Fonts.Scaled(fontSize, bold);
 
 	void ApplyTextColor()
 	{

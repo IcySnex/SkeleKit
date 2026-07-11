@@ -13,6 +13,7 @@ sealed class PageHost : UIViewController
 	readonly ContentView? page;
 
 	UITapGestureRecognizer? dismissKeyboard;
+	UIView? keyboardFocus;
 	nfloat keyboardCover;
 
 	public PageHost(
@@ -33,6 +34,21 @@ sealed class PageHost : UIViewController
 			new Selector("keyboardHidden:"),
 			UIKeyboard.WillHideNotification,
 			null);
+
+		// dynamic type resizes the fonts under us, so every cached measurement in the tree is wrong
+		NSNotificationCenter.DefaultCenter.AddObserver(
+			this,
+			new Selector("contentSizeChanged:"),
+			UIApplication.ContentSizeCategoryChangedNotification,
+			null);
+	}
+
+	[Export("contentSizeChanged:")]
+	void ContentSizeChanged(
+		NSNotification notification)
+	{
+		page?.InvalidateSubtree();
+		View?.SetNeedsLayout();
 	}
 
 	// marshaller needs this; Navigator keeps the managed ref so it stays unused
@@ -104,7 +120,7 @@ sealed class PageHost : UIViewController
 
 		page.Native.Frame = shrunk;
 
-		if (keyboardCover <= 0 || FirstResponder(page.Native) is not { } focused)
+		if (keyboardCover <= 0 || keyboardFocus is not { } focused)
 			return;
 
 		// shrinking reflows a layout that can adapt; a top-anchored field just gets clipped, so
@@ -153,6 +169,9 @@ sealed class PageHost : UIViewController
 		// the scroll view handles its own case, and doubling up would inset twice
 		if (page is null || ScrollRoot is not null || View?.Window is null)
 			return;
+
+		// resolved once here, not on every layout pass during the animation
+		keyboardFocus = hiding ? null : FirstResponder(page.Native);
 
 		nfloat cover = 0;
 

@@ -10,6 +10,16 @@ public abstract partial class Panel : View
 	/// </summary>
 	public ViewCollection Children { get; }
 
+	/// <summary>
+	/// Empty space between the panel's edge and its children.
+	/// </summary>
+	public Thickness Padding
+	{
+		get => padding;
+		set => Set(ref padding, value);
+	}
+	Thickness padding = Thickness.Zero;
+
 	protected Panel()
 	{
 		Children = new(this, SyncChildren);
@@ -27,5 +37,11 @@ public abstract partial class Panel : View
 	{
 		foreach (View child in Children)
 			child.OnBindingContextChanged();
+	}
+
+	private protected override void InvalidateChildren()
+	{
+		foreach (View child in Children)
+			child.InvalidateSubtree();
 	}
 }

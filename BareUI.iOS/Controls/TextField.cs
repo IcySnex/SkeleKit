@@ -75,7 +75,8 @@ public class TextField : Control
 	{
 		UITextField field = new()
 		{
-			BorderStyle = UITextBorderStyle.RoundedRect
+			BorderStyle = UITextBorderStyle.RoundedRect,
+			AdjustsFontForContentSizeCategory = true
 		};
 
 		field.EditingChanged += (sender, e) => OnEdited();
@@ -111,7 +112,7 @@ public class TextField : Control
 		Ui.Placeholder = placeholder;
 
 	void ApplyFont() =>
-		Ui.Font = UIFont.SystemFontOfSize((nfloat)fontSize);
+		Ui.Font = Fonts.Scaled(fontSize, bold: false);
 
 	void ApplyKeyboard() =>
 		Ui.KeyboardType = keyboard switch

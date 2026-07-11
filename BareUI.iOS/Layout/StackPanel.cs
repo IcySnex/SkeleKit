@@ -22,6 +22,8 @@ public class StackPanel : Panel
 	{
 		bool vertical = Orientation == Orientation.Vertical;
 
+		Size inner = availableSize.Deflate(Padding);
+
 		double along = 0;
 		double across = 0;
 		int visible = 0;
@@ -29,8 +31,8 @@ public class StackPanel : Panel
 		foreach (View child in Children)
 		{
 			Size childAvailable = vertical
-				? new(availableSize.Width, double.PositiveInfinity)
-				: new(double.PositiveInfinity, availableSize.Height);
+				? new(inner.Width, double.PositiveInfinity)
+				: new(double.PositiveInfinity, inner.Height);
 
 			child.Measure(childAvailable);
 
@@ -54,15 +56,19 @@ public class StackPanel : Panel
 
 		along += Spacing * Math.Max(0, visible - 1);
 
-		return vertical
+		Size desiredSize = vertical
 			? new(across, along)
 			: new(along, across);
+
+		return desiredSize.Inflate(Padding);
 	}
 
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
 		bool vertical = Orientation == Orientation.Vertical;
+
+		Size inner = finalSize.Deflate(Padding);
 
 		double offset = 0;
 		bool first = true;
@@ -81,8 +87,8 @@ public class StackPanel : Panel
 
 			Size desired = child.DesiredSize;
 			Rect slot = vertical
-				? new(0, offset, finalSize.Width, desired.Height)
-				: new(offset, 0, desired.Width, finalSize.Height);
+				? new(Padding.Left, Padding.Top + offset, inner.Width, desired.Height)
+				: new(Padding.Left + offset, Padding.Top, desired.Width, inner.Height);
 
 			child.Arrange(slot);
 			offset += vertical ? desired.Height : desired.Width;

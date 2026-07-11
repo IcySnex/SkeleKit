@@ -35,6 +35,8 @@ public class Grid : Panel
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
+		availableSize = availableSize.Deflate(Padding);
+
 		IReadOnlyList<GridLength> columns = EffectiveTracks(Columns);
 		IReadOnlyList<GridLength> rows = EffectiveTracks(Rows);
 
@@ -55,9 +57,9 @@ public class Grid : Panel
 			child.Measure(cell);
 		}
 
-		return new(
+		return new Size(
 			Sum(columnWidths) + columnGaps,
-			Sum(rowHeights) + rowGaps);
+			Sum(rowHeights) + rowGaps).Inflate(Padding);
 	}
 
 	protected override Size ArrangeOverride(
@@ -74,8 +76,8 @@ public class Grid : Panel
 			GridChild placement = PlacementOf(child, columns.Count, rows.Count);
 
 			Rect cell = new(
-				columnOffsets[placement.Column],
-				rowOffsets[placement.Row],
+				Padding.Left + columnOffsets[placement.Column],
+				Padding.Top + rowOffsets[placement.Row],
 				SpanSize(columnWidths, placement.Column, placement.ColumnSpan, ColumnSpacing),
 				SpanSize(rowHeights, placement.Row, placement.RowSpan, RowSpacing));
 

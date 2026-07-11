@@ -118,6 +118,13 @@ Hard-won rules (don't relearn these):
 - `[RelayCommand]` generates `IRelayCommand`, and `Bindable<T>` isn't covariant → bind with an
   explicit type arg: `Bind<ICommand?>(vm => vm.SaveCommand)`.
 
+Deliberately deferred (not blocking M5, listed so they don't get "forgotten" again):
+- `Label`: `FontWeight`/`FontDesign`/`Truncation` (only `Bold` exists).
+- `OneWayToSource` is in the `BindingMode` enum but no factory creates one.
+- Escape hatches from architecture §Interop: `ContentView.Controller`, `View.GestureRecognizers`.
+- Page chrome: `ToolbarItems`, `LargeTitle`, `HidesNavigationBar`, `BackgroundStyle`, iPad sidebar.
+- `Picker` API drift: docs say `ItemsSource`/`SelectedItem`, code has `Items`/`SelectedIndex`.
+
 Known debt, roughly in priority order:
 - `MenuView`/`PickerDemo` still need `OnViewModelAttached` (lists + `Picker.Items`). `CollectionView`
   + `ItemsSource` should kill the first.

@@ -40,7 +40,8 @@ public class TextEditor : Control
 	{
 		UITextView view = new()
 		{
-			Editable = true
+			Editable = true,
+			AdjustsFontForContentSizeCategory = true
 		};
 
 		view.Changed += (sender, e) => OnChanged();
@@ -62,7 +63,7 @@ public class TextEditor : Control
 		Ui.Text = text;
 
 	void ApplyFont() =>
-		Ui.Font = UIFont.SystemFontOfSize((nfloat)fontSize);
+		Ui.Font = Fonts.Scaled(fontSize, bold: false);
 
 	void OnChanged()
 	{
@@ -89,7 +90,7 @@ public class TextEditor : Control
 
 		CGSize fit = view.SizeThatFits(ClampToFinite(availableSize));
 
-		UIFont font = view.Font ?? UIFont.SystemFontOfSize((nfloat)fontSize);
+		UIFont font = view.Font ?? Fonts.Scaled(fontSize, bold: false);
 		UIEdgeInsets inset = view.TextContainerInset;
 		nfloat lineFloor = (nfloat)Math.Ceiling(font.LineHeight) + inset.Top + inset.Bottom;
 

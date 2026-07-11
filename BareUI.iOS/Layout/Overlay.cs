@@ -9,12 +9,14 @@ public class Overlay : Panel
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
+		Size inner = availableSize.Deflate(Padding);
+
 		double width = 0;
 		double height = 0;
 
 		foreach (View child in Children)
 		{
-			child.Measure(availableSize);
+			child.Measure(inner);
 
 			if (!child.IsVisible.Value)
 				continue;
@@ -23,13 +25,15 @@ public class Overlay : Panel
 			height = Math.Max(height, child.DesiredSize.Height);
 		}
 
-		return new(width, height);
+		return new Size(width, height).Inflate(Padding);
 	}
 
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
-		Rect bounds = new(Point.Zero, finalSize);
+		Rect bounds = new(
+			new Point(Padding.Left, Padding.Top),
+			finalSize.Deflate(Padding));
 
 		foreach (View child in Children)
 			child.Arrange(bounds);

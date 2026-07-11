@@ -120,6 +120,20 @@ public abstract partial class View
 		return root;
 	}
 
+	/// <summary>
+	/// Drops every cached measurement in this subtree. For changes that hit leaves directly, like a dynamic-type resize.
+	/// </summary>
+	public void InvalidateSubtree()
+	{
+		measureValid = false;
+
+		InvalidateChildren();
+		InvalidateMeasure();
+	}
+
+	private protected virtual void InvalidateChildren()
+	{ }
+
 	partial void RequestLayout();
 
 	// stores a property, pushes it to the native view once realized, and relayouts if it can change size
