@@ -89,12 +89,10 @@ Known shortcuts to revisit:
   subtree each pass. Fine for now; optimize when a screen gets heavy.
 - `Panel.RealizeChildren` rebuilds all native subviews on any `Children` change (no diffing).
 
-- Reviewer follow-ups not yet done: Gallery pages sit flat in the project root (move to `Pages/`
-  + extract the copy-pasted `Secondary` color/caption scaffold); no unit tests for `ImageSource`
-  string-conversion heuristic; `Image.Loader` is static mutable global state (decide in M3/M4 if
+- Reviewer follow-up still open: `Image.Loader` is static mutable global state (decide in M3/M4 if
   it becomes `BareApp` config).
 - M3 structural note from review: `CreateNative` and `View.ApplyVisualState` are two uncoordinated
   writers of native state (an `Image` clipping bug came from this). M3 should introduce one
   property-application pipeline (base visual state, then control state).
 
-Next — M3 bindings (see PLAN.md). M2 work is uncommitted on `main` as of this writing.
+Next — M3 bindings (see PLAN.md). M2 is committed on `main`.
