@@ -206,6 +206,22 @@ public abstract partial class View
 	/// </summary>
 	public object? TapCommandParameter { get; set; }
 
+	/// <summary>
+	/// Gives the view keyboard focus, raising the keyboard for a text control. No-op until realized.
+	/// </summary>
+	public void Focus() =>
+		FocusCore();
+
+	/// <summary>
+	/// Takes keyboard focus away, dismissing the keyboard.
+	/// </summary>
+	public void Unfocus() =>
+		UnfocusCore();
+
+	partial void FocusCore();
+
+	partial void UnfocusCore();
+
 
 	// Layout properties
 
@@ -352,6 +368,16 @@ public abstract partial class View
 		set => Set(ref cornerRadius, value, ApplyVisualState, affectsMeasure: false);
 	}
 	double cornerRadius = 0;
+
+	/// <summary>
+	/// A drop shadow behind the view, or null for none. A shadow needs unclipped bounds, so it is ignored when the view clips.
+	/// </summary>
+	public Shadow? Shadow
+	{
+		get => shadow;
+		set => Set(ref shadow, value, ApplyVisualState, affectsMeasure: false);
+	}
+	Shadow? shadow;
 
 	/// <summary>
 	/// When true, content is clipped to the bounds and corner radius.

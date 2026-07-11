@@ -122,6 +122,8 @@ public abstract partial class View
 		if (Background is { } background)
 			native.BackgroundColor = background.ToUIColor();
 		native.ClipsToBounds = ClipsToBounds || CornerRadius > 0 || ClipsByDefault;
+
+		ApplyShadow();
 		native.Layer.CornerRadius = (nfloat)CornerRadius;
 	}
 
@@ -167,6 +169,35 @@ public abstract partial class View
 			frame.Y - bled.Top,
 			frame.Width + bled.Left + bled.Right,
 			frame.Height + bled.Top + bled.Bottom);
+	}
+
+	/// <summary>
+	/// Whether this view currently holds keyboard focus.
+	/// </summary>
+	public bool IsFocused =>
+		native?.IsFirstResponder is true;
+
+	partial void FocusCore() =>
+		native?.BecomeFirstResponder();
+
+	partial void UnfocusCore() =>
+		native?.ResignFirstResponder();
+
+	void ApplyShadow()
+	{
+		if (native is null)
+			return;
+
+		if (Shadow is not { } shadow)
+		{
+			native.Layer.ShadowOpacity = 0;
+			return;
+		}
+
+		native.Layer.ShadowOpacity = (float)shadow.Opacity;
+		native.Layer.ShadowRadius = (nfloat)shadow.Radius;
+		native.Layer.ShadowOffset = new(shadow.OffsetX, shadow.OffsetY);
+		native.Layer.ShadowColor = (shadow.Color ?? Colors.Black).ToUIColor().CGColor;
 	}
 
 	partial void ApplyFrame(

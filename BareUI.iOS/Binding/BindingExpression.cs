@@ -104,6 +104,33 @@ public static class BindingFactory
 			BindingMode.TwoWay);
 
 	/// <summary>
+	/// A control-to-source binding: the control writes to the source and never reads from it.
+	/// </summary>
+	public static BindingExpression<T?> BindToSource<TSource, T>(
+		Func<TSource, T> getter,
+		Action<TSource, T?> setter,
+		[CallerArgumentExpression(nameof(getter))] string? path = null)
+		where TSource : class =>
+		new(
+			ParsePath(path),
+			source => getter((TSource)source),
+			(source, value) => setter((TSource)source, value),
+			BindingMode.OneWayToSource);
+
+	/// <summary>
+	/// A one-time binding: read once when the context attaches, then never again.
+	/// </summary>
+	public static BindingExpression<T?> BindOnce<TSource, T>(
+		Func<TSource, T> getter,
+		[CallerArgumentExpression(nameof(getter))] string? path = null)
+		where TSource : class =>
+		new(
+			ParsePath(path),
+			source => getter((TSource)source),
+			null,
+			BindingMode.OneTime);
+
+	/// <summary>
 	/// A nested one-way binding. Each segment is subscribed on its own, so replacing an intermediate re-resolves the rest.
 	/// </summary>
 	public static BindingExpression<T?> BindPath<TSource, TMiddle, T>(

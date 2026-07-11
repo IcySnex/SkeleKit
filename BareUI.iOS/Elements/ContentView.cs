@@ -151,4 +151,32 @@ public abstract class ContentView<TViewModel> : ContentView
 		Func<TValue, T> format,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
 		BindingFactory.Bind(getter, format, path);
+
+	/// <summary>
+	/// Binds two ways through converters: <paramref name="format"/> out, <paramref name="parse"/> back in. A numeric text field, for instance.
+	/// </summary>
+	protected static BindingExpression<T?> Bind<TValue, T>(
+		Func<TViewModel, TValue> getter,
+		Action<TViewModel, TValue> setter,
+		Func<TValue, T> format,
+		Func<T, TValue> parse,
+		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
+		BindingFactory.Bind(getter, setter, format, parse, path);
+
+	/// <summary>
+	/// Binds control to source only: the control writes, and never reads back.
+	/// </summary>
+	protected static BindingExpression<T?> BindToSource<T>(
+		Func<TViewModel, T> getter,
+		Action<TViewModel, T?> setter,
+		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
+		BindingFactory.BindToSource(getter, setter, path);
+
+	/// <summary>
+	/// Reads the value once when the ViewModel attaches, then never again.
+	/// </summary>
+	protected static BindingExpression<T?> BindOnce<T>(
+		Func<TViewModel, T> getter,
+		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
+		BindingFactory.BindOnce(getter, path);
 }

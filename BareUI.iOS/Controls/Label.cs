@@ -30,15 +30,45 @@ public class Label : Control
 	Binding<double>? fontSizeBinding;
 
 	/// <summary>
-	/// Whether the text is rendered bold.
+	/// Shorthand for a bold <see cref="FontWeight"/>.
 	/// </summary>
 	public Bindable<bool> Bold
 	{
-		get => bold;
-		set => boldBinding = Register(boldBinding, value, value => Set(ref bold, value, ApplyFont));
+		get => weight is BareUI.FontWeight.Bold;
+		set => boldBinding = Register(boldBinding, value, value => Set(ref weight, value ? BareUI.FontWeight.Bold : BareUI.FontWeight.Regular, ApplyFont));
 	}
-	bool bold;
 	Binding<bool>? boldBinding;
+
+	/// <summary>
+	/// The font's weight.
+	/// </summary>
+	public Bindable<FontWeight> FontWeight
+	{
+		get => weight;
+		set => weightBinding = Register(weightBinding, value, value => Set(ref weight, value, ApplyFont));
+	}
+	FontWeight weight = BareUI.FontWeight.Regular;
+	Binding<BareUI.FontWeight>? weightBinding;
+
+	/// <summary>
+	/// The font's design: system, rounded, serif or monospaced.
+	/// </summary>
+	public FontDesign FontDesign
+	{
+		get => design;
+		set => Set(ref design, value, ApplyFont);
+	}
+	FontDesign design = FontDesign.Default;
+
+	/// <summary>
+	/// How the text is shortened when it does not fit.
+	/// </summary>
+	public Truncation Truncation
+	{
+		get => truncation;
+		set => Set(ref truncation, value, ApplyTruncation);
+	}
+	Truncation truncation = Truncation.Tail;
 
 	/// <summary>
 	/// Text color, or null for the system label color.
@@ -88,6 +118,7 @@ public class Label : Control
 		ApplyTextColor();
 		ApplyMaxLines();
 		ApplyTextAlignment();
+		ApplyTruncation();
 	}
 
 	UILabel Ui =>
@@ -98,7 +129,16 @@ public class Label : Control
 
 	// scaled by UIFontMetrics so the user's text-size setting is honoured
 	void ApplyFont() =>
-		Ui.Font = Fonts.Scaled(fontSize, bold);
+		Ui.Font = Fonts.Scaled(fontSize, weight, design);
+
+	void ApplyTruncation() =>
+		Ui.LineBreakMode = truncation switch
+		{
+			Truncation.Head => UILineBreakMode.HeadTruncation,
+			Truncation.Middle => UILineBreakMode.MiddleTruncation,
+			Truncation.None => UILineBreakMode.WordWrap,
+			_ => UILineBreakMode.TailTruncation
+		};
 
 	void ApplyTextColor()
 	{
