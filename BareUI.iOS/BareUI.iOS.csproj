@@ -13,6 +13,17 @@
         <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
     </PropertyGroup>
 
+    <!-- The package ships iOS only. The net10.0 shim exists so the layout engine can be tested
+         without a simulator; shipping it would hand consumers a hollow lib with no controls. -->
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- NU5128: the shim TFM has no lib/, which is the point -->
+        <NoWarn>$(NoWarn);NU5128</NoWarn>
+    </PropertyGroup>
+
     <ItemGroup>
         <InternalsVisibleTo Include="BareUI.Tests" />
     </ItemGroup>

@@ -94,6 +94,8 @@ public abstract partial class View
 		if (native is null)
 			return;
 
+		ApplyGestures();
+
 		native.UserInteractionEnabled = IsEnabled;
 
 		if (tapCommand is not null && tapRecognizer is null)
@@ -182,6 +184,35 @@ public abstract partial class View
 
 	partial void UnfocusCore() =>
 		native?.ResignFirstResponder();
+
+	/// <summary>
+	/// Animates the property changes made inside <paramref name="changes"/>.
+	/// </summary>
+	public static void Animate(
+		double seconds,
+		Action changes) =>
+		UIView.Animate(seconds, changes);
+
+	/// <summary>
+	/// Adds a native gesture recognizer. An escape hatch for gestures the library does not wrap.
+	/// </summary>
+	public void AddGesture(
+		UIGestureRecognizer gesture)
+	{
+		gestures.Add(gesture);
+
+		native?.AddGestureRecognizer(gesture);
+	}
+
+	// kept managed-side too: UIKit retains the recognizer, but the peer needs a root
+	readonly List<UIGestureRecognizer> gestures = [];
+
+	void ApplyGestures()
+	{
+		foreach (UIGestureRecognizer gesture in gestures)
+			if (gesture.View is null)
+				native?.AddGestureRecognizer(gesture);
+	}
 
 	void ApplyShadow()
 	{

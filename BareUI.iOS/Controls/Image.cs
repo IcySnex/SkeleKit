@@ -8,9 +8,9 @@ namespace BareUI;
 public class Image : Control
 {
 	/// <summary>
-	/// The loader used for URL sources. Replace to add caching.
+	/// The loader used for URL sources. Set it through <c>BareApp.UseImageLoader(...)</c>.
 	/// </summary>
-	public static IImageLoader Loader { get; set; } = new HttpImageLoader();
+	internal static IImageLoader Loader { get; set; } = new HttpImageLoader();
 
 	/// <summary>
 	/// Where the image is loaded from. URL sources load asynchronously, so give them an explicit Width/Height.

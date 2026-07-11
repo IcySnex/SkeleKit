@@ -94,6 +94,7 @@ public abstract partial class View
 		while (true)
 		{
 			view.measureValid = false;
+			view.previousValid = false;
 
 			if (view.Parent is not { } parent)
 				break;
@@ -126,6 +127,7 @@ public abstract partial class View
 	public void InvalidateSubtree()
 	{
 		measureValid = false;
+		previousValid = false;
 
 		InvalidateChildren();
 		InvalidateMeasure();
@@ -411,6 +413,13 @@ public abstract partial class View
 
 	bool measureValid;
 	Size lastAvailable;
+	Size lastDesired;
+
+	// a second slot: Grid measures an auto child unconstrained and then again at the resolved cell
+	// size, so a single-slot cache would thrash on every pass
+	bool previousValid;
+	Size previousAvailable;
+	Size previousDesired;
 
 	/// <summary>
 	/// First pass: computes <see cref="DesiredSize"/> for the space the parent offers.
@@ -420,14 +429,35 @@ public abstract partial class View
 	{
 		// same slot and nothing changed since: DesiredSize still holds
 		if (measureValid && lastAvailable == available)
+		{
+			DesiredSize = lastDesired;
 			return;
+		}
+
+		if (previousValid && previousAvailable == available)
+		{
+			// swap the slots, so alternating between two sizes stays a cache hit
+			(lastAvailable, previousAvailable) = (previousAvailable, lastAvailable);
+			(lastDesired, previousDesired) = (previousDesired, lastDesired);
+			(measureValid, previousValid) = (previousValid, measureValid);
+
+			DesiredSize = lastDesired;
+			return;
+		}
+
+		if (measureValid)
+		{
+			previousAvailable = lastAvailable;
+			previousDesired = lastDesired;
+			previousValid = true;
+		}
 
 		lastAvailable = available;
 		measureValid = true;
 
 		if (!isVisible)
 		{
-			DesiredSize = Size.Zero;
+			DesiredSize = lastDesired = Size.Zero;
 			return;
 		}
 
@@ -446,7 +476,7 @@ public abstract partial class View
 			Clamp(measured.Width, minWidth, maxWidth),
 			Clamp(measured.Height, minHeight, maxHeight));
 
-		DesiredSize = desired.Inflate(Margin);
+		DesiredSize = lastDesired = desired.Inflate(Margin);
 	}
 
 	/// <summary>

@@ -50,6 +50,17 @@ public sealed class BareApp
 	}
 
 	/// <summary>
+	/// Sets how <c>Image</c> loads remote URLs. Plug in a caching loader here.
+	/// </summary>
+	public BareApp UseImageLoader(
+		IImageLoader loader)
+	{
+		Image.Loader = loader;
+
+		return this;
+	}
+
+	/// <summary>
 	/// Registers the pages the app can show. Every navigable page goes here, once.
 	/// </summary>
 	public BareApp UsePages(
