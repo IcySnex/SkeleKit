@@ -11,7 +11,7 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 {
 	readonly CollectionView<Movie> movies = new()
 	{
-		Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12),
+		Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12, snap: CarouselSnap.Item),
 		ItemTemplate = () => new MovieCell(),
 		Height = 260
 	};
@@ -28,7 +28,7 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 			{
 				new Label
 				{
-					Text = "Swipe the row sideways",
+					Text = "Swipe sideways — it settles on an item",
 					Margin = new Thickness(16, 0),
 					TextColor = Theme.Secondary,
 					FontSize = 13

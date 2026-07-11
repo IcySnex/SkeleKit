@@ -9,8 +9,21 @@ public partial class ScrollView
 	private protected override UIView CreateNative() =>
 		new ScrollHost(this);
 
-	private protected override void ApplyProperties() =>
+	private protected override void ApplyProperties()
+	{
+		UIScrollView host = (UIScrollView)Native;
+		bool vertical = Orientation == Orientation.Vertical;
+
+		// only bounce along the axis that scrolls
+		host.AlwaysBounceVertical = vertical;
+		host.AlwaysBounceHorizontal = !vertical;
+
+		// nested inside the safe area UIKit reports zero insets; reaching a bar it insets the content
+		// and lets it scroll under the bar, which is what SwiftUI does
+		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Always;
+
 		ApplyKeyboardDismiss();
+	}
 
 	partial void ApplyKeyboardDismissCore() =>
 		((UIScrollView)Native).KeyboardDismissMode = keyboardDismiss switch

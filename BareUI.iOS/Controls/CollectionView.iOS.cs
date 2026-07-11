@@ -24,9 +24,22 @@ public partial class CollectionView<TItem>
 
 	private protected override UIView CreateNative()
 	{
+		bool carousel = Layout.Kind is CollectionLayoutKind.Carousel;
+
 		CollectionHost collection = new(this, CreateLayout(Layout, HeaderTemplate is not null))
 		{
-			BackgroundColor = UIColor.Clear
+			BackgroundColor = UIColor.Clear,
+
+			// only bounce along the axis that actually scrolls: a carousel must not drag vertically,
+			// and a list must not drag sideways
+			AlwaysBounceVertical = !carousel,
+			AlwaysBounceHorizontal = carousel,
+
+			// a nested collection sits inside the safe area, so UIKit gives it zero insets; one that
+			// reaches a bar gets the inset it needs and its content scrolls under the bar
+			ContentInsetAdjustmentBehavior = carousel
+				? UIScrollViewContentInsetAdjustmentBehavior.Never
+				: UIScrollViewContentInsetAdjustmentBehavior.Always
 		};
 
 		collection.RegisterClassForCell(typeof(BareCell), CellId);
@@ -292,7 +305,13 @@ public partial class CollectionView<TItem>
 
 		NSCollectionLayoutSection section = NSCollectionLayoutSection.Create(group);
 		section.InterGroupSpacing = spacing;
-		section.OrthogonalScrollingBehavior = UICollectionLayoutSectionOrthogonalScrollingBehavior.Continuous;
+		section.OrthogonalScrollingBehavior = layout.Snap switch
+		{
+			CarouselSnap.Item => UICollectionLayoutSectionOrthogonalScrollingBehavior.GroupPaging,
+			CarouselSnap.ItemCentered => UICollectionLayoutSectionOrthogonalScrollingBehavior.GroupPagingCentered,
+			CarouselSnap.Page => UICollectionLayoutSectionOrthogonalScrollingBehavior.Paging,
+			_ => UICollectionLayoutSectionOrthogonalScrollingBehavior.Continuous
+		};
 		section.ContentInsets = new(0, spacing, 0, spacing);
 
 		return section;

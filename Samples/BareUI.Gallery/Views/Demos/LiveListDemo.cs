@@ -28,6 +28,10 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 	{
 		Title = "Live list";
 
+		// let the list run under the tab bar; the collection insets its own content, so the last row
+		// stays reachable while the content scrolls beneath the bar
+		SafeAreaEdges = SafeAreaEdges.Top | SafeAreaEdges.Leading | SafeAreaEdges.Trailing;
+
 		Content = new Grid
 		{
 			Rows = { GridLength.Auto, GridLength.Star },

@@ -16,6 +16,24 @@ public enum CollectionLayoutKind
 }
 
 /// <summary>
+/// How a carousel settles when the drag ends. Mirrors SwiftUI's scroll target behaviour.
+/// </summary>
+public enum CarouselSnap
+{
+	/// <summary>Free scrolling; stops wherever the drag ends.</summary>
+	None,
+
+	/// <summary>Settles on an item, leading edge aligned.</summary>
+	Item,
+
+	/// <summary>Settles on an item, centred.</summary>
+	ItemCentered,
+
+	/// <summary>Settles a full page at a time.</summary>
+	Page
+}
+
+/// <summary>
 /// The layout of a <c>CollectionView</c>: a list, a grid, or a carousel.
 /// </summary>
 public readonly struct CollectionLayout
@@ -45,18 +63,25 @@ public readonly struct CollectionLayout
 	/// </summary>
 	public bool Grouped { get; }
 
+	/// <summary>
+	/// How a carousel settles when the drag ends.
+	/// </summary>
+	public CarouselSnap Snap { get; }
+
 	CollectionLayout(
 		CollectionLayoutKind kind,
 		int columns,
 		double spacing,
 		double itemWidth,
-		bool grouped)
+		bool grouped,
+		CarouselSnap snap)
 	{
 		Kind = kind;
 		Columns = columns;
 		Spacing = spacing;
 		ItemWidth = itemWidth;
 		Grouped = grouped;
+		Snap = snap;
 	}
 
 
@@ -65,7 +90,7 @@ public readonly struct CollectionLayout
 	/// </summary>
 	public static CollectionLayout List(
 		bool grouped = false) =>
-		new(CollectionLayoutKind.List, 1, 0, 0, grouped);
+		new(CollectionLayoutKind.List, 1, 0, 0, grouped, CarouselSnap.None);
 
 	/// <summary>
 	/// A grid of equal columns.
@@ -73,13 +98,14 @@ public readonly struct CollectionLayout
 	public static CollectionLayout Grid(
 		int columns,
 		double spacing = 8) =>
-		new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, false);
+		new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, false, CarouselSnap.None);
 
 	/// <summary>
-	/// A horizontally scrolling row of fixed-width items.
+	/// A horizontally scrolling row of fixed-width items, optionally snapping as it settles.
 	/// </summary>
 	public static CollectionLayout Carousel(
 		double itemWidth,
-		double spacing = 8) =>
-		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, false);
+		double spacing = 8,
+		CarouselSnap snap = CarouselSnap.None) =>
+		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, false, snap);
 }
