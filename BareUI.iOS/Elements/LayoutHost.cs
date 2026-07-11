@@ -1,5 +1,6 @@
 #if IOS
 using CoreGraphics;
+using ObjCRuntime;
 using UIKit;
 
 namespace BareUI;
@@ -9,7 +10,7 @@ namespace BareUI;
 /// </summary>
 sealed class LayoutHost : UIView
 {
-	readonly View element;
+	readonly View? element;
 
 	public LayoutHost(
 		View element)
@@ -17,10 +18,18 @@ sealed class LayoutHost : UIView
 		this.element = element;
 	}
 
+	// marshaller needs this; only hit if the peer was collected, so element is gone
+	public LayoutHost(
+		NativeHandle handle) : base(handle)
+	{ }
+
 
 	public override CGSize SizeThatFits(
 		CGSize size)
 	{
+		if (element is null)
+			return CGSize.Empty;
+
 		Size desired = element.HostMeasure(new(size.Width, size.Height));
 		return new CGSize(desired.Width, desired.Height);
 	}
@@ -28,7 +37,8 @@ sealed class LayoutHost : UIView
 	public override void LayoutSubviews()
 	{
 		base.LayoutSubviews();
-		element.HostLayout(new(Bounds.Width, Bounds.Height));
+
+		element?.HostLayout(new(Bounds.Width, Bounds.Height));
 	}
 }
 #endif

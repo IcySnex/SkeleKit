@@ -1,5 +1,6 @@
 #if IOS
 using CoreGraphics;
+using ObjCRuntime;
 using UIKit;
 #endif
 
@@ -101,7 +102,7 @@ public class ScrollView : Panel
 /// </summary>
 sealed class ScrollHost : UIScrollView
 {
-	readonly ScrollView element;
+	readonly ScrollView? element;
 
 	public ScrollHost(
 		ScrollView element)
@@ -109,10 +110,16 @@ sealed class ScrollHost : UIScrollView
 		this.element = element;
 	}
 
+	// see LayoutHost
+	public ScrollHost(
+		NativeHandle handle) : base(handle)
+	{ }
+
 	public override void LayoutSubviews()
 	{
 		base.LayoutSubviews();
-		element.LayoutContent(new(Bounds.Width, Bounds.Height));
+
+		element?.LayoutContent(new(Bounds.Width, Bounds.Height));
 	}
 }
 #endif
