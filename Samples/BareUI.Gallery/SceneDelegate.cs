@@ -1,4 +1,3 @@
-using BareUI.Primitives;
 using Foundation;
 using UIKit;
 
@@ -17,21 +16,9 @@ public class SceneDelegate : UIWindowSceneDelegate
 		if (scene is not UIWindowScene windowScene)
 			return;
 
-		Thickness probe = new(16, 8);
-
-		UIViewController rootViewController = new();
-		rootViewController.View!.BackgroundColor = UIColor.SystemBackground;
-		rootViewController.View.AddSubview(new UILabel(windowScene.CoordinateSpace.Bounds)
-		{
-			Text = $"BareUI Gallery — wired up (Thickness.Horizontal = {probe.Horizontal})",
-			TextAlignment = UITextAlignment.Center,
-			AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
-			Lines = 0
-		});
-
 		Window = new(windowScene)
 		{
-			RootViewController = rootViewController
+			RootViewController = new BareHostController(MovieInfoPage.Build())
 		};
 		Window.MakeKeyAndVisible();
 	}
