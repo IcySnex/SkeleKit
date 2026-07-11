@@ -135,7 +135,7 @@ BareUI.sln
 - **Not done, deferred:** `ToolbarItems`, `LargeTitles`-on-scroll (`TitleRevealOnScroll`),
   iPadOS sidebar (`SidebarOnIPad`).
 
-### M5 — CollectionView (virtualization)
+### M5 — CollectionView (virtualization) — ✅ DONE (2026-07-11, pending on-device scroll check)
 - One `CollectionView` control over `UICollectionView` + diffable data source:
   - Layouts: `.List` (incl. native inset-grouped — covers Settings), `.Grid(columns)`
     (covers Home poster grids), `.Carousel` (horizontal sections).
@@ -145,7 +145,10 @@ BareUI.sln
     (cell binding context), so scrolling never rebuilds trees.
   - Sections with header templates, selection command, empty view.
 - **Exit criteria:** Velura Home grid and Settings inset-grouped list reproduced in Gallery
-  with smooth 120 Hz scrolling on device.
+  with smooth 120 Hz scrolling on device. *(Gallery has both, plus carousel + live-list demos.
+  The 120 Hz check needs a device run.)*
+- Also landed: `CarouselSnap` (all five native orthogonal behaviours), `View.IgnoresSafeArea`
+  (per-view safe-area bleed), and a rewrite of safe-area handling — see ADR note below.
 
 ### M6 — Validation, docs, packaging
 - Port two real Velura screens on a branch (`SettingsGroupViewController` and a simplified

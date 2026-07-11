@@ -80,7 +80,8 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Status (2026-07-11)
 
-**M0–M4 complete.** Commits land on `main` (linear history). Next: **M5 — `CollectionView`**.
+**M0–M5 complete** (M5 pending an on-device 120 Hz scroll check). Commits land on `main` (linear
+history). Next: **M6 — validation, docs, packaging**.
 
 Shape of the thing now:
 - **Element model**: `View` (lazy realize, WPF measure/arrange, `Parent`, `InvalidateMeasure`),
@@ -102,6 +103,16 @@ Shape of the thing now:
 - **Gallery**: `Program.cs` + `Views/ViewModels/Models/Services`, CommunityToolkit.Mvvm VMs, zero
   UIKit outside `NativeViewDemo`.
 
+M5:
+- `CollectionView<TItem>` over `UICollectionView` + **`UICollectionViewDiffableDataSource`** (UIKit does
+  the diffing; we do not hand-roll batch updates). `ItemView<TItem>` is the cell's tree, built once per
+  recycled cell and rebound on reuse. `CollectionLayout.List(grouped:)/.Grid(columns)/.Carousel(...)`,
+  `Section<T>` + `HeaderTemplate`, `SelectionCommand`, `EmptyView`, `CarouselSnap` (all five native
+  orthogonal behaviours).
+- Perf: one cached `ItemKey` per item (no identifier allocation per snapshot, and it roots the NSObject
+  peers); snapshots coalesce onto the next run-loop turn, so an `ObservableCollection.Add` loop is one
+  diff, not N; off-screen collections apply without animation.
+
 Hard-won rules (don't relearn these):
 - **Native peers must be rooted** — see the convention above. It caused the black-screen/SIGABRT bug.
 - **Measure is cached per available-size** (`View.measureValid` + `lastAvailable`).
@@ -112,6 +123,14 @@ Hard-won rules (don't relearn these):
 - **A `Panel` must lay out its own content, not wait for UIKit.** UIKit only calls `LayoutSubviews`
   on a view whose bounds changed, so `ScrollView` kept stale content after a binding update — it now
   arranges its content in `ArrangeOverride`.
+- **We own every scroll-view inset.** `ContentInsetAdjustmentBehavior = Never` everywhere: `Always`
+  insets *across* the scroll axis (a vertical list gains a horizontal scrollable range) and
+  `ScrollableAxes` drops the cross-axis inset (content under the notch). Both guesses are wrong.
+  A page always sits inside the safe area; a view escapes it with `IgnoresSafeArea`, and a scrolling
+  view turns that bleed into a content inset along its scroll axis (so the scroll passes under the bar
+  but its content never does). `ContentView.ScrollsUnderBars` bleeds a scrolling root vertically.
+- **A list configuration paints its own opaque background** over `backgroundView` — set it clear or the
+  `EmptyView` is invisible.
 - **`Bindable<T>` can't take an interface `T`** (C# forbids user-defined conversions from
   interfaces) → `Picker.Items` stays plain; literals need `Bindable.From<ICommand?>(cmd)`.
 - User-defined conversions don't chain → `Image.Source` needs `ImageSource.Symbol(...)`/`Url(...)`.
