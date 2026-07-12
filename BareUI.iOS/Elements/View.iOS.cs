@@ -269,7 +269,8 @@ public abstract partial class View
 	void ApplyGradient(
 		LinearGradient gradient)
 	{
-		gradientLayer ??= new();
+		// negative z keeps the fill under the children even if the sublayer order shifts
+		gradientLayer ??= new() { ZPosition = -1 };
 
 		if (gradientLayer.SuperLayer is null)
 			native!.Layer.InsertSublayer(gradientLayer, 0);
@@ -483,8 +484,9 @@ public abstract partial class View
 
 		recognizer = new(() =>
 		{
-			CGPoint translation = recognizer.TranslationInView(recognizer.View);
-			CGPoint velocity = recognizer.VelocityInView(recognizer.View);
+			// measured in the parent: the view's own space rotates and scales under the gesture
+			CGPoint translation = recognizer.TranslationInView(recognizer.View?.Superview);
+			CGPoint velocity = recognizer.VelocityInView(recognizer.View?.Superview);
 
 			handler(new(
 				recognizer.State switch
@@ -550,14 +552,11 @@ public abstract partial class View
 		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
 		bool resized = native.Bounds.Size != next.Size;
 
-		// setting Frame under a transform is undefined: bounds+centre is the same thing without one
-		if (HasTransform)
-		{
-			native.Bounds = new(0, 0, next.Width, next.Height);
-			native.Center = new(next.X + (next.Width / 2), next.Y + (next.Height / 2));
-		}
-		else
-			native.Frame = next;
+		// always bounds+centre, never Frame: an animation can leave the native transform non-identity
+		// while the model reads as untransformed, and setting Frame under a transform is undefined.
+		// The origin stays — a scroll view keeps its content offset there
+		native.Bounds = new(native.Bounds.X, native.Bounds.Y, next.Width, next.Height);
+		native.Center = new(next.X + (next.Width / 2), next.Y + (next.Height / 2));
 
 		if (resized)
 		{
