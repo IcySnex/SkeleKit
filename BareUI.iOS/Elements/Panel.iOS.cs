@@ -33,10 +33,13 @@ public abstract partial class Panel
 				wanted.Add(child.Native);
 
 		foreach (UIView existing in host.Subviews)
-			if (!wanted.Contains(existing))
+			if (!wanted.Contains(existing) && !ReferenceEquals(existing, BackgroundView))
 				existing.RemoveFromSuperview();
 
 		UIView[] subviews = host.Subviews;
+
+		// a material background holds subview 0, so the children start one slot in
+		int offset = BackgroundView is null ? 0 : 1;
 
 		for (int index = 0; index < Children.Count; index++)
 		{
@@ -44,11 +47,11 @@ public abstract partial class Panel
 
 			// already in the right slot: leave it alone. Re-inserting a UITextField would make it
 			// resign first responder, so never touch a subview that has not moved
-			if (index < subviews.Length && subviews[index] == native)
+			if (index + offset < subviews.Length && subviews[index + offset] == native)
 				continue;
 
 			// InsertSubview moves a view that is already a subview, so this fixes order too
-			host.InsertSubview(native, index);
+			host.InsertSubview(native, index + offset);
 			subviews = host.Subviews;
 		}
 

@@ -41,6 +41,28 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 						Child = new Label { Style = Styles.Title, Text = "Styles.ProminentCard, BasedOn Card" }
 					},
 
+					new Label { Style = Styles.Caption, Text = "Brush — a gradient fill, with a material blurring it" },
+					new Overlay
+					{
+						Height = 160,
+						CornerRadius = 12,
+						ClipsToBounds = true,
+						Children =
+						{
+							new Border { Background = LinearGradient.Vertical(Colors.Indigo, Colors.Pink) },
+							new Border
+							{
+								Background = new Material(MaterialKind.Thin),
+								CornerRadius = 10,
+								Padding = new Thickness(12, 8),
+								Margin = new Thickness(12),
+								HorizontalAlignment = HorizontalAlignment.Start,
+								VerticalAlignment = VerticalAlignment.End,
+								Child = new Label { Style = Styles.Title, Text = "Material.Thin" }
+							}
+						}
+					},
+
 					new Label { Style = Styles.Caption, Text = "A shadow goes outside, the rounding inside" },
 					new Border
 					{

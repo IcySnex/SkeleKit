@@ -200,7 +200,13 @@ machinery.
 - A gradient is a `CAGradientLayer`, which does not autoresize: its frame is synced from
   `View.ApplyFrame`. Its CGColors are snapshots, so they re-resolve through the existing
   `ReapplyVisuals` walk on a dark-mode change — the same rule the border stroke and shadow follow.
-- A material is a `UIVisualEffectView` inserted as subview 0, which *does* autoresize.
+- A material is a `UIVisualEffectView` inserted as subview 0, which *does* autoresize. `Panel`'s
+  subview diff skips it and offsets the children by one slot, or the next `Children` change would
+  tear the material out.
+- **A gradient or a material needs a `Panel`** (`Border`, `Overlay`, `VStack`, …) and throws on a
+  leaf control. Both fills sit under the view's *subviews* but above the layer's own drawing, and a
+  `UILabel` renders its text into that layer — the fill would cover the text. A solid brush works
+  anywhere; wrap the control in a `Border` to fill behind it.
 - `SwipeAction.Background` stays a `Color`: `UIContextualAction.BackgroundColor` takes a color, and
   a gradient behind a swipe action is not a thing UIKit offers.
 

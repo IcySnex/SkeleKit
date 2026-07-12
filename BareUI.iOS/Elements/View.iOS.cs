@@ -1,4 +1,6 @@
+using CoreAnimation;
 using CoreGraphics;
+using Foundation;
 using UIKit;
 
 namespace BareUI;
@@ -65,6 +67,9 @@ public abstract partial class View
 
 		OnUnrealized();
 		DetachBindings();
+
+		DropGradient();
+		DropMaterial();
 
 		native.RemoveFromSuperview();
 		if (OwnsNative)
@@ -175,8 +180,8 @@ public abstract partial class View
 
 		native.Hidden = !isVisible;
 		native.Alpha = (nfloat)Opacity;
-		if (Background is { } background)
-			native.BackgroundColor = background.ToUIColor();
+
+		ApplyBackground();
 
 		// a clipped layer cannot draw a shadow: the shadow is outside the bounds. A corner radius alone
 		// still clips (an Image must round its content), a shadow turns that off
@@ -184,6 +189,147 @@ public abstract partial class View
 
 		ApplyShadow();
 		native.Layer.CornerRadius = (nfloat)CornerRadius;
+	}
+
+	CAGradientLayer? gradientLayer;
+	UIVisualEffectView? materialView;
+
+	// a material is a real subview, so the panel's child diff has to know to leave it alone
+	internal UIView? BackgroundView =>
+		materialView;
+
+	void ApplyBackground()
+	{
+		if (native is null)
+			return;
+
+		switch (Background)
+		{
+			case SolidBrush solid:
+				DropGradient();
+				DropMaterial();
+
+				native.BackgroundColor = solid.Color.ToUIColor();
+				break;
+
+			case LinearGradient gradient:
+				DropMaterial();
+				RequirePanel("A gradient");
+
+				native.BackgroundColor = UIColor.Clear;
+				ApplyGradient(gradient);
+				break;
+
+			case Material material:
+				DropGradient();
+				RequirePanel("A material");
+
+				native.BackgroundColor = UIColor.Clear;
+				ApplyMaterial(material);
+				break;
+
+			// no brush leaves the native background alone: a control paints its own
+			default:
+				DropGradient();
+				DropMaterial();
+				break;
+		}
+	}
+
+	// both fills sit under the view's *subviews*, but over a control's own drawing — a UILabel renders
+	// its text into the layer, so a gradient behind it would cover the text
+	void RequirePanel(
+		string fill)
+	{
+		if (this is not Panel)
+			throw new InvalidOperationException(
+				$"{fill} background needs a panel (Border, Overlay, VStack, ...); {GetType().Name} draws its own content, which the fill would cover.");
+	}
+
+	void ApplyGradient(
+		LinearGradient gradient)
+	{
+		gradientLayer ??= new();
+
+		if (gradientLayer.SuperLayer is null)
+			native!.Layer.InsertSublayer(gradientLayer, 0);
+
+		CGColor[] colors = new CGColor[gradient.Stops.Count];
+		NSNumber[] locations = new NSNumber[gradient.Stops.Count];
+
+		for (int index = 0; index < gradient.Stops.Count; index++)
+		{
+			GradientStop stop = gradient.Stops[index];
+
+			colors[index] = stop.Color.ToUIColor().CGColor;
+			locations[index] = NSNumber.FromDouble(stop.Offset);
+		}
+
+		gradientLayer.Colors = colors;
+		gradientLayer.Locations = locations;
+		gradientLayer.StartPoint = new(gradient.Start.X, gradient.Start.Y);
+		gradientLayer.EndPoint = new(gradient.End.X, gradient.End.Y);
+
+		SyncGradientFrame();
+	}
+
+	// a CALayer does not autoresize, and its implicit animation would lag a frame behind a scroll
+	void SyncGradientFrame()
+	{
+		if (gradientLayer is null || native is null)
+			return;
+
+		CATransaction.Begin();
+		CATransaction.DisableActions = true;
+
+		gradientLayer.Frame = native.Bounds;
+		gradientLayer.CornerRadius = (nfloat)CornerRadius;
+
+		CATransaction.Commit();
+	}
+
+	void ApplyMaterial(
+		Material material)
+	{
+		UIBlurEffect effect = UIBlurEffect.FromStyle(material.Kind switch
+		{
+			MaterialKind.UltraThin => UIBlurEffectStyle.SystemUltraThinMaterial,
+			MaterialKind.Thin => UIBlurEffectStyle.SystemThinMaterial,
+			MaterialKind.Thick => UIBlurEffectStyle.SystemThickMaterial,
+			MaterialKind.Chrome => UIBlurEffectStyle.SystemChromeMaterial,
+			_ => UIBlurEffectStyle.SystemMaterial
+		});
+
+		if (materialView is null)
+		{
+			materialView = new(effect)
+			{
+				Frame = native!.Bounds,
+				AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
+				UserInteractionEnabled = false
+			};
+
+			native.InsertSubview(materialView, 0);
+		}
+		else
+			materialView.Effect = effect;
+
+		materialView.Layer.CornerRadius = (nfloat)CornerRadius;
+		materialView.ClipsToBounds = CornerRadius > 0;
+	}
+
+	void DropGradient()
+	{
+		gradientLayer?.RemoveFromSuperLayer();
+		gradientLayer?.Dispose();
+		gradientLayer = null;
+	}
+
+	void DropMaterial()
+	{
+		materialView?.RemoveFromSuperview();
+		materialView?.Dispose();
+		materialView = null;
 	}
 
 	// the page's insets, walked up the tree
@@ -302,6 +448,9 @@ public abstract partial class View
 		native.Frame = next;
 
 		if (resized)
+		{
+			SyncGradientFrame();
 			native.SetNeedsLayout();
+		}
 	}
 }

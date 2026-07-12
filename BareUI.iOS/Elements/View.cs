@@ -438,14 +438,14 @@ public abstract partial class View
 	// Visual properties
 
 	/// <summary>
-	/// Solid background color, or null for transparent.
+	/// The background fill — a color, a gradient or a material — or null for transparent.
 	/// </summary>
-	public Color? Background
+	public Brush? Background
 	{
 		get => background;
 		set => Set(ref background, value, ApplyVisualState, affectsMeasure: false);
 	}
-	Color? background;
+	Brush? background;
 
 	/// <summary>
 	/// Opacity from 0 (transparent) to 1 (opaque).
