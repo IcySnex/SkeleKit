@@ -9,8 +9,11 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class AnimationDemo : ContentView<AnimationDemoViewModel>
 {
+	const double Distance = 240;
+
 	// the animator owns a native peer: a field is what keeps it alive while it runs
 	Animator? drag;
+	double grabbedAt;
 	bool open;
 
 	public AnimationDemo()
@@ -67,40 +70,60 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 		View card,
 		PanGesture pan)
 	{
-		const double distance = 240;
-
 		switch (pan.State)
 		{
+			// a running animator is taken over, never replaced: two animators on one transform fight
 			case GestureState.Began:
-				// building it paused is what lets the drag scrub an animation that UIKit would otherwise run
-				drag?.Dispose();
-				drag = Animator.Create(Animation.Spring(), () =>
-				{
-					card.Translation = new(open ? 0 : distance, 0);
-					card.Rotation = open ? 0 : 6;
-				});
-				drag.Start();
-				drag.Pause();
+				drag ??= Prepare(card);
+				drag.Grab();
+
+				grabbedAt = drag.Fraction;
 				break;
 
 			case GestureState.Changed:
 				if (drag is not null)
-					drag.Fraction = Math.Clamp((open ? -pan.Translation.X : pan.Translation.X) / distance, 0, 1);
+					drag.Fraction = Math.Clamp(grabbedAt + (Travel(pan.Translation.X) / Distance), 0, 1);
 				break;
 
 			default:
 				if (drag is null)
 					break;
 
-				// past halfway (or thrown hard enough) it finishes; otherwise it runs back to where it came from
-				bool completes = drag.Fraction > 0.5 || Math.Abs(pan.Velocity.X) > 800;
+				// past halfway, or thrown hard enough, it finishes; otherwise it runs back where it came from
+				bool completes = drag.Fraction > 0.5 || Travel(pan.Velocity.X) > 800;
 
 				drag.IsReversed = !completes;
 				drag.Continue();
-
-				if (completes)
-					open = !open;
 				break;
 		}
+	}
+
+	// the animation always runs 0 -> 1, so an open card reads a drag back to the left as forward progress
+	double Travel(
+		double x) =>
+		open ? -x : x;
+
+	Animator Prepare(
+		View card)
+	{
+		Animator animator = Animator.Create(Animation.Spring(), () =>
+		{
+			card.Translation = new(open ? 0 : Distance, 0);
+			card.Rotation = open ? 0 : 6;
+		});
+
+		// it only flips once the animation actually reached the end; a spring-back leaves it as it was
+		animator.OnCompleted(finished =>
+		{
+			if (finished)
+				open = !open;
+
+			drag = null;
+		});
+
+		animator.Start();
+		animator.Pause();
+
+		return animator;
 	}
 }

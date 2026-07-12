@@ -74,6 +74,22 @@ public sealed class Animator : IDisposable
 		native.PauseAnimation();
 
 	/// <summary>
+	/// Takes a running animation over: pauses it where it is and puts it back on its forward timeline, ready to be scrubbed.
+	/// </summary>
+	public void Grab()
+	{
+		native.PauseAnimation();
+
+		// a reversed animator measures FractionComplete along the *reversed* timeline, so a gesture
+		// that grabs one mid-spring-back would otherwise scrub from the wrong end
+		if (native.Reversed)
+		{
+			native.FractionComplete = 1 - native.FractionComplete;
+			native.Reversed = false;
+		}
+	}
+
+	/// <summary>
 	/// Hands a paused animation back to the animator, running the rest of it. Below 1, <paramref name="durationFactor"/> finishes faster.
 	/// </summary>
 	public void Continue(
