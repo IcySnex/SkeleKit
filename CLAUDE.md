@@ -138,6 +138,13 @@ Hard-won rules (don't relearn these):
   but its content never does). `ContentView.ScrollsUnderBars` bleeds a scrolling root vertically.
 - **A list configuration paints its own opaque background** over `backgroundView` — set it clear or the
   `EmptyView` is invisible.
+- **UIKit reverts a reversed animation without telling us.** An `Animator`'s changes block writes the
+  *end* values into our model; if the animation runs backwards, UIKit restores the native view to the
+  start and the model is left a value ahead. `Set`'s equality short-circuit then makes the *next*
+  animation a silent no-op (its block writes nothing native), which reads as "the control just
+  stopped responding". `AnimationCapture` records what a block touched and `Animator` restores it on
+  a `.Start` finish. Any future native-side revert (a cancelled transition, an interactive dismiss)
+  needs the same treatment.
 - **Clipping and a shadow are mutually exclusive on one layer** (the shadow is drawn outside the
   bounds). `CornerRadius > 0` used to force `ClipsToBounds` unconditionally, which silently ate the
   shadow of every rounded card. A `Shadow` now turns that implicit clip off; an explicit

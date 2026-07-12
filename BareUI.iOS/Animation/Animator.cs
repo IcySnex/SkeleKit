@@ -8,13 +8,12 @@ namespace BareUI;
 /// <remarks>Hold it in a field for as long as it runs: it owns a native peer, and a collected animator crashes.</remarks>
 public sealed class Animator : IDisposable
 {
-	readonly UIViewPropertyAnimator native;
+	UIViewPropertyAnimator native = null!;
 
-	Animator(
-		UIViewPropertyAnimator native)
-	{
-		this.native = native;
-	}
+	Dictionary<View, ViewState>? captured;
+
+	Animator()
+	{ }
 
 	/// <summary>
 	/// Prepares an animation of the changes made in <paramref name="changes"/>. It does not run until <see cref="Start"/>.
@@ -22,10 +21,34 @@ public sealed class Animator : IDisposable
 	/// <remarks>Only what <paramref name="changes"/> touches is animated. To animate a layout property (Width, Margin, ...), call <see cref="View.LayoutNow"/> at the end of it — and expect the view's bounds to be scrubbed along with everything else.</remarks>
 	public static Animator Create(
 		Animation animation,
-		Action changes) =>
-		new(animation.SpringDamping is { } damping
-			? new(animation.Duration, (nfloat)damping, changes)
-			: new(animation.Duration, Curve(animation.Easing), changes));
+		Action changes)
+	{
+		Animator animator = new();
+
+		// the changes write the animation's end values into the model; remember what they moved
+		Action recorded = () => animator.captured = AnimationCapture.Run(changes);
+
+		animator.native = animation.SpringDamping is { } damping
+			? new(animation.Duration, (nfloat)damping, recorded)
+			: new(animation.Duration, Curve(animation.Easing), recorded);
+
+		// added first, so the model is consistent by the time the app's own OnCompleted runs
+		animator.native.AddCompletion(animator.Reconcile);
+
+		return animator;
+	}
+
+	// a reversed animation ends where it started: UIKit puts the native views back and never tells us,
+	// leaving the model a value ahead — and Set's equality check would then swallow the next animation
+	void Reconcile(
+		UIViewAnimatingPosition position)
+	{
+		if (position is UIViewAnimatingPosition.Start && captured is { } states)
+			foreach ((View view, ViewState state) in states)
+				view.Restore(state);
+
+		captured = null;
+	}
 
 
 	/// <summary>
@@ -102,6 +125,7 @@ public sealed class Animator : IDisposable
 	/// <summary>
 	/// Ends the animation. It settles where it is, unless <paramref name="finish"/> runs it to the end.
 	/// </summary>
+	/// <remarks>Stopping without finishing abandons the animation mid-flight: the views keep the values the animation was heading for, so assign what you want them to hold.</remarks>
 	public void Stop(
 		bool finish = false)
 	{

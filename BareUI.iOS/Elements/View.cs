@@ -170,6 +170,9 @@ public abstract partial class View
 		if (EqualityComparer<T>.Default.Equals(field, value))
 			return;
 
+		// inside an animation's changes: remember where this view was, in case UIKit reverts it
+		AnimationCapture.Record(this);
+
 		field = value;
 
 		if (apply is not null)
@@ -523,6 +526,24 @@ public abstract partial class View
 	// a transformed view must be positioned by bounds+centre: setting Frame under a transform is undefined
 	private protected bool HasTransform =>
 		translation != Point.Zero || scale != 1 || rotation != 0;
+
+	internal ViewState Capture() =>
+		new(translation, scale, rotation, opacity, cornerRadius, background, width, height, margin);
+
+	// the values UIKit already put back natively, so nothing moves on screen: only the model catches up
+	internal void Restore(
+		ViewState state)
+	{
+		Translation = state.Translation;
+		Scale = state.Scale;
+		Rotation = state.Rotation;
+		Opacity = state.Opacity;
+		CornerRadius = state.CornerRadius;
+		Background = state.Background;
+		Width = state.Width;
+		Height = state.Height;
+		Margin = state.Margin;
+	}
 
 	private protected void ApplyTransform() =>
 		ApplyTransformCore();

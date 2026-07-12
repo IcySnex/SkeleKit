@@ -250,6 +250,16 @@ on the animation UIKit already runs.
 - `View.OnPan` wraps `UIPanGestureRecognizer` in a typed `PanGesture`, so an app can scrub an
   animator without importing UIKit. That is the whole point of the interactive story: the gesture
   drives `Animator.Fraction`, and the release hands the rest back with `Continue()`.
+- **The shadow model must be reconciled with UIKit after a reversed animation** — the deepest cost
+  of retained-mode wrapping, and the reason `Animator` captures. An animation's changes block runs
+  once, immediately, writing the *end* values into BareUI's model while UIKit animates the native
+  view. Reverse it, and UIKit puts the native view back at the start and never tells us: the model
+  is now a value ahead of the screen. Worse, `View.Set` short-circuits on equality, so the *next*
+  animation's block writes nothing native at all and silently animates nothing. `Animator` therefore
+  records every view its block touches (`AnimationCapture`, hooked into the one `Set` funnel) and
+  restores their model when the animation ends at `.Start`. In plain UIKit this bug cannot exist —
+  `view.transform` *is* the model — so it is a defect we import by keeping a second copy, and it
+  belongs in the library, not in every app that reverses an animation.
 
 ## ADR-011: Cells adopt UIKit's *state*, never its content configuration
 
