@@ -20,6 +20,36 @@ public class TextEditor : Control
 	Binding<string?>? textBinding;
 
 	/// <summary>
+	/// What the editor holds, so the system can offer autofill.
+	/// </summary>
+	public ContentKind ContentKind
+	{
+		get => contentKind;
+		set => Set(ref contentKind, value, ApplyTraits, affectsMeasure: false);
+	}
+	ContentKind contentKind;
+
+	/// <summary>
+	/// When typing is automatically capitalized.
+	/// </summary>
+	public Capitalization Capitalization
+	{
+		get => capitalization;
+		set => Set(ref capitalization, value, ApplyTraits, affectsMeasure: false);
+	}
+	Capitalization capitalization = Capitalization.Sentences;
+
+	/// <summary>
+	/// Whether the keyboard autocorrects and spell-checks the input.
+	/// </summary>
+	public bool Autocorrection
+	{
+		get => autocorrection;
+		set => Set(ref autocorrection, value, ApplyTraits, affectsMeasure: false);
+	}
+	bool autocorrection = true;
+
+	/// <summary>
 	/// Font size in points.
 	/// </summary>
 	public Bindable<double> FontSize
@@ -29,6 +59,26 @@ public class TextEditor : Control
 	}
 	double fontSize = 17;
 	Binding<double>? fontSizeBinding;
+
+	/// <summary>
+	/// The weight the text is drawn at.
+	/// </summary>
+	public FontWeight FontWeight
+	{
+		get => fontWeight;
+		set => Set(ref fontWeight, value, ApplyFont, affectsMeasure: false);
+	}
+	FontWeight fontWeight = FontWeight.Regular;
+
+	/// <summary>
+	/// The system font design the text uses.
+	/// </summary>
+	public FontDesign FontDesign
+	{
+		get => fontDesign;
+		set => Set(ref fontDesign, value, ApplyFont, affectsMeasure: false);
+	}
+	FontDesign fontDesign;
 
 	/// <summary>
 	/// Invoked with the new value whenever the text changes.
@@ -54,6 +104,7 @@ public class TextEditor : Control
 	{
 		ApplyText();
 		ApplyFont();
+		ApplyTraits();
 	}
 
 	UITextView Ui => (UITextView)Native;
@@ -62,7 +113,21 @@ public class TextEditor : Control
 		Ui.Text = text;
 
 	void ApplyFont() =>
-		Ui.Font = Fonts.Scaled(fontSize, bold: false);
+		Ui.Font = Fonts.Scaled(fontSize, fontWeight, fontDesign);
+
+	void ApplyTraits()
+	{
+		Ui.TextContentType = TextField.ContentType(contentKind);
+		Ui.AutocapitalizationType = capitalization switch
+		{
+			Capitalization.None => UITextAutocapitalizationType.None,
+			Capitalization.Words => UITextAutocapitalizationType.Words,
+			Capitalization.Characters => UITextAutocapitalizationType.AllCharacters,
+			_ => UITextAutocapitalizationType.Sentences
+		};
+		Ui.AutocorrectionType = autocorrection ? UITextAutocorrectionType.Yes : UITextAutocorrectionType.No;
+		Ui.SpellCheckingType = autocorrection ? UITextSpellCheckingType.Yes : UITextSpellCheckingType.No;
+	}
 
 	void OnChanged()
 	{
