@@ -27,6 +27,19 @@ public class BindingTests
 		Assert.Equal("Dune", view.Current);
 	}
 
+	// the neutral shim applies inline; this locks the marshalled refresh path end-to-end
+	[Fact]
+	public async Task OneWay_TracksChangesFromBackgroundThread()
+	{
+		MovieViewModel viewModel = new() { Title = "Interstellar" };
+		StubBound view = new() { Text = BindingFactory.Bind((MovieViewModel vm) => vm.Title) };
+		view.BindingContext = viewModel;
+
+		await Task.Run(() => viewModel.Title = "Dune");
+
+		Assert.Equal("Dune", view.Current);
+	}
+
 	[Fact]
 	public void OneWay_IgnoresUnrelatedProperty()
 	{

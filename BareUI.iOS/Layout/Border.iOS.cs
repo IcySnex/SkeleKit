@@ -6,6 +6,20 @@ public partial class Border
 	{
 		base.OnRealized();
 
+		ApplyStroke();
+	}
+
+	// CGColor is a snapshot, so a theme change re-resolves it here
+	internal override void ReapplyVisuals()
+	{
+		base.ReapplyVisuals();
+
+		if (IsRealized)
+			ApplyStroke();
+	}
+
+	void ApplyStroke()
+	{
 		if (Stroke is { } stroke && StrokeThickness > 0)
 		{
 			Native.Layer.BorderWidth = (nfloat)StrokeThickness;

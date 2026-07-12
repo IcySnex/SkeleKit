@@ -26,7 +26,7 @@ public class GridDemo : ContentView<GridDemoViewModel>
 	protected override void OnViewModelAttached()
 	{
 		movies.ItemsSource = Bindable.From<IReadOnlyList<Movie>?>(ViewModel!.Movies);
-		movies.SelectionCommand = ViewModel.OpenCommand;
+		movies.SelectionCommand = Bindable.From<ICommand?>(ViewModel.OpenCommand);
 	}
 
 	protected override void OnAppearing() =>

@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using BareUI.Gallery.Models;
 using BareUI.Gallery.ViewModels.Demos;
 using BareUI.Gallery.Views;
@@ -26,6 +27,6 @@ public class ListDemo : ContentView<ListDemoViewModel>
 	protected override void OnViewModelAttached()
 	{
 		entries.GroupedItemsSource = Bindable.From<IReadOnlyList<Section<SettingsEntry>>?>(ViewModel!.Sections);
-		entries.SelectionCommand = ViewModel.OpenCommand;
+		entries.SelectionCommand = Bindable.From<ICommand?>(ViewModel.OpenCommand);
 	}
 }

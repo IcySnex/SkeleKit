@@ -174,6 +174,10 @@ public abstract partial class View
 
 	partial void ApplyVisualStateCore();
 
+	// theme change: dynamic UIColors adapt on their own, but CGColor snapshots (borders, shadows) do not
+	internal virtual void ReapplyVisuals() =>
+		ApplyVisualState();
+
 	private protected void ApplyInteraction() =>
 		ApplyInteractionCore();
 
@@ -207,6 +211,76 @@ public abstract partial class View
 	/// The parameter passed to <see cref="TapCommand"/>.
 	/// </summary>
 	public object? TapCommandParameter { get; set; }
+
+	// Accessibility
+
+	/// <summary>
+	/// Text VoiceOver reads for the view, or null for the control's own default.
+	/// </summary>
+	public Bindable<string?> AccessibilityLabel
+	{
+		get => accessibilityLabel;
+		set => accessibilityLabelBinding = Register(accessibilityLabelBinding, value, value => Set(ref accessibilityLabel, value, ApplyAccessibility, affectsMeasure: false));
+	}
+	string? accessibilityLabel;
+	Binding<string?>? accessibilityLabelBinding;
+
+	/// <summary>
+	/// Extra VoiceOver context describing what activating the view does, or null for none.
+	/// </summary>
+	public string? AccessibilityHint
+	{
+		get => accessibilityHint;
+		set => Set(ref accessibilityHint, value, ApplyAccessibility, affectsMeasure: false);
+	}
+	string? accessibilityHint;
+
+	/// <summary>
+	/// The current value VoiceOver reads after the label (a slider's percentage), or null for the control's own default.
+	/// </summary>
+	public Bindable<string?> AccessibilityValue
+	{
+		get => accessibilityValue;
+		set => accessibilityValueBinding = Register(accessibilityValueBinding, value, value => Set(ref accessibilityValue, value, ApplyAccessibility, affectsMeasure: false));
+	}
+	string? accessibilityValue;
+	Binding<string?>? accessibilityValueBinding;
+
+	/// <summary>
+	/// Extra traits VoiceOver applies on top of the control's own (Header, Selected, ...).
+	/// </summary>
+	public AccessibilityTraits AccessibilityTraits
+	{
+		get => accessibilityTraits;
+		set => Set(ref accessibilityTraits, value, ApplyAccessibility, affectsMeasure: false);
+	}
+	AccessibilityTraits accessibilityTraits;
+
+	/// <summary>
+	/// Identifier for UI tests. Never read to the user.
+	/// </summary>
+	public string? AccessibilityIdentifier
+	{
+		get => accessibilityIdentifier;
+		set => Set(ref accessibilityIdentifier, value, ApplyAccessibility, affectsMeasure: false);
+	}
+	string? accessibilityIdentifier;
+
+	/// <summary>
+	/// Overrides whether VoiceOver treats the view as one element, or null for the control's own default.
+	/// </summary>
+	public bool? IsAccessibilityElement
+	{
+		get => isAccessibilityElement;
+		set => Set(ref isAccessibilityElement, value, ApplyAccessibility, affectsMeasure: false);
+	}
+	bool? isAccessibilityElement;
+
+	private protected void ApplyAccessibility() =>
+		ApplyAccessibilityCore();
+
+	partial void ApplyAccessibilityCore();
+
 
 	/// <summary>
 	/// Gives the view keyboard focus, raising the keyboard for a text control. No-op until realized.

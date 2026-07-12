@@ -126,6 +126,56 @@ built once per recycled cell, only the item binding context swaps on reuse.
 
 ## ADR-007: Explicit registration everywhere, no discovery
 
-View↔ViewModel mapping (`.Map<TVm,TView>()`), tabs, services — all explicit calls at
-startup. No assembly scanning, no attribute discovery. Trim/AOT-safe by construction and
-keeps startup deterministic. Slightly more boilerplate per screen (one line) — accepted.
+View↔ViewModel mapping (`UsePages(pages => pages.AddTransient<TView>())` — a view reports
+its own ViewModel type, so registration takes one type parameter), tabs, services — all
+explicit calls at startup. No assembly scanning, no attribute discovery. Trim/AOT-safe by
+construction and keeps startup deterministic. Slightly more boilerplate per screen (one
+line) — accepted.
+
+## ADR-008: Styling — typed `Style<T>` actions, no setter/resource system
+
+**Decision:** a style is `Style<T> : IStyle` wrapping an `Action<T>` (plus optional
+`BasedOn`). Applied three ways: explicitly via a new `View.Style` property (applies
+immediately in the setter), implicitly via an app-global `Theme` registered with
+`BareApp.UseTheme(...)` (applied in the `View` base constructor, inheritance chain
+base-most first), or manually (`style.Apply(view)`). Shared values ("resources") are plain
+C# statics — **no `ResourceDictionary`**.
+
+**Context:** WPF's styling stack is reflection-shaped end to end: `Setter` targets a
+`DependencyProperty` with an `object` value (boxing + runtime type checks),
+`ResourceDictionary` is a string-keyed runtime lookup, `BasedOn` resolution and implicit
+style application walk type metadata. None of it survives the no-reflection rule, and none
+of it is needed when the "markup" is already C#: a typed closure over the control *is* a
+setter collection, with IntelliSense, compile-time checking and refactoring for free.
+
+**Precedence without a property system:** WPF tracks value sources per dependency property.
+BareUI gets the same observable order purely from execution order:
+
+1. control defaults — C# field initializers, which run *before* base ctor bodies;
+2. implicit theme styles — applied in the `View` base ctor (`GetType()` is already the
+   final type there);
+3. explicit `View.Style` — runs at its position in the object initializer (convention:
+   first line);
+4. local values — initializer assignments after it.
+
+The cost: no "unset back to default", and a style assigned *after* local values overwrites
+them. Accepted — statement order is visible in the source, unlike WPF's invisible
+value-source table.
+
+**Consequences:**
+- `Button.Style` (the `ButtonStyle` enum) renames to `Button.Kind` to free the `Style`
+  name on `View`. Pre-1.0 breaking change, single-line fix per call site.
+- Controls must configure themselves via field initializers, never ctor-body property
+  sets, or they would silently beat theme styles. Review rule.
+- The theme registry is a static internal frozen before `Run` — same write-once-at-startup
+  lifecycle as `UsePages`; mutation after freeze throws.
+- Bindings inside styles are safe to share: applying a style registers a fresh
+  `Binding<T>` per view.
+- Styles are neutral code — precedence, chain order and BasedOn are unit-tested without
+  a simulator.
+
+**Rejected alternatives:** setter objects keyed by property (reflection or a hand-rolled
+dependency-property system — the thing this library exists to avoid); string-keyed resource
+dictionaries (stringly, trim-hostile for no gain over statics); per-subtree cascading
+themes (complexity without a driving screen); source-generated styles (ADR-004 territory,
+v2 sugar at most).

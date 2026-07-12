@@ -184,6 +184,21 @@ public partial class CollectionView<TItem>
 	UICollectionView Ui =>
 		(UICollectionView)Native;
 
+	// recycled cell trees sit outside the element tree, so the theme walk visits them here
+	internal override void ReapplyVisuals()
+	{
+		base.ReapplyVisuals();
+
+		if (!IsRealized)
+			return;
+
+		foreach (UICollectionViewCell cell in Ui.VisibleCells)
+			if (cell is BareCell { Hosted: { } hosted })
+				hosted.ReapplyVisuals();
+
+		EmptyView?.ReapplyVisuals();
+	}
+
 	// UIKit does the diffing. A burst of changes (an Add loop over an ObservableCollection) collapses
 	// into one snapshot on the next turn of the run loop instead of N separate updates.
 	partial void ReloadItems() =>
@@ -364,7 +379,7 @@ public partial class CollectionView<TItem>
 		int section,
 		int index)
 	{
-		if (ItemAt(section, index) is not { } item || SelectionCommand is not { } command)
+		if (ItemAt(section, index) is not { } item || Selection is not { } command)
 			return;
 
 		if (command.CanExecute(item))

@@ -18,6 +18,20 @@ public readonly record struct Color(
 		double blue) : this(red, green, blue, 1.0)
 	{ }
 
+	// when set, the native side resolves the live UIKit color; the channels are a light-mode fallback
+	internal SystemColor? System { get; init; }
+
+	// dark-appearance channels; ignored when System is set
+	internal (double Red, double Green, double Blue, double Alpha)? Dark { get; init; }
+
+	/// <summary>
+	/// A color that resolves per appearance: <paramref name="light"/> normally, <paramref name="dark"/> in dark mode.
+	/// </summary>
+	public static Color Dynamic(
+		Color light,
+		Color dark) =>
+		light with { System = null, Dark = (dark.Red, dark.Green, dark.Blue, dark.Alpha) };
+
 
 	/// <summary>
 	/// Fully transparent.
@@ -51,9 +65,51 @@ public readonly record struct Color(
 
 
 	/// <summary>
-	/// Returns this color with a different <paramref name="alpha"/> (0..1).
+	/// Returns this color with a different <paramref name="alpha"/> (0..1). A system color flattens to its light-mode value.
 	/// </summary>
 	public Color WithAlpha(
 		double alpha) =>
-		this with { Alpha = alpha };
+		this with
+		{
+			System = null,
+			Alpha = alpha,
+			Dark = Dark is { } dark ? (dark.Red, dark.Green, dark.Blue, alpha) : null
+		};
+}
+
+/// <summary>
+/// The UIKit colors that adapt to appearance, contrast and vibrancy on their own.
+/// </summary>
+enum SystemColor
+{
+	Red,
+	Orange,
+	Yellow,
+	Green,
+	Mint,
+	Teal,
+	Cyan,
+	Blue,
+	Indigo,
+	Purple,
+	Pink,
+	Brown,
+	Gray,
+	Gray2,
+	Gray3,
+	Gray4,
+	Gray5,
+	Gray6,
+	Label,
+	SecondaryLabel,
+	TertiaryLabel,
+	PlaceholderText,
+	Separator,
+	Link,
+	Background,
+	SecondaryBackground,
+	TertiaryBackground,
+	GroupedBackground,
+	SecondaryGroupedBackground,
+	TertiaryGroupedBackground
 }

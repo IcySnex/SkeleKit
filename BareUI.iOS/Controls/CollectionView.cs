@@ -57,7 +57,16 @@ public partial class CollectionView<TItem> : View, ICollectionHost
 	/// <summary>
 	/// Invoked with the tapped item.
 	/// </summary>
-	public ICommand? SelectionCommand { get; set; }
+	public Bindable<ICommand?> SelectionCommand
+	{
+		get => Bindable.From<ICommand?>(selectionCommand);
+		set => selectionCommandBinding = Register(selectionCommandBinding, value, value => Set(ref selectionCommand, value, affectsMeasure: false));
+	}
+	ICommand? selectionCommand;
+	Binding<ICommand?>? selectionCommandBinding;
+
+	internal ICommand? Selection =>
+		selectionCommand;
 
 	/// <summary>
 	/// Shown instead of the items while the source is empty.

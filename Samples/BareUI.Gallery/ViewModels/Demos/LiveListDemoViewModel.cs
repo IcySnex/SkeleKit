@@ -16,8 +16,10 @@ public partial class LiveListDemoViewModel : ObservableObject
 	public ObservableCollection<TodoItem> Items { get; } = [];
 
 	[RelayCommand]
-	void Add() =>
+	void Add()
+	{
 		Items.Insert(0, new($"Item {next++}", $"Added at {DateTime.Now:HH:mm:ss}"));
+	}
 
 	[RelayCommand]
 	void Remove()
@@ -55,7 +57,7 @@ public partial class LiveListDemoViewModel : ObservableObject
 
 	public async Task RefreshAsync()
 	{
-		await Task.Delay(700);
+		await Task.Delay(2000);
 
 		Add();
 		Haptics.Selection();

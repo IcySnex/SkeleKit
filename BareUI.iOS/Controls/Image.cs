@@ -127,7 +127,7 @@ public class Image : Control
 		if (image is null || cancellationToken.IsCancellationRequested)
 			return;
 
-		UIApplication.SharedApplication.BeginInvokeOnMainThread(() =>
+		MainThread.Post(() =>
 		{
 			// still realized, still same url?
 			if (cancellationToken.IsCancellationRequested || !IsRealized)

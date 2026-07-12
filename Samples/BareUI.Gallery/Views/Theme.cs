@@ -6,9 +6,9 @@ namespace BareUI.Gallery.Views;
 public static class Theme
 {
 	/// <summary>
-	/// Muted gray matching the iOS secondary label color.
+	/// The iOS secondary label color, dark-mode aware.
 	/// </summary>
-	public static readonly Color Secondary = Color.FromHex(0x8E8E93);
+	public static readonly Color Secondary = Colors.SecondaryLabel;
 
 	/// <summary>
 	/// A small gray label that heads a demo section.

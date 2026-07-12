@@ -1,7 +1,7 @@
 # BareUI.iOS — API Sketch (Velura before/after)
 
-Illustrative only — final signatures may drift during implementation. All snippets are
-what *app* code looks like; no UIKit type appears anywhere.
+What *app* code looks like; no UIKit type appears anywhere. Sections 1–5 are the shipped
+API. Section 6 is the **M7 target** (styling) — not implemented yet.
 
 ## 1. App bootstrap
 
@@ -14,7 +14,8 @@ BareApp.Create()
     .UseServices(services =>
     {
         services.AddSingleton<Config>();
-        services.AddSingleton<IThemeManager, ThemeManager>();
+        services.AddSingleton<IMovieService, MovieService>();
+        services.AddTransient<HomeViewModel>();
         // ... existing Velura service registrations unchanged
     })
     .UsePages(pages => pages
@@ -26,7 +27,8 @@ BareApp.Create()
         .LargeTitles()
         .Tab<HomeView>("home_title", icon: "house")
         .Tab<SearchView>("search_title", icon: "magnifyingglass")
-        .Tab<SettingsView>("settings_title", icon: "gear"))
+        .Tab<SettingsView>("settings_title", icon: "gear")
+        .SidebarOnIPad())
     .Run(args);
 ```
 
@@ -38,34 +40,33 @@ What `SettingsGroupViewController` + `SettingsGroupItemViewCell` +
 ```csharp
 public class SettingsGroupView : ContentView<SettingsGroupViewModel>
 {
-    public SettingsGroupView() => Content = new CollectionView<SettingsEntry>
-    {
-        Layout = CollectionLayout.List(grouped: true),
-        Header = new SettingsHeader(),                       // reusable ContentView fragment
-        GroupedItemsSource = Bind(vm => vm.Sections),
-        SelectionCommand = ViewModel.OpenGroupCommand,
-        ItemTemplate = () => new SettingsRow(),
-    };
-
     public SettingsGroupView()
     {
         Title = Bind(vm => vm.GroupName);
-        TitleRevealOnScroll = true;                          // built-in ConcealingTitleView behavior
+
+        Content = new CollectionView<SettingsEntry>
+        {
+            Layout = CollectionLayout.List(grouped: true),
+            GroupedItemsSource = Bind<IReadOnlyList<Section<SettingsEntry>>?>(vm => vm.Sections),
+            SelectionCommand = Bind<ICommand?>(vm => vm.OpenGroupCommand),
+            ItemTemplate = () => new SettingsRow(),
+            HeaderTemplate = () => new SectionHeader()
+        };
     }
 }
 
 class SettingsRow : ItemView<SettingsEntry>
 {
-    protected override View Build() => new Grid
+    public SettingsRow() => Content = new Grid
     {
-        Columns = [Auto, Star, Auto],
+        Columns = { GridLength.Auto, GridLength.Star, GridLength.Auto },
         ColumnSpacing = 12,
-        Padding = new(16, 8),
+        Padding = new Thickness(16, 8),
         Children =
         {
             new Image
             {
-                Source     = Bind(i => i.IconName),
+                Source = Bind<string, ImageSource?>(i => i.IconName, n => ImageSource.Symbol(n)),
                 Background = Bind(i => i.IconBackground),
                 CornerRadius = 6,
                 Width = 29, Height = 29,
@@ -84,44 +85,44 @@ class SettingsRow : ItemView<SettingsEntry>
 ## 3. Layout-heavy content (MovieInfo top section)
 
 The declarative part of `MovieInfoViewController` (constraint list lines 287–357 of the
-original) becomes:
+original), composed in the page's constructor:
 
 ```csharp
-protected override View Build() => new ScrollView
+Content = new ScrollView
 {
-    SafeAreaEdges = SafeArea.None,               // full-bleed backdrop
-    Content = new StackPanel
+    IgnoresSafeArea = SafeAreaEdges.All,      // full-bleed backdrop
+    Content = new VStack
     {
         Children =
         {
-            new Overlay                           // backdrop + gradient + poster stack
+            new Overlay                       // backdrop + poster stack
             {
                 Children =
                 {
                     new Image
                     {
-                        Source = Bind(vm => vm.BackdropUrl),
+                        Source = Bind<string, ImageSource?>(vm => vm.BackdropUrl, u => ImageSource.Url(u)),
                         Stretch = Stretch.UniformToFill,
                     },
                     new VStack
                     {
                         VerticalAlignment = VerticalAlignment.Center,
-                        Padding = new(24, 0),
+                        Padding = new Thickness(24, 0),
                         Spacing = 2,
                         Children =
                         {
                             new Image
                             {
-                                Source = Bind(vm => vm.PosterUrl),
+                                Source = Bind<string, ImageSource?>(vm => vm.PosterUrl, u => ImageSource.Url(u)),
                                 Width = 140, Height = 210,
                                 CornerRadius = 8,
-                                Shadow = new(opacity: 0.5f, radius: 12, offsetY: 6),
-                                Margin = new(bottom: 32),
+                                Shadow = new(opacity: 0.5, radius: 12, offsetY: 6),
+                                Margin = new Thickness(0, 0, 0, 32),
                                 HorizontalAlignment = HorizontalAlignment.Center,
                             },
                             new Label
                             {
-                                Text = Bind(vm => vm.Movie.Title),
+                                Text = Bind(vm => vm.Title),
                                 FontSize = 24, FontWeight = FontWeight.Bold,
                                 TextColor = Colors.White,
                                 MaxLines = 1, TextAlignment = TextAlignment.Center,
@@ -130,16 +131,16 @@ protected override View Build() => new ScrollView
                             {
                                 Text = Bind(vm => vm.SubtitleLine),   // genres • year • duration (VM concern now)
                                 FontSize = 14,
-                                TextColor = Colors.White.WithAlpha(0.375f),
+                                TextColor = Colors.White.WithAlpha(0.375),
                                 MaxLines = 2, TextAlignment = TextAlignment.Center,
                             },
                             new Button
                             {
-                                Text = L10n.Get("media_play"),
+                                Text = "media_play".L10N(),
                                 Icon = "play.fill",
-                                Style = ButtonStyle.FilledCapsule,
-                                Command = ViewModel.PlayCommand,
-                                Margin = new(top: 32),
+                                Style = ButtonStyle.FilledCapsule,    // becomes Kind in M7
+                                Command = Bind<ICommand?>(vm => vm.PlayCommand),
+                                Margin = new Thickness(0, 32, 0, 0),
                                 HorizontalAlignment = HorizontalAlignment.Center,
                             },
                         }
@@ -167,7 +168,7 @@ IsOn = Bind(vm => vm.Config.Appearance.AnimateTabBar,
             (vm, v) => vm.Config.Appearance.AnimateTabBar = v);
 
 // Converter / formatter
-Text = Bind(vm => vm.Movie.Duration, format: d => d.L10N());
+Text = Bind<TimeSpan, string?>(vm => vm.Duration, d => d.L10N());
 
 // Numeric text field (replaces UINumberField)
 Text = Bind(vm => vm.Port, (vm, v) => vm.Port = v,
@@ -176,9 +177,13 @@ Text = Bind(vm => vm.Port, (vm, v) => vm.Port = v,
 // Update trigger
 Text = Bind(vm => vm.Query, (vm, v) => vm.Query = v).On(UpdateTrigger.FocusLost);
 
-// Commands
-Command = ViewModel.CloseCommand;                    // direct — no binding needed
-TapCommand = ViewModel.OpenMovieCommand;             // any view is tappable
+// Commands — Bindable like everything else; explicit type arg because
+// [RelayCommand] generates IRelayCommand and Bindable<T> is not covariant
+Command = Bind<ICommand?>(vm => vm.CloseCommand);
+TapCommand = Bind<ICommand?>(vm => vm.OpenMovieCommand);   // any view is tappable
+
+// Literals for interface-typed properties (no implicit conversion from interfaces)
+SelectionCommand = Bindable.From<ICommand?>(someCommand);
 ```
 
 ## 5. Navigation from a ViewModel
@@ -202,3 +207,50 @@ public partial class HomeViewModel(INavigator navigator) : ObservableObject
 
 ViewModels stay CommunityToolkit.Mvvm — BareUI requires only `INotifyPropertyChanged` /
 `ICommand`, nothing library-specific.
+
+## 6. Styling & theming (M7 target — not yet implemented)
+
+See PLAN.md §M7 and ADR-008. Styles are typed actions; resources are plain statics.
+
+```csharp
+// Styles.cs — the app's "resource dictionary" is a static class
+static class Palette
+{
+    public static readonly Color Accent = Colors.Indigo;
+    public static readonly Color Card = Colors.SecondaryGroupedBackground;
+}
+
+static class Styles
+{
+    public static readonly Style<Label> Caption = new(l =>
+    {
+        l.TextStyle = TextStyle.Caption1;      // native Dynamic Type curve
+        l.TextColor = Colors.SecondaryLabel;
+    });
+
+    public static readonly Style<Border> Card = new(b =>
+    {
+        b.Background = Palette.Card;
+        b.CornerRadius = 12;
+        b.Padding = new Thickness(16);
+    });
+
+    // BasedOn: Card applies first, then the overrides
+    public static readonly Style<Border> ProminentCard = new(Card, b =>
+        b.Shadow = new(opacity: 0.2, radius: 8, offsetY: 4));
+}
+
+// Explicit use — Style goes FIRST in the initializer; later lines override it
+new Label { Style = Styles.Caption, Text = "Runtime" }
+new Border { Style = Styles.ProminentCard, Child = content }
+
+// Implicit use — app-wide defaults, applied to every instance of the type
+BareApp.Create()
+    .UseTheme(theme => theme
+        .Style(new Style<Label>(l => l.TextColor = Colors.Label))
+        .Style(new Style<Button>(b => b.Kind = ButtonStyle.Tinted)))   // Button.Style → Kind in M7
+    ...
+```
+
+Precedence (each later source wins): control defaults → theme styles (base type first) →
+explicit `Style` → local values after it.

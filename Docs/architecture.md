@@ -4,11 +4,11 @@ Five layers, each depending only on the ones below it:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│ 5. App model      BareApp, INavigator, TabsHost,    │
-│                   NavigationHost, ContentView<TVm>  │
+│ 5. App model      BareApp, INavigator, PageHost,    │
+│                   ContentView<TVm>, Haptics         │
 ├─────────────────────────────────────────────────────┤
-│ 4. Binding        Bindable<T>, Binding<TVm,T>,      │
-│                   commands, collection observation  │
+│ 4. Binding        Bindable<T>, BindingExpression<T>,│
+│                   Binding<T>, commands, MainThread  │
 ├─────────────────────────────────────────────────────┤
 │ 3. Controls       Label, Button, Image, TextField…  │
 │                   (1:1 native wrappers)             │
@@ -74,12 +74,17 @@ See ADR-002 for why (vs Auto Layout translation).
   (`InvalidateMeasure()` bubbles to the root, which calls `SetNeedsLayout`).
 - **Arrange**: `void Arrange(Rect final)` — applies `Margin`, alignment, min/max clamping,
   then sets `Native.Frame`. No constraints, no solver, no `TranslatesAutoresizingMaskIntoConstraints`.
-- **Safe area**: a `SafeAreaEdges` property (flags: None/Top/Bottom/Leading/Trailing/All)
-  on any view; the root `LayoutHost` reads `SafeAreaInsets` and panels subtract them during
-  arrange. Replaces Velura's scattered `AtLeftOfSafeArea` calls.
-- **Environment changes**: root host observes trait collection (dynamic type, size class)
-  and bounds changes → full re-measure. Controls using `UIFontMetrics` resize natively;
-  layout follows automatically.
+- **Safe area — one regime**: a page always sits *inside* the safe area (`PageHost` insets
+  the root frame). A view escapes it with `IgnoresSafeArea` (edge flags) and grows back out;
+  a *scrolling* view turns that bleed into a content inset along its scroll axis, so the
+  scroll passes under the bar but its content never does. BareUI owns every scroll inset
+  (`ContentInsetAdjustmentBehavior = Never` everywhere — UIKit's guesses are wrong both ways).
+- **Environment changes**: `PageHost` observes `ContentSizeCategoryChangedNotification`
+  (Dynamic Type → `InvalidateSubtree`, every cached measurement dropped) and registers for
+  `UITraitUserInterfaceStyle` changes (theme → `ReapplyVisuals` walk re-resolving CGColor
+  snapshots like border strokes and shadows; dynamic `UIColor`s adapt on their own).
+  Keyboard frame changes shrink the page like a safe-area change (SwiftUI semantics), with
+  a slide-up fallback for non-adaptive layouts.
 
 ### Panels (v1)
 
@@ -104,7 +109,7 @@ v1 set and native mapping:
 |---|---|---|
 | `Label` | `UILabel` | `Text`, `FontSize`/`FontWeight`/`FontDesign` (maps to `UIFontMetrics`-scaled dynamic fonts by default), `TextColor`, `MaxLines`, `Truncation`, `TextAlignment` |
 | `Button` | `UIButton` (UIButtonConfiguration) | `Text`, `Icon` (SF Symbol name), `Style` (Plain/Tinted/Filled/Capsule…), `Command`/`CommandParameter` |
-| `Image` | `UIImageView` | `Source` (SF Symbol, bundle, or async loader hook `IImageLoader` — plugs into Velura's `ImageCache`), `Stretch`, `CornerRadius` |
+| `Image` | `UIImageView` | `Source` (`ImageSource.Symbol/Bundle/Url`); the default `IImageLoader` caches (`NSCache`), dedups in-flight downloads and pre-decodes; swap it via `BareApp.UseImageLoader` |
 | `TextField` | `UITextField` | `Text` (TwoWay default), `Placeholder`, `Keyboard`, `ReturnKey`, `OnSubmit` |
 | `SecureField` | `UITextField` | secure entry preset |
 | `TextEditor` | `UITextView` | multi-line |
@@ -124,10 +129,10 @@ Numeric entry (Velura's `UINumberField`) = `TextField` with `Keyboard = Numeric`
 ```csharp
 Text    = Bind(vm => vm.Title);                                  // OneWay
 Text    = Bind(vm => vm.Name, (vm, v) => vm.Name = v);           // TwoWay (explicit setter)
-Text    = Bind(vm => vm.Duration, format: d => d.L10N());        // converter
+Text    = Bind<TimeSpan, string?>(vm => vm.Duration, d => d.L10N()); // converter
 IsOn    = Bind(vm => vm.Config.Appearance.AnimateTabBar,
                (vm, v) => vm.Config.Appearance.AnimateTabBar = v); // nested path, TwoWay
-Command = ViewModel.PlayCommand;                                  // commands bind directly
+Command = Bind<ICommand?>(vm => vm.PlayCommand);                  // commands are Bindable too
 ```
 
 **Mechanics**:
@@ -140,17 +145,16 @@ Command = ViewModel.PlayCommand;                                  // commands bi
   `[CallerArgumentExpression]`: the literal string `"vm => vm.Config.Appearance.AnimateTabBar"`
   is parsed once (split after `=>`, then on `.`) into segments
   `["Config","Appearance","AnimateTabBar"]`.
-- **Nested paths**: the binding walks the path with per-segment change subscription — it
-  subscribes `PropertyChanged` on each intermediate `INotifyPropertyChanged` and
-  re-resolves the chain when an intermediate changes. Intermediate values are read via
-  small generated-at-compile-time accessors? No — intermediate reads reuse the same full
-  getter (leaf value) plus per-segment name matching for *when* to update; intermediate
-  object references for re-subscription are obtained by requiring intermediates to be
-  INPC and… (see ADR-003 for the exact scheme: segment getters are produced by the same
-  `Bind` call for common depths, with an explicit `Bind(vm => vm.Sub, s => s.Leaf)`
-  chained overload as the general fallback).
+- **Nested paths**: a `BindingExpression<T>` carries the parsed segments, each with an
+  optional step delegate. On attach the binding walks the chain, subscribing
+  `PropertyChanged` on every intermediate `INotifyPropertyChanged`; when any watched
+  segment fires it re-attaches (re-resolving intermediates that were replaced) and
+  re-applies the leaf getter. `BindingFactory.BindPath` is the explicit-path fallback.
 - **Modes**: OneTime / OneWay (default) / TwoWay (when setter supplied) / OneWayToSource.
-  Update triggers: property-changed (default) / focus-lost / explicit.
+  Update triggers: property-changed (default) / focus-lost.
+- **Threading**: a source may notify from any thread; the binding marshals the refresh to
+  the main thread (`MainThread.Post` — inline on the neutral test TFM, `DispatchQueue.MainQueue`
+  on iOS). Same helper backs `CanExecuteChanged` and async image completion.
 - **Target→source**: each control wires its own native change event (`UISwitch.ValueChanged`,
   `UITextField.EditingChanged`, …) in its wrapper — no global mapper registry.
 - **Ownership & teardown**: bindings register with the owning `ContentView`; unrealize
@@ -171,38 +175,41 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
 // ViewModel directly. Anything that truly needs the instance goes in OnViewModelAttached().
 ```
 
-- Typed `ViewModel` injected via constructor (DI) or set by the navigator.
-- Lifecycle: `OnLoaded` / `OnAppearing` / `OnDisappearing` / `OnUnloaded`.
-- Page-level chrome as properties, not UIKit calls: `Title`, `LargeTitle` (mode),
-  `ToolbarItems` (leading/trailing bar buttons with `Icon` + `Command`), `HidesNavigationBar`,
-  `BackgroundStyle` (system grouped etc.).
-- Internally a hidden generic `UIViewController` hosts the root `LayoutHost`; app code
-  never sees it (`.Controller` escape hatch exists, `[EditorBrowsable(Never)]`).
+- Typed `ViewModel` attached by the navigator after construction (resolved through DI).
+- Lifecycle: `OnLoaded` / `OnAppearing` / `OnDisappearing` / `OnUnloaded` +
+  `OnViewModelAttached`.
+- Page-level chrome as properties, not UIKit calls: `Title` (bindable), `TitleStyle`
+  (incl. large titles), `ToolbarItems` (leading/trailing bar buttons with `Icon` +
+  `Command`), `HidesNavigationBar`, `BackgroundStyle`, `SearchPlaceholder`/`SearchChanged`,
+  `ScrollsUnderBars`.
+- Internally a hidden `PageHost : UIViewController` hosts the page; app code never sees it
+  (`ContentView.Controller` escape hatch exists).
 
 ### Navigation (ViewModel-first, AOT-safe)
 
 ```csharp
 BareApp.Create()
-    .UseServices(s => { s.AddSingleton<INavigator, ...>(); ... })
-    .Map<HomeViewModel, HomeView>()          // explicit registry — no scanning, AOT-safe
-    .Map<MovieInfoViewModel, MovieInfoView>()
+    .UseServices(s => { s.AddSingleton<IMovieService, MovieService>(); ... })
+    .UsePages(pages => pages
+        .AddSingleton<HomeView>()            // explicit registry — no scanning, AOT-safe;
+        .AddTransient<MovieInfoView>())      // a view reports its own ViewModel type
     .Tabs(t => t
-        .Tab<HomeViewModel>("Home", icon: "house")
-        .Tab<SearchViewModel>("Search", icon: "magnifyingglass")
-        .Tab<SettingsViewModel>("Settings", icon: "gear"))
-    .Run();
+        .Tab<HomeView>("Home", icon: "house")
+        .Tab<SearchView>("Search", icon: "magnifyingglass")
+        .Tab<SettingsView>("Settings", icon: "gear")
+        .SidebarOnIPad())
+    .Run(args);
 ```
 
-- `INavigator` (injectable into ViewModels — absorbs Velura's `INavigation` +
-  `IDialogHandler`):
+- `INavigator` (injectable into ViewModels, ViewModel-first only):
   - `PushAsync<TVm>()` / `PushAsync(vmInstance)` / `PopAsync()` / `PopToRootAsync()`
   - `PresentAsync<TVm>(ModalStyle)` — sheet (with detents), full-screen, form sheet
   - `AlertAsync(...)`, `ConfirmAsync(...)`, `ActionSheetAsync(...)`
-- `NavigationHost` wraps `UINavigationController` (large titles, `ConcealingTitleView`-style
-  behavior becomes a built-in `TitleRevealOnScroll` option). `TabsHost` wraps
-  `UITabBarController` incl. iPadOS sidebar mode.
-- `BareApp` hides `Main.cs`/`AppDelegate`/`UIWindow` scene wiring; hosts the
-  `IServiceProvider` (Microsoft.Extensions.DependencyInjection, matching Velura).
+- Shells: `Tabs(...)` (`UITabBarController`, incl. iPadOS sidebar via `SidebarOnIPad`),
+  `Stack<TView>()` (`UINavigationController`), `SinglePage<TView>()`.
+- `BareApp` hides `Main.cs`/`AppDelegate`/`UIWindow` scene wiring (ships `BareAppDelegate` +
+  `BareSceneDelegate`); hosts the `IServiceProvider`
+  (Microsoft.Extensions.DependencyInjection). `UseImageLoader` swaps the image pipeline.
 
 ### CollectionView (virtualization)
 
@@ -212,9 +219,9 @@ Built on `UICollectionView` + compositional layout + diffable data source:
 new CollectionView<Movie>
 {
     Layout      = CollectionLayout.Grid(columns: 3, spacing: 12),   // or .List(grouped: true), .Carousel()
-    ItemsSource = Bind(vm => vm.Movies),
-    ItemTemplate = () => new PosterCell(),        // element tree built once per recycled cell
-    SelectionCommand = ViewModel.OpenMovieCommand // receives the tapped item
+    ItemsSource = Bind<IReadOnlyList<Movie>?>(vm => vm.Movies),
+    ItemTemplate = () => new PosterCell(),                     // element tree built once per recycled cell
+    SelectionCommand = Bind<ICommand?>(vm => vm.OpenMovieCommand) // receives the tapped item
 }
 ```
 
@@ -224,8 +231,25 @@ new CollectionView<Movie>
 - `ItemsSource` accepts `IReadOnlyList<T>`; if it also implements
   `INotifyCollectionChanged` (incl. Velura's `ObservableRangeCollection`), changes flow
   through the diffable data source snapshot with animations.
-- Sections (`GroupedItemsSource`) + header/footer templates; `.List` layout uses
+- Sections (`GroupedItemsSource`) + header templates; `.List` layout uses
   `UICollectionLayoutListConfiguration` so Settings-style inset-grouped lists are native.
+- Also: pull-to-refresh (`RefreshCommand`), native swipe actions, context menus,
+  `EmptyView`, `ScrollTo(item)`, `Scrolled`, `CarouselSnap`. Snapshots coalesce onto the
+  next run-loop turn, so an `Add` loop is one diff; one cached `ItemKey` per item roots
+  the identifier peers and avoids per-snapshot allocation.
+
+## System integration
+
+- **Dark mode**: the `Colors` palette + semantic colors (`Label`, `Separator`,
+  backgrounds, ...) resolve live UIKit dynamic colors; `Color.Dynamic(light, dark)` for
+  custom pairs. CGColor snapshots re-resolve on theme change (see layer 2).
+- **Dynamic Type**: fonts go through `UIFontMetrics`; a text-size change invalidates every
+  cached measurement.
+- **VoiceOver**: `AccessibilityLabel`/`AccessibilityValue` (bindable), `AccessibilityHint`,
+  `AccessibilityIdentifier`, `AccessibilityTraits` (OR'd onto the control's own),
+  `IsAccessibilityElement`.
+- **Haptics** (`Impact`/`Selection`/`Notify`), `View.Animate`, `View.AddGesture`,
+  `View.Focus()/Unfocus()/IsFocused`, `KeyboardDismiss` modes on `ScrollView`.
 
 ## Interop & escape hatches
 

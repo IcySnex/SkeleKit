@@ -80,8 +80,12 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Status (2026-07-11)
 
-**M0–M5 complete** (M5 pending an on-device 120 Hz scroll check). Commits land on `main` (linear
-history). Next: **M6 — validation, docs, packaging**.
+**M0–M6 complete** apart from validation that needs hardware or the reference app: the Velura
+two-screen port, the on-device 120 Hz scroll + runtime-DI checks, and a LICENSE file. Commits land
+on `main` (linear history). Next: **M7 — styling & resources**; the full spec lives in PLAN.md §M7 +
+ADR-008 + api-sketch.md §6 (typed `Style<T>`, `View.Style`, `UseTheme`, `Label.TextStyle`,
+`Button.Style`→`Kind` rename; resources stay plain statics). PLAN.md and the docs describe current
+state only — historical milestone trackers were removed 2026-07-12.
 
 Shape of the thing now:
 - **Element model**: `View` (lazy realize, WPF measure/arrange, `Parent`, `InvalidateMeasure`),
@@ -140,9 +144,21 @@ Hard-won rules (don't relearn these):
 Framework surface (completion pass — every previously deferred item is now implemented):
 - **Text**: `Label.FontWeight` (9 weights), `FontDesign` (system/rounded/serif/mono), `Truncation`,
   `MaxLines`. All `UIFontMetrics`-scaled, so Dynamic Type works.
-- **Visual**: `View.Shadow`, `Colors` (system palette), `CornerRadius`, `Opacity`, `ClipsToBounds`.
+- **Visual**: `View.Shadow`, `CornerRadius`, `Opacity`, `ClipsToBounds`. **Dark mode**: `Colors`
+  palette + semantics (`Label`/`Separator`/backgrounds) resolve live UIKit colors;
+  `Color.Dynamic(light, dark)`; `WithAlpha` flattens a system color to its light value. CGColor
+  snapshots (border stroke, shadow) re-resolve via the `ReapplyVisuals` walk that `PageHost`
+  triggers on a `UITraitUserInterfaceStyle` change (`CollectionView` forwards it into live cells).
 - **Bindings**: all four modes (`BindToSource` = OneWayToSource, `BindOnce` = OneTime), converters
   both ways (`format:`/`parse:`), `UpdateTrigger.FocusLost`. `View.Focus()/Unfocus()/IsFocused`.
+  Off-main-thread INPC is marshalled to the main thread (`MainThread.Post`; inline in the shim).
+- **Accessibility**: `View.AccessibilityLabel`/`AccessibilityValue` (bindable),
+  `AccessibilityHint`, `AccessibilityIdentifier`, `AccessibilityTraits` (flags, OR'd onto the
+  control's own), `IsAccessibilityElement` (null = control default).
+- **Images**: default loader has an `NSCache` (64 MB, cost = decoded bytes), one download per
+  url no matter how many cells ask, and pre-decodes via `PrepareForDisplayAsync`.
+- `CollectionView.SelectionCommand` is `Bindable<ICommand?>` (assign literals with
+  `Bindable.From<ICommand?>(...)`, like every command).
 - **Page chrome**: `ToolbarItems`, `TitleStyle.Large`, `HidesNavigationBar`, `BackgroundStyle`,
   `SearchPlaceholder`/`SearchChanged`; lifecycle `OnLoaded`/`OnUnloaded` alongside
   `OnAppearing`/`OnDisappearing`; `ContentView.Controller` escape hatch.
@@ -155,7 +171,8 @@ Framework surface (completion pass — every previously deferred item is now imp
 
 Known debt:
 - DI (`Microsoft.Extensions.DependencyInjection`) is the only reflection surface in the stack —
-  re-check it under `MtouchLink=Full` before shipping.
-- `MenuView` still needs `OnViewModelAttached` for its button list (a `CollectionView` would remove it).
+  the Release device publish is clean (zero IL2xxx), but resolve-at-runtime on device is still
+  the real proof.
 - v1 non-goals (see PLAN): theming/styles system, animation *framework*, RTL, XAML. Accessibility
-  (`AccessibilityLabel`/traits) was explicitly skipped — worth revisiting before 1.0.
+  custom actions still unwrapped.
+- M6 remaining: the Velura two-screen port (the acceptance test) and the on-device 120 Hz check.

@@ -44,4 +44,12 @@ public abstract partial class Panel : View
 		foreach (View child in Children)
 			child.InvalidateSubtree();
 	}
+
+	internal override void ReapplyVisuals()
+	{
+		base.ReapplyVisuals();
+
+		foreach (View child in Children)
+			child.ReapplyVisuals();
+	}
 }

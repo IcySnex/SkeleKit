@@ -51,6 +51,9 @@ sealed class PageHost : UIViewController
 		View?.SetNeedsLayout();
 	}
 
+	// dynamic UIColors adapt live, but layer colors (borders, shadows) are snapshots
+	IUITraitChangeRegistration? themeChange;
+
 	// marshaller needs this; Navigator keeps the managed ref so it stays unused
 	public PageHost(
 		NativeHandle handle) : base(handle)
@@ -89,6 +92,9 @@ sealed class PageHost : UIViewController
 		};
 		View.AddGestureRecognizer(dismissKeyboard);
 
+		themeChange = RegisterForTraitChanges(
+			[typeof(UITraitUserInterfaceStyle)],
+			(IUITraitEnvironment _, UITraitCollection _) => this.page?.ReapplyVisuals());
 	}
 
 	void ApplyChrome(

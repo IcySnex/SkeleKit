@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using BareUI.Gallery.Models;
 using BareUI.Gallery.ViewModels.Demos;
 using BareUI.Gallery.Views;
@@ -44,7 +45,7 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 	protected override void OnViewModelAttached()
 	{
 		movies.ItemsSource = Bindable.From<IReadOnlyList<Movie>?>(ViewModel!.Movies);
-		movies.SelectionCommand = ViewModel.OpenCommand;
+		movies.SelectionCommand = Bindable.From<ICommand?>(ViewModel.OpenCommand);
 	}
 
 	protected override void OnAppearing() =>

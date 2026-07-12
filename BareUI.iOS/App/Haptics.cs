@@ -34,7 +34,10 @@ public static class Haptics
 	public static void Impact(
 		HapticStyle style = HapticStyle.Medium)
 	{
-		using UIImpactFeedbackGenerator generator = new(Style(style));
+		if (Anchor() is not { } anchor)
+			return;
+
+		using UIImpactFeedbackGenerator generator = UIImpactFeedbackGenerator.GetFeedbackGenerator(Style(style), anchor);
 
 		generator.Prepare();
 		generator.ImpactOccurred();
@@ -45,7 +48,10 @@ public static class Haptics
 	/// </summary>
 	public static void Selection()
 	{
-		using UISelectionFeedbackGenerator generator = new();
+		if (Anchor() is not { } anchor)
+			return;
+
+		using UISelectionFeedbackGenerator generator = UISelectionFeedbackGenerator.GetFeedbackGenerator(anchor);
 
 		generator.Prepare();
 		generator.SelectionChanged();
@@ -57,13 +63,24 @@ public static class Haptics
 	public static void Notify(
 		bool success)
 	{
-		using UINotificationFeedbackGenerator generator = new();
+		if (Anchor() is not { } anchor)
+			return;
+
+		using UINotificationFeedbackGenerator generator = UINotificationFeedbackGenerator.GetFeedbackGenerator(anchor);
 
 		generator.Prepare();
 		generator.NotificationOccurred(success
 			? UINotificationFeedbackType.Success
 			: UINotificationFeedbackType.Error);
 	}
+
+	// the modern factories tie the haptic to the window's display; no window, no haptic
+	static UIView? Anchor() =>
+		UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows)
+			.FirstOrDefault(window => window.IsKeyWindow);
 
 	static UIImpactFeedbackStyle Style(
 		HapticStyle style) =>

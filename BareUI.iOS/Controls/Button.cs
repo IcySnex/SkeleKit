@@ -150,5 +150,5 @@ public class Button : Control
 	void OnCanExecuteChanged(
 		object? sender,
 		EventArgs e) =>
-		UIApplication.SharedApplication.BeginInvokeOnMainThread(ApplyIsEnabled);
+		MainThread.Post(ApplyIsEnabled);
 }

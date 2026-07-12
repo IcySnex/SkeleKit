@@ -43,6 +43,7 @@ public abstract partial class View
 
 		ApplyVisualState();
 		ApplyInteraction();
+		ApplyAccessibility();
 		ApplyProperties();
 		OnBindingContextChanged();
 		OnRealized();
@@ -69,6 +70,7 @@ public abstract partial class View
 		if (OwnsNative)
 			native.Dispose();
 		native = null;
+		defaultTraits = null;
 	}
 
 	private protected virtual void OnRealized()
@@ -112,6 +114,58 @@ public abstract partial class View
 	{
 		if (tapCommand is { } command && command.CanExecute(TapCommandParameter))
 			command.Execute(TapCommandParameter);
+	}
+
+	// the control's own traits, captured before we layer ours on top
+	UIAccessibilityTrait? defaultTraits;
+
+	partial void ApplyAccessibilityCore()
+	{
+		if (native is null)
+			return;
+
+		// null falls back to the control's own default (a UILabel reads its text)
+		native.AccessibilityLabel = accessibilityLabel;
+		native.AccessibilityHint = accessibilityHint;
+		native.AccessibilityValue = accessibilityValue;
+		native.AccessibilityIdentifier = accessibilityIdentifier;
+
+		defaultTraits ??= native.AccessibilityTraits;
+		native.AccessibilityTraits = defaultTraits.Value | Traits(accessibilityTraits);
+
+		if (isAccessibilityElement is { } element)
+			native.IsAccessibilityElement = element;
+	}
+
+	static UIAccessibilityTrait Traits(
+		AccessibilityTraits traits)
+	{
+		UIAccessibilityTrait native = UIAccessibilityTrait.None;
+
+		if (traits.HasFlag(AccessibilityTraits.Button))
+			native |= UIAccessibilityTrait.Button;
+		if (traits.HasFlag(AccessibilityTraits.Link))
+			native |= UIAccessibilityTrait.Link;
+		if (traits.HasFlag(AccessibilityTraits.Header))
+			native |= UIAccessibilityTrait.Header;
+		if (traits.HasFlag(AccessibilityTraits.Image))
+			native |= UIAccessibilityTrait.Image;
+		if (traits.HasFlag(AccessibilityTraits.Selected))
+			native |= UIAccessibilityTrait.Selected;
+		if (traits.HasFlag(AccessibilityTraits.StaticText))
+			native |= UIAccessibilityTrait.StaticText;
+		if (traits.HasFlag(AccessibilityTraits.Adjustable))
+			native |= UIAccessibilityTrait.Adjustable;
+		if (traits.HasFlag(AccessibilityTraits.UpdatesFrequently))
+			native |= UIAccessibilityTrait.UpdatesFrequently;
+		if (traits.HasFlag(AccessibilityTraits.NotEnabled))
+			native |= UIAccessibilityTrait.NotEnabled;
+		if (traits.HasFlag(AccessibilityTraits.PlaysSound))
+			native |= UIAccessibilityTrait.PlaysSound;
+		if (traits.HasFlag(AccessibilityTraits.StartsMediaSession))
+			native |= UIAccessibilityTrait.StartsMediaSession;
+
+		return native;
 	}
 
 	partial void ApplyVisualStateCore()

@@ -6,36 +6,63 @@ namespace BareUI.Gallery.Views;
 
 public class MenuView : ContentView<MenuViewModel>
 {
-	readonly VStack list = new()
-	{
-		Spacing = 12,
-		Margin = new Thickness(16)
-	};
-
 	public MenuView()
 	{
 		Title = "BareUI Gallery";
 
-		list.Children.Add(new Button
+		Content = new Grid
 		{
-			Text = "MovieInfo",
-			Style = ButtonStyle.Filled,
-			Command = Bind<ICommand?>(vm => vm.OpenMovieCommand)
-		});
-
-		Content = new ScrollView { Content = list };
-	}
-
-	// the demo list needs the ViewModel instance; CollectionView's ItemsSource replaces this in M5
-	protected override void OnViewModelAttached()
-	{
-		foreach (DemoEntry demo in ViewModel!.Demos)
-			list.Children.Add(new Button
+			Rows = { GridLength.Auto, GridLength.Star },
+			RowSpacing = 8,
+			Padding = new Thickness(0, 8),
+			Children =
 			{
-				Text = demo.Title,
-				Style = ButtonStyle.Gray,
-				Command = Bindable.From<ICommand?>(ViewModel.OpenDemoCommand),
-				CommandParameter = demo
-			});
+				new Button
+				{
+					Text = "MovieInfo",
+					Style = ButtonStyle.Filled,
+					Margin = new Thickness(16, 0),
+					Command = Bind<ICommand?>(vm => vm.OpenMovieCommand)
+				}.Row(0),
+
+				new CollectionView<DemoEntry>
+				{
+					Layout = CollectionLayout.List(),
+					ItemTemplate = () => new DemoRow(),
+					ItemsSource = Bind<IReadOnlyList<DemoEntry>?>(vm => vm.Demos),
+					SelectionCommand = Bind<ICommand?>(vm => vm.OpenDemoCommand),
+					IgnoresSafeArea = SafeAreaEdges.Bottom
+				}.Row(1)
+			}
+		};
 	}
+}
+
+/// <summary>
+/// One tappable demo row.
+/// </summary>
+public class DemoRow : ItemView<DemoEntry>
+{
+	public DemoRow() =>
+		Content = new HStack
+		{
+			Padding = new Thickness(16, 12),
+			Children =
+			{
+				new Label
+				{
+					Text = Bind(vm => vm.Title),
+					FontSize = 17,
+					HorizontalAlignment = HorizontalAlignment.Start
+				},
+
+				new Label
+				{
+					Text = "›",
+					FontSize = 17,
+					TextColor = Theme.Secondary,
+					HorizontalAlignment = HorizontalAlignment.End
+				}
+			}
+		};
 }

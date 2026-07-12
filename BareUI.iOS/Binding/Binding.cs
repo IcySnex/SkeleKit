@@ -90,9 +90,15 @@ sealed class Binding<T>(
 		if (e.PropertyName is { Length: > 0 } name && !Watches(name))
 			return;
 
+		// the source may notify from any thread, but apply touches UIKit
+		MainThread.Post(Refresh);
+	}
+
+	void Refresh()
+	{
 		// an intermediate may have been replaced, so rebuild the subscriptions too
-		object? current = source;
-		Attach(current);
+		if (source is { } current)
+			Attach(current);
 	}
 
 	bool Watches(
