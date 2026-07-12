@@ -44,10 +44,10 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 					Padding = new Thickness(16, 0),
 					Children =
 					{
-						new Button { Text = "Add", Style = ButtonStyle.Tinted, Command = Bind<ICommand?>(vm => vm.AddCommand) },
-						new Button { Text = "Remove", Style = ButtonStyle.Gray, Command = Bind<ICommand?>(vm => vm.RemoveCommand) },
-						new Button { Text = "Move", Style = ButtonStyle.Gray, Command = Bind<ICommand?>(vm => vm.ShuffleCommand) },
-						new Button { Text = "Clear", Style = ButtonStyle.Gray, Command = Bind<ICommand?>(vm => vm.ClearCommand) }
+						new Button { Text = "Add", Kind = ButtonStyle.Tinted, Command = Bind<ICommand?>(vm => vm.AddCommand) },
+						new Button { Text = "Remove", Kind = ButtonStyle.Gray, Command = Bind<ICommand?>(vm => vm.RemoveCommand) },
+						new Button { Text = "Move", Kind = ButtonStyle.Gray, Command = Bind<ICommand?>(vm => vm.ShuffleCommand) },
+						new Button { Text = "Clear", Kind = ButtonStyle.Gray, Command = Bind<ICommand?>(vm => vm.ClearCommand) }
 					}
 				}.Row(0),
 

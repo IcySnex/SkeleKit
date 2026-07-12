@@ -20,7 +20,7 @@ public class MenuView : ContentView<MenuViewModel>
 				new Button
 				{
 					Text = "MovieInfo",
-					Style = ButtonStyle.Filled,
+					Kind = ButtonStyle.Filled,
 					Margin = new Thickness(16, 0),
 					Command = Bind<ICommand?>(vm => vm.OpenMovieCommand)
 				}.Row(0),

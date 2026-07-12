@@ -138,7 +138,7 @@ Content = new ScrollView
                             {
                                 Text = "media_play".L10N(),
                                 Icon = "play.fill",
-                                Style = ButtonStyle.FilledCapsule,    // becomes Kind in M7
+                                Kind = ButtonStyle.FilledCapsule,
                                 Command = Bind<ICommand?>(vm => vm.PlayCommand),
                                 Margin = new Thickness(0, 32, 0, 0),
                                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -248,7 +248,7 @@ new Border { Style = Styles.ProminentCard, Child = content }
 BareApp.Create()
     .UseTheme(theme => theme
         .Style(new Style<Label>(l => l.TextColor = Colors.Label))
-        .Style(new Style<Button>(b => b.Kind = ButtonStyle.Tinted)))   // Button.Style → Kind in M7
+        .Style(new Style<Button>(b => b.Kind = ButtonStyle.Tinted)))
     ...
 ```
 

@@ -50,7 +50,7 @@ public class BindingView : ContentView<BindingViewModel>
 					new Button
 					{
 						Text = "Clear name",
-						Style = ButtonStyle.Filled,
+						Kind = ButtonStyle.Filled,
 						Command = Bind<ICommand?>(vm => vm.ClearNameCommand)
 					}
 				}

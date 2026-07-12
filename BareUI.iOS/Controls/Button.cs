@@ -31,14 +31,14 @@ public class Button : Control
 	Binding<string?>? iconBinding;
 
 	/// <summary>
-	/// The button's visual style.
+	/// The button's native style: plain, gray, tinted or filled.
 	/// </summary>
-	public ButtonStyle Style
+	public ButtonStyle Kind
 	{
-		get => style;
-		set => Set(ref style, value, ApplyConfiguration);
+		get => kind;
+		set => Set(ref kind, value, ApplyConfiguration);
 	}
-	ButtonStyle style = ButtonStyle.Plain;
+	ButtonStyle kind = ButtonStyle.Plain;
 
 	/// <summary>
 	/// Command invoked on tap; its CanExecute drives the enabled state.
@@ -109,7 +109,7 @@ public class Button : Control
 
 	void ApplyConfiguration()
 	{
-		UIButtonConfiguration configuration = style switch
+		UIButtonConfiguration configuration = kind switch
 		{
 			ButtonStyle.Gray => UIButtonConfiguration.GrayButtonConfiguration,
 			ButtonStyle.Tinted => UIButtonConfiguration.TintedButtonConfiguration,
@@ -117,7 +117,7 @@ public class Button : Control
 			_ => UIButtonConfiguration.PlainButtonConfiguration
 		};
 
-		if (style is ButtonStyle.FilledCapsule)
+		if (kind is ButtonStyle.FilledCapsule)
 			configuration.CornerStyle = UIButtonConfigurationCornerStyle.Capsule;
 
 		configuration.Title = text;

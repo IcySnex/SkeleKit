@@ -54,7 +54,7 @@ public class CounterView : ContentView<CounterViewModel>
 				new Button
 				{
 					Text = "Tap me",
-					Style = ButtonStyle.Filled,
+					Kind = ButtonStyle.Filled,
 					Command = Bind<ICommand?>(vm => vm.IncrementCommand)
 				}
 			}
