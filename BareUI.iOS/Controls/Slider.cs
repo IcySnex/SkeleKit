@@ -37,6 +37,66 @@ public class Slider : Control
 	double maximum = 1;
 
 	/// <summary>
+	/// The increment the value snaps to, or 0 for continuous.
+	/// </summary>
+	public double Step
+	{
+		get => step;
+		set => Set(ref step, value, affectsMeasure: false);
+	}
+	double step;
+
+	/// <summary>
+	/// The color of the filled part of the track, or null for the system tint.
+	/// </summary>
+	public Color? TrackColor
+	{
+		get => trackColor;
+		set => Set(ref trackColor, value, ApplyStyle, affectsMeasure: false);
+	}
+	Color? trackColor;
+
+	/// <summary>
+	/// The color of the unfilled part of the track, or null for the system default.
+	/// </summary>
+	public Color? EmptyTrackColor
+	{
+		get => emptyTrackColor;
+		set => Set(ref emptyTrackColor, value, ApplyStyle, affectsMeasure: false);
+	}
+	Color? emptyTrackColor;
+
+	/// <summary>
+	/// The thumb color, or null for the system default.
+	/// </summary>
+	public Color? ThumbColor
+	{
+		get => thumbColor;
+		set => Set(ref thumbColor, value, ApplyStyle, affectsMeasure: false);
+	}
+	Color? thumbColor;
+
+	/// <summary>
+	/// The SF Symbol shown at the minimum end, or null for none.
+	/// </summary>
+	public string? MinIcon
+	{
+		get => minIcon;
+		set => Set(ref minIcon, value, ApplyStyle);
+	}
+	string? minIcon;
+
+	/// <summary>
+	/// The SF Symbol shown at the maximum end, or null for none.
+	/// </summary>
+	public string? MaxIcon
+	{
+		get => maxIcon;
+		set => Set(ref maxIcon, value, ApplyStyle);
+	}
+	string? maxIcon;
+
+	/// <summary>
 	/// Invoked with the new value whenever the user moves the slider.
 	/// </summary>
 	public Action<double>? ValueChanged { get; set; }
@@ -54,6 +114,7 @@ public class Slider : Control
 	{
 		ApplyRange();
 		ApplyValue();
+		ApplyStyle();
 	}
 
 	UISlider Ui =>
@@ -68,9 +129,30 @@ public class Slider : Control
 	void ApplyValue() =>
 		Ui.Value = (float)current;
 
+	void ApplyStyle()
+	{
+		if (trackColor is { } track)
+			Ui.MinimumTrackTintColor = track.ToUIColor();
+
+		if (emptyTrackColor is { } empty)
+			Ui.MaximumTrackTintColor = empty.ToUIColor();
+
+		if (thumbColor is { } thumb)
+			Ui.ThumbTintColor = thumb.ToUIColor();
+
+		Ui.MinValueImage = minIcon is { } min ? UIImage.GetSystemImage(min) : null;
+		Ui.MaxValueImage = maxIcon is { } max ? UIImage.GetSystemImage(max) : null;
+	}
+
 	void OnValueChanged()
 	{
 		double value = Ui.Value;
+
+		if (step > 0)
+		{
+			value = minimum + (Math.Round((value - minimum) / step) * step);
+			Ui.Value = (float)value;
+		}
 
 		Set(ref current, value, affectsMeasure: false);
 		valueBinding?.PushToSource(value);

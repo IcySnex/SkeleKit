@@ -17,6 +17,26 @@ public class Switch : Control
 	Binding<bool>? isOnBinding;
 
 	/// <summary>
+	/// The fill color while on, or null for the system green.
+	/// </summary>
+	public Color? OnColor
+	{
+		get => onColor;
+		set => Set(ref onColor, value, ApplyColors, affectsMeasure: false);
+	}
+	Color? onColor;
+
+	/// <summary>
+	/// The thumb color, or null for the system default.
+	/// </summary>
+	public Color? ThumbColor
+	{
+		get => thumbColor;
+		set => Set(ref thumbColor, value, ApplyColors, affectsMeasure: false);
+	}
+	Color? thumbColor;
+
+	/// <summary>
 	/// Invoked with the new value whenever the user toggles the switch.
 	/// </summary>
 	public Action<bool>? Toggled { get; set; }
@@ -30,14 +50,26 @@ public class Switch : Control
 		return @switch;
 	}
 
-	private protected override void ApplyProperties() =>
+	private protected override void ApplyProperties()
+	{
 		ApplyIsOn();
+		ApplyColors();
+	}
 
 	UISwitch Ui =>
 		(UISwitch)Native;
 
 	void ApplyIsOn() =>
 		Ui.On = isOn;
+
+	void ApplyColors()
+	{
+		if (onColor is { } on)
+			Ui.OnTintColor = on.ToUIColor();
+
+		if (thumbColor is { } thumb)
+			Ui.ThumbTintColor = thumb.ToUIColor();
+	}
 
 	void OnToggled()
 	{

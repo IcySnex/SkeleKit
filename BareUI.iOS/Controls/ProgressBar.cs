@@ -27,6 +27,16 @@ public class ProgressBar : Control
 	Color? tint;
 	Binding<Color?>? tintBinding;
 
+	/// <summary>
+	/// The unfilled track color, or null for the system default.
+	/// </summary>
+	public Color? TrackColor
+	{
+		get => trackColor;
+		set => Set(ref trackColor, value, ApplyTint, affectsMeasure: false);
+	}
+	Color? trackColor;
+
 
 	private protected override UIView CreateNative() =>
 		new UIProgressView(UIProgressViewStyle.Default);
@@ -46,5 +56,8 @@ public class ProgressBar : Control
 	{
 		if (tint is { } color)
 			Ui.ProgressTintColor = color.ToUIColor();
+
+		if (trackColor is { } track)
+			Ui.TrackTintColor = track.ToUIColor();
 	}
 }
