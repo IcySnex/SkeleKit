@@ -19,14 +19,24 @@ public class Label : Control
 	Binding<string?>? textBinding;
 
 	/// <summary>
-	/// Font size in points.
+	/// The step of the native type hierarchy the text follows, or null to size it by <see cref="FontSize"/>.
+	/// </summary>
+	public TextStyle? TextStyle
+	{
+		get => textStyle;
+		set => Set(ref textStyle, value, ApplyFont);
+	}
+	TextStyle? textStyle;
+
+	/// <summary>
+	/// Explicit font size in points, overriding <see cref="TextStyle"/>. NaN falls back to the text style, or 17 points without one.
 	/// </summary>
 	public Bindable<double> FontSize
 	{
 		get => fontSize;
 		set => fontSizeBinding = Register(fontSizeBinding, value, value => Set(ref fontSize, value, ApplyFont));
 	}
-	double fontSize = 17;
+	double fontSize = double.NaN;
 	Binding<double>? fontSizeBinding;
 
 	/// <summary>
@@ -127,9 +137,11 @@ public class Label : Control
 	void ApplyText() =>
 		Ui.Text = text;
 
-	// scaled by UIFontMetrics so the user's text-size setting is honoured
+	// both paths scale with the user's text-size setting; a weight of Regular leaves a text style's own
 	void ApplyFont() =>
-		Ui.Font = Fonts.Scaled(fontSize, weight, design);
+		Ui.Font = FontSpec.UsesTextStyle(textStyle, fontSize)
+			? Fonts.Preferred(textStyle!.Value, weight, design)
+			: Fonts.Scaled(FontSpec.SizeOf(fontSize), weight, design);
 
 	void ApplyTruncation() =>
 		Ui.LineBreakMode = truncation switch

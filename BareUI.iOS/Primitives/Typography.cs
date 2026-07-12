@@ -52,6 +52,45 @@ public enum FontDesign
 }
 
 /// <summary>
+/// A step in the native type hierarchy. Each one carries its own Dynamic Type curve.
+/// </summary>
+public enum TextStyle
+{
+	/// <summary>The largest title, used once per screen.</summary>
+	LargeTitle,
+
+	/// <summary>The first title level.</summary>
+	Title1,
+
+	/// <summary>The second title level.</summary>
+	Title2,
+
+	/// <summary>The third title level.</summary>
+	Title3,
+
+	/// <summary>An emphasized heading above a block of body text.</summary>
+	Headline,
+
+	/// <summary>A heading below <see cref="Headline"/>.</summary>
+	Subheadline,
+
+	/// <summary>Running text.</summary>
+	Body,
+
+	/// <summary>A remark set slightly smaller than body text.</summary>
+	Callout,
+
+	/// <summary>A footnote.</summary>
+	Footnote,
+
+	/// <summary>The first caption level.</summary>
+	Caption1,
+
+	/// <summary>The second, smallest caption level.</summary>
+	Caption2
+}
+
+/// <summary>
 /// How text is shortened when it does not fit.
 /// </summary>
 public enum Truncation
