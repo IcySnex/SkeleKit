@@ -21,6 +21,9 @@ public class ListDemo : ContentView<ListDemoViewModel>
 	{
 		Title = "List";
 
+		// the large title collapses as the list scrolls
+		TitleStyle = TitleStyle.Large;
+
 		Content = entries;
 	}
 

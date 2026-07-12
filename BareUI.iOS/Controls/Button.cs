@@ -71,6 +71,36 @@ public class Button : Control
 	IconPlacement iconPlacement = IconPlacement.Leading;
 
 	/// <summary>
+	/// The icon's point size, or NaN to match the size class.
+	/// </summary>
+	public double IconSize
+	{
+		get => iconSize;
+		set => Set(ref iconSize, value, ApplyConfiguration);
+	}
+	double iconSize = double.NaN;
+
+	/// <summary>
+	/// Points between the icon (or spinner) and the text.
+	/// </summary>
+	public double IconSpacing
+	{
+		get => iconSpacing;
+		set => Set(ref iconSpacing, value, ApplyConfiguration);
+	}
+	double iconSpacing = 8;
+
+	/// <summary>
+	/// Padding around the content, or null for the size class default.
+	/// </summary>
+	public Thickness? Padding
+	{
+		get => padding;
+		set => Set(ref padding, value, ApplyConfiguration);
+	}
+	Thickness? padding;
+
+	/// <summary>
 	/// Styles the button red, for destructive actions.
 	/// </summary>
 	public bool IsDestructive
@@ -190,6 +220,22 @@ public class Button : Control
 		if (icon is not null)
 		{
 			configuration.Image = UIImage.GetSystemImage(icon);
+
+			// sized to sit beside the title, not at the symbol's free-standing size
+			double points = double.IsNaN(iconSize)
+				? size switch
+				{
+					ButtonSize.Mini => 12,
+					ButtonSize.Small => 13,
+					ButtonSize.Large => 17,
+					_ => 15
+				}
+				: iconSize;
+
+			configuration.PreferredSymbolConfigurationForImage = UIImageSymbolConfiguration.Create(
+				(nfloat)points,
+				UIImageSymbolWeight.Medium);
+
 			configuration.ImagePlacement = iconPlacement switch
 			{
 				IconPlacement.Trailing => NSDirectionalRectEdge.Trailing,
@@ -197,12 +243,20 @@ public class Button : Control
 				IconPlacement.Bottom => NSDirectionalRectEdge.Bottom,
 				_ => NSDirectionalRectEdge.Leading
 			};
-
-			if (text is not null)
-				configuration.ImagePadding = 6;
 		}
 
+		// the spinner takes the image slot, so it needs the same breathing room
 		configuration.ShowsActivityIndicator = isLoading;
+
+		if ((icon is not null || isLoading) && text is not null)
+			configuration.ImagePadding = (nfloat)iconSpacing;
+
+		if (padding is { } insets)
+			configuration.ContentInsets = new NSDirectionalEdgeInsets(
+				(nfloat)insets.Top,
+				(nfloat)insets.Left,
+				(nfloat)insets.Bottom,
+				(nfloat)insets.Right);
 
 		if (isDestructive)
 		{
