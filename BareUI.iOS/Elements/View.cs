@@ -530,19 +530,29 @@ public abstract partial class View
 	internal ViewState Capture() =>
 		new(translation, scale, rotation, opacity, cornerRadius, background, width, height, margin);
 
-	// the values UIKit already put back natively, so nothing moves on screen: only the model catches up
-	internal void Restore(
+	// unconditional, past Set's equality check: an animation block must write natively even when the
+	// model already holds these values, or the animation would capture nothing
+	internal void Apply(
 		ViewState state)
 	{
-		Translation = state.Translation;
-		Scale = state.Scale;
-		Rotation = state.Rotation;
-		Opacity = state.Opacity;
-		CornerRadius = state.CornerRadius;
-		Background = state.Background;
-		Width = state.Width;
-		Height = state.Height;
-		Margin = state.Margin;
+		translation = state.Translation;
+		scale = state.Scale;
+		rotation = state.Rotation;
+		opacity = state.Opacity;
+		cornerRadius = state.CornerRadius;
+		background = state.Background;
+
+		ApplyIfRealized(ApplyTransform);
+		ApplyIfRealized(ApplyVisualState);
+
+		if (!width.Equals(state.Width) || !height.Equals(state.Height) || margin != state.Margin)
+		{
+			width = state.Width;
+			height = state.Height;
+			margin = state.Margin;
+
+			InvalidateMeasure();
+		}
 	}
 
 	private protected void ApplyTransform() =>

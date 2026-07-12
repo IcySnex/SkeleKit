@@ -15,9 +15,9 @@ public class AnimationCaptureTests
 		Assert.Equal(0, view.Opacity);
 	}
 
-	// the animation's end values land in the model; a revert has to undo all of them at once
+	// the animation's end values land in the model; applying the snapshots has to undo all of them
 	[Fact]
-	public void Restore_PutsEveryTouchedViewBack()
+	public void Apply_PutsEveryTouchedViewBack()
 	{
 		StubLeaf first = new(10, 10);
 		StubLeaf second = new(10, 10);
@@ -30,7 +30,7 @@ public class AnimationCaptureTests
 		});
 
 		foreach ((View view, ViewState state) in captured)
-			view.Restore(state);
+			view.Apply(state);
 
 		Assert.Equal(Point.Zero, first.Translation);
 		Assert.Equal(0, first.Rotation);

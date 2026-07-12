@@ -14,6 +14,7 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 	// the animator owns a native peer: a field is what keeps it alive while it runs
 	Animator? drag;
 	double grabbedAt;
+	double panStart;
 	bool open;
 
 	public AnimationDemo()
@@ -78,22 +79,28 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 				drag.Grab();
 
 				grabbedAt = drag.Fraction;
+
+				// the recognizer only fires Began after ~10pt of slop; without zeroing, that slop
+				// lands in the first Changed as a visible jump
+				panStart = pan.Translation.X;
 				break;
 
 			case GestureState.Changed:
 				if (drag is not null)
-					drag.Fraction = Math.Clamp(grabbedAt + (Travel(pan.Translation.X) / Distance), 0, 1);
+					drag.Fraction = Math.Clamp(grabbedAt + (Travel(pan.Translation.X - panStart) / Distance), 0, 1);
 				break;
 
 			default:
 				if (drag is null)
 					break;
 
+				double thrown = Travel(pan.Velocity.X);
+
 				// past halfway, or thrown hard enough, it finishes; otherwise it runs back where it came from
-				bool completes = drag.Fraction > 0.5 || Travel(pan.Velocity.X) > 800;
+				bool completes = drag.Fraction > 0.5 || thrown > 800;
 
 				drag.IsReversed = !completes;
-				drag.Continue();
+				drag.Continue(thrown / Distance);
 				break;
 		}
 	}
@@ -121,9 +128,7 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 			drag = null;
 		});
 
-		animator.Start();
-		animator.Pause();
-
+		// not started: the first Grab readies it, paused at 0, ready to scrub
 		return animator;
 	}
 }

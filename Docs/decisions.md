@@ -250,16 +250,23 @@ on the animation UIKit already runs.
 - `View.OnPan` wraps `UIPanGestureRecognizer` in a typed `PanGesture`, so an app can scrub an
   animator without importing UIKit. That is the whole point of the interactive story: the gesture
   drives `Animator.Fraction`, and the release hands the rest back with `Continue()`.
-- **The shadow model must be reconciled with UIKit after a reversed animation** — the deepest cost
-  of retained-mode wrapping, and the reason `Animator` captures. An animation's changes block runs
-  once, immediately, writing the *end* values into BareUI's model while UIKit animates the native
-  view. Reverse it, and UIKit puts the native view back at the start and never tells us: the model
-  is now a value ahead of the screen. Worse, `View.Set` short-circuits on equality, so the *next*
-  animation's block writes nothing native at all and silently animates nothing. `Animator` therefore
-  records every view its block touches (`AnimationCapture`, hooked into the one `Set` funnel) and
-  restores their model when the animation ends at `.Start`. In plain UIKit this bug cannot exist —
-  `view.transform` *is* the model — so it is a defect we import by keeping a second copy, and it
-  belongs in the library, not in every app that reverses an animation.
+- **`Animator` does not use `UIViewPropertyAnimator` at all.** Three generations of wrappers over it
+  each produced a distinct glitch class: a scrubbed fraction does not survive `continueAnimation`
+  through a spring's non-monotonic curve; new timing parameters silently reset `isReversed`;
+  `durationFactor` squeezes a spring into the proportional remainder; a running spring's
+  `fractionComplete` measures time, not position; and replacing animators walls the scrub at the
+  segment edge. The replacement owns the loop outright: `AnimationCapture` snapshots the model state
+  of every view the changes block touches (both ends become plain values), `Motion` — a neutral,
+  unit-testable integrator — advances a position with a damped unit-mass spring (semi-implicit
+  Euler, sub-stepped) or an eased curve, and a `CADisplayLink` writes `ViewState.Lerp(start, end,
+  position)` into the *model* each frame via `View.Apply` (which bypasses `Set`'s equality check),
+  inside a `CATransaction` with actions disabled. There is no presentation/model split anywhere:
+  the screen *is* the shadow model, every frame, so the model can never end up a value ahead (the
+  old reversed-animation bug is unrepresentable). Scrubbing assigns the position; `Continue` seeds
+  the integrator with the gesture velocity; `Reverse` retargets and momentum carries through. Only
+  draw-only properties interpolate — brushes and layout snap on completion. Corollary: `ApplyFrame`
+  always positions by bounds+centre (origin preserved — it is a scroll offset), since setting
+  `Frame` under a transform is undefined.
 
 ## ADR-011: Cells adopt UIKit's *state*, never its content configuration
 

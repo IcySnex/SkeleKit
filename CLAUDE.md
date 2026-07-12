@@ -138,13 +138,21 @@ Hard-won rules (don't relearn these):
   but its content never does). `ContentView.ScrollsUnderBars` bleeds a scrolling root vertically.
 - **A list configuration paints its own opaque background** over `backgroundView` — set it clear or the
   `EmptyView` is invisible.
-- **UIKit reverts a reversed animation without telling us.** An `Animator`'s changes block writes the
-  *end* values into our model; if the animation runs backwards, UIKit restores the native view to the
-  start and the model is left a value ahead. `Set`'s equality short-circuit then makes the *next*
-  animation a silent no-op (its block writes nothing native), which reads as "the control just
-  stopped responding". `AnimationCapture` records what a block touched and `Animator` restores it on
-  a `.Start` finish. Any future native-side revert (a cancelled transition, an interactive dismiss)
-  needs the same treatment.
+- **`UIViewPropertyAnimator` cannot host an interactive animation** — three wrapper generations
+  each hit a different wall: a scrubbed fraction doesn't survive `continueAnimation` (a spring's
+  curve is non-monotonic), new timing parameters silently reset `isReversed`, a running spring's
+  `fractionComplete` is time not position, and replacing animators walls the scrub at the segment
+  edge. `Animator` owns the loop instead (ADR-010): `AnimationCapture` snapshots both ends,
+  `Motion` (neutral, unit-tested) integrates a damped spring or curve, and a `CADisplayLink`
+  writes the lerped `ViewState` into the *model* each frame via `View.Apply` (bypasses `Set`'s
+  equality check). Screen == shadow model by construction, so no reconcile step exists and a
+  native-side revert is unrepresentable. `View.Animate` stays `UIView.AnimateNotify` —
+  fire-and-forget only.
+- **`ApplyFrame` positions by bounds+centre, never `Frame`** (undefined under a transform, and an
+  animation can leave the native transform non-identity while the model reads none). The bounds
+  *origin* is preserved — it is a `UIScrollView`'s content offset.
+- **A fill sublayer needs `ZPosition = -1`.** Sublayer array order is not stable against subview
+  layers — the card gradient ended up *above* the label and silently swallowed it.
 - **Clipping and a shadow are mutually exclusive on one layer** (the shadow is drawn outside the
   bounds). `CornerRadius > 0` used to force `ClipsToBounds` unconditionally, which silently ate the
   shadow of every rounded card. A `Shadow` now turns that implicit clip off; an explicit
