@@ -143,7 +143,8 @@ internal sealed class PageHost : UIViewController
 		NSNotification notification,
 		bool hiding)
 	{
-		if (Page is null || !Page.IsRealized || Page.Native.Subviews.FirstOrDefault() is not null || View?.Window is null)
+		// a scrolling root avoids the keyboard itself, and doubling up would inset twice
+		if (Page is null || !Page.IsRealized || Page.Native.Subviews.FirstOrDefault() is UIScrollView || View?.Window is null)
 			return;
 
 		// resolved once here, not on every layout pass during the animation
