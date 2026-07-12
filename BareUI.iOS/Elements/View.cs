@@ -488,6 +488,48 @@ public abstract partial class View
 	bool clipsToBounds;
 
 
+	// Transform: drawn-only, so it never disturbs layout. This is what a gesture drags and an animation moves.
+
+	/// <summary>
+	/// Shifts the view from where layout put it, in points. Does not affect layout.
+	/// </summary>
+	public Point Translation
+	{
+		get => translation;
+		set => Set(ref translation, value, ApplyTransform, affectsMeasure: false);
+	}
+	Point translation = Point.Zero;
+
+	/// <summary>
+	/// Scales the view about its centre, 1 being its laid-out size. Does not affect layout.
+	/// </summary>
+	public double Scale
+	{
+		get => scale;
+		set => Set(ref scale, value, ApplyTransform, affectsMeasure: false);
+	}
+	double scale = 1;
+
+	/// <summary>
+	/// Rotates the view about its centre, in degrees. Does not affect layout.
+	/// </summary>
+	public double Rotation
+	{
+		get => rotation;
+		set => Set(ref rotation, value, ApplyTransform, affectsMeasure: false);
+	}
+	double rotation;
+
+	// a transformed view must be positioned by bounds+centre: setting Frame under a transform is undefined
+	private protected bool HasTransform =>
+		translation != Point.Zero || scale != 1 || rotation != 0;
+
+	private protected void ApplyTransform() =>
+		ApplyTransformCore();
+
+	partial void ApplyTransformCore();
+
+
 	/// <summary>
 	/// Per-child data written by a parent panel (e.g. a Grid stores row/column here).
 	/// </summary>

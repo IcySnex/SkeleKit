@@ -189,6 +189,26 @@ public abstract partial class View
 
 		ApplyShadow();
 		native.Layer.CornerRadius = (nfloat)CornerRadius;
+
+		ApplyTransform();
+	}
+
+	partial void ApplyTransformCore()
+	{
+		if (native is null)
+			return;
+
+		if (!HasTransform)
+		{
+			native.Transform = CGAffineTransform.MakeIdentity();
+			return;
+		}
+
+		CGAffineTransform transform = CGAffineTransform.MakeScale((nfloat)Scale, (nfloat)Scale);
+		transform = CGAffineTransform.Multiply(transform, CGAffineTransform.MakeRotation((nfloat)(Rotation * Math.PI / 180)));
+		transform = CGAffineTransform.Multiply(transform, CGAffineTransform.MakeTranslation((nfloat)Translation.X, (nfloat)Translation.Y));
+
+		native.Transform = transform;
 	}
 
 	CAGradientLayer? gradientLayer;
@@ -394,7 +414,91 @@ public abstract partial class View
 	public static void Animate(
 		double seconds,
 		Action changes) =>
-		UIView.Animate(seconds, changes);
+		Animate(Animation.Ease(seconds), changes);
+
+	/// <summary>
+	/// Animates the property changes made inside <paramref name="changes"/>, following <paramref name="animation"/>.
+	/// </summary>
+	/// <remarks>For an animation the user can grab mid-flight, create an <see cref="Animator"/> instead.</remarks>
+	public static void Animate(
+		Animation animation,
+		Action changes,
+		Action<bool>? completed = null)
+	{
+		UICompletionHandler done = finished => completed?.Invoke(finished);
+		Action animated = Animated(changes);
+
+		if (animation.SpringDamping is { } damping)
+			UIView.AnimateNotify(
+				animation.Duration,
+				animation.Delay,
+				(nfloat)damping,
+				0,
+				UIViewAnimationOptions.AllowUserInteraction,
+				animated,
+				done);
+		else
+			UIView.AnimateNotify(
+				animation.Duration,
+				animation.Delay,
+				Options(animation.Easing),
+				animated,
+				done);
+	}
+
+	// a layout property only reaches the native frame on the next layout pass, which would land *after*
+	// the animation block and so never animate. Forcing the pass inside the block is what animates it.
+	internal static Action Animated(
+		Action changes) =>
+		() =>
+		{
+			changes();
+
+			UIApplication.SharedApplication
+				.ConnectedScenes
+				.OfType<UIWindowScene>()
+				.SelectMany(scene => scene.Windows)
+				.FirstOrDefault(window => window.IsKeyWindow)?
+				.LayoutIfNeeded();
+		};
+
+	static UIViewAnimationOptions Options(
+		Easing easing) =>
+		UIViewAnimationOptions.AllowUserInteraction | easing switch
+		{
+			Easing.Linear => UIViewAnimationOptions.CurveLinear,
+			Easing.EaseIn => UIViewAnimationOptions.CurveEaseIn,
+			Easing.EaseOut => UIViewAnimationOptions.CurveEaseOut,
+			_ => UIViewAnimationOptions.CurveEaseInOut
+		};
+
+	/// <summary>
+	/// Calls <paramref name="handler"/> as the view is dragged. Drive an <see cref="Animator"/> from it to make the animation interactive.
+	/// </summary>
+	public void OnPan(
+		Action<PanGesture> handler)
+	{
+		UIPanGestureRecognizer recognizer = null!;
+
+		recognizer = new(() =>
+		{
+			CGPoint translation = recognizer.TranslationInView(recognizer.View);
+			CGPoint velocity = recognizer.VelocityInView(recognizer.View);
+
+			handler(new(
+				recognizer.State switch
+				{
+					UIGestureRecognizerState.Began => GestureState.Began,
+					UIGestureRecognizerState.Changed => GestureState.Changed,
+					UIGestureRecognizerState.Ended => GestureState.Ended,
+					_ => GestureState.Cancelled
+				},
+				new(translation.X, translation.Y),
+				new(velocity.X, velocity.Y)));
+		});
+
+		AddGesture(recognizer);
+	}
 
 	/// <summary>
 	/// Adds a native gesture recognizer. An escape hatch for gestures the library does not wrap.
@@ -443,9 +547,16 @@ public abstract partial class View
 		frame = Bleed(frame);
 
 		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
-		bool resized = native.Frame.Size != next.Size;
+		bool resized = native.Bounds.Size != next.Size;
 
-		native.Frame = next;
+		// setting Frame under a transform is undefined: bounds+centre is the same thing without one
+		if (HasTransform)
+		{
+			native.Bounds = new(0, 0, next.Width, next.Height);
+			native.Center = new(next.X + (next.Width / 2), next.Y + (next.Height / 2));
+		}
+		else
+			native.Frame = next;
 
 		if (resized)
 		{

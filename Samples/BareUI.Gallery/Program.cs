@@ -17,6 +17,7 @@ BareApp.Create()
 		services.AddTransient<BindingViewModel>();
 
 		services.AddTransient<StylingDemoViewModel>();
+		services.AddTransient<AnimationDemoViewModel>();
 		services.AddTransient<ButtonDemoViewModel>();
 		services.AddTransient<TextFieldDemoViewModel>();
 		services.AddTransient<TextEditorDemoViewModel>();
@@ -45,6 +46,7 @@ BareApp.Create()
 		pages.AddSingleton<BindingView>();
 
 		pages.AddTransient<StylingDemo>();
+		pages.AddTransient<AnimationDemo>();
 		pages.AddTransient<ButtonDemo>();
 		pages.AddTransient<TextFieldDemo>();
 		pages.AddTransient<TextEditorDemo>();

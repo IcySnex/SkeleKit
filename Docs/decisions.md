@@ -228,8 +228,20 @@ This does **not** reverse the "no animation framework" non-goal (PLAN §Non-Goal
 timeline, no declarative transition system, no implicit layout animation — only a first-class handle
 on the animation UIKit already runs.
 
-**Consequences:** an `Animator` owns a native peer, so it must be held in a field for as long as it
-runs (the rooting rule). A fire-and-forget animator is a crash, not a leak.
+**Consequences:**
+- An `Animator` owns a native peer, so it must be held in a field for as long as it runs (the
+  rooting rule). A fire-and-forget animator is a crash, not a leak.
+- **A layout property does not animate on its own.** Setting `Width` invalidates measure and the
+  frame only moves on the *next* layout pass — after the animation block has closed. So both
+  `View.Animate` and `Animator.Create` force that pass (`LayoutIfNeeded` on the key window) from
+  inside the block. Without it, half of what a user would think to animate simply snaps.
+- **Transform properties exist because layout cannot do this.** `Translation`, `Scale` and `Rotation`
+  are draw-only: they never invalidate measure, so a drag moves a card without re-running the layout
+  engine sixty times a second. A transformed view is positioned by bounds+centre — setting `Frame`
+  under a transform is undefined — which `View.ApplyFrame` now handles.
+- `View.OnPan` wraps `UIPanGestureRecognizer` in a typed `PanGesture`, so an app can scrub an
+  animator without importing UIKit. That is the whole point of the interactive story: the gesture
+  drives `Animator.Fraction`, and the release hands the rest back with `Continue()`.
 
 ## ADR-011: Cells adopt UIKit's *state*, never its content configuration
 

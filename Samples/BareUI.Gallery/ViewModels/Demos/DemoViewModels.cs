@@ -14,6 +14,8 @@ public class ImageDemoViewModel;
 
 public class StylingDemoViewModel;
 
+public class AnimationDemoViewModel;
+
 public class NativeViewDemoViewModel;
 
 public partial class ButtonDemoViewModel : ObservableObject
