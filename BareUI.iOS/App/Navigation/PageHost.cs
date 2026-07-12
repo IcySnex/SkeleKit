@@ -253,6 +253,11 @@ internal sealed class PageHost : UIViewController
 
 		View!.AddSubview(Page.Realize());
 
+		// we own the insets, so UIKit cannot find the scroll view on its own: telling it which one
+		// drives the bar is what collapses a large title (and blurs the bar edge) on scroll
+		if (Page.Native.Subviews.FirstOrDefault() is UIScrollView scroll)
+			SetContentScrollView(scroll, NSDirectionalRectEdge.Top);
+
 		// numeric keyboards have no return key, so tapping outside is the only way out
 		dismissKeyboard = new(() => View.EndEditing(true))
 		{
