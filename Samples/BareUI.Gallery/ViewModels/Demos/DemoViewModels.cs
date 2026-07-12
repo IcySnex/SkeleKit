@@ -52,6 +52,12 @@ public partial class SwitchDemoViewModel : ObservableObject
 	public partial bool IsOn { get; set; } = true;
 }
 
+public partial class SegmentedDemoViewModel : ObservableObject
+{
+	[ObservableProperty]
+	public partial int Selected { get; set; }
+}
+
 public partial class SliderDemoViewModel : ObservableObject
 {
 	[ObservableProperty]

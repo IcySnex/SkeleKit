@@ -13,6 +13,7 @@ public sealed class DemoCatalog : IDemoCatalog
 		new("TextField", typeof(TextFieldDemoViewModel)),
 		new("TextEditor", typeof(TextEditorDemoViewModel)),
 		new("Switch", typeof(SwitchDemoViewModel)),
+		new("SegmentedControl", typeof(SegmentedDemoViewModel)),
 		new("Slider", typeof(SliderDemoViewModel)),
 		new("Stepper", typeof(StepperDemoViewModel)),
 		new("ProgressBar", typeof(ProgressBarDemoViewModel)),
