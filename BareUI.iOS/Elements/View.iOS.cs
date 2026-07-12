@@ -426,7 +426,12 @@ public abstract partial class View
 		Action<bool>? completed = null)
 	{
 		UICompletionHandler done = finished => completed?.Invoke(finished);
-		Action animated = Animated(changes);
+
+		Action animated = () =>
+		{
+			changes();
+			LayoutNow();
+		};
 
 		if (animation.SpringDamping is { } damping)
 			UIView.AnimateNotify(
@@ -446,21 +451,17 @@ public abstract partial class View
 				done);
 	}
 
-	// a layout property only reaches the native frame on the next layout pass, which would land *after*
-	// the animation block and so never animate. Forcing the pass inside the block is what animates it.
-	internal static Action Animated(
-		Action changes) =>
-		() =>
-		{
-			changes();
-
-			UIApplication.SharedApplication
-				.ConnectedScenes
-				.OfType<UIWindowScene>()
-				.SelectMany(scene => scene.Windows)
-				.FirstOrDefault(window => window.IsKeyWindow)?
-				.LayoutIfNeeded();
-		};
+	/// <summary>
+	/// Runs any pending layout right now. Call it inside an <see cref="Animator"/>'s changes to animate a layout property.
+	/// </summary>
+	/// <remarks>A layout property (Width, Margin, ...) only reaches the native frame on the next layout pass, which lands after an animation block has closed — so it would snap instead of animating. <see cref="Animate(Animation, Action, Action{bool})"/> does this for you.</remarks>
+	public static void LayoutNow() =>
+		UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows)
+			.FirstOrDefault(window => window.IsKeyWindow)?
+			.LayoutIfNeeded();
 
 	static UIViewAnimationOptions Options(
 		Easing easing) =>

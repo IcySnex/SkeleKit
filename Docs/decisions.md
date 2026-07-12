@@ -232,9 +232,17 @@ on the animation UIKit already runs.
 - An `Animator` owns a native peer, so it must be held in a field for as long as it runs (the
   rooting rule). A fire-and-forget animator is a crash, not a leak.
 - **A layout property does not animate on its own.** Setting `Width` invalidates measure and the
-  frame only moves on the *next* layout pass — after the animation block has closed. So both
-  `View.Animate` and `Animator.Create` force that pass (`LayoutIfNeeded` on the key window) from
-  inside the block. Without it, half of what a user would think to animate simply snaps.
+  frame only moves on the *next* layout pass — after the animation block has closed. So
+  `View.Animate` forces that pass (`View.LayoutNow`) from inside the block. Without it, half of what
+  a user would think to animate simply snaps.
+- **`Animator.Create` must *not* force that pass**, and this is the sharp edge of the design. A
+  forced layout inside a scrubbed animator's block makes the animator capture the view's bounds and
+  centre as animatable properties, so the drag then interpolates the card's *height* and *position*
+  alongside its transform: it visibly shrinks, jumps, and springs from a stale origin instead of
+  from the finger. An `Animator` therefore animates only what its block touches; a caller who really
+  wants an interactively scrubbed layout property opts in with `View.LayoutNow()` and accepts that
+  the bounds ride along. This is why `Translation`/`Scale`/`Rotation` exist: an interactive gesture
+  should move a transform, not the layout.
 - **Transform properties exist because layout cannot do this.** `Translation`, `Scale` and `Rotation`
   are draw-only: they never invalidate measure, so a drag moves a card without re-running the layout
   engine sixty times a second. A transformed view is positioned by bounds+centre — setting `Frame`

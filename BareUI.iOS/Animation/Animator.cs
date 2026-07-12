@@ -19,16 +19,13 @@ public sealed class Animator : IDisposable
 	/// <summary>
 	/// Prepares an animation of the changes made in <paramref name="changes"/>. It does not run until <see cref="Start"/>.
 	/// </summary>
+	/// <remarks>Only what <paramref name="changes"/> touches is animated. To animate a layout property (Width, Margin, ...), call <see cref="View.LayoutNow"/> at the end of it — and expect the view's bounds to be scrubbed along with everything else.</remarks>
 	public static Animator Create(
 		Animation animation,
-		Action changes)
-	{
-		Action animated = View.Animated(changes);
-
-		return new(animation.SpringDamping is { } damping
-			? new(animation.Duration, (nfloat)damping, animated)
-			: new(animation.Duration, Curve(animation.Easing), animated));
-	}
+		Action changes) =>
+		new(animation.SpringDamping is { } damping
+			? new(animation.Duration, (nfloat)damping, changes)
+			: new(animation.Duration, Curve(animation.Easing), changes));
 
 
 	/// <summary>
