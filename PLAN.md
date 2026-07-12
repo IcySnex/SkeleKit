@@ -75,12 +75,92 @@ feature-complete for building a real app:
 - **Packaging**: NuGet ships the iOS lib + XML docs + README; Release device publish is
   clean (zero trim/AOT warnings).
 
-Outstanding validation (needs hardware / the reference app):
+Outstanding validation (needs the reference app):
 
 - Port two Velura screens (`SettingsGroupViewController`, simplified `MovieInfoViewController`)
   on a branch as the acceptance test; fix API friction found.
-- On-device: 120 Hz scroll check, runtime DI resolve under full trim.
 - Add a LICENSE before publishing the package.
+
+The on-device run (120 Hz scroll, runtime DI resolve under full trim) is done and clean.
+
+---
+
+## M8 — Modern surface: brushes, animation, collections, controls
+
+**Problem:** the library builds a real app, but not a *2026* one. An audit against how modern UIKit
+apps are actually built found four gaps that no amount of app code can close:
+
+1. `CollectionView` applies **one layout to the whole collection** — a screen with a hero carousel
+   *and* a grid *and* a list is not expressible, though `UICollectionViewCompositionalLayout` exists
+   to do exactly that. (`Layout` is also only read in `CreateNative`: reassigning it does nothing.)
+2. **No cell state, no accessories.** `BareCell` is a plain `UICollectionViewCell` — no selection
+   highlight, no pressed state, no disclosure chevron. The Gallery's `SettingsCell` hand-draws a
+   `"›"`, which is the gap made visible.
+3. **No materials, no gradients.** Glass bars and hero scrims — the defining look of modern iOS —
+   are reachable only through `NativeView`.
+4. **Animation is the legacy block API.** No spring, no completion, and no interruptible or
+   scrubbable animator. Interruptible interaction is UIKit's whole advantage over SwiftUI.
+
+Diffable data sources, by contrast, are already right (cached `ItemKey`, coalesced snapshots, no
+animation off-screen) and need no work.
+
+See **ADR-009** (brushes), **ADR-010** (animation), **ADR-011** (cell state).
+
+### Feature 1 — `Brush`: solid, gradient, material
+
+`View.Background` becomes `Brush?`. An implicit `Color` → `Brush` conversion keeps every existing
+call site compiling.
+
+- `SolidBrush` → `BackgroundColor` (today's path).
+- `LinearGradient` (stops + start/end in unit space) → a `CAGradientLayer` at sublayer 0, frame
+  synced from `ApplyFrame`, CGColors re-resolved by the existing `ReapplyVisuals` dark-mode walk.
+- `Material` (`UltraThin`…`Chrome`) → a `UIVisualEffectView` at subview 0.
+
+`SwipeAction.Background` stays a `Color`: `UIContextualAction` takes a color, not a brush.
+
+### Feature 2 — animation: `Animation` + `Animator`
+
+- `Animation` (neutral struct): duration, delay, `Easing`, optional spring damping.
+  `Animation.Spring(...)` / `.Ease(...)`.
+- `Animator` wraps `UIViewPropertyAnimator`: `Fraction` (scrub from a gesture), `Start`, `Pause`,
+  `Continue`, `Reverse`, `Stop`, `OnCompleted`. It is the managed root of its native peer.
+- `View.Animate` keeps its current signature as sugar over `Animation.Ease(seconds)`.
+
+### Feature 3 — collection completeness
+
+- **Per-section layouts**: a view-side `SectionStyle<TItem>` (layout + item template + optional
+  header template) resolved per `Section<T>` by a compositional *section provider*. Cell reuse
+  identifiers become per-style. Reassigning the layout after realize now calls
+  `SetCollectionViewLayout`.
+- **Cell state + accessories**: `BareCell` derives from `UICollectionViewListCell`;
+  `UpdateConfiguration` pushes `IsSelected`/`IsHighlighted` into the hosted `ItemView`, list sections
+  get the native background configuration (the grey tap highlight), and `ItemView.Accessory` maps to
+  `UICellAccessory` (`Disclosure`, `Checkmark`, `Detail`, `Reorder`, `Delete`).
+- **Selection modes + reorder**: `SelectionMode` (None/Single/Multiple), `SelectedItems`, and reorder
+  through the data source's `ReorderingHandlers`.
+- **Prefetch + pinned headers**: `IUICollectionViewDataSourcePrefetching` warms the image cache
+  ahead of the scroll; `CollectionLayout.List(pinnedHeaders:)` sticks section headers.
+
+### Feature 4 — the missing controls
+
+`SegmentedControl`, `DatePicker`, and a pull-down `Menu` on `Button` and `ToolbarItem` (`Picker`
+already wraps `UIMenu` — the pattern is proven).
+
+### Out of scope for M8
+
+Attributed/rich text and inline links; hero / shared-element page transitions; tab-bar badges;
+cell *content* configurations (we adopt the cell's state and accessories, never its content —
+ADR-011).
+
+### Exit criteria
+
+- One `CollectionView` renders a carousel, a grid and a list section on one screen (Gallery
+  `ShowcaseDemo`).
+- `SettingsCell`'s hand-drawn `"›"` is gone, replaced by a real accessory, and rows highlight on tap.
+- A Gallery card can be dragged, released mid-flight, and reversed — one `Animator`, no jump.
+- Materials and gradients are set through `Background`, with no extra nesting.
+- Unit tests: brushes, `Animation`, section-style resolution. Release device publish stays at zero
+  trim/AOT warnings.
 
 ---
 

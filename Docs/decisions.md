@@ -179,3 +179,71 @@ dependency-property system — the thing this library exists to avoid); string-k
 dictionaries (stringly, trim-hostile for no gain over statics); per-subtree cascading
 themes (complexity without a driving screen); source-generated styles (ADR-004 territory,
 v2 sugar at most).
+
+## ADR-009: Visual fills — one `Brush` property, not one control per effect
+
+**Decision:** `View.Background` is a `Brush?`. `SolidBrush` (implicitly converted from `Color`, so
+every existing call site is unchanged), `LinearGradient`, and `Material` (a blur) are the three
+fills. No `BlurView` / `GradientView` controls.
+
+**Context:** modern iOS is materials and gradients — blurred bars, glass cards, poster scrims. The
+alternative was a control per effect, which every user then has to *nest*: a card wanting a blurred
+background gains a wrapper view, and the layout tree grows a level for something that is not a
+layout concern. A brush keeps the fill where the fill belongs, and it composes with styling for
+free: `new Style<Border>(b => b.Background = new Material(MaterialKind.Thin))` needs no new
+machinery.
+
+**Consequences:**
+- `Color` → `Brush` stays implicit, so `Background = Colors.Red` and every `Style<T>` that sets a
+  background keep compiling. Conversions still do not chain, so a raw literal remains illegal —
+  unchanged from today.
+- A gradient is a `CAGradientLayer`, which does not autoresize: its frame is synced from
+  `View.ApplyFrame`. Its CGColors are snapshots, so they re-resolve through the existing
+  `ReapplyVisuals` walk on a dark-mode change — the same rule the border stroke and shadow follow.
+- A material is a `UIVisualEffectView` inserted as subview 0, which *does* autoresize.
+- `SwipeAction.Background` stays a `Color`: `UIContextualAction.BackgroundColor` takes a color, and
+  a gradient behind a swipe action is not a thing UIKit offers.
+
+**Rejected:** `BlurView`/`GradientView` panels (nesting, and they cannot be styled onto an existing
+control); a `Background` union of `Color?` + `Brush?` (two ways to say one thing).
+
+## ADR-010: Animation — `UIViewPropertyAnimator`, still not an animation framework
+
+**Decision:** `Animation` (a neutral struct: duration, delay, easing, optional spring damping) plus
+`Animator`, a wrapper over `UIViewPropertyAnimator` exposing `Fraction`, `Pause`, `Continue`,
+`Reverse` and `Stop`. `View.Animate(seconds, changes)` survives as sugar.
+
+**Context:** the old `View.Animate` was `UIView.Animate` — fire and forget. It cannot spring, cannot
+report completion, and above all cannot be *interrupted*: a gesture-driven card that the user grabs
+mid-flight has to jump. Interruptible, scrubbable animation is the specific thing UIKit does better
+than SwiftUI, and it is one class away.
+
+This does **not** reverse the "no animation framework" non-goal (PLAN §Non-Goals). There is no
+timeline, no declarative transition system, no implicit layout animation — only a first-class handle
+on the animation UIKit already runs.
+
+**Consequences:** an `Animator` owns a native peer, so it must be held in a field for as long as it
+runs (the rooting rule). A fire-and-forget animator is a crash, not a leak.
+
+## ADR-011: Cells adopt UIKit's *state*, never its content configuration
+
+**Decision:** `BareCell` derives from `UICollectionViewListCell` and overrides
+`UpdateConfiguration(UICellConfigurationState)` to push `IsSelected` / `IsHighlighted` into the
+hosted `ItemView`. Accessories map to `UICellAccessory`. The cell's **content** stays a BareUI tree;
+we never build a `UIContentConfiguration`.
+
+**Context:** `UIContentConfiguration` is UIKit's declarative "describe the cell, hand it over"
+model — and its content is `UIListContentConfiguration`, a fixed text/secondaryText/image layout.
+Adopting it would mean handing rendering of the cell's *contents* back to UIKit, which is exactly
+the composition BareUI exists to own; anything past a stock row would fall off it. But cell
+**state** (selected, highlighted, disabled) and **accessories** (disclosure, checkmark, reorder) are
+not content — they are the cell chrome, they are what makes a row feel native, and hand-rolling them
+is how the Gallery ended up drawing a `"›"` in a `Label`.
+
+So: state and accessories come from UIKit, content stays ours. `UICollectionViewListCell` works in
+grid and carousel sections too (it is a `UICollectionViewCell`), where the background configuration
+is simply cleared.
+
+**Consequences:** a cell can restyle itself on selection through ordinary bindings, because
+`IsSelected` is just another bindable property on `ItemView`. List sections get the native grey tap
+highlight for free.
