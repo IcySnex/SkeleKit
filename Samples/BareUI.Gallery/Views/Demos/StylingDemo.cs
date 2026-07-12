@@ -41,6 +41,21 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 						Child = new Label { Style = Styles.Title, Text = "Styles.ProminentCard, BasedOn Card" }
 					},
 
+					new Label { Style = Styles.Caption, Text = "A shadow goes outside, the rounding inside" },
+					new Border
+					{
+						Shadow = new(opacity: 0.4, radius: 10, offsetY: 4),
+						HorizontalAlignment = HorizontalAlignment.Start,
+						Child = new Image
+						{
+							Source = ImageSource.Symbol("swift"),
+							Width = 80,
+							Height = 80,
+							Background = Palette.Card,
+							CornerRadius = 16
+						}
+					},
+
 					new Label { Style = Styles.Caption, Text = "Whatever the initializer writes after the style wins" },
 					new Border
 					{

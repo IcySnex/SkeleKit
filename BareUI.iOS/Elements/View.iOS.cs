@@ -177,7 +177,10 @@ public abstract partial class View
 		native.Alpha = (nfloat)Opacity;
 		if (Background is { } background)
 			native.BackgroundColor = background.ToUIColor();
-		native.ClipsToBounds = ClipsToBounds || CornerRadius > 0 || ClipsByDefault;
+
+		// a clipped layer cannot draw a shadow: the shadow is outside the bounds. A corner radius alone
+		// still clips (an Image must round its content), a shadow turns that off
+		native.ClipsToBounds = ClipsToBounds || (CornerRadius > 0 && Shadow is null) || ClipsByDefault;
 
 		ApplyShadow();
 		native.Layer.CornerRadius = (nfloat)CornerRadius;

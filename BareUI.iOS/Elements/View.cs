@@ -468,7 +468,7 @@ public abstract partial class View
 	double cornerRadius = 0;
 
 	/// <summary>
-	/// A drop shadow behind the view, or null for none. A shadow needs unclipped bounds, so it is ignored when the view clips.
+	/// A drop shadow behind the view, or null for none. A shadow needs unclipped bounds: it stops a corner radius from clipping the content, and an explicit <see cref="ClipsToBounds"/> hides it.
 	/// </summary>
 	public Shadow? Shadow
 	{

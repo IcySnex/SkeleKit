@@ -138,6 +138,10 @@ Hard-won rules (don't relearn these):
   but its content never does). `ContentView.ScrollsUnderBars` bleeds a scrolling root vertically.
 - **A list configuration paints its own opaque background** over `backgroundView` — set it clear or the
   `EmptyView` is invisible.
+- **Clipping and a shadow are mutually exclusive on one layer** (the shadow is drawn outside the
+  bounds). `CornerRadius > 0` used to force `ClipsToBounds` unconditionally, which silently ate the
+  shadow of every rounded card. A `Shadow` now turns that implicit clip off; an explicit
+  `ClipsToBounds` still wins. To round *and* cast: shadow on an outer view, radius on the inner one.
 - **`Bindable<T>` can't take an interface `T`** (C# forbids user-defined conversions from
   interfaces) → `Picker.Items` stays plain; literals need `Bindable.From<ICommand?>(cmd)`.
 - User-defined conversions don't chain → `Image.Source` needs `ImageSource.Symbol(...)`/`Url(...)`.

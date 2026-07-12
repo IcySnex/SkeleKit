@@ -110,14 +110,19 @@ Content = new ScrollView
                         Spacing = 2,
                         Children =
                         {
-                            new Image
+                            // clipping and casting a shadow are mutually exclusive on one layer:
+                            // the shadow goes on the outer view, the rounding on the inner one
+                            new Border
                             {
-                                Source = Bind<string, ImageSource?>(vm => vm.PosterUrl, u => ImageSource.Url(u)),
-                                Width = 140, Height = 210,
-                                CornerRadius = 8,
                                 Shadow = new(opacity: 0.5, radius: 12, offsetY: 6),
                                 Margin = new Thickness(0, 0, 0, 32),
                                 HorizontalAlignment = HorizontalAlignment.Center,
+                                Child = new Image
+                                {
+                                    Source = Bind<string, ImageSource?>(vm => vm.PosterUrl, u => ImageSource.Url(u)),
+                                    Width = 140, Height = 210,
+                                    CornerRadius = 8,
+                                },
                             },
                             new Label
                             {
