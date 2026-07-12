@@ -70,7 +70,9 @@ public partial class CollectionView<TItem>
 			}
 			finally
 			{
-				refresh.EndRefreshing();
+				// land the refresh's own changes first, then collapse the spinner — running both in
+				// one turn animates the diff against a moving content inset
+				FlushSnapshot(() => refresh.EndRefreshing());
 			}
 		};
 
@@ -119,6 +121,9 @@ public partial class CollectionView<TItem>
 					if (action.Command is { } command && command.CanExecute(item))
 						command.Execute(item);
 
+					// the diff must land before done resets the swipe, or a removed row slides
+					// back into view for a beat before the queued snapshot takes it out
+					FlushSnapshot();
 					done(true);
 				});
 
@@ -206,6 +211,10 @@ public partial class CollectionView<TItem>
 
 		DispatchQueue.MainQueue.DispatchAsync(() =>
 		{
+			// a flush may have landed it already
+			if (!snapshotQueued)
+				return;
+
 			snapshotQueued = false;
 
 			if (IsRealized)
@@ -213,10 +222,29 @@ public partial class CollectionView<TItem>
 		});
 	}
 
-	void ApplySnapshot()
+	// coalescing waits a turn, but UIKit's own animations (a collapsing swipe, a settling refresh
+	// control) must not run against stale data: these apply the pending diff right now
+	void FlushSnapshot(
+		Action? completed = null)
+	{
+		if (!snapshotQueued || !IsRealized)
+		{
+			completed?.Invoke();
+			return;
+		}
+
+		snapshotQueued = false;
+		ApplySnapshot(completed);
+	}
+
+	void ApplySnapshot(
+		Action? completed = null)
 	{
 		if (data is null)
+		{
+			completed?.Invoke();
 			return;
+		}
 
 		NSDiffableDataSourceSnapshot<NSNumber, ItemKey> snapshot = new();
 
@@ -243,7 +271,12 @@ public partial class CollectionView<TItem>
 		Prune();
 
 		// animating an off-screen collection is wasted work
-		data.ApplySnapshot(snapshot, Ui.Window is not null);
+		bool animated = Ui.Window is not null;
+
+		if (completed is null)
+			data.ApplySnapshot(snapshot, animated);
+		else
+			data.ApplySnapshot(snapshot, animated, completed);
 	}
 
 	ItemKey KeyFor(
