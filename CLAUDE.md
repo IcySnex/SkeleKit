@@ -189,5 +189,4 @@ Known debt:
 - `VStack`/`HStack` set `Orientation` in their **ctor body**, the one place the library breaks its
   own rule — so a `Style<VStack>` touching `Orientation` loses. Nothing else does it.
 - M6 remaining: the Velura two-screen port (the acceptance test) and the on-device 120 Hz check.
-- M7 remaining: styling is covered by unit tests and builds clean, but has not been *run* — no
-  simulator screenshot of `StylingDemo`, no Release device re-publish (trim/AOT check).
+- No LICENSE file yet — needed before the package is published.
