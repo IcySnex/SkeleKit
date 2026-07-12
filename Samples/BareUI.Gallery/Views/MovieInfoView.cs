@@ -59,10 +59,10 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
 								Spacing = 6,
 								Children =
 								{
-									new Label { Text = Bind(vm => vm.Title), FontSize = 28, Bold = true },
-									new Label { Text = Bind(vm => vm.Metadata), FontSize = 15, TextColor = Theme.Secondary },
-									new Label { Text = Bind(vm => vm.GenreLine), FontSize = 15, TextColor = Theme.Secondary },
-									new Label { Text = Bind(vm => vm.Overview), FontSize = 15 }
+									new Label { TextStyle = TextStyle.Title1, Text = Bind(vm => vm.Title), Bold = true },
+									new Label { Style = Styles.Detail, Text = Bind(vm => vm.Metadata) },
+									new Label { Style = Styles.Detail, Text = Bind(vm => vm.GenreLine) },
+									new Label { TextStyle = TextStyle.Subheadline, Text = Bind(vm => vm.Overview) }
 								}
 							}.Column(1)
 						}

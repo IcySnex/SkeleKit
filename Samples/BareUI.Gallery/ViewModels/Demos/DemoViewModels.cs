@@ -12,6 +12,8 @@ public class DividerDemoViewModel;
 
 public class ImageDemoViewModel;
 
+public class StylingDemoViewModel;
+
 public class NativeViewDemoViewModel;
 
 public partial class ButtonDemoViewModel : ObservableObject

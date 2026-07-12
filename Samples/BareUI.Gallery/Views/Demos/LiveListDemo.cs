@@ -20,8 +20,8 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 		IgnoresSafeArea = SafeAreaEdges.Bottom,
 		EmptyView = new Label
 		{
+			Style = Styles.Detail,
 			Text = "Nothing here yet — tap Add",
-			TextColor = Theme.Secondary,
 			TextAlignment = TextAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center
 		}

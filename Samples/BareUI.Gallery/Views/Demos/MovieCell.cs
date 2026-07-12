@@ -23,17 +23,16 @@ public class MovieCell : ItemView<Movie>
 
 				new Label
 				{
+					TextStyle = TextStyle.Footnote,
 					Text = Bind(vm => vm.Title),
-					FontSize = 13,
 					Bold = true,
 					MaxLines = 1
 				},
 
 				new Label
 				{
-					Text = Bind(vm => vm.Year, year => year.ToString()),
-					FontSize = 12,
-					TextColor = Theme.Secondary
+					Style = Styles.Caption,
+					Text = Bind(vm => vm.Year, year => year.ToString())
 				}
 			}
 		};

@@ -23,13 +23,13 @@ public class NativeViewDemo : ContentView<NativeViewDemoViewModel>
 					Margin = new Thickness(16),
 					Children =
 					{
-						Theme.Caption("UISegmentedControl"),
+						new Label { Style = Styles.Caption, Text = "UISegmentedControl" },
 						new NativeView(CreateSegmentedControl()),
 
-						Theme.Caption("UIDatePicker"),
+						new Label { Style = Styles.Caption, Text = "UIDatePicker" },
 						new NativeView(CreateDatePicker()),
 
-						Theme.Caption("UISlider (native)"),
+						new Label { Style = Styles.Caption, Text = "UISlider (native)" },
 						new NativeView(CreateNativeSlider())
 					}
 				}

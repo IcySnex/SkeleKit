@@ -19,7 +19,7 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 			VerticalAlignment = VerticalAlignment.End,
 			Children =
 			{
-				Theme.Caption("No ScrollView on this page. The field below sits at the bottom."),
+				new Label { Style = Styles.Caption, Text = "No ScrollView on this page. The field below sits at the bottom." },
 
 				new Label
 				{

@@ -27,10 +27,10 @@ public class PickerDemo : ContentView<PickerDemoViewModel>
 				Margin = new Thickness(16),
 				Children =
 				{
-					Theme.Caption("Menu-style selection"),
+					new Label { Style = Styles.Caption, Text = "Menu-style selection" },
 					picker,
 
-					Theme.Caption("Selection"),
+					new Label { Style = Styles.Caption, Text = "Selection" },
 					new Label { Text = Bind(vm => vm.Selection), Bold = true }
 				}
 			}

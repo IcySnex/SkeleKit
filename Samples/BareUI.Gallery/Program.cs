@@ -16,6 +16,7 @@ BareApp.Create()
 		services.AddTransient<MovieInfoViewModel>();
 		services.AddTransient<BindingViewModel>();
 
+		services.AddTransient<StylingDemoViewModel>();
 		services.AddTransient<ButtonDemoViewModel>();
 		services.AddTransient<TextFieldDemoViewModel>();
 		services.AddTransient<TextEditorDemoViewModel>();
@@ -34,12 +35,16 @@ BareApp.Create()
 		services.AddTransient<CarouselDemoViewModel>();
 		services.AddTransient<LiveListDemoViewModel>();
 	})
+	.UseTheme(theme => theme
+		.Style(new Style<Label>(label => label.TextColor = Colors.Label))
+		.Style(new Style<Button>(button => button.Kind = ButtonStyle.Tinted)))
 	.UsePages(pages =>
 	{
 		pages.AddSingleton<MenuView>();
 		pages.AddTransient<MovieInfoView>();
 		pages.AddSingleton<BindingView>();
 
+		pages.AddTransient<StylingDemo>();
 		pages.AddTransient<ButtonDemo>();
 		pages.AddTransient<TextFieldDemo>();
 		pages.AddTransient<TextEditorDemo>();

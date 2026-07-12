@@ -52,15 +52,15 @@ public class DemoRow : ItemView<DemoEntry>
 				new Label
 				{
 					Text = Bind(vm => vm.Title),
-					FontSize = 17,
+					TextStyle = TextStyle.Body,
 					HorizontalAlignment = HorizontalAlignment.Start
 				},
 
 				new Label
 				{
 					Text = "›",
-					FontSize = 17,
-					TextColor = Theme.Secondary,
+					TextStyle = TextStyle.Body,
+					TextColor = Palette.Secondary,
 					HorizontalAlignment = HorizontalAlignment.End
 				}
 			}

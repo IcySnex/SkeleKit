@@ -20,13 +20,13 @@ public class SwitchDemo : ContentView<SwitchDemoViewModel>
 				Margin = new Thickness(16),
 				Children =
 				{
-					Theme.Caption("Two-way"),
+					new Label { Style = Styles.Caption, Text = "Two-way" },
 					new Switch { IsOn = Bind(vm => vm.IsOn, (vm, value) => vm.IsOn = value) },
 
-					Theme.Caption("Mirrors the switch"),
+					new Label { Style = Styles.Caption, Text = "Mirrors the switch" },
 					new Label { Text = Bind(vm => vm.IsOn, on => on ? "On" : "Off"), Bold = true },
 
-					Theme.Caption("Disabled"),
+					new Label { Style = Styles.Caption, Text = "Disabled" },
 					new Switch { IsOn = true, IsEnabled = false }
 				}
 			}

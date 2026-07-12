@@ -7,6 +7,7 @@ public sealed class DemoCatalog : IDemoCatalog
 {
 	public IReadOnlyList<DemoEntry> Demos { get; } =
 	[
+		new("Styling", typeof(StylingDemoViewModel)),
 		new("Button", typeof(ButtonDemoViewModel)),
 		new("TextField", typeof(TextFieldDemoViewModel)),
 		new("TextEditor", typeof(TextEditorDemoViewModel)),

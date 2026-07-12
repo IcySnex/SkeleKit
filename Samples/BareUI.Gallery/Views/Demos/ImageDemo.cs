@@ -22,7 +22,7 @@ public class ImageDemo : ContentView<ImageDemoViewModel>
 					Margin = new Thickness(16),
 					Children =
 					{
-						Theme.Caption("SF Symbol"),
+						new Label { Style = Styles.Caption, Text = "SF Symbol" },
 						new Image
 						{
 							Source = ImageSource.Symbol("star.fill"),
@@ -31,7 +31,7 @@ public class ImageDemo : ContentView<ImageDemoViewModel>
 							Stretch = Stretch.Uniform
 						},
 
-						Theme.Caption("URL image"),
+						new Label { Style = Styles.Caption, Text = "URL image" },
 						new Image
 						{
 							Source = ImageSource.Url("https://picsum.photos/300/200"),
@@ -40,7 +40,7 @@ public class ImageDemo : ContentView<ImageDemoViewModel>
 							Stretch = Stretch.UniformToFill
 						},
 
-						Theme.Caption("SF Symbol with fill stretch"),
+						new Label { Style = Styles.Caption, Text = "SF Symbol with fill stretch" },
 						new Image
 						{
 							Source = ImageSource.Symbol("heart.fill"),
@@ -49,7 +49,7 @@ public class ImageDemo : ContentView<ImageDemoViewModel>
 							Stretch = Stretch.Fill
 						},
 
-						Theme.Caption("SF Symbol no stretch"),
+						new Label { Style = Styles.Caption, Text = "SF Symbol no stretch" },
 						new Image
 						{
 							Source = ImageSource.Symbol("gear"),

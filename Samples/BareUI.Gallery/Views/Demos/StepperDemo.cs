@@ -20,7 +20,7 @@ public class StepperDemo : ContentView<StepperDemoViewModel>
 				Margin = new Thickness(16),
 				Children =
 				{
-					Theme.Caption("1–10, step 1"),
+					new Label { Style = Styles.Caption, Text = "1–10, step 1" },
 					new Stepper
 					{
 						Minimum = 1,

@@ -11,8 +11,8 @@ public class TodoCell : ItemView<TodoItem>
 			Padding = new Thickness(16, 10),
 			Children =
 			{
-				new Label { Text = Bind(item => item.Title), FontSize = 17 },
-				new Label { Text = Bind(item => item.Detail), FontSize = 13, TextColor = Theme.Secondary }
+				new Label { TextStyle = TextStyle.Body, Text = Bind(item => item.Title) },
+				new Label { Style = Styles.Caption, Text = Bind(item => item.Detail) }
 			}
 		};
 }

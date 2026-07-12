@@ -20,24 +20,24 @@ public class BindingView : ContentView<BindingViewModel>
 				Margin = new Thickness(16),
 				Children =
 				{
-					Theme.Caption("Two-way: type here"),
+					new Label { Style = Styles.Caption, Text = "Two-way: type here" },
 					new TextField
 					{
 						Placeholder = "Name",
 						Text = Bind(vm => vm.Name, (vm, value) => vm.Name = value ?? "")
 					},
 
-					Theme.Caption("One-way: mirrors the field above"),
+					new Label { Style = Styles.Caption, Text = "One-way: mirrors the field above" },
 					new Label { Text = Bind(vm => vm.Name), Bold = true },
 
-					Theme.Caption("Converter: length as text"),
+					new Label { Style = Styles.Caption, Text = "Converter: length as text" },
 					new Label { Text = Bind(vm => vm.Name, name => $"{name.Length} characters") },
 
-					Theme.Caption("Two-way switch, one-way label"),
+					new Label { Style = Styles.Caption, Text = "Two-way switch, one-way label" },
 					new Switch { IsOn = Bind(vm => vm.IsSubscribed, (vm, value) => vm.IsSubscribed = value) },
 					new Label { Text = Bind(vm => vm.IsSubscribed, on => on ? "Subscribed" : "Not subscribed") },
 
-					Theme.Caption("Two-way slider, converted label"),
+					new Label { Style = Styles.Caption, Text = "Two-way slider, converted label" },
 					new Slider
 					{
 						Minimum = 0,
@@ -46,7 +46,7 @@ public class BindingView : ContentView<BindingViewModel>
 					},
 					new Label { Text = Bind(vm => vm.Volume, volume => $"Volume {volume:F0}") },
 
-					Theme.Caption("Command: disabled while the name is empty"),
+					new Label { Style = Styles.Caption, Text = "Command: disabled while the name is empty" },
 					new Button
 					{
 						Text = "Clear name",

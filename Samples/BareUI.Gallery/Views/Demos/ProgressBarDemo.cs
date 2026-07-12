@@ -22,19 +22,19 @@ public class ProgressBarDemo : ContentView<ProgressBarDemoViewModel>
 					Margin = new Thickness(16),
 					Children =
 					{
-						Theme.Caption("0% progress"),
+						new Label { Style = Styles.Caption, Text = "0% progress" },
 						new ProgressBar { Progress = 0 },
 
-						Theme.Caption("30% progress"),
+						new Label { Style = Styles.Caption, Text = "30% progress" },
 						new ProgressBar { Progress = 0.3 },
 
-						Theme.Caption("70% progress"),
+						new Label { Style = Styles.Caption, Text = "70% progress" },
 						new ProgressBar { Progress = 0.7 },
 
-						Theme.Caption("100% progress"),
+						new Label { Style = Styles.Caption, Text = "100% progress" },
 						new ProgressBar { Progress = 1 },
 
-						Theme.Caption("With tint"),
+						new Label { Style = Styles.Caption, Text = "With tint" },
 						new ProgressBar { Progress = 0.5, Tint = Color.FromHex(0x34C759) }
 					}
 				}

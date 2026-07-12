@@ -22,15 +22,15 @@ public class TextEditorDemo : ContentView<TextEditorDemoViewModel>
 				Margin = new Thickness(16),
 				Children =
 				{
-					Theme.Caption("Two-way, grows with its content"),
+					new Label { Style = Styles.Caption, Text = "Two-way, grows with its content" },
 					Boxed(new TextEditor
 					{
 						FontSize = 16,
 						Text = Bind(vm => vm.Text, (vm, value) => vm.Text = value ?? "")
 					}),
 
-					Theme.Caption("Character count"),
-					new Label { Text = Bind(vm => vm.Text, text => $"{text.Length} characters"), TextColor = Theme.Secondary }
+					new Label { Style = Styles.Caption, Text = "Character count" },
+					new Label { Text = Bind(vm => vm.Text, text => $"{text.Length} characters"), TextColor = Palette.Secondary }
 				}
 			}
 		};

@@ -20,15 +20,15 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 				Margin = new Thickness(16),
 				Children =
 				{
-					Theme.Caption("Two-way"),
+					new Label { Style = Styles.Caption, Text = "Two-way" },
 					new TextField
 					{
 						Placeholder = "Name",
 						Text = Bind(vm => vm.Text, (vm, value) => vm.Text = value ?? "")
 					},
-					new Label { Text = Bind(vm => vm.Text), TextColor = Theme.Secondary },
+					new Label { Text = Bind(vm => vm.Text), TextColor = Palette.Secondary },
 
-					Theme.Caption("Email keyboard"),
+					new Label { Style = Styles.Caption, Text = "Email keyboard" },
 					new TextField
 					{
 						Placeholder = "you@example.com",
@@ -37,7 +37,7 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 						Text = Bind(vm => vm.Email, (vm, value) => vm.Email = value ?? "")
 					},
 
-					Theme.Caption("SecureField"),
+					new Label { Style = Styles.Caption, Text = "SecureField" },
 					new SecureField
 					{
 						Placeholder = "Password",

@@ -24,15 +24,14 @@ public class SettingsCell : ItemView<SettingsEntry>
 				new Label
 				{
 					Text = Bind(vm => vm.Title),
-					FontSize = 17,
+					TextStyle = TextStyle.Body,
 					HorizontalAlignment = HorizontalAlignment.Start
 				},
 
 				new Label
 				{
+					Style = Styles.Detail,
 					Text = Bind(vm => vm.Detail),
-					FontSize = 15,
-					TextColor = Theme.Secondary,
 					HorizontalAlignment = HorizontalAlignment.End,
 					TextAlignment = TextAlignment.Trailing
 				}

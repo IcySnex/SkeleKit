@@ -32,10 +32,9 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 			{
 				new Label
 				{
+					Style = Styles.Caption,
 					Text = "Swipe sideways — it settles on an item",
-					Margin = new Thickness(16, 0),
-					TextColor = Theme.Secondary,
-					FontSize = 13
+					Margin = new Thickness(16, 0)
 				},
 				movies
 			}

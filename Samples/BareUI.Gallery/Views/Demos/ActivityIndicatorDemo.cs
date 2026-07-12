@@ -22,19 +22,19 @@ public class ActivityIndicatorDemo : ContentView<ActivityIndicatorDemoViewModel>
 					Margin = new Thickness(16),
 					Children =
 					{
-						Theme.Caption("Medium, animating"),
+						new Label { Style = Styles.Caption, Text = "Medium, animating" },
 						new ActivityIndicator { IsAnimating = true, IsLarge = false },
 
-						Theme.Caption("Medium, stopped"),
+						new Label { Style = Styles.Caption, Text = "Medium, stopped" },
 						new ActivityIndicator { IsAnimating = false, IsLarge = false },
 
-						Theme.Caption("Large, animating"),
+						new Label { Style = Styles.Caption, Text = "Large, animating" },
 						new ActivityIndicator { IsAnimating = true, IsLarge = true },
 
-						Theme.Caption("Large, stopped"),
+						new Label { Style = Styles.Caption, Text = "Large, stopped" },
 						new ActivityIndicator { IsAnimating = false, IsLarge = true },
 
-						Theme.Caption("Custom color"),
+						new Label { Style = Styles.Caption, Text = "Custom color" },
 						new ActivityIndicator
 						{
 							IsAnimating = true,
