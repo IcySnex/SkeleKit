@@ -61,6 +61,17 @@ public sealed class BareApp
 	}
 
 	/// <summary>
+	/// Registers implicit styles applied to every view of a type as it is built. One theme per app.
+	/// </summary>
+	public BareApp UseTheme(
+		Action<Theme> configure)
+	{
+		Theme.Use(configure);
+
+		return this;
+	}
+
+	/// <summary>
 	/// Registers the pages the app can show. Every navigable page goes here, once.
 	/// </summary>
 	public BareApp UsePages(
