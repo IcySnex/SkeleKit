@@ -9,10 +9,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 - ~~★ **Leading toolbar item next to the back button**~~ — **done** (`LeftItemsSupplementBackButton`
   always on).
-- ◆ **Large-title collapse driven by a BareUI scroll** — UIKit shrinks the large title from the
-  scroll position, but only when it finds the scroll view; with our owned insets it needs
-  `NavigationItem.ScrollEdgeAppearance` + hooking the page's `ScrollView`/`CollectionView`.
-  This is the "title gets smaller on scroll" you asked for.
+- ~~◆ **Large-title collapse driven by a BareUI scroll**~~ — **done** (`SetContentScrollView`
+  wires the page's root scroll to the bar).
 - ~~★ **Back button title / display mode**~~ — **done** (`ContentView.BackButtonTitle` +
   `BackButtonStyle`).
 - ◆ **Pop interception** — "unsaved changes" confirm-before-back: wrap
@@ -67,14 +65,13 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 ## Button
 
-- ★ **Subtitle** — `UIButton.Configuration.Subtitle`.
-- ★ **Image placement & padding** — icon leading/trailing/top/bottom, `ImagePadding`,
-  `ContentInsets`.
-- ★ **Size & shape** — `UIButtonConfigurationSize` (mini…large), `CornerStyle` incl. capsule.
-- ★ **Role** — destructive/cancel styling.
-- ◆ **Menu button** — `Menu` + `ShowsMenuAsPrimaryAction`, and the popup-button variant
-  (`ChangesSelectionAsPrimaryAction`) — a dropdown picker in button form.
-- ★ **Loading state** — `ShowsActivityIndicator`; bind to a command's running state.
+- ~~★ **Subtitle**~~ — **done** (`Button.Subtitle`).
+- ~~★ **Image placement & padding**~~ — **done** (`Button.IconPlacement`); `ContentInsets` remain.
+- ~~★ **Size & shape**~~ — **done** (`Button.Size`; capsule already existed as `FilledCapsule`).
+- ~~★ **Role**~~ — **done** (`Button.IsDestructive`).
+- ◆ **Menu button** — ~~`Menu` + `ShowsMenuAsPrimaryAction`~~ **done** (`Button.Menu`); the
+  popup-selection variant (`ChangesSelectionAsPrimaryAction`) remains.
+- ~~★ **Loading state**~~ — **done** (`Button.IsLoading`, bindable).
 
 ## Image
 
@@ -104,7 +101,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 - ◆ **DatePicker** — `UIDatePicker`: date/time/date-and-time/countdown × compact/inline/wheels.
   Most-requested control that isn't there.
-- ★ **SegmentedControl** — `UISegmentedControl`; items + selected index/item binding.
+- ~~★ **SegmentedControl**~~ — **done** (new control, `Items` + two-way `SelectedIndex`).
 - ★ **ColorWell** — `UIColorWell` (+ `UIColorPickerViewController` via navigator).
 - ★ **PageControl** — dots, pairs with the carousel layout.
 - ▲ **WebView** — `WKWebView`: url/html, navigation events, JS eval. Big but standard.
