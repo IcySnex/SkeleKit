@@ -8,6 +8,28 @@ namespace BareUI;
 public abstract partial class View
 {
 	/// <summary>
+	/// Applies the app's implicit theme styles for this view's type.
+	/// </summary>
+	protected View() =>
+		Theme.ApplyTo(this);
+
+
+	/// <summary>
+	/// A style applied the moment it is assigned: put it first in an object initializer, later assignments override it.
+	/// </summary>
+	public IStyle? Style
+	{
+		get => style;
+		set
+		{
+			style = value;
+			value?.Apply(this);
+		}
+	}
+	IStyle? style;
+
+
+	/// <summary>
 	/// The panel this view sits in, or null when it is a root or unparented.
 	/// </summary>
 	public View? Parent { get; private set; }
