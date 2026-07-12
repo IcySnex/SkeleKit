@@ -30,6 +30,26 @@ public class ButtonDemo : ContentView<ButtonDemoViewModel>
 
 					new Label { Style = Styles.Caption, Text = "With an SF Symbol" },
 					new Button { Text = "Play", Icon = "play.fill", Kind = ButtonStyle.Filled },
+					new Button { Text = "Next", Icon = "chevron.right", IconPlacement = IconPlacement.Trailing },
+
+					new Label { Style = Styles.Caption, Text = "Subtitle, size, destructive, loading" },
+					new Button { Text = "Buy now", Subtitle = "Free shipping", Kind = ButtonStyle.Filled, Size = ButtonSize.Large },
+					new Button { Text = "Delete", Icon = "trash", IsDestructive = true, Kind = ButtonStyle.Tinted },
+					new Button { Text = "Loading", IsLoading = true, Kind = ButtonStyle.Gray },
+
+					new Label { Style = Styles.Caption, Text = "Menu button — tap opens a pull-down" },
+					new Button
+					{
+						Text = "Sort by",
+						Icon = "arrow.up.arrow.down",
+						Kind = ButtonStyle.Gray,
+						Menu =
+						{
+							new MenuAction { Text = "Name", Icon = "textformat" },
+							new MenuAction { Text = "Date", Icon = "calendar" },
+							new MenuAction { Text = "Reset", Icon = "arrow.counterclockwise", IsDestructive = true }
+						}
+					},
 
 					new Label { Style = Styles.Caption, Text = "Bound command" },
 					new Button

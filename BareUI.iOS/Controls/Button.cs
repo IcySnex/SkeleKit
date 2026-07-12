@@ -30,6 +30,17 @@ public class Button : Control
 	Binding<string?>? iconBinding;
 
 	/// <summary>
+	/// Smaller text shown under the title, or null for none.
+	/// </summary>
+	public Bindable<string?> Subtitle
+	{
+		get => subtitle;
+		set => subtitleBinding = Register(subtitleBinding, value, value => Set(ref subtitle, value, ApplyConfiguration));
+	}
+	string? subtitle;
+	Binding<string?>? subtitleBinding;
+
+	/// <summary>
 	/// The button's native style: plain, gray, tinted or filled.
 	/// </summary>
 	public ButtonStyle Kind
@@ -38,6 +49,52 @@ public class Button : Control
 		set => Set(ref kind, value, ApplyConfiguration);
 	}
 	ButtonStyle kind = ButtonStyle.Plain;
+
+	/// <summary>
+	/// The built-in size class.
+	/// </summary>
+	public ButtonSize Size
+	{
+		get => size;
+		set => Set(ref size, value, ApplyConfiguration);
+	}
+	ButtonSize size = ButtonSize.Medium;
+
+	/// <summary>
+	/// Where the icon sits relative to the text.
+	/// </summary>
+	public IconPlacement IconPlacement
+	{
+		get => iconPlacement;
+		set => Set(ref iconPlacement, value, ApplyConfiguration);
+	}
+	IconPlacement iconPlacement = IconPlacement.Leading;
+
+	/// <summary>
+	/// Styles the button red, for destructive actions.
+	/// </summary>
+	public bool IsDestructive
+	{
+		get => isDestructive;
+		set => Set(ref isDestructive, value, ApplyConfiguration);
+	}
+	bool isDestructive;
+
+	/// <summary>
+	/// Shows a spinner in place of the icon while true. Bind it to a command's running state.
+	/// </summary>
+	public Bindable<bool> IsLoading
+	{
+		get => isLoading;
+		set => isLoadingBinding = Register(isLoadingBinding, value, value => Set(ref isLoading, value, ApplyConfiguration, affectsMeasure: false));
+	}
+	bool isLoading;
+	Binding<bool>? isLoadingBinding;
+
+	/// <summary>
+	/// Menu entries shown on tap instead of invoking <see cref="Command"/>. Empty for a plain button.
+	/// </summary>
+	public IList<MenuAction> Menu { get; } = [];
 
 	/// <summary>
 	/// Command invoked on tap; its CanExecute drives the enabled state.
@@ -94,6 +151,7 @@ public class Button : Control
 	private protected override void ApplyProperties()
 	{
 		ApplyConfiguration();
+		ApplyMenu();
 		ApplyIsEnabled();
 	}
 
@@ -120,15 +178,76 @@ public class Button : Control
 			configuration.CornerStyle = UIButtonConfigurationCornerStyle.Capsule;
 
 		configuration.Title = text;
+		configuration.Subtitle = subtitle;
+		configuration.ButtonSize = size switch
+		{
+			ButtonSize.Mini => UIButtonConfigurationSize.Mini,
+			ButtonSize.Small => UIButtonConfigurationSize.Small,
+			ButtonSize.Large => UIButtonConfigurationSize.Large,
+			_ => UIButtonConfigurationSize.Medium
+		};
 
 		if (icon is not null)
 		{
 			configuration.Image = UIImage.GetSystemImage(icon);
+			configuration.ImagePlacement = iconPlacement switch
+			{
+				IconPlacement.Trailing => NSDirectionalRectEdge.Trailing,
+				IconPlacement.Top => NSDirectionalRectEdge.Top,
+				IconPlacement.Bottom => NSDirectionalRectEdge.Bottom,
+				_ => NSDirectionalRectEdge.Leading
+			};
+
 			if (text is not null)
 				configuration.ImagePadding = 6;
 		}
 
+		configuration.ShowsActivityIndicator = isLoading;
+
+		if (isDestructive)
+		{
+			configuration.BaseForegroundColor = UIColor.SystemRed;
+
+			if (kind is ButtonStyle.Filled or ButtonStyle.FilledCapsule)
+			{
+				configuration.BaseBackgroundColor = UIColor.SystemRed;
+				configuration.BaseForegroundColor = UIColor.White;
+			}
+		}
+
 		Ui.Configuration = configuration;
+	}
+
+	// the actions stay rooted here: UIKit's retain alone would let their managed peers die
+	UIAction[]? menuActions;
+
+	void ApplyMenu()
+	{
+		if (Menu.Count == 0)
+			return;
+
+		menuActions = new UIAction[Menu.Count];
+
+		for (int index = 0; index < Menu.Count; index++)
+		{
+			MenuAction entry = Menu[index];
+
+			menuActions[index] = UIAction.Create(
+				entry.Text,
+				entry.Icon is { } entryIcon ? UIImage.GetSystemImage(entryIcon) : null,
+				null,
+				_ =>
+				{
+					if (entry.Command is { } entryCommand && entryCommand.CanExecute(null))
+						entryCommand.Execute(null);
+				});
+
+			if (entry.IsDestructive)
+				menuActions[index].Attributes = UIMenuElementAttributes.Destructive;
+		}
+
+		Ui.Menu = UIMenu.Create(menuActions);
+		Ui.ShowsMenuAsPrimaryAction = true;
 	}
 
 	void ApplyIsEnabled()
