@@ -37,12 +37,32 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 						Text = Bind(vm => vm.Email, (vm, value) => vm.Email = value ?? "")
 					},
 
-					new Label { Style = Styles.Caption, Text = "SecureField" },
+					new Label { Style = Styles.Caption, Text = "SecureField — autofills a saved password" },
 					new SecureField
 					{
 						Placeholder = "Password",
+						ContentKind = ContentKind.Password,
 						ReturnKey = ReturnKeyType.Done,
 						Text = Bind(vm => vm.Password, (vm, value) => vm.Password = value ?? "")
+					},
+
+					new Label { Style = Styles.Caption, Text = "One-time code — autofills from Messages" },
+					new TextField
+					{
+						Placeholder = "123456",
+						ContentKind = ContentKind.OneTimeCode,
+						Keyboard = KeyboardType.Numeric
+					},
+
+					new Label { Style = Styles.Caption, Text = "Clear button, no autocorrection, mono" },
+					new TextField
+					{
+						Placeholder = "SKU-0000",
+						ClearButton = ClearButton.WhileEditing,
+						Autocorrection = false,
+						Capitalization = Capitalization.Characters,
+						FontDesign = FontDesign.Monospaced,
+						RequiresText = true
 					}
 				}
 			}

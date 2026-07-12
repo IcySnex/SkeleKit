@@ -36,7 +36,19 @@ public class SliderDemo : ContentView<SliderDemoViewModel>
 						Maximum = 100,
 						Value = Bind(vm => vm.Percent, (vm, value) => vm.Percent = value)
 					},
-					new Label { Text = Bind(vm => vm.Percent, value => $"{value:F0}%"), TextColor = Palette.Secondary }
+					new Label { Text = Bind(vm => vm.Percent, value => $"{value:F0}%"), TextColor = Palette.Secondary },
+
+					new Label { Style = Styles.Caption, Text = "Volume — icons, tinted track, snaps to 10" },
+					new Slider
+					{
+						Minimum = 0,
+						Maximum = 100,
+						Step = 10,
+						MinIcon = "speaker.fill",
+						MaxIcon = "speaker.wave.3.fill",
+						TrackColor = Colors.Indigo,
+						Value = Bind(vm => vm.Percent, (vm, value) => vm.Percent = value)
+					}
 				}
 			}
 		};

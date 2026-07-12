@@ -27,7 +27,10 @@ public class SwitchDemo : ContentView<SwitchDemoViewModel>
 					new Label { Text = Bind(vm => vm.IsOn, on => on ? "On" : "Off"), Bold = true },
 
 					new Label { Style = Styles.Caption, Text = "Disabled" },
-					new Switch { IsOn = true, IsEnabled = false }
+					new Switch { IsOn = true, IsEnabled = false },
+
+					new Label { Style = Styles.Caption, Text = "Tinted" },
+					new Switch { IsOn = true, OnColor = Colors.Indigo }
 				}
 			}
 		};

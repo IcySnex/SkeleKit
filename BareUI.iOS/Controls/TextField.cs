@@ -184,7 +184,8 @@ public class TextField : Control
 
 	void ApplyTraits()
 	{
-		Ui.TextContentType = ContentType(contentKind);
+		ApplyContentType(Ui.TextContentType, contentKind, type => Ui.TextContentType = type);
+
 		Ui.ClearButtonMode = clearButton switch
 		{
 			ClearButton.WhileEditing => UITextFieldViewMode.WhileEditing,
@@ -204,9 +205,14 @@ public class TextField : Control
 		Ui.EnablesReturnKeyAutomatically = requiresText;
 	}
 
-	internal static NSString? ContentType(
-		ContentKind kind) =>
-		kind switch
+	// the binding setter rejects null: None leaves the system default alone, and clearing a
+	// previously set kind writes the empty string — UIKit's spelling for "explicitly nothing"
+	internal static void ApplyContentType(
+		NSString? current,
+		ContentKind kind,
+		Action<NSString> assign)
+	{
+		NSString? type = kind switch
 		{
 			ContentKind.Username => UITextContentType.Username,
 			ContentKind.Password => UITextContentType.Password,
@@ -219,6 +225,12 @@ public class TextField : Control
 			ContentKind.Url => UITextContentType.Url,
 			_ => null
 		};
+
+		if (type is not null)
+			assign(type);
+		else if (current is not null)
+			assign(new(""));
+	}
 
 	void ApplyKeyboard() =>
 		Ui.KeyboardType = keyboard switch

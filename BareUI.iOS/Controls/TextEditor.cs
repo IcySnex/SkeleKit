@@ -117,7 +117,8 @@ public class TextEditor : Control
 
 	void ApplyTraits()
 	{
-		Ui.TextContentType = TextField.ContentType(contentKind);
+		TextField.ApplyContentType(Ui.TextContentType, contentKind, type => Ui.TextContentType = type);
+
 		Ui.AutocapitalizationType = capitalization switch
 		{
 			Capitalization.None => UITextAutocapitalizationType.None,
