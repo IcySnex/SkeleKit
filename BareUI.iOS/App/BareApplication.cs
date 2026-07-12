@@ -72,7 +72,7 @@ public class BareApplication
 
 		UINavigationController Stack(Type? viewModel, bool prefersLargeTitles = false)
 		{
-			UINavigationController stack = new(Page(viewModel));
+			UINavigationController stack = new BareStack(Page(viewModel));
 			stack.NavigationBar.PrefersLargeTitles = prefersLargeTitles;
 
 			return stack;
@@ -125,4 +125,20 @@ public class BareApplication
 		Current = this;
 		UIApplication.Main(args, null, typeof(BareApplicationDelegate));
 	}
+}
+
+// a plain stack decides the status bar itself; this one asks the visible page
+internal sealed class BareStack : UINavigationController
+{
+	public BareStack(
+		UIViewController root) : base(root)
+	{ }
+
+	public BareStack(
+		ObjCRuntime.NativeHandle handle) : base(handle)
+	{ }
+
+
+	public override UIViewController? ChildViewControllerForStatusBarStyle() =>
+		TopViewController;
 }

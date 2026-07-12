@@ -44,6 +44,31 @@ public abstract partial class ContentView : Panel
 	public PageBackground BackgroundStyle { get; set; } = PageBackground.Default;
 
 	/// <summary>
+	/// The back button title the next pushed page shows, or null for this page's title.
+	/// </summary>
+	public string? BackButtonTitle { get; set; }
+
+	/// <summary>
+	/// How the next pushed page's back button represents this page.
+	/// </summary>
+	public BackButtonStyle BackButtonStyle { get; set; }
+
+	/// <summary>
+	/// The small line of text above the navigation title, or null for none.
+	/// </summary>
+	public string? Prompt { get; set; }
+
+	/// <summary>
+	/// The status bar look for this page.
+	/// </summary>
+	public StatusBarStyle StatusBar { get; set; }
+
+	/// <summary>
+	/// Hides the tab bar while this page is on top of the stack.
+	/// </summary>
+	public bool HidesTabBar { get; set; }
+
+	/// <summary>
 	/// Buttons in the navigation bar.
 	/// </summary>
 	public IList<ToolbarItem> ToolbarItems { get; } = [];
@@ -52,6 +77,11 @@ public abstract partial class ContentView : Panel
 	/// Placeholder for the navigation bar's search field. Setting it shows the search bar.
 	/// </summary>
 	public string? SearchPlaceholder { get; set; }
+
+	/// <summary>
+	/// Whether the search bar collapses into the bar as the content scrolls.
+	/// </summary>
+	public bool HidesSearchBarWhenScrolling { get; set; }
 
 	/// <summary>
 	/// Invoked as the user types in the search field.

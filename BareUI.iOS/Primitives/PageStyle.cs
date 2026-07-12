@@ -36,3 +36,45 @@ public enum PageBackground
 	/// </summary>
 	None
 }
+
+/// <summary>
+/// How the next pushed page's back button represents this page.
+/// </summary>
+public enum BackButtonStyle
+{
+	/// <summary>
+	/// The page title, shortened to "Back" when space runs out.
+	/// </summary>
+	Default,
+
+	/// <summary>
+	/// Always the generic "Back", never the title.
+	/// </summary>
+	Generic,
+
+	/// <summary>
+	/// The chevron alone.
+	/// </summary>
+	Minimal
+}
+
+/// <summary>
+/// The status bar look a page asks for.
+/// </summary>
+public enum StatusBarStyle
+{
+	/// <summary>
+	/// Follows the system appearance.
+	/// </summary>
+	Default,
+
+	/// <summary>
+	/// White content, for dark page backgrounds.
+	/// </summary>
+	Light,
+
+	/// <summary>
+	/// Black content, for light page backgrounds.
+	/// </summary>
+	Dark
+}

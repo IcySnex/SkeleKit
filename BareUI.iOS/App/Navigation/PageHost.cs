@@ -71,6 +71,8 @@ internal sealed class PageHost : UIViewController
 		this.Page = page;
 		page.Host = this;
 
+		HidesBottomBarWhenPushed = page.HidesTabBar;
+
 		NSNotificationCenter.DefaultCenter.AddObserver(
 			this,
 			new("keyboardFrameChanged:"),
@@ -94,6 +96,14 @@ internal sealed class PageHost : UIViewController
 
 
 	public ContentView? Page { get; }
+
+	public override UIStatusBarStyle PreferredStatusBarStyle() =>
+		Page?.StatusBar switch
+		{
+			StatusBarStyle.Light => UIStatusBarStyle.LightContent,
+			StatusBarStyle.Dark => UIStatusBarStyle.DarkContent,
+			_ => UIStatusBarStyle.Default
+		};
 
 
 	[Export("contentSizeChanged:")]
@@ -126,6 +136,14 @@ internal sealed class PageHost : UIViewController
 		};
 
 		NavigationItem.Title = page.Title.Value;
+		NavigationItem.Prompt = page.Prompt;
+		NavigationItem.BackButtonTitle = page.BackButtonTitle;
+		NavigationItem.BackButtonDisplayMode = page.BackButtonStyle switch
+		{
+			BackButtonStyle.Generic => UINavigationItemBackButtonDisplayMode.Generic,
+			BackButtonStyle.Minimal => UINavigationItemBackButtonDisplayMode.Minimal,
+			_ => UINavigationItemBackButtonDisplayMode.Default
+		};
 
 		NavigationItem.LargeTitleDisplayMode = page.TitleStyle is TitleStyle.Large
 			? UINavigationItemLargeTitleDisplayMode.Always
@@ -187,6 +205,9 @@ internal sealed class PageHost : UIViewController
 		}
 
 		NavigationItem.LeftBarButtonItems = [.. leading];
+
+		// leading items sit next to Back, they do not replace it
+		NavigationItem.LeftItemsSupplementBackButton = true;
 		NavigationItem.RightBarButtonItems = [.. trailing];
 	}
 
@@ -205,7 +226,7 @@ internal sealed class PageHost : UIViewController
 		search.SearchBar.TextChanged += (_, e) => page.NotifySearch(e.SearchText);
 
 		NavigationItem.SearchController = search;
-		NavigationItem.HidesSearchBarWhenScrolling = false;
+		NavigationItem.HidesSearchBarWhenScrolling = page.HidesSearchBarWhenScrolling;
 
 		DefinesPresentationContext = true;
 	}
