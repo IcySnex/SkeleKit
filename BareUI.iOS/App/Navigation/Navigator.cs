@@ -1,27 +1,76 @@
-using UIKit;
-
 namespace BareUI;
 
-sealed class Navigator(
+internal sealed class Navigator(
 	ViewRegistry registry,
 	IServiceProvider services,
 	Func<UINavigationController?> currentStack) : INavigator
 {
-	// UIKit retains view controllers natively only; without these the GC eats the managed peers
+	static UIViewController? Top()
+	{
+		UIViewController? controller = UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows)
+			.FirstOrDefault(window => window.IsKeyWindow)?
+			.RootViewController;
+
+		while (controller?.PresentedViewController is UIViewController presented)
+			controller = presented;
+
+		return controller;
+	}
+
+	static void Present<T>(
+		UIAlertController alert,
+		TaskCompletionSource<T> completion)
+	{
+		if (Top() is UIViewController top)
+			top.PresentViewController(alert, true, null);
+		else
+			completion.SetResult(default!);
+	}
+
+	static void Present(
+		UIAlertController alert,
+		TaskCompletionSource completion)
+	{
+		if (Top() is UIViewController top)
+			top.PresentViewController(alert, true, null);
+		else
+			completion.SetResult();
+	}
+
+
 	readonly List<PageHost> hosts = [];
+
+
+	PageHost Track(
+		ContentView page)
+	{
+		PageHost host = new(page);
+		hosts.Add(host);
+
+		return host;
+	}
+
+	void Prune()
+	{
+		UIViewController[] stack = currentStack()?.ViewControllers ?? [];
+
+		hosts.RemoveAll(host => !stack.Contains(host) && host.PresentingViewController is null);
+	}
+
 
 	public Task PushAsync<TViewModel>()
 		where TViewModel : class =>
 		PushAsync(registry.CreateViewModel(typeof(TViewModel), services));
-
 	public Task PushAsync(
 		Type viewModel) =>
 		PushAsync(registry.CreateViewModel(viewModel, services));
-
 	public Task PushAsync(
 		object viewModel)
 	{
-		if (currentStack() is not { } stack)
+		if (currentStack() is not UINavigationController stack)
 			throw new InvalidOperationException("There is no navigation stack to push onto.");
 
 		PageHost host = Track(registry.CreatePage(viewModel));
@@ -46,11 +95,15 @@ sealed class Navigator(
 		return Task.CompletedTask;
 	}
 
+
 	public Task PresentAsync<TViewModel>(
 		ModalStyle style)
 		where TViewModel : class =>
 		PresentAsync(registry.CreateViewModel(typeof(TViewModel), services), style);
-
+	public Task PresentAsync(
+		Type viewModel,
+		ModalStyle style) =>
+		PresentAsync(registry.CreateViewModel(viewModel, services), style);
 	public Task PresentAsync(
 		object viewModel,
 		ModalStyle style)
@@ -68,7 +121,7 @@ sealed class Navigator(
 			_ => UIModalPresentationStyle.PageSheet
 		};
 
-		if (style.Presentation is ModalPresentation.Sheet && wrapper.SheetPresentationController is { } sheet)
+		if (style.Presentation is ModalPresentation.Sheet && wrapper.SheetPresentationController is UISheetPresentationController sheet)
 			sheet.Detents = style.Detent is Detent.Medium
 				? [UISheetPresentationControllerDetent.CreateMediumDetent()]
 				: [UISheetPresentationControllerDetent.CreateLargeDetent()];
@@ -82,7 +135,7 @@ sealed class Navigator(
 	{
 		TaskCompletionSource completion = new();
 
-		if (Top() is { } top)
+		if (Top() is UIViewController top)
 			top.DismissViewController(true, () =>
 			{
 				Prune();
@@ -93,6 +146,7 @@ sealed class Navigator(
 
 		return completion.Task;
 	}
+
 
 	public Task AlertAsync(
 		string title,
@@ -143,57 +197,5 @@ sealed class Navigator(
 		Present(sheet, completion);
 
 		return completion.Task;
-	}
-
-	void Present<T>(
-		UIAlertController alert,
-		TaskCompletionSource<T> completion)
-	{
-		if (Top() is { } top)
-			top.PresentViewController(alert, true, null);
-		else
-			completion.SetResult(default!);
-	}
-
-	void Present(
-		UIAlertController alert,
-		TaskCompletionSource completion)
-	{
-		if (Top() is { } top)
-			top.PresentViewController(alert, true, null);
-		else
-			completion.SetResult();
-	}
-
-	PageHost Track(
-		ContentView page)
-	{
-		PageHost host = new(page);
-		hosts.Add(host);
-
-		return host;
-	}
-
-	// drop managed refs to hosts UIKit no longer holds
-	void Prune()
-	{
-		UIViewController[] stack = currentStack()?.ViewControllers ?? [];
-
-		hosts.RemoveAll(host => !stack.Contains(host) && host.PresentingViewController is null);
-	}
-
-	static UIViewController? Top()
-	{
-		UIViewController? controller = UIApplication.SharedApplication
-			.ConnectedScenes
-			.OfType<UIWindowScene>()
-			.SelectMany(scene => scene.Windows)
-			.FirstOrDefault(window => window.IsKeyWindow)?
-			.RootViewController;
-
-		while (controller?.PresentedViewController is { } presented)
-			controller = presented;
-
-		return controller;
 	}
 }

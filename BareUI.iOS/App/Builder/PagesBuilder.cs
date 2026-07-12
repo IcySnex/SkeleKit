@@ -13,6 +13,7 @@ public sealed class PagesBuilder
 		this.registry = registry;
 	}
 
+
 	/// <summary>
 	/// A fresh page instance per navigation. The usual choice.
 	/// </summary>

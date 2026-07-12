@@ -6,7 +6,7 @@ using BareUI.Gallery.Views;
 using BareUI.Gallery.Views.Demos;
 using Microsoft.Extensions.DependencyInjection;
 
-BareApp.Create()
+BareApplication.CreateBuilder()
 	.UseServices(services =>
 	{
 		services.AddSingleton<IDemoCatalog, DemoCatalog>();
@@ -66,6 +66,8 @@ BareApp.Create()
 		pages.AddTransient<LiveListDemo>();
 	})
 	.Tabs(tabs => tabs
-		.Tab<MenuView>("Controls", icon: "square.grid.2x2")
-		.Tab<BindingView>("Bindings", icon: "link"))
+		.LargeTitles()
+		.Tab<MenuView>("Controls", "square.grid.2x2")
+		.Tab<BindingView>("Bindings", "link"))
+	.Build()
 	.Run(args);

@@ -44,7 +44,7 @@ public partial class LiveListDemoViewModel : ObservableObject
 		TodoItem item)
 	{
 		Items.Remove(item);
-		Haptics.Notify(success: false);
+		Haptics.Notify(HapticsNotification.Success);
 	}
 
 	[RelayCommand]

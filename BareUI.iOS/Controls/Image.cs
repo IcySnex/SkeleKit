@@ -8,7 +8,7 @@ namespace BareUI;
 public class Image : Control
 {
 	/// <summary>
-	/// The loader used for URL sources. Set it through <c>BareApp.UseImageLoader(...)</c>.
+	/// The loader used for URL sources. Set it through <c>BareApplicationBuilder.UseImageLoader(...)</c>.
 	/// </summary>
 	internal static IImageLoader Loader { get; set; } = new HttpImageLoader();
 

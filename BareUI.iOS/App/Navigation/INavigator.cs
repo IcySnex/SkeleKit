@@ -1,27 +1,25 @@
 namespace BareUI;
 
 /// <summary>
-/// Navigation and dialogs, driven from a ViewModel. Inject it; never touch UIKit.
+/// Navigation and dialogs, driven from a ViewModel.
 /// </summary>
 public interface INavigator
 {
 	/// <summary>
 	/// Pushes the page mapped to <typeparamref name="TViewModel"/>, resolving the ViewModel from services.
 	/// </summary>
-	Task PushAsync<TViewModel>()
-		where TViewModel : class;
-
+	Task PushAsync<TViewModel>() where TViewModel : class;
+	/// <summary>
+	/// Pushes the page for a ViewModel type resolved from services.
+	/// </summary>
+	Task PushAsync(
+		Type viewModel);
 	/// <summary>
 	/// Pushes the page mapped to this ViewModel instance.
 	/// </summary>
 	Task PushAsync(
 		object viewModel);
 
-	/// <summary>
-	/// Pushes the page for a ViewModel type resolved from services.
-	/// </summary>
-	Task PushAsync(
-		Type viewModel);
 
 	/// <summary>
 	/// Pops the top page.
@@ -33,13 +31,18 @@ public interface INavigator
 	/// </summary>
 	Task PopToRootAsync();
 
+
 	/// <summary>
 	/// Presents the page mapped to <typeparamref name="TViewModel"/> modally.
 	/// </summary>
 	Task PresentAsync<TViewModel>(
-		ModalStyle style)
-		where TViewModel : class;
-
+		ModalStyle style) where TViewModel : class;
+	/// <summary>
+	/// Presents the page for a ViewModel type resolved from services.
+	/// </summary>
+	Task PresentAsync(
+		Type viewModel,
+		ModalStyle style);
 	/// <summary>
 	/// Presents the page mapped to this ViewModel instance modally.
 	/// </summary>
@@ -51,6 +54,7 @@ public interface INavigator
 	/// Dismisses the current modal.
 	/// </summary>
 	Task DismissAsync();
+
 
 	/// <summary>
 	/// Shows a message with a single dismiss button.
@@ -70,7 +74,7 @@ public interface INavigator
 		string cancel = "Cancel");
 
 	/// <summary>
-	/// Shows an action sheet; returns the chosen option, or null when cancelled.
+	/// Shows an action sheet; returns the chosen option, or null when canceled.
 	/// </summary>
 	Task<string?> ActionSheetAsync(
 		string title,

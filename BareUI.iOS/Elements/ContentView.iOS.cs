@@ -18,7 +18,7 @@ public abstract partial class ContentView
 	internal Thickness PageSafeArea { get; set; } = Thickness.Zero;
 
 	partial void ApplyTitleCore() =>
-		Host?.SetTitle(Title.Value);
+		Host?.NavigationItem.Title = Title.Value;
 
 	// a scrolling page bleeds vertically by default, so its content slides under the bars and they
 	// blur over it. Never horizontally: nothing goes under the notch unless it asks to.

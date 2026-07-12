@@ -1,33 +1,6 @@
 namespace BareUI;
 
 /// <summary>
-/// How a modal page is presented.
-/// </summary>
-public enum ModalPresentation
-{
-	/// <summary>A sheet the user can swipe away.</summary>
-	Sheet,
-
-	/// <summary>Covers the whole screen.</summary>
-	FullScreen,
-
-	/// <summary>A centred card on iPad, a sheet on iPhone.</summary>
-	FormSheet
-}
-
-/// <summary>
-/// How far a sheet opens.
-/// </summary>
-public enum Detent
-{
-	/// <summary>Half height.</summary>
-	Medium,
-
-	/// <summary>Full height.</summary>
-	Large
-}
-
-/// <summary>
 /// The presentation style of a modal page.
 /// </summary>
 public readonly struct ModalStyle

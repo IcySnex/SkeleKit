@@ -22,7 +22,7 @@
                     <key>UISceneConfigurationName</key>
                     <string>Default</string>
                     <key>UISceneDelegateClassName</key>
-                    <string>BareSceneDelegate</string>
+                    <string>BareWindowSceneDelegate</string>
                 </dict>
             </array>
         </dict>

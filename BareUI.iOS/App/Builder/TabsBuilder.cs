@@ -5,6 +5,12 @@ namespace BareUI;
 /// </summary>
 public sealed class TabsBuilder
 {
+	internal sealed record Definition(
+		Type ViewModel,
+		string Title,
+		string Icon);
+
+
 	readonly ViewRegistry registry;
 
 	internal TabsBuilder(
@@ -13,11 +19,13 @@ public sealed class TabsBuilder
 		this.registry = registry;
 	}
 
-	internal List<TabDefinition> Definitions { get; } = [];
+	internal List<Definition> Definitions { get; } = [];
+
 
 	internal bool UseLargeTitles { get; private set; }
 
 	internal bool UseSidebar { get; private set; }
+
 
 	/// <summary>
 	/// Adds a tab rooted at <typeparamref name="TView"/>, which must be registered in UsePages.
@@ -52,8 +60,3 @@ public sealed class TabsBuilder
 		return this;
 	}
 }
-
-sealed record TabDefinition(
-	Type ViewModel,
-	string Title,
-	string Icon);
