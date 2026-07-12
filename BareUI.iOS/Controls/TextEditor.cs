@@ -4,7 +4,7 @@ using UIKit;
 namespace BareUI;
 
 /// <summary>
-/// A multi-line text input wrapping <c>UITextView</c>.
+/// A multi-line text input.
 /// </summary>
 public class TextEditor : Control
 {
@@ -44,8 +44,8 @@ public class TextEditor : Control
 			AdjustsFontForContentSizeCategory = true
 		};
 
-		view.Changed += (sender, e) => OnChanged();
-		view.Ended += (sender, e) => OnEditingEnded();
+		view.Changed += (_, _) => OnChanged();
+		view.Ended += (_, _) => OnEditingEnded();
 
 		return view;
 	}
@@ -56,8 +56,7 @@ public class TextEditor : Control
 		ApplyFont();
 	}
 
-	UITextView Ui =>
-		(UITextView)Native;
+	UITextView Ui => (UITextView)Native;
 
 	void ApplyText() =>
 		Ui.Text = text;

@@ -60,6 +60,8 @@ public readonly record struct GridLength
 	/// <summary>
 	/// A fixed track of <paramref name="points"/> points.
 	/// </summary>
+	/// <param name="points">The fixed size in layout points.</param>
+	/// <returns>A new fixed-size grid length configuration.</returns>
 	public static GridLength Pixels(
 		double points) =>
 		new(points, GridUnitType.Pixel);
@@ -67,6 +69,8 @@ public readonly record struct GridLength
 	/// <summary>
 	/// A star track with the given <paramref name="weight"/> of the remaining space.
 	/// </summary>
+	/// <param name="weight">The proportional allocation factor.</param>
+	/// <returns>A new proportional grid length configuration.</returns>
 	public static GridLength Stars(
 		double weight) =>
 		new(weight, GridUnitType.Star);
@@ -75,25 +79,23 @@ public readonly record struct GridLength
 	/// <summary>
 	/// True for an <see cref="GridUnitType.Auto"/> track.
 	/// </summary>
-	public bool IsAuto =>
-		Type == GridUnitType.Auto;
+	public bool IsAuto => Type == GridUnitType.Auto;
 
 	/// <summary>
 	/// True for a <see cref="GridUnitType.Pixel"/> track.
 	/// </summary>
-	public bool IsAbsolute =>
-		Type == GridUnitType.Pixel;
+	public bool IsAbsolute => Type == GridUnitType.Pixel;
 
 	/// <summary>
 	/// True for a <see cref="GridUnitType.Star"/> track.
 	/// </summary>
-	public bool IsStar =>
-		Type == GridUnitType.Star;
+	public bool IsStar => Type == GridUnitType.Star;
 
 
 	/// <summary>
 	/// A fixed track from a point value (so <c>Columns = { 200, GridLength.Star }</c> compiles).
 	/// </summary>
+	/// <param name="points">The absolute size in layout points.</param>
 	public static implicit operator GridLength(
 		double points) =>
 		Pixels(points);

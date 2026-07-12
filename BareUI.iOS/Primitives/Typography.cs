@@ -5,31 +5,49 @@ namespace BareUI;
 /// </summary>
 public enum FontWeight
 {
-	/// <summary>Ultra light.</summary>
+	/// <summary>
+	/// Ultra light.
+	/// </summary>
 	UltraLight,
 
-	/// <summary>Thin.</summary>
+	/// <summary>
+	/// Thin.
+	/// </summary>
 	Thin,
 
-	/// <summary>Light.</summary>
+	/// <summary>
+	/// Light.
+	/// </summary>
 	Light,
 
-	/// <summary>The default weight.</summary>
+	/// <summary>
+	/// The default weight.
+	/// </summary>
 	Regular,
 
-	/// <summary>Medium.</summary>
+	/// <summary>
+	/// Medium.
+	/// </summary>
 	Medium,
 
-	/// <summary>Semibold.</summary>
+	/// <summary>
+	/// Semibold.
+	/// </summary>
 	Semibold,
 
-	/// <summary>Bold.</summary>
+	/// <summary>
+	/// Bold.
+	/// </summary>
 	Bold,
 
-	/// <summary>Heavy.</summary>
+	/// <summary>
+	/// Heavy.
+	/// </summary>
 	Heavy,
 
-	/// <summary>Black.</summary>
+	/// <summary>
+	/// Black.
+	/// </summary>
 	Black
 }
 
@@ -38,16 +56,24 @@ public enum FontWeight
 /// </summary>
 public enum FontDesign
 {
-	/// <summary>The system font.</summary>
+	/// <summary>
+	/// The system font.
+	/// </summary>
 	Default,
 
-	/// <summary>The rounded system font.</summary>
+	/// <summary>
+	/// The rounded system font.
+	/// </summary>
 	Rounded,
 
-	/// <summary>A serif face.</summary>
+	/// <summary>
+	/// A serif face.
+	/// </summary>
 	Serif,
 
-	/// <summary>A monospaced face.</summary>
+	/// <summary>
+	/// A monospaced face.
+	/// </summary>
 	Monospaced
 }
 
@@ -56,37 +82,59 @@ public enum FontDesign
 /// </summary>
 public enum TextStyle
 {
-	/// <summary>The largest title, used once per screen.</summary>
+	/// <summary>
+	/// The largest title, used once per screen.
+	/// </summary>
 	LargeTitle,
 
-	/// <summary>The first title level.</summary>
+	/// <summary>
+	/// The first title level.
+	/// </summary>
 	Title1,
 
-	/// <summary>The second title level.</summary>
+	/// <summary>
+	/// The second title level.
+	/// </summary>
 	Title2,
 
-	/// <summary>The third title level.</summary>
+	/// <summary>
+	/// The third title level.
+	/// </summary>
 	Title3,
 
-	/// <summary>An emphasized heading above a block of body text.</summary>
+	/// <summary>
+	/// An emphasized heading above a block of body text.
+	/// </summary>
 	Headline,
 
-	/// <summary>A heading below <see cref="Headline"/>.</summary>
+	/// <summary>
+	/// A heading below <see cref="Headline"/>.
+	/// </summary>
 	Subheadline,
 
-	/// <summary>Running text.</summary>
+	/// <summary>
+	/// Running text.
+	/// </summary>
 	Body,
 
-	/// <summary>A remark set slightly smaller than body text.</summary>
+	/// <summary>
+	/// A remark set slightly smaller than body text.
+	/// </summary>
 	Callout,
 
-	/// <summary>A footnote.</summary>
+	/// <summary>
+	/// A footnote.
+	/// </summary>
 	Footnote,
 
-	/// <summary>The first caption level.</summary>
+	/// <summary>
+	/// The first caption level.
+	/// </summary>
 	Caption1,
 
-	/// <summary>The second, smallest caption level.</summary>
+	/// <summary>
+	/// The second, smallest caption level.
+	/// </summary>
 	Caption2
 }
 
@@ -95,15 +143,23 @@ public enum TextStyle
 /// </summary>
 public enum Truncation
 {
-	/// <summary>Wrap onto the next line, up to MaxLines.</summary>
+	/// <summary>
+	/// Wrap onto the next line, up to MaxLines.
+	/// </summary>
 	None,
 
-	/// <summary>An ellipsis at the end.</summary>
+	/// <summary>
+	/// An ellipsis at the end.
+	/// </summary>
 	Tail,
 
-	/// <summary>An ellipsis at the start.</summary>
+	/// <summary>
+	/// An ellipsis at the start.
+	/// </summary>
 	Head,
 
-	/// <summary>An ellipsis in the middle.</summary>
+	/// <summary>
+	/// An ellipsis in the middle.
+	/// </summary>
 	Middle
 }

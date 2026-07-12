@@ -68,7 +68,7 @@ public class MeasureCacheTests
 	{
 		StubLeaf first = new(10, 10);
 		StubLeaf second = new(10, 10);
-		VStack stack = new() { Children = { first, second } };
+		StackPanel stack = new() { Children = { first, second } };
 
 		stack.Measure(new(100, 100));
 		int before = first.MeasureCount;
@@ -84,8 +84,8 @@ public class MeasureCacheTests
 	public void ChildChange_InvalidatesAncestors()
 	{
 		StubLeaf leaf = new(10, 10);
-		VStack inner = new() { Children = { leaf } };
-		VStack outer = new() { Children = { inner } };
+		StackPanel inner = new() { Children = { leaf } };
+		StackPanel outer = new() { Children = { inner } };
 
 		outer.Measure(new(100, 100));
 		double before = outer.DesiredSize.Height;
@@ -100,8 +100,8 @@ public class MeasureCacheTests
 	public void GrandchildChange_InvalidatesRoot()
 	{
 		StubLeaf leaf = new(10, 10);
-		VStack inner = new() { Children = { leaf } };
-		VStack outer = new() { Children = { inner } };
+		StackPanel inner = new() { Children = { leaf } };
+		StackPanel outer = new() { Children = { inner } };
 
 		outer.Measure(new(100, 100));
 

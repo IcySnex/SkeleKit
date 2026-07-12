@@ -5,21 +5,33 @@ namespace BareUI;
 /// </summary>
 public enum KeyboardType
 {
-	/// <summary>The standard keyboard.</summary>
+	/// <summary>
+	/// The standard keyboard.
+	/// </summary>
 	Default,
 
-	/// <summary>A numeric keypad (digits only).</summary>
+	/// <summary>
+	/// A numeric keypad (digits only).
+	/// </summary>
 	Numeric,
 
-	/// <summary>A numeric keypad with a decimal point.</summary>
+	/// <summary>
+	/// A numeric keypad with a decimal point.
+	/// </summary>
 	Decimal,
 
-	/// <summary>A keypad for entering phone numbers.</summary>
+	/// <summary>
+	/// A keypad for entering phone numbers.
+	/// </summary>
 	Phone,
 
-	/// <summary>A keyboard optimized for entering email addresses.</summary>
+	/// <summary>
+	/// A keyboard optimized for entering email addresses.
+	/// </summary>
 	Email,
 
-	/// <summary>A keyboard optimized for entering URLs.</summary>
+	/// <summary>
+	/// A keyboard optimized for entering URLs.
+	/// </summary>
 	Url
 }

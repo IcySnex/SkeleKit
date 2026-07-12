@@ -8,7 +8,7 @@ namespace BareUI.Gallery.Views.Demos;
 public class MovieCell : ItemView<Movie>
 {
 	public MovieCell() =>
-		Content = new VStack
+		Content = new StackPanel
 		{
 			Spacing = 6,
 			Children =

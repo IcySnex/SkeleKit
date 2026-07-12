@@ -5,22 +5,33 @@ namespace BareUI;
 /// </summary>
 public enum GestureState
 {
-	/// <summary>The finger went down and the gesture was recognized.</summary>
+	/// <summary>
+	/// The finger went down and the gesture was recognized.
+	/// </summary>
 	Began,
 
-	/// <summary>The finger moved.</summary>
+	/// <summary>
+	/// The finger moved.
+	/// </summary>
 	Changed,
 
-	/// <summary>The finger lifted.</summary>
+	/// <summary>
+	/// The finger lifted.
+	/// </summary>
 	Ended,
 
-	/// <summary>The system took the gesture away.</summary>
+	/// <summary>
+	/// The system took the gesture away.
+	/// </summary>
 	Cancelled
 }
 
 /// <summary>
 /// One update of a drag: how far it has moved from where it started, and how fast it is going.
 /// </summary>
+/// <param name="State">The current execution state of the gesture lifecycle.</param>
+/// <param name="Translation">The cumulative distance moved from the start position.</param>
+/// <param name="Velocity">The current speed and direction of the movement.</param>
 public readonly record struct PanGesture(
 	GestureState State,
 	Point Translation,

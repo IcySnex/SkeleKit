@@ -5,7 +5,7 @@ namespace BareUI.Gallery.Views.Demos;
 public class TodoCell : ItemView<TodoItem>
 {
 	public TodoCell() =>
-		Content = new VStack
+		Content = new StackPanel
 		{
 			Spacing = 2,
 			Padding = new Thickness(16, 10),

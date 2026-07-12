@@ -61,12 +61,13 @@ internal sealed class Navigator(
 	}
 
 
-	public Task PushAsync<TViewModel>()
-		where TViewModel : class =>
+	public Task PushAsync<TViewModel>() where TViewModel : class =>
 		PushAsync(registry.CreateViewModel(typeof(TViewModel), services));
+
 	public Task PushAsync(
 		Type viewModel) =>
 		PushAsync(registry.CreateViewModel(viewModel, services));
+
 	public Task PushAsync(
 		object viewModel)
 	{
@@ -97,13 +98,14 @@ internal sealed class Navigator(
 
 
 	public Task PresentAsync<TViewModel>(
-		ModalStyle style)
-		where TViewModel : class =>
+		ModalStyle style) where TViewModel : class =>
 		PresentAsync(registry.CreateViewModel(typeof(TViewModel), services), style);
+
 	public Task PresentAsync(
 		Type viewModel,
 		ModalStyle style) =>
 		PresentAsync(registry.CreateViewModel(viewModel, services), style);
+
 	public Task PresentAsync(
 		object viewModel,
 		ModalStyle style)
@@ -118,10 +120,15 @@ internal sealed class Navigator(
 		{
 			ModalPresentation.FullScreen => UIModalPresentationStyle.FullScreen,
 			ModalPresentation.FormSheet => UIModalPresentationStyle.FormSheet,
-			_ => UIModalPresentationStyle.PageSheet
+			ModalPresentation.CurrentContext => UIModalPresentationStyle.CurrentContext,
+			ModalPresentation.OverFullScreen => UIModalPresentationStyle.OverFullScreen,
+			ModalPresentation.OverCurrentContext => UIModalPresentationStyle.OverCurrentContext,
+			ModalPresentation.Popover => UIModalPresentationStyle.Popover,
+			ModalPresentation.PageSheet => UIModalPresentationStyle.PageSheet,
+			_ => UIModalPresentationStyle.Automatic
 		};
 
-		if (style.Presentation is ModalPresentation.Sheet && wrapper.SheetPresentationController is UISheetPresentationController sheet)
+		if (style.Presentation is ModalPresentation.PageSheet && wrapper.SheetPresentationController is UISheetPresentationController sheet)
 			sheet.Detents = style.Detent is Detent.Medium
 				? [UISheetPresentationControllerDetent.CreateMediumDetent()]
 				: [UISheetPresentationControllerDetent.CreateLargeDetent()];
@@ -182,7 +189,7 @@ internal sealed class Navigator(
 
 	public Task<string?> ActionSheetAsync(
 		string title,
-		string cancel,
+		string cancel = "Cancel",
 		params string[] options)
 	{
 		TaskCompletionSource<string?> completion = new();

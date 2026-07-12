@@ -1,9 +1,7 @@
-using UIKit;
-
 namespace BareUI;
 
 /// <summary>
-/// A continuous value picker wrapping <c>UISlider</c>.
+/// A continuous value picker.
 /// </summary>
 public class Slider : Control
 {
@@ -26,7 +24,7 @@ public class Slider : Control
 		get => minimum;
 		set => Set(ref minimum, value, ApplyRange, affectsMeasure: false);
 	}
-	double minimum = 0;
+	double minimum;
 
 	/// <summary>
 	/// The maximum selectable value.
@@ -47,7 +45,7 @@ public class Slider : Control
 	private protected override UIView CreateNative()
 	{
 		UISlider slider = new();
-		slider.ValueChanged += (sender, e) => OnValueChanged();
+		slider.ValueChanged += (_, _) => OnValueChanged();
 
 		return slider;
 	}

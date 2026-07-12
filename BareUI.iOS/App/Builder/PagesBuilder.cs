@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// Registers every page the app can show. Shells (tabs, stacks) only reference pages registered here.
+/// Registers the pages available in the application.
 /// </summary>
 public sealed class PagesBuilder
 {
@@ -15,8 +15,10 @@ public sealed class PagesBuilder
 
 
 	/// <summary>
-	/// A fresh page instance per navigation. The usual choice.
+	/// Registers a view that is recreated every time it is resolved.
 	/// </summary>
+	/// <typeparam name="TView">The view type to register.</typeparam>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddTransient<TView>()
 		where TView : ContentView, new()
 	{
@@ -26,8 +28,10 @@ public sealed class PagesBuilder
 	}
 
 	/// <summary>
-	/// One page instance reused for the app's lifetime, so it keeps its state (scroll position, input).
+	/// Registers a view that keeps a single shared instance throughout the lifecycle.
 	/// </summary>
+	/// <typeparam name="TView">The view type to register.</typeparam>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddSingleton<TView>()
 		where TView : ContentView, new()
 	{

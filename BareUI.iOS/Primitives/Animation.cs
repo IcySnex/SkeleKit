@@ -5,16 +5,24 @@ namespace BareUI;
 /// </summary>
 public enum Easing
 {
-	/// <summary>Constant speed.</summary>
+	/// <summary>
+	/// Constant speed.
+	/// </summary>
 	Linear,
 
-	/// <summary>Starts slow.</summary>
+	/// <summary>
+	/// Starts slow.
+	/// </summary>
 	EaseIn,
 
-	/// <summary>Ends slow.</summary>
+	/// <summary>
+	/// Ends slow.
+	/// </summary>
 	EaseOut,
 
-	/// <summary>Starts and ends slow. The default.</summary>
+	/// <summary>
+	/// Starts and ends slow. The default.
+	/// </summary>
 	EaseInOut
 }
 
@@ -59,6 +67,9 @@ public readonly record struct Animation
 	/// <summary>
 	/// An animation of <paramref name="duration"/> seconds following a curve.
 	/// </summary>
+	/// <param name="duration">The running time of the animation in seconds.</param>
+	/// <param name="easing">The speed distribution curve over the timeline.</param>
+	/// <returns>A new animation configuration.</returns>
 	public static Animation Ease(
 		double duration,
 		Easing easing = Easing.EaseInOut) =>
@@ -71,6 +82,9 @@ public readonly record struct Animation
 	/// <summary>
 	/// A spring that settles over <paramref name="duration"/> seconds; lower <paramref name="damping"/> bounces more.
 	/// </summary>
+	/// <param name="duration">The settlement time of the spring in seconds.</param>
+	/// <param name="damping">The resistance factor from 0.0 to 1.0.</param>
+	/// <returns>A new spring-based animation configuration.</returns>
 	public static Animation Spring(
 		double duration = 0.5,
 		double damping = 0.8) =>
@@ -80,9 +94,12 @@ public readonly record struct Animation
 			SpringDamping = damping
 		};
 
+
 	/// <summary>
 	/// The same animation, started <paramref name="seconds"/> later.
 	/// </summary>
+	/// <param name="seconds">The delay timing offset in seconds.</param>
+	/// <returns>A copy of this animation with the updated start delay.</returns>
 	public Animation After(
 		double seconds) =>
 		this with { Delay = seconds };

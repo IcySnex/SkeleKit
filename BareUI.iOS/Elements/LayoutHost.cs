@@ -1,13 +1,8 @@
-using CoreGraphics;
 using ObjCRuntime;
-using UIKit;
 
 namespace BareUI;
 
-/// <summary>
-/// The native <c>UIView</c> hosting a BareUI panel, bridging UIKit's sizing protocol to the measure/arrange engine.
-/// </summary>
-sealed class LayoutHost : UIView
+internal sealed class LayoutHost : UIView
 {
 	readonly View? element;
 
@@ -17,7 +12,6 @@ sealed class LayoutHost : UIView
 		this.element = element;
 	}
 
-	// marshaller needs this; only hit if the peer was collected, so element is gone
 	public LayoutHost(
 		NativeHandle handle) : base(handle)
 	{ }
@@ -30,7 +24,7 @@ sealed class LayoutHost : UIView
 			return CGSize.Empty;
 
 		Size desired = element.HostMeasure(new(size.Width, size.Height));
-		return new CGSize(desired.Width, desired.Height);
+		return new(desired.Width, desired.Height);
 	}
 
 	public override void LayoutSubviews()

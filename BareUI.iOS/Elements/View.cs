@@ -19,14 +19,13 @@ public abstract partial class View
 	/// </summary>
 	public IStyle? Style
 	{
-		get => style;
+		get;
 		set
 		{
-			style = value;
+			field = value;
 			value?.Apply(this);
 		}
 	}
-	IStyle? style;
 
 
 	/// <summary>
@@ -44,20 +43,18 @@ public abstract partial class View
 
 	readonly List<BindingBase> bindings = [];
 
-	object? bindingContext;
-
 	/// <summary>
 	/// The object bindings resolve against. Inherited from the parent unless set explicitly.
 	/// </summary>
 	public object? BindingContext
 	{
-		get => bindingContext ?? Parent?.BindingContext;
+		get => field ?? Parent?.BindingContext;
 		set
 		{
-			if (ReferenceEquals(bindingContext, value))
+			if (ReferenceEquals(field, value))
 				return;
 
-			bindingContext = value;
+			field = value;
 			OnBindingContextChanged();
 		}
 	}
@@ -216,10 +213,9 @@ public abstract partial class View
 	/// </summary>
 	public bool IsEnabled
 	{
-		get => isEnabled;
-		set => Set(ref isEnabled, value, ApplyInteraction, affectsMeasure: false);
-	}
-	bool isEnabled = true;
+		get;
+		set => Set(ref field, value, ApplyInteraction, affectsMeasure: false);
+	} = true;
 
 	/// <summary>
 	/// Command invoked when the view is tapped.
@@ -331,10 +327,9 @@ public abstract partial class View
 	/// </summary>
 	public SafeAreaEdges IgnoresSafeArea
 	{
-		get => ignoresSafeArea;
-		set => Set(ref ignoresSafeArea, value);
-	}
-	SafeAreaEdges ignoresSafeArea = SafeAreaEdges.None;
+		get;
+		set => Set(ref field, value);
+	} = SafeAreaEdges.None;
 
 	/// <summary>
 	/// Empty space around the view, outside its bounds.
@@ -371,40 +366,36 @@ public abstract partial class View
 	/// </summary>
 	public double MinWidth
 	{
-		get => minWidth;
-		set => Set(ref minWidth, value);
-	}
-	double minWidth = 0;
+		get;
+		set => Set(ref field, value);
+	} = 0;
 
 	/// <summary>
 	/// Maximum width in points.
 	/// </summary>
 	public double MaxWidth
 	{
-		get => maxWidth;
-		set => Set(ref maxWidth, value);
-	}
-	double maxWidth = double.PositiveInfinity;
+		get;
+		set => Set(ref field, value);
+	} = double.PositiveInfinity;
 
 	/// <summary>
 	/// Minimum height in points.
 	/// </summary>
 	public double MinHeight
 	{
-		get => minHeight;
-		set => Set(ref minHeight, value);
-	}
-	double minHeight = 0;
+		get;
+		set => Set(ref field, value);
+	} = 0;
 
 	/// <summary>
 	/// Maximum height in points.
 	/// </summary>
 	public double MaxHeight
 	{
-		get => maxHeight;
-		set => Set(ref maxHeight, value);
-	}
-	double maxHeight = double.PositiveInfinity;
+		get;
+		set => Set(ref field, value);
+	} = double.PositiveInfinity;
 
 	/// <summary>
 	/// How the view is placed within the horizontal space its parent gives it.
@@ -468,27 +459,25 @@ public abstract partial class View
 		get => cornerRadius;
 		set => Set(ref cornerRadius, value, ApplyVisualState, affectsMeasure: false);
 	}
-	double cornerRadius = 0;
+	double cornerRadius;
 
 	/// <summary>
 	/// A drop shadow behind the view, or null for none. A shadow needs unclipped bounds: it stops a corner radius from clipping the content, and an explicit <see cref="ClipsToBounds"/> hides it.
 	/// </summary>
 	public Shadow? Shadow
 	{
-		get => shadow;
-		set => Set(ref shadow, value, ApplyVisualState, affectsMeasure: false);
+		get;
+		set => Set(ref field, value, ApplyVisualState, affectsMeasure: false);
 	}
-	Shadow? shadow;
 
 	/// <summary>
 	/// When true, content is clipped to the bounds and corner radius.
 	/// </summary>
 	public bool ClipsToBounds
 	{
-		get => clipsToBounds;
-		set => Set(ref clipsToBounds, value, ApplyVisualState, affectsMeasure: false);
+		get;
+		set => Set(ref field, value, ApplyVisualState, affectsMeasure: false);
 	}
-	bool clipsToBounds;
 
 
 	// Transform: drawn-only, so it never disturbs layout. This is what a gesture drags and an animation moves.
@@ -504,7 +493,7 @@ public abstract partial class View
 	Point translation = Point.Zero;
 
 	/// <summary>
-	/// Scales the view about its centre, 1 being its laid-out size. Does not affect layout.
+	/// Scales the view about its center, 1 being its laid-out size. Does not affect layout.
 	/// </summary>
 	public double Scale
 	{
@@ -514,7 +503,7 @@ public abstract partial class View
 	double scale = 1;
 
 	/// <summary>
-	/// Rotates the view about its centre, in degrees. Does not affect layout.
+	/// Rotates the view about its center, in degrees. Does not affect layout.
 	/// </summary>
 	public double Rotation
 	{
@@ -523,9 +512,8 @@ public abstract partial class View
 	}
 	double rotation;
 
-	// a transformed view must be positioned by bounds+centre: setting Frame under a transform is undefined
-	private protected bool HasTransform =>
-		translation != Point.Zero || scale != 1 || rotation != 0;
+	// a transformed view must be positioned by bounds+center: setting Frame under a transform is undefined
+	private protected bool HasTransform => translation != Point.Zero || Math.Abs(scale - 1) > 0.00001 || Math.Abs(rotation) > 0.00001;
 
 	internal ViewState Capture() =>
 		new(translation, scale, rotation, opacity, cornerRadius, background, width, height, margin);
@@ -649,7 +637,7 @@ public abstract partial class View
 	}
 
 	/// <summary>
-	/// Second pass: positions the view within its slot, honouring margin and alignment.
+	/// Second pass: positions the view within its slot, honoring margin and alignment.
 	/// </summary>
 	public void Arrange(
 		Rect finalRect)

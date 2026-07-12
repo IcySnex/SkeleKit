@@ -15,15 +15,18 @@ public abstract partial class Panel : View
 	/// </summary>
 	public Thickness Padding
 	{
-		get => padding;
-		set => Set(ref padding, value);
-	}
-	Thickness padding = Thickness.Zero;
+		get;
+		set => Set(ref field, value);
+	} = Thickness.Zero;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="Panel"/> class.
+	/// </summary>
 	protected Panel()
 	{
 		Children = new(this, SyncChildren);
 	}
+
 
 	void SyncChildren()
 	{

@@ -1,10 +1,9 @@
-using UIKit;
-
 namespace BareUI;
 
 /// <summary>
 /// A menu-style selection button wrapping <c>UIButton</c> + <c>UIMenu</c>.
 /// </summary>
+/// <typeparam name="TItem">The reference type of individual selectable item objects populated within the menu structure.</typeparam>
 public class Picker<TItem> : Control
 	where TItem : class
 {
@@ -31,7 +30,7 @@ public class Picker<TItem> : Control
 	Binding<TItem?>? selectedBinding;
 
 	/// <summary>
-	/// How an item is labelled in the menu. Defaults to <c>ToString()</c>.
+	/// How an item is labeled in the menu. Defaults to <c>ToString()</c>.
 	/// </summary>
 	public Func<TItem, string> ItemTitle { get; set; } = item => item.ToString() ?? "";
 
@@ -74,7 +73,7 @@ public class Picker<TItem> : Control
 		{
 			TItem item = items[index];
 
-			actions[index] = UIAction.Create(ItemTitle(item), null, null, action => OnSelected(item));
+			actions[index] = UIAction.Create(ItemTitle(item), null, null, _ => OnSelected(item));
 
 			if (ReferenceEquals(item, selected))
 				actions[index].State = UIMenuElementState.On;

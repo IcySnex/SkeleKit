@@ -7,9 +7,6 @@ public abstract partial class ContentView
 {
 	internal PageHost? Host { get; set; }
 
-	/// <summary>
-	/// The hosting <c>UIViewController</c>. An escape hatch: app code should not need it.
-	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public UIViewController? Controller =>
 		Host;
@@ -20,8 +17,6 @@ public abstract partial class ContentView
 	partial void ApplyTitleCore() =>
 		Host?.NavigationItem.Title = Title.Value;
 
-	// a scrolling page bleeds vertically by default, so its content slides under the bars and they
-	// blur over it. Never horizontally: nothing goes under the notch unless it asks to.
 	private protected override void OnRealized()
 	{
 		if (ScrollsUnderBars

@@ -52,13 +52,20 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 ## Conventions
 
 - Tabs, file-scoped namespaces, each ctor/method parameter on its own line (matches Velura style).
-- Doc comments: standard `/// <summary>` block, summary text on **one line** (never wrap into
-  multiple `///` lines). Keep them terse.
+- Doc comments (**public API only**): always the full block form (`/// <summary>` on its own line,
+  never the compact `/// <summary>X</summary>` one-liner), summary text on **one** `///` line, plus
+  `<param>`/`<returns>`/`<typeparam>` tags on methods. **Internal/private members get no XML docs
+  at all** — an inline `//` where the code can't say it is enough.
 - Inline `//` comments: short fragments, lowercase, only when the code can't say it itself. No
   full-sentence prose, no multi-line blocks, no explaining a bugfix inline — that goes in the
   commit body.
 - Omit redundant modifiers/types: no `private` where it's already the default; target-typed
-  `new(...)` (no redundant type name); collection expressions `[]`. Matches Velura.
+  `new(...)` (no redundant type name); collection expressions `[]`. Matches Velura. Exception:
+  top-level `internal` is written out explicitly.
+- Prefer primary constructors, `field`-keyword semi-auto properties
+  (`get; set => Set(ref field, ...)`), and expression bodies joined onto one line when short
+  (`internal override bool Scrolls => true;`). Two blank lines between member groups
+  (fields / properties / methods).
 - **No `#if IOS`. Ever.** The library has zero preprocessor directives and stays that way. A
   wholly-iOS file goes in `Controls/` (or is named in the csproj's `net10.0` `Compile Remove`
   glob) and just uses UIKit directly. A file that mixes layout math with UIKit splits: neutral
@@ -89,7 +96,7 @@ Shape of the thing now:
 - **Element model**: `View` (lazy realize, WPF measure/arrange, `Parent`, `InvalidateMeasure`),
   `Panel`/`ViewCollection`, `LayoutHost`. Property pipeline is `Set(ref field, value, apply)`;
   `CreateNative` only *constructs*, every property is pushed through one `ApplyProperties()` hook.
-- **Panels**: `StackPanel` (+`VStack`/`HStack`), `Grid` (auto/star/px + spans + spacing), `Overlay`,
+- **Panels**: `StackPanel` (no `VStack`/`HStack` sugar — removed 2026-07-12), `Grid` (auto/star/px + spans + spacing), `Overlay`,
   `Border`, `ScrollView` (+`KeyboardDismiss`). Layout math unit-tested in the neutral TFM.
 - **Controls**: `Label`, `Button`, `Image`, `TextField`/`SecureField`/`TextEditor`, `Switch`,
   `Slider`, `Stepper`, `ProgressBar`, `ActivityIndicator`, `Divider`, `Picker`, `NativeView`.
@@ -201,7 +208,5 @@ Known debt:
 - v1 non-goals (see PLAN): animation *framework*, RTL, XAML; styling stops at ADR-008 (no
   state-based styles, no runtime theme switching past light/dark, no per-subtree themes).
   Accessibility custom actions still unwrapped.
-- `VStack`/`HStack` set `Orientation` in their **ctor body**, the one place the library breaks its
-  own rule — so a `Style<VStack>` touching `Orientation` loses. Nothing else does it.
 - M6 remaining: the Velura two-screen port (the acceptance test) and the on-device 120 Hz check.
 - No LICENSE file yet — needed before the package is published.

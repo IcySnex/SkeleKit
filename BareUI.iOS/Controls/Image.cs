@@ -1,9 +1,7 @@
-using UIKit;
-
 namespace BareUI;
 
 /// <summary>
-/// Displays an image from a symbol, bundle asset, or URL wrapping <c>UIImageView</c>.
+/// Displays an image from a symbol, bundle asset, or URL.
 /// </summary>
 public class Image : Control
 {
@@ -109,35 +107,42 @@ public class Image : Control
 		ImageSource source,
 		CancellationToken cancellationToken)
 	{
-		UIImage? image;
 		try
 		{
-			image = await Loader.LoadAsync(source.Value, cancellationToken);
-		}
-		catch (OperationCanceledException)
-		{
-			return;
+			UIImage? image;
+			try
+			{
+				image = await Loader.LoadAsync(source.Value, cancellationToken);
+			}
+			catch (OperationCanceledException)
+			{
+				return;
+			}
+			catch
+			{
+				// custom loader must not kill the process
+				return;
+			}
+
+			if (image is null || cancellationToken.IsCancellationRequested)
+				return;
+
+			MainThread.Post(() =>
+			{
+				// still realized, still same url?
+				if (cancellationToken.IsCancellationRequested || !IsRealized)
+					return;
+
+				if (this.source is not { Kind: ImageSourceKind.Url } current || current.Value != source.Value)
+					return;
+
+				Ui.Image = image;
+				InvalidateMeasure();
+			});
 		}
 		catch
 		{
-			// custom loader must not kill the process
-			return;
+			// ignore :3
 		}
-
-		if (image is null || cancellationToken.IsCancellationRequested)
-			return;
-
-		MainThread.Post(() =>
-		{
-			// still realized, still same url?
-			if (cancellationToken.IsCancellationRequested || !IsRealized)
-				return;
-
-			if (this.source is not { Kind: ImageSourceKind.Url } current || current.Value != source.Value)
-				return;
-
-			Ui.Image = image;
-			InvalidateMeasure();
-		});
 	}
 }

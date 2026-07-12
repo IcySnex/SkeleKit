@@ -5,34 +5,50 @@ namespace BareUI;
 /// </summary>
 public enum CollectionLayoutKind
 {
-	/// <summary>A vertical list of full-width rows.</summary>
+	/// <summary>
+	/// A vertical list of full-width rows.
+	/// </summary>
 	List,
 
-	/// <summary>A vertical grid of equal columns.</summary>
+	/// <summary>
+	/// A vertical grid of equal columns.
+	/// </summary>
 	Grid,
 
-	/// <summary>A horizontally scrolling row.</summary>
+	/// <summary>
+	/// A horizontally scrolling row.
+	/// </summary>
 	Carousel
 }
 
 /// <summary>
-/// How a carousel settles when the drag ends. Mirrors SwiftUI's scroll target behaviour.
+/// How a carousel settles when the drag ends. Mirrors SwiftUI's scroll target behavior.
 /// </summary>
 public enum CarouselSnap
 {
-	/// <summary>Free scrolling; stops wherever the drag ends.</summary>
+	/// <summary>
+	/// Free scrolling; stops wherever the drag ends.
+	/// </summary>
 	None,
 
-	/// <summary>Free scrolling, but the resting offset lands on an item's leading edge.</summary>
+	/// <summary>
+	/// Free scrolling, but the resting offset lands on an item's leading edge.
+	/// </summary>
 	LeadingBoundary,
 
-	/// <summary>Settles on an item, leading edge aligned.</summary>
+	/// <summary>
+	/// Settles on an item, leading edge aligned.
+	/// </summary>
 	Item,
 
-	/// <summary>Settles on an item, centred.</summary>
+	/// <summary>
+	/// Settles on an item, centred.
+	/// </summary>
 	ItemCentered,
 
-	/// <summary>Settles a full page at a time.</summary>
+	/// <summary>
+	/// Settles a full page at a time.
+	/// </summary>
 	Page
 }
 
@@ -70,6 +86,7 @@ public readonly struct CollectionLayout
 	/// How a carousel settles when the drag ends.
 	/// </summary>
 	public CarouselSnap Snap { get; }
+
 
 	CollectionLayout(
 		CollectionLayoutKind kind,

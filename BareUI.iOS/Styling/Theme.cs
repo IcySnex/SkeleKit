@@ -5,31 +5,8 @@ namespace BareUI;
 /// </summary>
 public sealed class Theme
 {
-	readonly Dictionary<Type, List<IStyle>> registered = [];
-	readonly Dictionary<Type, IStyle[]> chains = [];
-
-	bool frozen;
-
-	/// <summary>
-	/// Registers a style applied to every view of its target type, including subtypes.
-	/// </summary>
-	public Theme Style(
-		IStyle style)
-	{
-		if (frozen)
-			throw new InvalidOperationException("A theme cannot be changed once it is in use.");
-
-		if (!registered.TryGetValue(style.TargetType, out List<IStyle>? styles))
-			registered[style.TargetType] = styles = [];
-
-		styles.Add(style);
-
-		return this;
-	}
-
-
-	// written once at startup, read-only from the first view onwards
 	internal static Theme? Current { get; private set; }
+
 
 	internal static void Use(
 		Action<Theme> configure)
@@ -47,8 +24,6 @@ public sealed class Theme
 	internal static void Reset() =>
 		Current = null;
 
-	// runs in the View base ctor: field initializers (the control's defaults) are done, nothing from
-	// the object initializer has been assigned yet
 	internal static void ApplyTo(
 		View view)
 	{
@@ -59,9 +34,19 @@ public sealed class Theme
 			style.Apply(view);
 	}
 
+
+	readonly Dictionary<Type, List<IStyle>> registered = [];
+	readonly Dictionary<Type, IStyle[]> chains = [];
+
+	bool frozen;
+
+
 	IStyle[] Chain(
-		Type type)
+		Type? type)
 	{
+		if (type is null)
+			return [];
+
 		if (chains.TryGetValue(type, out IStyle[]? chain))
 			return chain;
 
@@ -71,7 +56,6 @@ public sealed class Theme
 		return chains[type] = [.. collected];
 	}
 
-	// base-most first, so a Style<Label> wins over a Style<View>
 	void Collect(
 		Type type,
 		List<IStyle> collected)
@@ -81,5 +65,26 @@ public sealed class Theme
 
 		if (registered.TryGetValue(type, out List<IStyle>? styles))
 			collected.AddRange(styles);
+	}
+
+
+	/// <summary>
+	/// Registers a style applied to every view of its target type, including subtypes.
+	/// </summary>
+	/// <param name="style">The implicit style to register.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if the theme has already been frozen and is in use.</exception>
+	public Theme Style(
+		IStyle style)
+	{
+		if (frozen)
+			throw new InvalidOperationException("A theme cannot be changed once it is in use.");
+
+		if (!registered.TryGetValue(style.TargetType, out List<IStyle>? styles))
+			registered[style.TargetType] = styles = [];
+
+		styles.Add(style);
+
+		return this;
 	}
 }

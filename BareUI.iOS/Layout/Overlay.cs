@@ -1,4 +1,3 @@
-
 namespace BareUI;
 
 /// <summary>
@@ -31,9 +30,7 @@ public class Overlay : Panel
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
-		Rect bounds = new(
-			new Point(Padding.Left, Padding.Top),
-			finalSize.Deflate(Padding));
+		Rect bounds = new(new(Padding.Left, Padding.Top), finalSize.Deflate(Padding));
 
 		foreach (View child in Children)
 			child.Arrange(bounds);

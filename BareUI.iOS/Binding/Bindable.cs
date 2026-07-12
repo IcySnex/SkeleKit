@@ -3,6 +3,7 @@ namespace BareUI;
 /// <summary>
 /// A control property that takes either a literal or a <c>Bind(...)</c> expression.
 /// </summary>
+/// <typeparam name="T">The underlying data type of the property.</typeparam>
 public readonly struct Bindable<T>
 {
 	/// <summary>
@@ -13,8 +14,9 @@ public readonly struct Bindable<T>
 	internal BindingExpression<T>? Expression { get; }
 
 	/// <summary>
-	/// Wraps a literal value. Needed for interface-typed properties: C# forbids an implicit conversion from an interface.
+	/// Wraps a literal value. Needed for interface-typed properties.
 	/// </summary>
+	/// <param name="value">The literal value to encapsulate.</param>
 	public Bindable(
 		T? value)
 	{
@@ -30,10 +32,18 @@ public readonly struct Bindable<T>
 	}
 
 
+	/// <summary>
+	/// Creates a bindable container from a constant value.
+	/// </summary>
+	/// <param name="value">The raw value to wrap.</param>
 	public static implicit operator Bindable<T>(
 		T value) =>
 		new(value);
 
+	/// <summary>
+	/// Creates a bindable container from an active binding expression.
+	/// </summary>
+	/// <param name="expression">The evaluation rule for the property.</param>
 	public static implicit operator Bindable<T>(
 		BindingExpression<T> expression) =>
 		new(expression);
@@ -47,6 +57,9 @@ public static class Bindable
 	/// <summary>
 	/// Wraps a literal, for property types C# will not implicitly convert (interfaces).
 	/// </summary>
+	/// <typeparam name="T">The type of value being encapsulated.</typeparam>
+	/// <param name="value">The raw value to protect from layout restrictions.</param>
+	/// <returns>A new wrapped literal configuration.</returns>
 	public static Bindable<T> From<T>(
 		T? value) =>
 		new(value);

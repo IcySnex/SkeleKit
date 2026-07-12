@@ -110,7 +110,7 @@ public class BindingTests
 	{
 		MovieViewModel viewModel = new() { Title = "Interstellar" };
 		StubBound leaf = new() { Text = BindingFactory.Bind((MovieViewModel vm) => vm.Title) };
-		VStack root = new() { Children = { leaf } };
+		StackPanel root = new() { Children = { leaf } };
 
 		root.BindingContext = viewModel;
 

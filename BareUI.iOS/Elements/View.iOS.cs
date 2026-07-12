@@ -263,7 +263,7 @@ public abstract partial class View
 	{
 		if (this is not Panel)
 			throw new InvalidOperationException(
-				$"{fill} background needs a panel (Border, Overlay, VStack, ...); {GetType().Name} draws its own content, which the fill would cover.");
+				$"{fill} background needs a panel (Border, Overlay, StackPanel, ...); {GetType().Name} draws its own content, which the fill would cover.");
 	}
 
 	void ApplyGradient(

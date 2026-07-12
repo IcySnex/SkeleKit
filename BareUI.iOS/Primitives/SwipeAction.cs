@@ -7,10 +7,14 @@ namespace BareUI;
 /// </summary>
 public enum SwipeSide
 {
-	/// <summary>Revealed by swiping from the trailing edge (the usual place for Delete).</summary>
+	/// <summary>
+	/// Revealed by swiping from the trailing edge (the usual place for Delete).
+	/// </summary>
 	Trailing,
 
-	/// <summary>Revealed by swiping from the leading edge.</summary>
+	/// <summary>
+	/// Revealed by swiping from the leading edge.
+	/// </summary>
 	Leading
 }
 
@@ -40,7 +44,7 @@ public sealed class SwipeAction
 	public bool IsDestructive { get; set; }
 
 	/// <summary>
-	/// The action's background colour, or null for the system default.
+	/// The action's background color, or null for the system default.
 	/// </summary>
 	public Color? Background { get; set; }
 

@@ -2,13 +2,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BareUI;
 
+/// <summary>
+/// A builder used to configure and construct a <see cref="BareApplication"/>.
+/// </summary>
 public sealed class BareApplicationBuilder
 {
 	internal readonly ServiceCollection Services = [];
 	internal readonly ViewRegistry Registry = new();
 
 	internal BareApplication.ShellKind Shell = BareApplication.ShellKind.None;
-	internal bool PreferLargeTitles = false;
+	internal bool PreferLargeTitles;
 	internal TabsBuilder? TabsBuilder;
 	internal Type? RootViewModel;
 
@@ -16,8 +19,10 @@ public sealed class BareApplicationBuilder
 
 
 	/// <summary>
-	/// Registers services. Use explicit factories to stay trim-safe.
+	/// Registers core dependencies and application services into the container.
 	/// </summary>
+	/// <param name="configure">A delegate to configure.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder UseServices(
 		Action<IServiceCollection> configure)
 	{
@@ -28,6 +33,8 @@ public sealed class BareApplicationBuilder
 	/// <summary>
 	/// Sets how <c>Image</c> loads remote URLs. Plug in a caching loader here.
 	/// </summary>
+	/// <param name="loader">The loader to use.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder UseImageLoader(
 		IImageLoader loader)
 	{
@@ -36,8 +43,10 @@ public sealed class BareApplicationBuilder
 	}
 
 	/// <summary>
-	/// Registers implicit styles applied to every view of a type as it is built. One theme per app.
+	/// Registers implicit styles applied to every view of a type as it is built.
 	/// </summary>
+	/// <param name="configure">A delegate to configure.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder UseTheme(
 		Action<Theme> configure)
 	{
@@ -46,8 +55,10 @@ public sealed class BareApplicationBuilder
 	}
 
 	/// <summary>
-	/// Registers the pages the app can show. Every navigable page goes here, once.
+	/// Registers the pages the app can show.
 	/// </summary>
+	/// <param name="configure">A delegate to configure.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder UsePages(
 		Action<PagesBuilder> configure)
 	{
@@ -58,8 +69,10 @@ public sealed class BareApplicationBuilder
 
 
 	/// <summary>
-	/// A single page with no navigation bar.
+	/// Configures the app to use as a single page without navigation chrome.
 	/// </summary>
+	/// <typeparam name="TView">The type of the root view.</typeparam>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder SinglePage<TView>() where TView : ContentView
 	{
 		RootViewModel = Registry.ViewModelOf<TView>();
@@ -69,8 +82,11 @@ public sealed class BareApplicationBuilder
 	}
 
 	/// <summary>
-	/// One navigation stack rooted at <typeparamref name="TView"/>.
+	/// Configures the app to use a stack-based navigation hierarchy.
 	/// </summary>
+	/// <typeparam name="TView">The type of the root view.</typeparam>
+	/// <param name="preferLargeTitles">Whether to enable large, collapsing titles.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder Stack<TView>(
 		bool preferLargeTitles = false) where TView : ContentView
 	{
@@ -83,8 +99,10 @@ public sealed class BareApplicationBuilder
 	}
 
 	/// <summary>
-	/// A tab bar; each tab gets its own navigation stack.
+	/// Configures the app to use bottom navigation tabs with each tab having its own navigation stack.
 	/// </summary>
+	/// <param name="configure">The delegate to configure.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder Tabs(
 		Action<TabsBuilder> configure)
 	{
@@ -98,8 +116,10 @@ public sealed class BareApplicationBuilder
 
 
 	/// <summary>
-	/// Freezes configuration and constructs the runtime App instance.
+	/// Builds and returns the configured application instance.
 	/// </summary>
+	/// <returns>The fully built application.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if a shell layout style has not been configured.</exception>
 	public BareApplication Build()
 	{
 		if (Shell == BareApplication.ShellKind.None)

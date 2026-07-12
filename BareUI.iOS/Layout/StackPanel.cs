@@ -1,4 +1,3 @@
-
 namespace BareUI;
 
 /// <summary>
@@ -95,27 +94,5 @@ public class StackPanel : Panel
 		}
 
 		return finalSize;
-	}
-}
-
-/// <summary>
-/// A <see cref="StackPanel"/> preset to <see cref="Orientation.Vertical"/>.
-/// </summary>
-public sealed class VStack : StackPanel
-{
-	public VStack()
-	{
-		Orientation = Orientation.Vertical;
-	}
-}
-
-/// <summary>
-/// A <see cref="StackPanel"/> preset to <see cref="Orientation.Horizontal"/>.
-/// </summary>
-public sealed class HStack : StackPanel
-{
-	public HStack()
-	{
-		Orientation = Orientation.Horizontal;
 	}
 }

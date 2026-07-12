@@ -1,3 +1,4 @@
+using System.Collections;
 using BareUI.Gallery.Models;
 
 namespace BareUI.Gallery.Views.Demos;
@@ -8,8 +9,9 @@ namespace BareUI.Gallery.Views.Demos;
 public class SettingsCell : ItemView<SettingsEntry>
 {
 	public SettingsCell() =>
-		Content = new HStack
+		Content = new StackPanel
 		{
+			Orientation = Orientation.Horizontal,
 			Spacing = 12,
 			Padding = new Thickness(16, 12),
 			Children =

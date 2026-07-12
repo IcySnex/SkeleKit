@@ -1,9 +1,7 @@
-using UIKit;
-
 namespace BareUI;
 
 /// <summary>
-/// A progress bar wrapping <c>UIProgressView</c>.
+/// A progress bar.
 /// </summary>
 public class ProgressBar : Control
 {
@@ -39,8 +37,7 @@ public class ProgressBar : Control
 		ApplyTint();
 	}
 
-	UIProgressView Ui =>
-		(UIProgressView)Native;
+	UIProgressView Ui => (UIProgressView)Native;
 
 	void ApplyProgress() =>
 		Ui.Progress = (float)progress;

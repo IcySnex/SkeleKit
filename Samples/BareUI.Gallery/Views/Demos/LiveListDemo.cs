@@ -38,8 +38,9 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 			Padding = new Thickness(0, 8),
 			Children =
 			{
-				new HStack
+				new StackPanel
 				{
+					Orientation = Orientation.Horizontal,
 					Spacing = 8,
 					Padding = new Thickness(16, 0),
 					Children =

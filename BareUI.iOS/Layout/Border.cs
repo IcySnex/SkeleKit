@@ -1,4 +1,3 @@
-
 namespace BareUI;
 
 /// <summary>
@@ -32,12 +31,7 @@ public partial class Border : Panel
 	}
 
 
-	Thickness Inset =>
-		new(
-			Padding.Left + StrokeThickness,
-			Padding.Top + StrokeThickness,
-			Padding.Right + StrokeThickness,
-			Padding.Bottom + StrokeThickness);
+	Thickness Inset => new(Padding.Left + StrokeThickness, Padding.Top + StrokeThickness, Padding.Right + StrokeThickness, Padding.Bottom + StrokeThickness);
 
 
 	protected override Size MeasureOverride(
@@ -59,5 +53,4 @@ public partial class Border : Panel
 		Child?.Arrange(new Rect(Point.Zero, finalSize).Deflate(Inset));
 		return finalSize;
 	}
-
 }

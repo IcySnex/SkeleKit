@@ -5,12 +5,18 @@ namespace BareUI;
 /// </summary>
 public enum UpdateTrigger
 {
-	/// <summary>On every change (default).</summary>
+	/// <summary>
+	/// On every change (default).
+	/// </summary>
 	PropertyChanged,
 
-	/// <summary>When the control loses focus.</summary>
+	/// <summary>
+	/// When the control loses focus.
+	/// </summary>
 	FocusLost,
 
-	/// <summary>Only when the app asks for it.</summary>
+	/// <summary>
+	/// Only when the app asks for it.
+	/// </summary>
 	Explicit
 }

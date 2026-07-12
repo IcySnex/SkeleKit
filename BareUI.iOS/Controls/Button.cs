@@ -1,10 +1,9 @@
 using System.Windows.Input;
-using UIKit;
 
 namespace BareUI;
 
 /// <summary>
-/// A tappable button wrapping <c>UIButton</c> built from a UIButtonConfiguration.
+/// A tappable button.
 /// </summary>
 public class Button : Control
 {
@@ -87,7 +86,7 @@ public class Button : Control
 	private protected override UIView CreateNative()
 	{
 		UIButton button = new();
-		button.TouchUpInside += (sender, e) => OnClicked();
+		button.TouchUpInside += (_, _) => OnClicked();
 
 		return button;
 	}

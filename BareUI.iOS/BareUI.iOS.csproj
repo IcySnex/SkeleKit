@@ -53,5 +53,6 @@
         <Compile Remove="Animation/**" />
         <Compile Remove="**/*.iOS.cs" />
         <Compile Remove="Elements/LayoutHost.cs" />
+        <Compile Remove="Primitives/Fonts.cs" />
     </ItemGroup>
 </Project>

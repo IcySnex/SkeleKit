@@ -1,12 +1,9 @@
-using UIKit;
+// ReSharper disable InconsistentNaming
 
 namespace BareUI;
 
-static class ColorInterop
+internal static class ColorInterop
 {
-	/// <summary>
-	/// Converts a neutral <see cref="Color"/> to its <c>UIColor</c> equivalent, live for system and dynamic colors.
-	/// </summary>
 	public static UIColor ToUIColor(
 		this Color color)
 	{
@@ -30,11 +27,7 @@ static class ColorInterop
 		double green,
 		double blue,
 		double alpha) =>
-		UIColor.FromRGBA(
-			(nfloat)red,
-			(nfloat)green,
-			(nfloat)blue,
-			(nfloat)alpha);
+		UIColor.FromRGBA((nfloat)red, (nfloat)green, (nfloat)blue, (nfloat)alpha);
 
 	static UIColor Resolve(
 		SystemColor system) =>

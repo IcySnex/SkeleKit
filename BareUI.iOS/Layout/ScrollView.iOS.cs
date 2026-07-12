@@ -1,35 +1,26 @@
-using CoreGraphics;
 using ObjCRuntime;
-using UIKit;
 
 namespace BareUI;
 
 public partial class ScrollView
 {
-	private protected override UIView CreateNative() =>
-		new ScrollHost(this);
-
-	nfloat keyboardCover;
-
-	private protected override void ApplyProperties()
+	static UIView? FirstResponder(
+		UIView view)
 	{
-		UIScrollView host = (UIScrollView)Native;
-		bool vertical = Orientation == Orientation.Vertical;
+		if (view.IsFirstResponder)
+			return view;
 
-		// only bounce along the axis that scrolls
-		host.AlwaysBounceVertical = vertical;
-		host.AlwaysBounceHorizontal = !vertical;
+		foreach (UIView child in view.Subviews)
+			if (FirstResponder(child) is { } found)
+				return found;
 
-		// we own the insets: UIKit's adjustment guesses which edges to inset, and every guess it makes
-		// is wrong for us — Always insets across the scroll axis (phantom horizontal scrolling),
-		// ScrollableAxes drops the cross-axis inset entirely (content under the notch)
-		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never;
-
-		ApplyKeyboardDismiss();
-		ApplyRefresh(host);
+		return null;
 	}
 
+
+	nfloat keyboardCover;
 	UIRefreshControl? refresh;
+
 
 	void ApplyRefresh(
 		UIScrollView host)
@@ -38,7 +29,7 @@ public partial class ScrollView
 			return;
 
 		refresh = new();
-		refresh.ValueChanged += async (sender, e) =>
+		refresh.ValueChanged += async (_, _) =>
 		{
 			try
 			{
@@ -54,8 +45,6 @@ public partial class ScrollView
 		host.RefreshControl = refresh;
 	}
 
-	// insets along the scroll axis let the content pass under the bar; the cross axis is handled as
-	// layout padding in LayoutContent, because a cross-axis inset is what makes a scroll view drift
 	void ApplyContentInsets()
 	{
 		UIScrollView host = (UIScrollView)Native;
@@ -76,6 +65,7 @@ public partial class ScrollView
 		}
 	}
 
+
 	partial void ApplyKeyboardDismissCore() =>
 		((UIScrollView)Native).KeyboardDismissMode = keyboardDismiss switch
 		{
@@ -88,7 +78,6 @@ public partial class ScrollView
 		Size viewport) =>
 		LayoutContent(viewport);
 
-	// lay out content, report scrollable size
 	internal void LayoutContent(
 		Size viewport)
 	{
@@ -106,7 +95,6 @@ public partial class ScrollView
 		bool vertical = Orientation == Orientation.Vertical;
 		Thickness bled = BledInsets;
 
-		// across the scroll axis the bleed becomes padding, so content never sits under the notch
 		double padLeft = vertical ? bled.Left : 0;
 		double padRight = vertical ? bled.Right : 0;
 		double padTop = vertical ? 0 : bled.Top;
@@ -130,8 +118,6 @@ public partial class ScrollView
 		host.ContentSize = new CGSize(width + padLeft + padRight, height + padTop + padBottom);
 	}
 
-	// UIKit never moves anything for the keyboard: inset the content by however much it covers,
-	// then scroll the focused control back into view
 	internal void OnKeyboardChanged(
 		NSNotification notification,
 		bool hiding)
@@ -153,7 +139,7 @@ public partial class ScrollView
 		if (!hiding)
 		{
 			CGRect keyboard = UIKeyboard.FrameEndFromNotification(notification);
-			CGRect hostInWindow = host.ConvertRectToView(host.Bounds, null);
+			CGRect hostInWindow = host.ConvertRectToView(host.Bounds, host);
 
 			// the safe-area bottom is already in the adjusted inset, so do not count it twice
 			covered = (nfloat)Math.Max(
@@ -164,8 +150,6 @@ public partial class ScrollView
 		keyboardCover = covered;
 
 		double duration = UIKeyboard.AnimationDurationFromNotification(notification);
-
-		// composed with the safe-area insets, never replacing them
 		UIView.Animate(duration, ApplyContentInsets);
 
 		if (hiding || focused is null)
@@ -179,24 +163,26 @@ public partial class ScrollView
 		double offset) =>
 		Scrolled?.Invoke(offset);
 
-	static UIView? FirstResponder(
-		UIView view)
+
+	private protected override UIView CreateNative() =>
+		new ScrollHost(this);
+
+	private protected override void ApplyProperties()
 	{
-		if (view.IsFirstResponder)
-			return view;
+		UIScrollView host = (UIScrollView)Native;
+		bool vertical = Orientation == Orientation.Vertical;
 
-		foreach (UIView child in view.Subviews)
-			if (FirstResponder(child) is { } found)
-				return found;
+		host.AlwaysBounceVertical = vertical;
+		host.AlwaysBounceHorizontal = !vertical;
 
-		return null;
+		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never;
+
+		ApplyKeyboardDismiss();
+		ApplyRefresh(host);
 	}
 }
 
-/// <summary>
-/// The native <c>UIScrollView</c> that hosts a <see cref="ScrollView"/> and drives its content layout.
-/// </summary>
-sealed class ScrollHost : UIScrollView
+internal sealed class ScrollHost : UIScrollView
 {
 	readonly ScrollView? element;
 
@@ -205,31 +191,25 @@ sealed class ScrollHost : UIScrollView
 	{
 		this.element = element;
 
-		// selector-based, not block-based: a block observer's dispatcher peer can be collected
-		NSNotificationCenter.DefaultCenter.AddObserver(
-			this,
-			new Selector("keyboardFrameChanged:"),
-			UIKeyboard.WillChangeFrameNotification,
-			null);
-
-		NSNotificationCenter.DefaultCenter.AddObserver(
-			this,
-			new Selector("keyboardHidden:"),
-			UIKeyboard.WillHideNotification,
-			null);
+		NSNotificationCenter.DefaultCenter.AddObserver(this, new("keyboardFrameChanged:"), UIKeyboard.WillChangeFrameNotification, null);
+		NSNotificationCenter.DefaultCenter.AddObserver(this, new("keyboardHidden:"), UIKeyboard.WillHideNotification, null);
 	}
 
-	// see LayoutHost
 	public ScrollHost(
 		NativeHandle handle) : base(handle)
 	{ }
 
-	public override void LayoutSubviews()
-	{
-		base.LayoutSubviews();
 
-		element?.LayoutContent(new(Bounds.Width, Bounds.Height));
-	}
+	[Export("keyboardFrameChanged:")]
+	void KeyboardFrameChanged(
+		NSNotification notification) =>
+		element?.OnKeyboardChanged(notification, hiding: false);
+
+	[Export("keyboardHidden:")]
+	void KeyboardHidden(
+		NSNotification notification) =>
+		element?.OnKeyboardChanged(notification, hiding: true);
+
 
 	public override CGPoint ContentOffset
 	{
@@ -242,15 +222,13 @@ sealed class ScrollHost : UIScrollView
 		}
 	}
 
-	[Export("keyboardFrameChanged:")]
-	void KeyboardFrameChanged(
-		NSNotification notification) =>
-		element?.OnKeyboardChanged(notification, hiding: false);
+	public override void LayoutSubviews()
+	{
+		base.LayoutSubviews();
 
-	[Export("keyboardHidden:")]
-	void KeyboardHidden(
-		NSNotification notification) =>
-		element?.OnKeyboardChanged(notification, hiding: true);
+		element?.LayoutContent(new(Bounds.Width, Bounds.Height));
+	}
+
 
 	protected override void Dispose(
 		bool disposing)

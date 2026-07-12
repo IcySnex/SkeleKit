@@ -44,8 +44,9 @@ public class MenuView : ContentView<MenuViewModel>
 public class DemoRow : ItemView<DemoEntry>
 {
 	public DemoRow() =>
-		Content = new HStack
+		Content = new StackPanel
 		{
+			Orientation = Orientation.Horizontal,
 			Padding = new Thickness(16, 12),
 			Children =
 			{

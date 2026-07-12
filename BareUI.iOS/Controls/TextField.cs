@@ -1,9 +1,7 @@
-using UIKit;
-
 namespace BareUI;
 
 /// <summary>
-/// A single-line text input wrapping <c>UITextField</c>.
+/// A single-line text input wrapping.
 /// </summary>
 public class TextField : Control
 {
@@ -79,8 +77,8 @@ public class TextField : Control
 			AdjustsFontForContentSizeCategory = true
 		};
 
-		field.EditingChanged += (sender, e) => OnEdited();
-		field.EditingDidEnd += (sender, e) => OnEditingEnded();
+		field.EditingChanged += (_, _) => OnEdited();
+		field.EditingDidEnd += (_, _) => OnEditingEnded();
 
 		field.ShouldReturn = textField =>
 		{
@@ -102,8 +100,7 @@ public class TextField : Control
 		ApplyReturnKey();
 	}
 
-	UITextField Ui =>
-		(UITextField)Native;
+	UITextField Ui => (UITextField)Native;
 
 	void ApplyText() =>
 		Ui.Text = text;

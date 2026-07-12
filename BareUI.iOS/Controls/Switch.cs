@@ -1,9 +1,7 @@
-using UIKit;
-
 namespace BareUI;
 
 /// <summary>
-/// A binary on/off toggle wrapping <c>UISwitch</c>.
+/// A binary on/off toggle.
 /// </summary>
 public class Switch : Control
 {
@@ -27,7 +25,7 @@ public class Switch : Control
 	private protected override UIView CreateNative()
 	{
 		UISwitch @switch = new();
-		@switch.ValueChanged += (sender, e) => OnToggled();
+		@switch.ValueChanged += (_, _) => OnToggled();
 
 		return @switch;
 	}

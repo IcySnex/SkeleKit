@@ -3,19 +3,18 @@ using System.Windows.Input;
 
 namespace BareUI;
 
-/// <summary>
-/// A virtualized list, grid or carousel over <c>UICollectionView</c>. Cells are recycled: the element tree is built once per cell and rebound on reuse.
-/// </summary>
-// the native host is not generic, so it talks to the element through this
-interface ICollectionHost
+internal interface ICollectionHost
 {
 	void SyncEmptyState();
 
 	void SyncInsets();
 }
 
-public partial class CollectionView<TItem> : View, ICollectionHost
-	where TItem : class
+/// <summary>
+/// A data-driven list, grid, or carousel scroll layout container wrapping native platform components.
+/// </summary>
+/// <typeparam name="TItem">The underlying object instance type managed by item container collections.</typeparam>
+public partial class CollectionView<TItem> : View, ICollectionHost where TItem : class
 {
 	/// <summary>
 	/// The items to show. Live updates when the list also implements <c>INotifyCollectionChanged</c>.
@@ -94,18 +93,14 @@ public partial class CollectionView<TItem> : View, ICollectionHost
 	public Action<double>? Scrolled { get; set; }
 
 
-	private protected override bool ClipsByDefault =>
-		true;
+	private protected override bool ClipsByDefault => true;
 
-	internal override bool Scrolls =>
-		true;
+	internal override bool Scrolls => true;
 
 	// it scrolls itself, so it takes the space it is offered rather than sizing to its content
 	protected override Size MeasureOverride(
 		Size availableSize) =>
-		new(
-			double.IsFinite(availableSize.Width) ? availableSize.Width : 0,
-			double.IsFinite(availableSize.Height) ? availableSize.Height : 0);
+		new(double.IsFinite(availableSize.Width) ? availableSize.Width : 0, double.IsFinite(availableSize.Height) ? availableSize.Height : 0);
 
 	void SetItemsSource(
 		IReadOnlyList<TItem>? value)
@@ -145,7 +140,7 @@ public partial class CollectionView<TItem> : View, ICollectionHost
 	void OnItemsChanged(
 		object? sender,
 		NotifyCollectionChangedEventArgs e) =>
-		ApplyChange(e);
+		ApplyChange();
 
 	void OnSectionsChanged(
 		object? sender,
@@ -154,15 +149,12 @@ public partial class CollectionView<TItem> : View, ICollectionHost
 
 	partial void ReloadItems();
 
-	partial void ApplyChange(
-		NotifyCollectionChangedEventArgs change);
+	partial void ApplyChange();
 
 
-	internal bool IsGrouped =>
-		sections is not null;
+	internal bool IsGrouped => sections is not null;
 
-	internal int SectionCount =>
-		sections?.Count ?? 1;
+	internal int SectionCount => sections?.Count ?? 1;
 
 	internal int CountIn(
 		int section) =>
@@ -200,4 +192,5 @@ public partial class CollectionView<TItem> : View, ICollectionHost
 			return true;
 		}
 	}
+
 }

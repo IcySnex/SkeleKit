@@ -1,9 +1,7 @@
-using UIKit;
-
 namespace BareUI;
 
 /// <summary>
-/// An activity indicator spinner wrapping <c>UIActivityIndicatorView</c>.
+/// An activity indicator spinner.
 /// </summary>
 public class ActivityIndicator : Control
 {
@@ -47,8 +45,7 @@ public class ActivityIndicator : Control
 		ApplyIsAnimating();
 	}
 
-	UIActivityIndicatorView Ui =>
-		(UIActivityIndicatorView)Native;
+	UIActivityIndicatorView Ui => (UIActivityIndicatorView)Native;
 
 	void ApplyIsAnimating()
 	{

@@ -1,9 +1,5 @@
-using System.Collections.Specialized;
 using CoreFoundation;
-using CoreGraphics;
-using Foundation;
 using ObjCRuntime;
-using UIKit;
 
 namespace BareUI;
 
@@ -12,8 +8,6 @@ public partial class CollectionView<TItem>
 	internal const string CellId = "BareCell";
 	internal const string HeaderId = "BareHeader";
 
-	// one key per item, reused across snapshots: no allocation per update, and it roots the managed
-	// peers so the GC cannot collect an identifier the data source still holds
 	readonly Dictionary<object, ItemKey> keys = new(ReferenceEqualityComparer.Instance);
 	readonly List<NSNumber> sectionKeys = [];
 
@@ -67,7 +61,7 @@ public partial class CollectionView<TItem>
 			return;
 
 		refresh = new();
-		refresh.ValueChanged += async (sender, e) =>
+		refresh.ValueChanged += async (_, _) =>
 		{
 			try
 			{
@@ -101,7 +95,6 @@ public partial class CollectionView<TItem>
 		double offset) =>
 		Scrolled?.Invoke(offset);
 
-	// swipe actions and context menus are per-row, so they resolve the item behind the index path
 	internal UISwipeActionsConfiguration? SwipeConfiguration(
 		NSIndexPath indexPath,
 		SwipeSide side)
@@ -184,7 +177,6 @@ public partial class CollectionView<TItem>
 	UICollectionView Ui =>
 		(UICollectionView)Native;
 
-	// recycled cell trees sit outside the element tree, so the theme walk visits them here
 	internal override void ReapplyVisuals()
 	{
 		base.ReapplyVisuals();
@@ -199,13 +191,10 @@ public partial class CollectionView<TItem>
 		EmptyView?.ReapplyVisuals();
 	}
 
-	// UIKit does the diffing. A burst of changes (an Add loop over an ObservableCollection) collapses
-	// into one snapshot on the next turn of the run loop instead of N separate updates.
 	partial void ReloadItems() =>
 		QueueSnapshot();
 
-	partial void ApplyChange(
-		NotifyCollectionChangedEventArgs change) =>
+	partial void ApplyChange() =>
 		QueueSnapshot();
 
 	void QueueSnapshot()
@@ -266,7 +255,6 @@ public partial class CollectionView<TItem>
 		return key;
 	}
 
-	// drop keys for items that left, so the cache cannot grow without bound
 	void Prune()
 	{
 		int live = 0;
@@ -288,7 +276,7 @@ public partial class CollectionView<TItem>
 				keys.Remove(item);
 	}
 
-	UICollectionViewCell CellFor(
+	BareCell CellFor(
 		UICollectionView collectionView,
 		NSIndexPath indexPath,
 		NSObject identifier)
@@ -305,7 +293,7 @@ public partial class CollectionView<TItem>
 		return cell;
 	}
 
-	UICollectionReusableView HeaderFor(
+	BareHeader HeaderFor(
 		UICollectionView collectionView,
 		string kind,
 		NSIndexPath indexPath)
@@ -324,16 +312,12 @@ public partial class CollectionView<TItem>
 		return header;
 	}
 
-	// UIKit re-runs layout after every snapshot, so this is the one place that cannot be missed by an
-	// update path or dropped by an interrupted animation
 	void ICollectionHost.SyncEmptyState() =>
 		SyncEmptyState();
 
 	void ICollectionHost.SyncInsets() =>
 		SyncInsets();
 
-	// the bleed becomes a content inset along the scroll axis: items start inside the safe area and
-	// scroll under the bar. Nothing is ever inset across the axis, so the view cannot drift.
 	void SyncInsets()
 	{
 		if (!IsRealized)
@@ -496,8 +480,7 @@ public partial class CollectionView<TItem>
 	}
 }
 
-// only selection: the diffable data source owns the data side
-sealed class CollectionDelegate<TItem>(
+internal sealed class CollectionDelegate<TItem>(
 	CollectionView<TItem> element) : UICollectionViewDelegate
 	where TItem : class
 {
@@ -521,10 +504,7 @@ sealed class CollectionDelegate<TItem>(
 		element.MenuConfiguration(indexPath);
 }
 
-/// <summary>
-/// The native <c>UICollectionView</c>, which drives the empty state from its own layout pass.
-/// </summary>
-sealed class CollectionHost : UICollectionView
+internal sealed class CollectionHost : UICollectionView
 {
 	readonly ICollectionHost? element;
 
@@ -550,24 +530,15 @@ sealed class CollectionHost : UICollectionView
 	}
 }
 
-/// <summary>
-/// A recycled cell that hosts one BareUI item tree.
-/// </summary>
-sealed class BareCell : UICollectionViewCell
+internal sealed class BareCell(
+	NativeHandle handle) : UICollectionViewCell(handle)
 {
-	View? hosted;
-
-	public BareCell(
-		NativeHandle handle) : base(handle)
-	{ }
-
-	public View? Hosted =>
-		hosted;
+	public View? Hosted { get; private set; }
 
 	public void Attach(
 		View view)
 	{
-		hosted = view;
+		Hosted = view;
 
 		ContentView.AddSubview(view.Realize());
 	}
@@ -576,13 +547,13 @@ sealed class BareCell : UICollectionViewCell
 	public override UICollectionViewLayoutAttributes PreferredLayoutAttributesFittingAttributes(
 		UICollectionViewLayoutAttributes layoutAttributes)
 	{
-		if (hosted is null)
+		if (Hosted is null)
 			return layoutAttributes;
 
-		hosted.Measure(new(layoutAttributes.Frame.Width, double.PositiveInfinity));
+		Hosted.Measure(new(layoutAttributes.Frame.Width, double.PositiveInfinity));
 
 		CGRect frame = layoutAttributes.Frame;
-		frame.Height = (nfloat)hosted.DesiredSize.Height;
+		frame.Height = (nfloat)Hosted.DesiredSize.Height;
 		layoutAttributes.Frame = frame;
 
 		return layoutAttributes;
@@ -592,28 +563,20 @@ sealed class BareCell : UICollectionViewCell
 	{
 		base.LayoutSubviews();
 
-		hosted?.Arrange(new(0, 0, ContentView.Bounds.Width, ContentView.Bounds.Height));
+		Hosted?.Arrange(new(0, 0, ContentView.Bounds.Width, ContentView.Bounds.Height));
 	}
 }
 
-/// <summary>
-/// A recycled section header hosting one BareUI tree.
-/// </summary>
-sealed class BareHeader : UICollectionReusableView
+internal sealed class BareHeader(
+	NativeHandle handle) : UICollectionReusableView(handle)
 {
-	View? hosted;
+	public View? Hosted { get; private set; }
 
-	public BareHeader(
-		NativeHandle handle) : base(handle)
-	{ }
-
-	public View? Hosted =>
-		hosted;
 
 	public void Attach(
 		View view)
 	{
-		hosted = view;
+		Hosted = view;
 
 		AddSubview(view.Realize());
 	}
@@ -621,13 +584,13 @@ sealed class BareHeader : UICollectionReusableView
 	public override UICollectionViewLayoutAttributes PreferredLayoutAttributesFittingAttributes(
 		UICollectionViewLayoutAttributes layoutAttributes)
 	{
-		if (hosted is null)
+		if (Hosted is null)
 			return layoutAttributes;
 
-		hosted.Measure(new(layoutAttributes.Frame.Width, double.PositiveInfinity));
+		Hosted.Measure(new(layoutAttributes.Frame.Width, double.PositiveInfinity));
 
 		CGRect frame = layoutAttributes.Frame;
-		frame.Height = (nfloat)hosted.DesiredSize.Height;
+		frame.Height = (nfloat)Hosted.DesiredSize.Height;
 		layoutAttributes.Frame = frame;
 
 		return layoutAttributes;
@@ -637,6 +600,6 @@ sealed class BareHeader : UICollectionReusableView
 	{
 		base.LayoutSubviews();
 
-		hosted?.Arrange(new(0, 0, Bounds.Width, Bounds.Height));
+		Hosted?.Arrange(new(0, 0, Bounds.Width, Bounds.Height));
 	}
 }

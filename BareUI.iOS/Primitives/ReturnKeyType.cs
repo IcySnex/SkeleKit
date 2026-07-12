@@ -5,21 +5,33 @@ namespace BareUI;
 /// </summary>
 public enum ReturnKeyType
 {
-	/// <summary>The standard "return" label.</summary>
+	/// <summary>
+	/// The standard "return" label.
+	/// </summary>
 	Default,
 
-	/// <summary>"Go".</summary>
+	/// <summary>
+	/// "Go".
+	/// </summary>
 	Go,
 
-	/// <summary>"Next".</summary>
+	/// <summary>
+	/// "Next".
+	/// </summary>
 	Next,
 
-	/// <summary>"Search".</summary>
+	/// <summary>
+	/// "Search".
+	/// </summary>
 	Search,
 
-	/// <summary>"Send".</summary>
+	/// <summary>
+	/// "Send".
+	/// </summary>
 	Send,
 
-	/// <summary>"Done".</summary>
+	/// <summary>
+	/// "Done".
+	/// </summary>
 	Done
 }

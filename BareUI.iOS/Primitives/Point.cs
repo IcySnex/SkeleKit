@@ -3,6 +3,8 @@ namespace BareUI;
 /// <summary>
 /// A point in the layout coordinate space (origin top-left, y grows downward).
 /// </summary>
+/// <param name="X">The horizontal coordinate value.</param>
+/// <param name="Y">The vertical coordinate value.</param>
 public readonly record struct Point(
 	double X,
 	double Y)

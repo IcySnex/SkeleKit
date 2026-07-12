@@ -1,13 +1,17 @@
 namespace BareUI;
 
 /// <summary>
-/// How far a sheet opens.
+/// How the height is restricted for a modal sheet.
 /// </summary>
 public enum Detent
 {
-	/// <summary>Half height.</summary>
+	/// <summary>
+	/// Half height.
+	/// </summary>
 	Medium,
 
-	/// <summary>Full height.</summary>
+	/// <summary>
+	/// Full height.
+	/// </summary>
 	Large
 }

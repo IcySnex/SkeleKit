@@ -7,10 +7,14 @@ namespace BareUI;
 /// </summary>
 public enum ToolbarSide
 {
-	/// <summary>Trailing edge (the right, in a left-to-right layout).</summary>
+	/// <summary>
+	/// Trailing edge (the right, in a left-to-right layout).
+	/// </summary>
 	Trailing,
 
-	/// <summary>Leading edge.</summary>
+	/// <summary>
+	/// Leading edge.
+	/// </summary>
 	Leading
 }
 

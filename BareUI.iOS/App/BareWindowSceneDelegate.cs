@@ -1,5 +1,8 @@
 namespace BareUI;
 
+/// <summary>
+/// <inheritdoc/>
+/// </summary>
 [Register(nameof(BareWindowSceneDelegate))]
 public class BareWindowSceneDelegate : UIWindowSceneDelegate
 {

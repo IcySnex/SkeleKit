@@ -24,7 +24,7 @@ public abstract partial class ContentView : Panel
 	public SafeAreaEdges SafeAreaEdges { get; set; } = SafeAreaEdges.All;
 
 	/// <summary>
-	/// Whether scrolling content passes under the navigation and tab bars, so they blur over it. On by default.
+	/// Whether scrolling content passes under the navigation bar, so they blur over it. On by default.
 	/// </summary>
 	public bool ScrollsUnderBars { get; set; } = true;
 
@@ -58,28 +58,6 @@ public abstract partial class ContentView : Panel
 	/// </summary>
 	public Action<string>? SearchChanged { get; set; }
 
-	internal void NotifySearch(
-		string text) =>
-		SearchChanged?.Invoke(text);
-
-	/// <summary>
-	/// Raised once, the first time the page is realized.
-	/// </summary>
-	protected virtual void OnLoaded()
-	{ }
-
-	/// <summary>
-	/// Raised when the page's tree is torn down.
-	/// </summary>
-	protected virtual void OnUnloaded()
-	{ }
-
-	internal void NotifyLoaded() =>
-		OnLoaded();
-
-	internal void NotifyUnloaded() =>
-		OnUnloaded();
-
 	/// <summary>
 	/// The page's element tree.
 	/// </summary>
@@ -94,6 +72,20 @@ public abstract partial class ContentView : Panel
 				Children.Add(value);
 		}
 	}
+
+
+
+	/// <summary>
+	/// Raised once, the first time the page is realized.
+	/// </summary>
+	protected virtual void OnLoaded()
+	{ }
+
+	/// <summary>
+	/// Raised when the page's tree is torn down.
+	/// </summary>
+	protected virtual void OnUnloaded()
+	{ }
 
 	/// <summary>
 	/// Raised once the ViewModel is attached, after construction.
@@ -113,12 +105,23 @@ public abstract partial class ContentView : Panel
 	protected virtual void OnDisappearing()
 	{ }
 
-	// the host controller and the registry drive these
+
+	internal void NotifySearch(
+		string text) =>
+		SearchChanged?.Invoke(text);
+
+	internal void NotifyLoaded() =>
+		OnLoaded();
+
+	internal void NotifyUnloaded() =>
+		OnUnloaded();
+
 	internal void NotifyAppearing() =>
 		OnAppearing();
 
 	internal void NotifyDisappearing() =>
 		OnDisappearing();
+
 
 	internal abstract void AttachViewModel(
 		object viewModel);
@@ -154,6 +157,7 @@ public abstract partial class ContentView : Panel
 /// <summary>
 /// A page bound to a typed ViewModel: bind with <c>Bind(...)</c>.
 /// </summary>
+/// <typeparam name="TViewModel">The structural data type backing the container context.</typeparam>
 public abstract class ContentView<TViewModel> : ContentView
 	where TViewModel : class
 {
@@ -181,6 +185,10 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds one way to a ViewModel property.
 	/// </summary>
+	/// <typeparam name="T">The underlying type of the bound target element.</typeparam>
+	/// <param name="getter">The property selection expression.</param>
+	/// <param name="path">The automatically captured string representation of the expression property.</param>
+	/// <returns>A one-way tracking data stream context configuration.</returns>
 	protected static BindingExpression<T?> Bind<T>(
 		Func<TViewModel, T> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
@@ -189,6 +197,11 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds two ways; <paramref name="setter"/> writes the control's value back.
 	/// </summary>
+	/// <typeparam name="T">The underlying type of the bound target element.</typeparam>
+	/// <param name="getter">The property selection expression.</param>
+	/// <param name="setter">The logic layer handler mutation expression.</param>
+	/// <param name="path">The automatically captured string representation of the expression property.</param>
+	/// <returns>A bi-directional tracking data stream context configuration.</returns>
 	protected static BindingExpression<T?> Bind<T>(
 		Func<TViewModel, T> getter,
 		Action<TViewModel, T?> setter,
@@ -198,6 +211,12 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds one way through a converter.
 	/// </summary>
+	/// <typeparam name="TValue">The intermediate value node processed from the state tier.</typeparam>
+	/// <typeparam name="T">The targeted structural output presentation type.</typeparam>
+	/// <param name="getter">The property selection expression.</param>
+	/// <param name="format">The mapper rule converting source parameters to targets.</param>
+	/// <param name="path">The automatically captured string representation of the expression property.</param>
+	/// <returns>A converted one-way tracking data stream context configuration.</returns>
 	protected static BindingExpression<T?> Bind<TValue, T>(
 		Func<TViewModel, TValue> getter,
 		Func<TValue, T> format,
@@ -207,6 +226,14 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds two ways through converters: <paramref name="format"/> out, <paramref name="parse"/> back in. A numeric text field, for instance.
 	/// </summary>
+	/// <typeparam name="TValue">The intermediate value node processed from the state tier.</typeparam>
+	/// <typeparam name="T">The targeted structural output presentation type.</typeparam>
+	/// <param name="getter">The property selection expression.</param>
+	/// <param name="setter">The logic layer handler mutation expression.</param>
+	/// <param name="format">The mapping parser converting state metrics into screen views.</param>
+	/// <param name="parse">The reverse mapping translation parsing screen string types into model fields.</param>
+	/// <param name="path">The automatically captured string representation of the expression property.</param>
+	/// <returns>A converted bi-directional tracking data stream context configuration.</returns>
 	protected static BindingExpression<T?> Bind<TValue, T>(
 		Func<TViewModel, TValue> getter,
 		Action<TViewModel, TValue> setter,
@@ -218,6 +245,11 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds control to source only: the control writes, and never reads back.
 	/// </summary>
+	/// <typeparam name="T">The underlying type of the bound target element.</typeparam>
+	/// <param name="getter">The basic initialization fallback extractor rule.</param>
+	/// <param name="setter">The logic layer handler mutation expression.</param>
+	/// <param name="path">The automatically captured string representation of the expression property.</param>
+	/// <returns>An upward-streaming destination-only data configuration.</returns>
 	protected static BindingExpression<T?> BindToSource<T>(
 		Func<TViewModel, T> getter,
 		Action<TViewModel, T?> setter,
@@ -227,6 +259,10 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Reads the value once when the ViewModel attaches, then never again.
 	/// </summary>
+	/// <typeparam name="T">The underlying type of the bound target element.</typeparam>
+	/// <param name="getter">The instant-evaluation property state extraction expression.</param>
+	/// <param name="path">The automatically captured string representation of the expression property.</param>
+	/// <returns>A static-snapshot evaluation configuration.</returns>
 	protected static BindingExpression<T?> BindOnce<T>(
 		Func<TViewModel, T> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>

@@ -10,9 +10,11 @@ public interface IStyle
 	/// </summary>
 	Type TargetType { get; }
 
+
 	/// <summary>
 	/// Runs the style's setters against <paramref name="view"/>.
 	/// </summary>
+	/// <param name="view">The view instance to configure.</param>
 	void Apply(
 		View view);
 }

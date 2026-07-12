@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// How strong a haptic tap feels.
+/// How the weight and sharpness for haptic feedback is.
 /// </summary>
 public enum HapticStyle
 {

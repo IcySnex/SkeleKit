@@ -8,7 +8,7 @@ public class PaddingTests
 	[Fact]
 	public void StackPanel_Padding_GrowsDesiredSize()
 	{
-		VStack stack = new()
+		StackPanel stack = new()
 		{
 			Padding = new Thickness(10),
 			Children = { new StubLeaf(40, 20) }
@@ -24,7 +24,7 @@ public class PaddingTests
 	public void StackPanel_Padding_OffsetsChildren()
 	{
 		StubLeaf leaf = new(40, 20);
-		VStack stack = new()
+		StackPanel stack = new()
 		{
 			Padding = new Thickness(10, 5),
 			Children = { leaf }
@@ -42,7 +42,7 @@ public class PaddingTests
 	public void StackPanel_Padding_ShrinksChildAvailableWidth()
 	{
 		StubLeaf leaf = new(40, 20);
-		VStack stack = new()
+		StackPanel stack = new()
 		{
 			Padding = new Thickness(25),
 			Children = { leaf }
@@ -96,7 +96,7 @@ public class PaddingTests
 	public void Padding_Zero_ChangesNothing()
 	{
 		StubLeaf leaf = new(40, 20);
-		VStack stack = new() { Children = { leaf } };
+		StackPanel stack = new() { Children = { leaf } };
 
 		stack.Measure(new(200, 200));
 		stack.Arrange(new(0, 0, 200, 200));

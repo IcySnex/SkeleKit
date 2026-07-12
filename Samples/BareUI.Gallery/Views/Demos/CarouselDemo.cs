@@ -24,7 +24,7 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 	{
 		Title = "Carousel";
 
-		Content = new VStack
+		Content = new StackPanel
 		{
 			Spacing = 16,
 			Margin = new Thickness(0, 16),

@@ -16,7 +16,7 @@ public class TextEditorDemo : ContentView<TextEditorDemoViewModel>
 
 		Content = new ScrollView
 		{
-			Content = new VStack
+			Content = new StackPanel
 			{
 				Spacing = 20,
 				Margin = new Thickness(16),

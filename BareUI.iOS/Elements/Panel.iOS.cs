@@ -47,7 +47,7 @@ public abstract partial class Panel
 
 			// already in the right slot: leave it alone. Re-inserting a UITextField would make it
 			// resign first responder, so never touch a subview that has not moved
-			if (index + offset < subviews.Length && subviews[index + offset] == native)
+			if (index + offset < subviews.Length && subviews[index + offset].Equals(native))
 				continue;
 
 			// InsertSubview moves a view that is already a subview, so this fixes order too

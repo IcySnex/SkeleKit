@@ -12,7 +12,7 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 	{
 		Title = "Keyboard";
 
-		Content = new VStack
+		Content = new StackPanel
 		{
 			Margin = new Thickness(16),
 			Spacing = 12,

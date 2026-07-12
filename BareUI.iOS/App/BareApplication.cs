@@ -2,6 +2,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BareUI;
 
+/// <summary>
+/// The core application instance that handles DI, navigation setup, and the app lifecycle.
+/// </summary>
 public class BareApplication
 {
 	internal enum ShellKind
@@ -13,6 +16,9 @@ public class BareApplication
 	}
 
 
+	/// <summary>
+	/// The currently running application instance.
+	/// </summary>
 	public static BareApplication? Current { get; private set; }
 
 
@@ -36,10 +42,13 @@ public class BareApplication
 
 	readonly ViewRegistry registry;
 	readonly ShellKind shell;
-	readonly bool PreferLargeTitles;
+	readonly bool preferLargeTitles;
 	readonly TabsBuilder? tabsBuilder;
 	readonly Type? rootViewModel;
 
+	/// <summary>
+	/// The built-in service provider for resolving dependencies.
+	/// </summary>
 	public IServiceProvider Services { get; }
 
 	internal BareApplication(
@@ -47,7 +56,7 @@ public class BareApplication
 	{
 		registry = builder.Registry;
 		shell = builder.Shell;
-		PreferLargeTitles = builder.PreferLargeTitles;
+		preferLargeTitles = builder.PreferLargeTitles;
 		tabsBuilder = builder.TabsBuilder;
 		rootViewModel = builder.RootViewModel;
 
@@ -55,15 +64,6 @@ public class BareApplication
 		Services = builder.Services.BuildServiceProvider();
 	}
 
-
-	public static BareApplicationBuilder CreateBuilder() =>
-		new();
-
-	public void Run(string[] args)
-	{
-		Current = this;
-		UIApplication.Main(args, null, typeof(BareApplicationDelegate));
-	}
 
 	internal UIViewController BuildShell()
 	{
@@ -80,32 +80,49 @@ public class BareApplication
 
 		switch (shell)
 		{
-				case ShellKind.SinglePage:
-					return Page(rootViewModel);
+			case ShellKind.SinglePage:
+				return Page(rootViewModel);
 
-				case ShellKind.Stack:
-					return Stack(rootViewModel, PreferLargeTitles);
+			case ShellKind.Stack:
+				return Stack(rootViewModel, preferLargeTitles);
 
-				case ShellKind.Tabs:
-					UITabBarController controller = new();
-					controller.ViewControllers = tabsBuilder?.Definitions
-						.Select(UIViewController (definition) =>
-						{
-							UINavigationController stack = Stack(definition.ViewModel, tabsBuilder.UseLargeTitles);
-							stack.ViewControllers![0].TabBarItem = new(definition.Title, UIImage.GetSystemImage(definition.Icon), null);
+			case ShellKind.Tabs:
+				UITabBarController controller = new();
+				controller.ViewControllers = tabsBuilder?.Definitions
+					.Select(UIViewController (definition) =>
+					{
+						UINavigationController stack = Stack(definition.ViewModel, tabsBuilder.UseLargeTitles);
+						stack.ViewControllers![0].TabBarItem = new(definition.Title, UIImage.GetSystemImage(definition.Icon), null);
 
-							return stack;
-						})
-						.ToArray();
+						return stack;
+					})
+					.ToArray();
 
-					if (tabsBuilder?.UseSidebar is true && OperatingSystem.IsIOSVersionAtLeast(18))
-						controller.Mode = UITabBarControllerMode.TabSidebar;
+				if (tabsBuilder?.UseSidebar is true && OperatingSystem.IsIOSVersionAtLeast(18))
+					controller.Mode = UITabBarControllerMode.TabSidebar;
 
-					return controller;
+				return controller;
 
-				case ShellKind.None:
-				default:
-					throw new InvalidOperationException("Call Tabs(...), Stack<TView>() or SinglePage<TView>() before Run().");
+			case ShellKind.None:
+			default:
+				throw new InvalidOperationException("Call Tabs(...), Stack<TView>() or SinglePage<TView>() before Run().");
 		}
+	}
+
+
+	/// <summary>
+	/// Creates a new builder to configure services and the layout shell.
+	/// </summary>
+	public static BareApplicationBuilder CreateBuilder() =>
+		new();
+
+	/// <summary>
+	/// Starts the native iOS main loop.
+	/// </summary>
+	public void Run(
+		string[] args)
+	{
+		Current = this;
+		UIApplication.Main(args, null, typeof(BareApplicationDelegate));
 	}
 }

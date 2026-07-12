@@ -3,7 +3,7 @@ using Foundation;
 
 namespace BareUI;
 
-static partial class MainThread
+internal static partial class MainThread
 {
 	static partial void PostCore(
 		Action action,

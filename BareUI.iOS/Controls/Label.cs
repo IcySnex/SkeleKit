@@ -1,9 +1,7 @@
-using UIKit;
-
 namespace BareUI;
 
 /// <summary>
-/// A text label wrapping <c>UILabel</c>.
+/// A text label.
 /// </summary>
 public class Label : Control
 {
@@ -58,7 +56,7 @@ public class Label : Control
 		set => weightBinding = Register(weightBinding, value, value => Set(ref weight, value, ApplyFont));
 	}
 	FontWeight weight = BareUI.FontWeight.Regular;
-	Binding<BareUI.FontWeight>? weightBinding;
+	Binding<FontWeight>? weightBinding;
 
 	/// <summary>
 	/// The font's design: system, rounded, serif or monospaced.

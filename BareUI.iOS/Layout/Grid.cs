@@ -1,11 +1,73 @@
-
 namespace BareUI;
 
 /// <summary>
-/// A WPF-style grid placing children into cells of <see cref="Rows"/> and <see cref="Columns"/> (absolute, auto, or star).
+/// A grid placing children into cells of <see cref="Rows"/> and <see cref="Columns"/> (absolute, auto, or star).
 /// </summary>
 public class Grid : Panel
 {
+	static IReadOnlyList<GridLength> EffectiveTracks(
+		List<GridLength> declared) =>
+		declared.Count > 0 ? declared : SingleStar;
+
+	static readonly GridLength[] SingleStar = [GridLength.Star];
+
+	static GridChild PlacementOf(
+		View child,
+		int columnCount,
+		int rowCount)
+	{
+		GridChild placement = child.LayoutParams as GridChild ?? GridChild.Default;
+
+		return new()
+		{
+			Row = Math.Clamp(placement.Row, 0, Math.Max(0, rowCount - 1)),
+			Column = Math.Clamp(placement.Column, 0, Math.Max(0, columnCount - 1)),
+			RowSpan = Math.Max(1, placement.RowSpan),
+			ColumnSpan = Math.Max(1, placement.ColumnSpan)
+		};
+	}
+
+	static double SpanSize(
+		double[] sizes,
+		int start,
+		int span,
+		double spacing)
+	{
+		double total = 0;
+		int end = Math.Min(sizes.Length, start + span);
+		for (int i = start; i < end; i++)
+			total += sizes[i];
+
+		total += spacing * Math.Max(0, Math.Min(span, sizes.Length - start) - 1);
+		return total;
+	}
+
+	static double[] Offsets(
+		double[] sizes,
+		double spacing)
+	{
+		double[] offsets = new double[sizes.Length];
+		double running = 0;
+		for (int i = 0; i < sizes.Length; i++)
+		{
+			offsets[i] = running;
+			running += sizes[i] + spacing;
+		}
+
+		return offsets;
+	}
+
+	static double Sum(
+		double[] values)
+	{
+		double total = 0;
+		foreach (double value in values)
+			total += value;
+
+		return total;
+	}
+
+
 	/// <summary>
 	/// The row definitions, top to bottom. Empty means a single star row.
 	/// </summary>
@@ -152,68 +214,6 @@ public class Grid : Panel
 		return sizes;
 	}
 
-
-	static IReadOnlyList<GridLength> EffectiveTracks(
-		List<GridLength> declared) =>
-		declared.Count > 0 ? declared : SingleStar;
-
-	static readonly GridLength[] SingleStar = [GridLength.Star];
-
-	static GridChild PlacementOf(
-		View child,
-		int columnCount,
-		int rowCount)
-	{
-		GridChild placement = child.LayoutParams as GridChild ?? GridChild.Default;
-
-		return new()
-		{
-			Row = Math.Clamp(placement.Row, 0, Math.Max(0, rowCount - 1)),
-			Column = Math.Clamp(placement.Column, 0, Math.Max(0, columnCount - 1)),
-			RowSpan = Math.Max(1, placement.RowSpan),
-			ColumnSpan = Math.Max(1, placement.ColumnSpan)
-		};
-	}
-
-	static double SpanSize(
-		double[] sizes,
-		int start,
-		int span,
-		double spacing)
-	{
-		double total = 0;
-		int end = Math.Min(sizes.Length, start + span);
-		for (int i = start; i < end; i++)
-			total += sizes[i];
-
-		total += spacing * Math.Max(0, Math.Min(span, sizes.Length - start) - 1);
-		return total;
-	}
-
-	static double[] Offsets(
-		double[] sizes,
-		double spacing)
-	{
-		double[] offsets = new double[sizes.Length];
-		double running = 0;
-		for (int i = 0; i < sizes.Length; i++)
-		{
-			offsets[i] = running;
-			running += sizes[i] + spacing;
-		}
-
-		return offsets;
-	}
-
-	static double Sum(
-		double[] values)
-	{
-		double total = 0;
-		foreach (double value in values)
-			total += value;
-
-		return total;
-	}
 
 	// width of the column span a child sits in
 	double CellWidth(

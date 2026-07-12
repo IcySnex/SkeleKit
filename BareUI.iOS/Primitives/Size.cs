@@ -1,8 +1,10 @@
 namespace BareUI;
 
 /// <summary>
-/// A width/height pair used throughout the measure/arrange layout engine.
+/// A width/height pair used  tothe measure/arrange layout.
 /// </summary>
+/// <param name="Width">The horizontal extent.</param>
+/// <param name="Height">The vertical extent.</param>
 public readonly record struct Size(
 	double Width,
 	double Height)
@@ -21,25 +23,24 @@ public readonly record struct Size(
 	/// <summary>
 	/// True when both axes are finite (neither infinite nor NaN).
 	/// </summary>
-	public bool IsFinite =>
-		double.IsFinite(Width) && double.IsFinite(Height);
+	public bool IsFinite => double.IsFinite(Width) && double.IsFinite(Height);
 
 
 	/// <summary>
 	/// Returns this size shrunk by <paramref name="thickness"/> on both axes, clamped at zero.
 	/// </summary>
+	/// <param name="thickness">The margins or padding to subtract.</param>
+	/// <returns>The deflated size.</returns>
 	public Size Deflate(
 		Thickness thickness) =>
-		new(
-			Math.Max(0, Width - thickness.Horizontal),
-			Math.Max(0, Height - thickness.Vertical));
+		new(Math.Max(0, Width - thickness.Horizontal), Math.Max(0, Height - thickness.Vertical));
 
 	/// <summary>
 	/// Returns this size grown by <paramref name="thickness"/> on both axes.
 	/// </summary>
+	/// <param name="thickness">The margins or padding to add.</param>
+	/// <returns>The inflated size.</returns>
 	public Size Inflate(
 		Thickness thickness) =>
-		new(
-			Width + thickness.Horizontal,
-			Height + thickness.Vertical);
+		new(Width + thickness.Horizontal, Height + thickness.Vertical);
 }

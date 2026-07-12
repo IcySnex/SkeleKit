@@ -1,9 +1,7 @@
-using UIKit;
-
 namespace BareUI;
 
 /// <summary>
-/// An increment/decrement control wrapping <c>UIStepper</c>.
+/// An increment/decrement control.
 /// </summary>
 public class Stepper : Control
 {
@@ -26,7 +24,7 @@ public class Stepper : Control
 		get => minimum;
 		set => Set(ref minimum, value, ApplyRange, affectsMeasure: false);
 	}
-	double minimum = 0;
+	double minimum;
 
 	/// <summary>
 	/// The maximum selectable value.
@@ -57,7 +55,7 @@ public class Stepper : Control
 	private protected override UIView CreateNative()
 	{
 		UIStepper stepper = new();
-		stepper.ValueChanged += (sender, e) => OnValueChanged();
+		stepper.ValueChanged += (_, _) => OnValueChanged();
 
 		return stepper;
 	}

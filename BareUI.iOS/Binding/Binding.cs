@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace BareUI;
 
-abstract class BindingBase
+internal abstract class BindingBase
 {
 	public abstract void Attach(
 		object? source);
@@ -10,8 +10,7 @@ abstract class BindingBase
 	public abstract void Detach();
 }
 
-// live binding: watches the source, pushes values into the control, and (two-way) back out
-sealed class Binding<T>(
+internal sealed class Binding<T>(
 	BindingExpression<T> expression,
 	Action<T?> apply) : BindingBase
 {
@@ -19,8 +18,9 @@ sealed class Binding<T>(
 
 	object? source;
 
-	public UpdateTrigger Trigger =>
-		expression.Trigger;
+
+	public UpdateTrigger Trigger => expression.Trigger;
+
 
 	public override void Attach(
 		object? source)
@@ -47,9 +47,6 @@ sealed class Binding<T>(
 		source = null;
 	}
 
-	/// <summary>
-	/// Writes the control's current value back to the source.
-	/// </summary>
 	public void PushToSource(
 		T? value)
 	{
@@ -90,13 +87,11 @@ sealed class Binding<T>(
 		if (e.PropertyName is { Length: > 0 } name && !Watches(name))
 			return;
 
-		// the source may notify from any thread, but apply touches UIKit
 		MainThread.Post(Refresh);
 	}
 
 	void Refresh()
 	{
-		// an intermediate may have been replaced, so rebuild the subscriptions too
 		if (source is { } current)
 			Attach(current);
 	}

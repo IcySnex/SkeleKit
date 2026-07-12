@@ -5,10 +5,14 @@ namespace BareUI;
 /// </summary>
 public enum TitleStyle
 {
-	/// <summary>The standard inline title.</summary>
+	/// <summary>
+	/// The standard inline title.
+	/// </summary>
 	Inline,
 
-	/// <summary>A large title that collapses to inline as the content scrolls.</summary>
+	/// <summary>
+	/// A large title that collapses to inline as the content scrolls.
+	/// </summary>
 	Large
 }
 
@@ -17,12 +21,18 @@ public enum TitleStyle
 /// </summary>
 public enum PageBackground
 {
-	/// <summary>The system background.</summary>
+	/// <summary>
+	/// The system background.
+	/// </summary>
 	Default,
 
-	/// <summary>The grouped background, for settings-style pages.</summary>
+	/// <summary>
+	/// The grouped background, for settings-style pages.
+	/// </summary>
 	Grouped,
 
-	/// <summary>No background at all.</summary>
+	/// <summary>
+	/// No background at all.
+	/// </summary>
 	None
 }

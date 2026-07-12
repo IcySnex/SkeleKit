@@ -16,7 +16,7 @@ public class DividerDemo : ContentView<DividerDemoViewModel>
 		Content =
 			new ScrollView
 			{
-				Content = new VStack
+				Content = new StackPanel
 				{
 					Spacing = 20,
 					Margin = new Thickness(16),

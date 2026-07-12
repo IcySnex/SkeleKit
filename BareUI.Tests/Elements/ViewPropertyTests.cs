@@ -8,7 +8,7 @@ public class ViewPropertyTests
 	public void Add_SetsParent()
 	{
 		StubLeaf child = new(10, 10);
-		VStack stack = new() { Children = { child } };
+		StackPanel stack = new() { Children = { child } };
 
 		Assert.Same(stack, child.Parent);
 	}
@@ -17,7 +17,7 @@ public class ViewPropertyTests
 	public void Remove_ClearsParent()
 	{
 		StubLeaf child = new(10, 10);
-		VStack stack = new() { Children = { child } };
+		StackPanel stack = new() { Children = { child } };
 
 		stack.Children.Remove(child);
 
@@ -28,7 +28,7 @@ public class ViewPropertyTests
 	public void Clear_ClearsParent()
 	{
 		StubLeaf child = new(10, 10);
-		VStack stack = new() { Children = { child } };
+		StackPanel stack = new() { Children = { child } };
 
 		stack.Children.Clear();
 
@@ -39,8 +39,8 @@ public class ViewPropertyTests
 	public void Parent_ChainsToRoot()
 	{
 		StubLeaf leaf = new(10, 10);
-		VStack inner = new() { Children = { leaf } };
-		VStack outer = new() { Children = { inner } };
+		StackPanel inner = new() { Children = { leaf } };
+		StackPanel outer = new() { Children = { inner } };
 
 		Assert.Same(inner, leaf.Parent);
 		Assert.Same(outer, inner.Parent);
@@ -66,7 +66,7 @@ public class ViewPropertyTests
 	public void InvalidateMeasure_OnUnrealizedTree_DoesNotThrow()
 	{
 		StubLeaf leaf = new(10, 10);
-		_ = new VStack { Children = { leaf } };
+		_ = new StackPanel { Children = { leaf } };
 
 		leaf.InvalidateMeasure();
 	}

@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// Haptic feedback.
+/// Provides access to native device haptic feedback.
 /// </summary>
 public static class Haptics
 {
@@ -12,9 +12,18 @@ public static class Haptics
 			.SelectMany(scene => scene.Windows)
 			.FirstOrDefault(window => window.IsKeyWindow);
 
-	static UIImpactFeedbackStyle Style(
-		HapticStyle style) =>
-		style switch
+
+	/// <summary>
+	/// Triggers impact feedback to simulate physical weight or collisions.
+	/// </summary>
+	/// <param name="style">The weight profile of the impact sensation.</param>
+	public static void Impact(
+		HapticStyle style = HapticStyle.Medium)
+	{
+		if (Anchor() is not UIWindow anchor)
+			return;
+
+		UIImpactFeedbackStyle type = style switch
 		{
 			HapticStyle.Light => UIImpactFeedbackStyle.Light,
 			HapticStyle.Heavy => UIImpactFeedbackStyle.Heavy,
@@ -23,33 +32,14 @@ public static class Haptics
 			_ => UIImpactFeedbackStyle.Medium
 		};
 
-	static UINotificationFeedbackType Notification(
-		HapticsNotification style) =>
-		style switch
-		{
-			HapticsNotification.Warning => UINotificationFeedbackType.Warning,
-			HapticsNotification.Error => UINotificationFeedbackType.Error,
-			_ => UINotificationFeedbackType.Success
-		};
-
-
-	/// <summary>
-	/// A tap, for a button or a state change.
-	/// </summary>
-	public static void Impact(
-		HapticStyle style = HapticStyle.Medium)
-	{
-		if (Anchor() is not UIWindow anchor)
-			return;
-
-		using UIImpactFeedbackGenerator generator = UIImpactFeedbackGenerator.GetFeedbackGenerator(Style(style), anchor);
+		using UIImpactFeedbackGenerator generator = UIImpactFeedbackGenerator.GetFeedbackGenerator(type, anchor);
 
 		generator.Prepare();
 		generator.ImpactOccurred();
 	}
 
 	/// <summary>
-	/// A tick, for moving through a set of values.
+	/// Triggers subtle feedback indicating a user selection change.
 	/// </summary>
 	public static void Selection()
 	{
@@ -63,17 +53,25 @@ public static class Haptics
 	}
 
 	/// <summary>
-	/// Success, warning or failure.
+	/// Triggers notification feedback for successes, warnings, or errors.
 	/// </summary>
+	/// <param name="notification">The event type being signaled.</param>
 	public static void Notify(
 		HapticsNotification notification)
 	{
 		if (Anchor() is not UIWindow anchor)
 			return;
 
+		UINotificationFeedbackType type = notification switch
+		{
+			HapticsNotification.Warning => UINotificationFeedbackType.Warning,
+			HapticsNotification.Error => UINotificationFeedbackType.Error,
+			_ => UINotificationFeedbackType.Success
+		};
+
 		using UINotificationFeedbackGenerator generator = UINotificationFeedbackGenerator.GetFeedbackGenerator(anchor);
 
 		generator.Prepare();
-		generator.NotificationOccurred(Notification(notification));
+		generator.NotificationOccurred(type);
 	}
 }

@@ -1,20 +1,25 @@
 namespace BareUI;
 
 /// <summary>
-/// A scrolling container for a single child, backed by <c>UIScrollView</c>.
+/// A scrolling container for a single child.
 /// </summary>
 public partial class ScrollView : Panel
 {
+	static double Fill(
+		double available,
+		double desired) =>
+		double.IsFinite(available) ? available : desired;
+
+
+	private protected override bool ClipsByDefault => true;
+
+	internal override bool Scrolls => true;
+
+
 	/// <summary>
 	/// The scroll axis.
 	/// </summary>
 	public Orientation Orientation { get; set; } = Orientation.Vertical;
-
-	private protected override bool ClipsByDefault =>
-		true;
-
-	internal override bool Scrolls =>
-		true;
 
 	/// <summary>
 	/// Whether the content is inset so the keyboard never covers the focused control. On by default.
@@ -41,11 +46,6 @@ public partial class ScrollView : Panel
 	}
 	KeyboardDismiss keyboardDismiss = KeyboardDismiss.Interactive;
 
-	void ApplyKeyboardDismiss() =>
-		ApplyKeyboardDismissCore();
-
-	partial void ApplyKeyboardDismissCore();
-
 	/// <summary>
 	/// The single scrollable child.
 	/// </summary>
@@ -60,6 +60,15 @@ public partial class ScrollView : Panel
 		}
 	}
 
+
+	void ApplyKeyboardDismiss() =>
+		ApplyKeyboardDismissCore();
+
+
+	partial void ApplyKeyboardDismissCore();
+
+	partial void ArrangeContent(
+		Size viewport);
 
 	protected override Size MeasureOverride(
 		Size availableSize)
@@ -87,8 +96,6 @@ public partial class ScrollView : Panel
 		return new(width, height);
 	}
 
-	// the engine lays the content out itself: UIKit only calls ScrollHost.LayoutSubviews when the
-	// scroll view's own bounds change, which would leave content stale after a binding update
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
@@ -96,12 +103,4 @@ public partial class ScrollView : Panel
 
 		return finalSize;
 	}
-
-	partial void ArrangeContent(
-		Size viewport);
-
-	static double Fill(
-		double available,
-		double desired) =>
-		double.IsFinite(available) ? available : desired;
 }

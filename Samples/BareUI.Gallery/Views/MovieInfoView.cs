@@ -16,7 +16,7 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
 
 		Content = new ScrollView
 		{
-			Content = new VStack
+			Content = new StackPanel
 			{
 				Spacing = 16,
 				Margin = new Thickness(16),
@@ -54,7 +54,7 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
 								Stretch = Stretch.UniformToFill
 							}.Column(0),
 
-							new VStack
+							new StackPanel
 							{
 								Spacing = 6,
 								Children =

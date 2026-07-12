@@ -2,9 +2,6 @@ using ObjCRuntime;
 
 namespace BareUI;
 
-/// <summary>
-/// The hidden <c>UIViewController</c> that hosts one <see cref="ContentView"/>.
-/// </summary>
 internal sealed class PageHost : UIViewController
 {
 	static CGRect Inset(
@@ -96,9 +93,6 @@ internal sealed class PageHost : UIViewController
 	{ }
 
 
-	/// <summary>
-	/// The page this controller hosts.
-	/// </summary>
 	public ContentView? Page { get; }
 
 
@@ -207,12 +201,11 @@ internal sealed class PageHost : UIViewController
 		};
 
 		search.SearchBar.Placeholder = placeholder;
-		search.SearchBar.TextChanged += (sender, e) => page.NotifySearch(e.SearchText ?? "");
+		search.SearchBar.TextChanged += (_, e) => page.NotifySearch(e.SearchText);
 
 		NavigationItem.SearchController = search;
 		NavigationItem.HidesSearchBarWhenScrolling = false;
 
-		// the search controller is retained natively only
 		DefinesPresentationContext = true;
 	}
 
@@ -311,7 +304,6 @@ internal sealed class PageHost : UIViewController
 
 		Page?.NotifyDisappearing();
 
-		// popped for good, not just covered
 		if (IsMovingFromParentViewController)
 			Page?.Unrealize();
 	}

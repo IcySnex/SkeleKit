@@ -1,22 +1,22 @@
 namespace BareUI;
 
 /// <summary>
-/// What type of notification the haptic tap is.
+/// How the type of notification event for haptic feedback is.
 /// </summary>
 public enum HapticsNotification
 {
 	/// <summary>
-	/// Notification is a success.
+	/// Indicates a task completed successfully.
 	/// </summary>
 	Success,
 
 	/// <summary>
-	/// Notification is a warning.
+	/// Indicates a condition that requires user attention.
 	/// </summary>
 	Warning,
 
 	/// <summary>
-	/// Notification is an error.
+	/// Indicates a failed operation or critical error.
 	/// </summary>
 	Error,
 }
