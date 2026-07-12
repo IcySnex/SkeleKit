@@ -78,14 +78,12 @@ Acceptance target: rewrite its screens with zero UIKit imports.
   ILCompiler ships no `ios-*` RID (`NETSDK1203`); Velura sets it, but it is inert.
 - Public API stays UIKit-free except explicit escape hatches (`NativeView`, `.Native`).
 
-## Status (2026-07-11)
+## Status (2026-07-12)
 
-**M0–M6 complete** apart from validation that needs hardware or the reference app: the Velura
+**M0–M7 complete** apart from validation that needs hardware or the reference app: the Velura
 two-screen port, the on-device 120 Hz scroll + runtime-DI checks, and a LICENSE file. Commits land
-on `main` (linear history). Next: **M7 — styling & resources**; the full spec lives in PLAN.md §M7 +
-ADR-008 + api-sketch.md §6 (typed `Style<T>`, `View.Style`, `UseTheme`, `Label.TextStyle`,
-`Button.Style`→`Kind` rename; resources stay plain statics). PLAN.md and the docs describe current
-state only — historical milestone trackers were removed 2026-07-12.
+on `main` (linear history). PLAN.md and the docs describe current state only — historical milestone
+trackers were removed 2026-07-12.
 
 Shape of the thing now:
 - **Element model**: `View` (lazy realize, WPF measure/arrange, `Parent`, `InvalidateMeasure`),
@@ -104,8 +102,13 @@ Shape of the thing now:
   `ContentView<TVm>` composes its tree in the **constructor** (XAML-compatible); `PageHost` is the
   hidden `UIViewController`. `INavigator` = push/pop/present + alert/confirm/action sheet,
   **ViewModel-first only**. Registration is one path: `UsePages` (`AddTransient`/`AddSingleton`).
+- **Styling** (neutral, unit-tested): `Style<T>` wraps an `Action<T>` (+ `BasedOn`); `View.Style`
+  applies **in its setter** (so it goes first in an initializer); `Theme` (`BareApp.UseTheme`) holds
+  the app-global implicit styles and applies them **in the `View` base ctor**, chain base-most first,
+  per-type chain cached. Precedence is pure C# construction order: field initializers → theme →
+  explicit `Style` → local values. Resources are plain statics — no `ResourceDictionary` (ADR-008).
 - **Gallery**: `Program.cs` + `Views/ViewModels/Models/Services`, CommunityToolkit.Mvvm VMs, zero
-  UIKit outside `NativeViewDemo`.
+  UIKit outside `NativeViewDemo`. `Views/Palette.cs` + `Views/Styles.cs` are the styling pattern.
 
 M5:
 - `CollectionView<TItem>` over `UICollectionView` + **`UICollectionViewDiffableDataSource`** (UIKit does
@@ -142,8 +145,11 @@ Hard-won rules (don't relearn these):
   explicit type arg: `Bind<ICommand?>(vm => vm.SaveCommand)`.
 
 Framework surface (completion pass — every previously deferred item is now implemented):
-- **Text**: `Label.FontWeight` (9 weights), `FontDesign` (system/rounded/serif/mono), `Truncation`,
-  `MaxLines`. All `UIFontMetrics`-scaled, so Dynamic Type works.
+- **Text**: `Label.TextStyle` (the native hierarchy: LargeTitle…Caption2, each with its own Dynamic
+  Type curve, resolved by `GetPreferredFont`), `FontWeight` (9 weights), `FontDesign`
+  (system/rounded/serif/mono), `Truncation`, `MaxLines`. All `UIFontMetrics`-scaled, so Dynamic Type
+  works. `FontSize` defaults to **NaN** = "follow `TextStyle`" (17 without one); an explicit size
+  always beats a text style, weight and design compose on top of whichever wins.
 - **Visual**: `View.Shadow`, `CornerRadius`, `Opacity`, `ClipsToBounds`. **Dark mode**: `Colors`
   palette + semantics (`Label`/`Separator`/backgrounds) resolve live UIKit colors;
   `Color.Dynamic(light, dark)`; `WithAlpha` flattens a system color to its light value. CGColor
@@ -173,6 +179,11 @@ Known debt:
 - DI (`Microsoft.Extensions.DependencyInjection`) is the only reflection surface in the stack —
   the Release device publish is clean (zero IL2xxx), but resolve-at-runtime on device is still
   the real proof.
-- v1 non-goals (see PLAN): theming/styles system, animation *framework*, RTL, XAML. Accessibility
-  custom actions still unwrapped.
+- v1 non-goals (see PLAN): animation *framework*, RTL, XAML; styling stops at ADR-008 (no
+  state-based styles, no runtime theme switching past light/dark, no per-subtree themes).
+  Accessibility custom actions still unwrapped.
+- `VStack`/`HStack` set `Orientation` in their **ctor body**, the one place the library breaks its
+  own rule — so a `Style<VStack>` touching `Orientation` loses. Nothing else does it.
 - M6 remaining: the Velura two-screen port (the acceptance test) and the on-device 120 Hz check.
+- M7 remaining: styling is covered by unit tests and builds clean, but has not been *run* — no
+  simulator screenshot of `StylingDemo`, no Release device re-publish (trim/AOT check).

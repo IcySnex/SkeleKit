@@ -1,7 +1,6 @@
 # BareUI.iOS — API Sketch (Velura before/after)
 
-What *app* code looks like; no UIKit type appears anywhere. Sections 1–5 are the shipped
-API. Section 6 is the **M7 target** (styling) — not implemented yet.
+What *app* code looks like; no UIKit type appears anywhere. Every section is the shipped API.
 
 ## 1. App bootstrap
 
@@ -208,9 +207,9 @@ public partial class HomeViewModel(INavigator navigator) : ObservableObject
 ViewModels stay CommunityToolkit.Mvvm — BareUI requires only `INotifyPropertyChanged` /
 `ICommand`, nothing library-specific.
 
-## 6. Styling & theming (M7 target — not yet implemented)
+## 6. Styling & theming
 
-See PLAN.md §M7 and ADR-008. Styles are typed actions; resources are plain statics.
+See ADR-008. Styles are typed actions; resources are plain statics.
 
 ```csharp
 // Styles.cs — the app's "resource dictionary" is a static class

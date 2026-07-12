@@ -75,6 +75,48 @@ public partial class CounterViewModel : ObservableObject
 }
 ```
 
+## Styling
+
+There is no `ResourceDictionary` and no setter system: shared values are plain statics, and a
+style is a typed action over the control — IntelliSense, compile-time checking, zero reflection.
+
+```csharp
+static class Palette
+{
+	public static readonly Color Card = Colors.SecondaryGroupedBackground;
+}
+
+static class Styles
+{
+	public static readonly Style<Label> Caption = new(label =>
+	{
+		label.TextStyle = TextStyle.Caption1;   // the native type hierarchy, Dynamic Type included
+		label.TextColor = Colors.SecondaryLabel;
+	});
+
+	// BasedOn: Card runs first, then the overrides
+	public static readonly Style<Border> Card = new(border =>
+	{
+		border.Background = Palette.Card;
+		border.CornerRadius = 12;
+	});
+	public static readonly Style<Border> ProminentCard = new(Card, border =>
+		border.Shadow = new(opacity: 0.2, radius: 8, offsetY: 4));
+}
+
+// Explicit — Style goes FIRST in the initializer: later lines override it
+new Label { Style = Styles.Caption, Text = "Runtime" }
+
+// Implicit — one app-global theme, applied to every view of the type as it is built
+BareApp.Create()
+	.UseTheme(theme => theme
+		.Style(new Style<Label>(label => label.TextColor = Colors.Label))
+		.Style(new Style<Button>(button => button.Kind = ButtonStyle.Tinted)))
+```
+
+Precedence, each source beating the one before it: control defaults → theme styles (base type
+first) → explicit `Style` → whatever the initializer assigns after it.
+
 ## What's in the box
 
 - **Layout**: `Grid` (star/auto/pixel, spans, spacing), `VStack`/`HStack`, `Overlay`, `Border`,
@@ -92,6 +134,8 @@ public partial class CounterViewModel : ObservableObject
   `SidebarOnIPad()`.
 - **Page chrome**: titles (incl. large), toolbar items, search bar, background styles, lifecycle
   hooks (`OnAppearing`, `OnLoaded`, ...).
+- **Styling**: typed `Style<T>` with `BasedOn`, an app-global `Theme` of implicit styles, and
+  `Label.TextStyle` for the native type hierarchy.
 - **System integration**: dark mode (semantic + dynamic colors), Dynamic Type, VoiceOver
   (labels, hints, traits), haptics, keyboard avoidance and dismissal, gestures.
 

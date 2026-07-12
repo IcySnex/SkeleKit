@@ -58,6 +58,13 @@ view when realized. This keeps object initializers order-independent and lets tr
 built off-screen. No dependency-property system — plain properties + a small
 `Set(ref field, value)` helper that forwards to native and invalidates layout when needed.
 
+**Styling** (ADR-008): a `Style<T>` is an `Action<T>` over the typed view, so a setter block is
+ordinary C# — no property registry, no boxing, no reflection. `View.Style` applies one in its
+setter; the app-global `Theme` applies its implicit styles in the `View` base constructor, walking
+the inheritance chain base-most first. Because C# runs field initializers before base constructor
+bodies and object initializers after them, value precedence (defaults → theme → explicit `Style` →
+local values) is just construction order — nothing tracks a value's source.
+
 ## 2. Layout engine
 
 Custom two-pass **measure/arrange** (WPF semantics), computing frames directly.
@@ -107,8 +114,8 @@ v1 set and native mapping:
 
 | BareUI | UIKit | Notes |
 |---|---|---|
-| `Label` | `UILabel` | `Text`, `FontSize`/`FontWeight`/`FontDesign` (maps to `UIFontMetrics`-scaled dynamic fonts by default), `TextColor`, `MaxLines`, `Truncation`, `TextAlignment` |
-| `Button` | `UIButton` (UIButtonConfiguration) | `Text`, `Icon` (SF Symbol name), `Style` (Plain/Tinted/Filled/Capsule…), `Command`/`CommandParameter` |
+| `Label` | `UILabel` | `Text`, `TextStyle` (the native type hierarchy), `FontSize`/`FontWeight`/`FontDesign` (maps to `UIFontMetrics`-scaled dynamic fonts by default), `TextColor`, `MaxLines`, `Truncation`, `TextAlignment` |
+| `Button` | `UIButton` (UIButtonConfiguration) | `Text`, `Icon` (SF Symbol name), `Kind` (Plain/Tinted/Filled/Capsule…), `Command`/`CommandParameter` |
 | `Image` | `UIImageView` | `Source` (`ImageSource.Symbol/Bundle/Url`); the default `IImageLoader` caches (`NSCache`), dedups in-flight downloads and pre-decodes; swap it via `BareApp.UseImageLoader` |
 | `TextField` | `UITextField` | `Text` (TwoWay default), `Placeholder`, `Keyboard`, `ReturnKey`, `OnSubmit` |
 | `SecureField` | `UITextField` | secure entry preset |
