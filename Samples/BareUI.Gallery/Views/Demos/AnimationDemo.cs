@@ -11,6 +11,10 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 {
 	const double Distance = 240;
 
+	// hex literals on purpose: a system color resolves natively and cannot lerp, so it would snap
+	static readonly LinearGradient ClosedFill = LinearGradient.Vertical(Color.FromHex(0x5856D6), Color.FromHex(0xFF2D55));
+	static readonly LinearGradient OpenFill = LinearGradient.Vertical(Color.FromHex(0x32ADE6), Color.FromHex(0x30D158));
+
 	// the animator owns a native peer: a field is what keeps it alive while it runs
 	Animator? drag;
 	double grabbedAt;
@@ -33,7 +37,7 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 
 		Border card = new()
 		{
-			Background = LinearGradient.Vertical(Colors.Indigo, Colors.Pink),
+			Background = ClosedFill,
 			CornerRadius = 16,
 			Height = 120,
 			Padding = new Thickness(16),
@@ -47,7 +51,7 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 		};
 		card.OnPan(pan => Drag(card, pan));
 
-		Content = new VStack
+		Content = new StackPanel
 		{
 			Spacing = 20,
 			Margin = new Thickness(16),
@@ -117,6 +121,7 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 		{
 			card.Translation = new(open ? 0 : Distance, 0);
 			card.Rotation = open ? 0 : 6;
+			card.Background = open ? ClosedFill : OpenFill;
 		});
 
 		// it only flips once the animation actually reached the end; a spring-back leaves it as it was

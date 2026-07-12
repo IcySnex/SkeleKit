@@ -1,40 +1,19 @@
 namespace BareUI;
 
-/// <summary>
-/// Integrates an animation's position over time: a damped spring or an eased curve, from 0 towards a target.
-/// </summary>
-/// <remarks>Pure maths on purpose — the whole feel of an animation is testable without UIKit.</remarks>
-sealed class Motion
+internal sealed class Motion(
+	Animation animation)
 {
-	readonly Animation animation;
-
 	double origin;
 	double elapsed;
 
-	public Motion(
-		Animation animation)
-	{
-		this.animation = animation;
-	}
 
-	/// <summary>
-	/// Where the animation is, in fractions of the full travel. A spring may overshoot past 0 or 1.
-	/// </summary>
 	public double Position { get; set; }
 
-	/// <summary>
-	/// How fast the position moves, in full travels per second. Seed it from a gesture for a natural hand-off.
-	/// </summary>
 	public double Velocity { get; set; }
 
-	/// <summary>
-	/// Where the animation is heading.
-	/// </summary>
 	public double Target { get; private set; } = 1;
 
-	/// <summary>
-	/// Points the motion at <paramref name="target"/>, keeping the current position and momentum.
-	/// </summary>
+
 	public void Run(
 		double target)
 	{
@@ -43,9 +22,6 @@ sealed class Motion
 		elapsed = 0;
 	}
 
-	/// <summary>
-	/// Advances the motion by <paramref name="dt"/> seconds. Returns false once it has settled on the target.
-	/// </summary>
 	public bool Step(
 		double dt)
 	{

@@ -10,16 +10,12 @@ namespace BareUI;
 /// <remarks>Hold it in a field for as long as it runs: it owns a native peer, and a collected animator stops ticking.</remarks>
 public sealed class Animator : IDisposable
 {
-	// no UIViewPropertyAnimator: it cannot retime, reverse, or rescrub without jumping. The animator
-	// integrates its own spring and writes the interpolated state into the model every frame, so the
-	// screen and the shadow model are the same thing by construction
 	readonly Action changes;
 	readonly Motion motion;
+	readonly List<Action<bool>> completions = [];
 
 	Dictionary<View, ViewState>? start;
 	Dictionary<View, ViewState>? end;
-
-	readonly List<Action<bool>> completions = [];
 
 	CADisplayLink? link;
 	double lastTime;
@@ -37,16 +33,17 @@ public sealed class Animator : IDisposable
 	/// <summary>
 	/// Prepares an animation of the changes made in <paramref name="changes"/>. It does not run until <see cref="Start"/>.
 	/// </summary>
-	/// <remarks>Only what <paramref name="changes"/> touches is animated, and only its draw-only properties (Translation, Scale, Rotation, Opacity, CornerRadius) interpolate — layout properties snap when it completes.</remarks>
+	/// <remarks>Only what <paramref name="changes"/> touches is animated. Transforms, Opacity, CornerRadius, colors, gradients and layout lengths all interpolate; what has no in-between (a Material, a system color, an auto-sized Width) snaps when the animation settles.</remarks>
 	public static Animator Create(
 		Animation animation,
 		Action changes) =>
 		new(animation, changes);
 
-	// runs the changes once: the model briefly holds the end values while both ends are snapshotted,
-	// then the same tick puts everything back at 0, so nothing ever renders
 	void Materialize()
 	{
+		// runs the changes once: the model briefly holds the end values while both ends are snapshotted,
+		// then the same tick puts everything back at 0, so nothing ever renders
+
 		if (start is not null)
 			return;
 
@@ -73,6 +70,47 @@ public sealed class Animator : IDisposable
 		CATransaction.Commit();
 	}
 
+	void Tick()
+	{
+		double now = link!.TargetTimestamp;
+		double dt = Math.Clamp(now - lastTime, 0.001, 1.0 / 20);
+		lastTime = now;
+
+		if (motion.Step(dt))
+		{
+			Apply(motion.Position);
+			return;
+		}
+
+		StopLink();
+		Apply(motion.Target);
+		Dispatch(motion.Target is 1);
+	}
+
+	void Dispatch(
+		bool finished)
+	{
+		foreach (Action<bool> handler in completions)
+			handler(finished);
+	}
+
+	void StartLink()
+	{
+		if (link is not null)
+			return;
+
+		link = CADisplayLink.Create(Tick);
+		lastTime = CAAnimation.CurrentMediaTime();
+
+		link.AddToRunLoop(NSRunLoop.Main, NSRunLoopMode.Common);
+	}
+
+	void StopLink()
+	{
+		link?.Invalidate();
+		link = null;
+	}
+
 
 	/// <summary>
 	/// How far the animation has run, from 0 to 1. Assign it to scrub, e.g. from a drag.
@@ -94,8 +132,7 @@ public sealed class Animator : IDisposable
 	/// <summary>
 	/// Whether the animation is currently running on its own.
 	/// </summary>
-	public bool IsRunning =>
-		link is not null;
+	public bool IsRunning => link is not null;
 
 	/// <summary>
 	/// Whether the animation is headed backwards, towards where it started. Takes effect on the next <see cref="Continue"/>.
@@ -186,49 +223,9 @@ public sealed class Animator : IDisposable
 		Action<bool> handler) =>
 		completions.Add(handler);
 
+
 	/// <inheritdoc/>
 	public void Dispose() =>
 		StopLink();
 
-
-	void Tick()
-	{
-		double now = link!.TargetTimestamp;
-		double dt = Math.Clamp(now - lastTime, 0.001, 1.0 / 20);
-		lastTime = now;
-
-		if (motion.Step(dt))
-		{
-			Apply(motion.Position);
-			return;
-		}
-
-		StopLink();
-		Apply(motion.Target);
-		Dispatch(motion.Target is 1);
-	}
-
-	void Dispatch(
-		bool finished)
-	{
-		foreach (Action<bool> handler in completions)
-			handler(finished);
-	}
-
-	void StartLink()
-	{
-		if (link is not null)
-			return;
-
-		link = CADisplayLink.Create(Tick);
-		lastTime = CAAnimation.CurrentMediaTime();
-
-		link.AddToRunLoop(NSRunLoop.Main, NSRunLoopMode.Common);
-	}
-
-	void StopLink()
-	{
-		link?.Invalidate();
-		link = null;
-	}
 }

@@ -75,6 +75,39 @@ public readonly record struct Color(
 			Alpha = alpha,
 			Dark = Dark is { } dark ? (dark.Red, dark.Green, dark.Blue, alpha) : null
 		};
+
+	// straight-channel mix, both appearances of a dynamic pair; a system color resolves natively
+	// and cannot be mixed here, so null tells the animation to snap instead
+	internal static Color? Lerp(
+		Color a,
+		Color b,
+		double t)
+	{
+		if (a.System is not null || b.System is not null)
+			return null;
+
+		Color mixed = new(
+			Mix(a.Red, b.Red),
+			Mix(a.Green, b.Green),
+			Mix(a.Blue, b.Blue),
+			Mix(a.Alpha, b.Alpha));
+
+		if (a.Dark is null && b.Dark is null)
+			return mixed;
+
+		(double Red, double Green, double Blue, double Alpha) darkA = a.Dark ?? (a.Red, a.Green, a.Blue, a.Alpha);
+		(double Red, double Green, double Blue, double Alpha) darkB = b.Dark ?? (b.Red, b.Green, b.Blue, b.Alpha);
+
+		return mixed with
+		{
+			Dark = (Mix(darkA.Red, darkB.Red), Mix(darkA.Green, darkB.Green), Mix(darkA.Blue, darkB.Blue), Mix(darkA.Alpha, darkB.Alpha))
+		};
+
+		double Mix(
+			double from,
+			double to) =>
+			Math.Clamp(from + ((to - from) * t), 0, 1);
+	}
 }
 
 /// <summary>
