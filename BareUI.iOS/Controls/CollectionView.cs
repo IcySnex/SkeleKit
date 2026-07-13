@@ -18,26 +18,26 @@ internal interface ICollectionHost
 public partial class CollectionView<TItem> : View, ICollectionHost where TItem : class
 {
 	/// <summary>
-	/// The items to show. Every collection change animates into place.
+	/// The items to show. Changes animate into place when the list is an <c>ObservableCollection</c>.
 	/// </summary>
-	public Bindable<ObservableCollection<TItem>?> ItemsSource
+	public BindableList<TItem> ItemsSource
 	{
-		get => itemsSource;
-		set => itemsSourceBinding = Register(itemsSourceBinding, value, SetItemsSource);
+		get => new(itemsSource);
+		set => itemsSourceBinding = Register(itemsSourceBinding, value.Expression, value.Value, SetItemsSource);
 	}
-	ObservableCollection<TItem>? itemsSource;
-	Binding<ObservableCollection<TItem>?>? itemsSourceBinding;
+	IReadOnlyList<TItem>? itemsSource;
+	Binding<IReadOnlyList<TItem>?>? itemsSourceBinding;
 
 	/// <summary>
 	/// Titled groups, each with its own header. Takes precedence over <see cref="ItemsSource"/>.
 	/// </summary>
-	public Bindable<ObservableCollection<Section<TItem>>?> GroupedItemsSource
+	public BindableList<Section<TItem>> GroupedItemsSource
 	{
-		get => sections;
-		set => sectionsBinding = Register(sectionsBinding, value, SetSections);
+		get => new(sections);
+		set => sectionsBinding = Register(sectionsBinding, value.Expression, value.Value, SetSections);
 	}
-	ObservableCollection<Section<TItem>>? sections;
-	Binding<ObservableCollection<Section<TItem>>?>? sectionsBinding;
+	IReadOnlyList<Section<TItem>>? sections;
+	Binding<IReadOnlyList<Section<TItem>>?>? sectionsBinding;
 
 	/// <summary>
 	/// Builds the element tree for a cell. Called once per recycled cell, never per item.
@@ -128,35 +128,35 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 		new(double.IsFinite(availableSize.Width) ? availableSize.Width : 0, double.IsFinite(availableSize.Height) ? availableSize.Height : 0);
 
 	void SetItemsSource(
-		ObservableCollection<TItem>? value)
+		IReadOnlyList<TItem>? value)
 	{
 		if (ReferenceEquals(itemsSource, value))
 			return;
 
-		if (itemsSource is not null)
-			itemsSource.CollectionChanged -= OnItemsChanged;
+		if (itemsSource is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnItemsChanged;
 
 		itemsSource = value;
 
-		if (itemsSource is not null)
-			itemsSource.CollectionChanged += OnItemsChanged;
+		if (itemsSource is INotifyCollectionChanged live)
+			live.CollectionChanged += OnItemsChanged;
 
 		ReloadItems();
 	}
 
 	void SetSections(
-		ObservableCollection<Section<TItem>>? value)
+		IReadOnlyList<Section<TItem>>? value)
 	{
 		if (ReferenceEquals(sections, value))
 			return;
 
-		if (sections is not null)
-			sections.CollectionChanged -= OnSectionsChanged;
+		if (sections is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnSectionsChanged;
 
 		sections = value;
 
-		if (sections is not null)
-			sections.CollectionChanged += OnSectionsChanged;
+		if (sections is INotifyCollectionChanged live)
+			live.CollectionChanged += OnSectionsChanged;
 
 		ReloadItems();
 	}

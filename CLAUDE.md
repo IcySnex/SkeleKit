@@ -171,8 +171,10 @@ Hard-won rules (don't relearn these):
   `ClipsToBounds` still wins. To round *and* cast: shadow on an outer view, radius on the inner one.
 - **`Bindable<T>` can't take an interface `T`** (C# forbids user-defined conversions from
   interfaces) → list sources (`CollectionView.ItemsSource`/`GroupedItemsSource`, `Picker.ItemsSource`)
-  are typed `ObservableCollection<T>`, so `ItemsSource = ViewModel.Items` assigns plainly and change
-  notification is guaranteed by the type.
+  are `BindableList<T>`: implicit conversions from the *concrete* list types (`T[]`, `List<T>`,
+  `ObservableCollection<T>`) and from binding expressions, accepting any `IReadOnlyList<T>` inside.
+  Mutations animate only when the source implements `INotifyCollectionChanged` — a mutated plain
+  `List<T>` not updating is the developer's contract, not a framework bug (WPF semantics).
 - User-defined conversions don't chain → `Image.Source` needs `ImageSource.Symbol(...)`/`Url(...)`.
 
 Framework surface (completion pass — every previously deferred item is now implemented):

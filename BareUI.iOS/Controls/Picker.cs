@@ -12,13 +12,13 @@ public class Picker<TItem> : Control
 	/// <summary>
 	/// The selectable items.
 	/// </summary>
-	public Bindable<ObservableCollection<TItem>?> ItemsSource
+	public BindableList<TItem> ItemsSource
 	{
-		get => items;
-		set => itemsBinding = Register(itemsBinding, value, value => Set(ref items, value ?? [], ApplyMenu));
+		get => new(items);
+		set => itemsBinding = Register(itemsBinding, value.Expression, value.Value, value => Set(ref items, value ?? [], ApplyMenu));
 	}
-	ObservableCollection<TItem> items = [];
-	Binding<ObservableCollection<TItem>?>? itemsBinding;
+	IReadOnlyList<TItem> items = [];
+	Binding<IReadOnlyList<TItem>?>? itemsBinding;
 
 	/// <summary>
 	/// The selected item, or null for none.

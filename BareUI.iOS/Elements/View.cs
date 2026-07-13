@@ -76,6 +76,13 @@ public abstract partial class View
 	private protected Binding<T>? Register<T>(
 		Binding<T>? existing,
 		Bindable<T> value,
+		Action<T?> apply) =>
+		Register(existing, value.Expression, value.Value, apply);
+
+	private protected Binding<T>? Register<T>(
+		Binding<T>? existing,
+		BindingExpression<T>? expression,
+		T? value,
 		Action<T?> apply)
 	{
 		if (existing is not null)
@@ -84,9 +91,9 @@ public abstract partial class View
 			bindings.Remove(existing);
 		}
 
-		if (value.Expression is not { } expression)
+		if (expression is null)
 		{
-			apply(value.Value);
+			apply(value);
 			return null;
 		}
 
