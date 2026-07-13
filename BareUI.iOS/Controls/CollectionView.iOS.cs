@@ -93,11 +93,15 @@ public partial class CollectionView<TItem>
 
 	internal void OnDragEnded()
 	{
-		if (!endsAfterDrag)
+		if (endsAfterDrag)
+		{
+			endsAfterDrag = false;
+			EndNativeRefresh();
 			return;
+		}
 
-		endsAfterDrag = false;
-		EndNativeRefresh();
+		// a diff held back during a refreshing drag still has to land
+		FlushSnapshot();
 	}
 
 	// land the refresh's own changes first, then collapse the spinner — running both in
@@ -243,6 +247,11 @@ public partial class CollectionView<TItem>
 		{
 			// a flush may have landed it already
 			if (!snapshotQueued)
+				return;
+
+			// a batch update under a held refresh drag interrupts the touch and yanks the offset:
+			// the diff stays queued and the drag's end flushes it, the way Mail lands new rows
+			if (refresh is { Refreshing: true } && Ui.Dragging)
 				return;
 
 			snapshotQueued = false;
