@@ -111,6 +111,56 @@ public class Label : Control
 	TextAlignment textAlignment = BareUI.TextAlignment.Leading;
 	Binding<TextAlignment>? textAlignmentBinding;
 
+	/// <summary>
+	/// Extra points between lines.
+	/// </summary>
+	public double LineSpacing
+	{
+		get => lineSpacing;
+		set => Set(ref lineSpacing, value, ApplyText);
+	}
+	double lineSpacing;
+
+	/// <summary>
+	/// Extra points between characters (negative tightens).
+	/// </summary>
+	public double LetterSpacing
+	{
+		get => letterSpacing;
+		set => Set(ref letterSpacing, value, ApplyText);
+	}
+	double letterSpacing;
+
+	/// <summary>
+	/// Underlines the text.
+	/// </summary>
+	public bool Underline
+	{
+		get => underline;
+		set => Set(ref underline, value, ApplyText, affectsMeasure: false);
+	}
+	bool underline;
+
+	/// <summary>
+	/// Strikes the text through.
+	/// </summary>
+	public bool Strikethrough
+	{
+		get => strikethrough;
+		set => Set(ref strikethrough, value, ApplyText, affectsMeasure: false);
+	}
+	bool strikethrough;
+
+	/// <summary>
+	/// How far the text may shrink to fit its width, 0.5 meaning half size, or 0 to truncate instead.
+	/// </summary>
+	public double AutoShrink
+	{
+		get => autoShrink;
+		set => Set(ref autoShrink, value, ApplyAutoShrink, affectsMeasure: false);
+	}
+	double autoShrink;
+
 
 	private protected override UIView CreateNative() =>
 		new UILabel
@@ -121,19 +171,57 @@ public class Label : Control
 
 	private protected override void ApplyProperties()
 	{
-		ApplyText();
 		ApplyFont();
 		ApplyTextColor();
 		ApplyMaxLines();
 		ApplyTextAlignment();
 		ApplyTruncation();
+		ApplyAutoShrink();
+		ApplyText();
 	}
 
 	UILabel Ui =>
 		(UILabel)Native;
 
-	void ApplyText() =>
-		Ui.Text = text;
+	bool UsesAttributes =>
+		lineSpacing is not 0 || letterSpacing is not 0 || underline || strikethrough;
+
+	void ApplyText()
+	{
+		if (!UsesAttributes || text is null)
+		{
+			Ui.Text = text;
+			return;
+		}
+
+		// the paragraph style mirrors the label's own wrap and alignment, or it would override them
+		NSMutableParagraphStyle paragraph = new()
+		{
+			LineSpacing = (nfloat)lineSpacing,
+			LineBreakMode = Ui.LineBreakMode,
+			Alignment = Ui.TextAlignment
+		};
+
+		UIStringAttributes attributes = new()
+		{
+			ParagraphStyle = paragraph
+		};
+
+		if (letterSpacing is not 0)
+			attributes.KerningAdjustment = (float)letterSpacing;
+		if (underline)
+			attributes.UnderlineStyle = NSUnderlineStyle.Single;
+		if (strikethrough)
+			attributes.StrikethroughStyle = NSUnderlineStyle.Single;
+
+		Ui.AttributedText = new NSAttributedString(text, attributes);
+	}
+
+	void ApplyAutoShrink()
+	{
+		Ui.AdjustsFontSizeToFitWidth = autoShrink > 0;
+		Ui.MinimumScaleFactor = (nfloat)autoShrink;
+	}
 
 	// both paths scale with the user's text-size setting; a weight of Regular leaves a text style's own
 	void ApplyFont() =>
@@ -141,7 +229,8 @@ public class Label : Control
 			? Fonts.Preferred(textStyle!.Value, weight, design)
 			: Fonts.Scaled(FontSpec.SizeOf(fontSize), weight, design);
 
-	void ApplyTruncation() =>
+	void ApplyTruncation()
+	{
 		Ui.LineBreakMode = truncation switch
 		{
 			Truncation.Head => UILineBreakMode.HeadTruncation,
@@ -149,6 +238,10 @@ public class Label : Control
 			Truncation.None => UILineBreakMode.WordWrap,
 			_ => UILineBreakMode.TailTruncation
 		};
+
+		if (UsesAttributes)
+			ApplyText();
+	}
 
 	void ApplyTextColor()
 	{
@@ -159,11 +252,16 @@ public class Label : Control
 	void ApplyMaxLines() =>
 		Ui.Lines = maxLines;
 
-	void ApplyTextAlignment() =>
+	void ApplyTextAlignment()
+	{
 		Ui.TextAlignment = textAlignment switch
 		{
 			BareUI.TextAlignment.Center => UITextAlignment.Center,
 			BareUI.TextAlignment.Trailing => UITextAlignment.Right,
 			_ => UITextAlignment.Left
 		};
+
+		if (UsesAttributes)
+			ApplyText();
+	}
 }

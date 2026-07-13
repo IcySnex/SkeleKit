@@ -29,6 +29,13 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 					new Label { Style = Styles.Caption, Text = "Weight and design compose on top of a text style" },
 					new Label { TextStyle = TextStyle.Body, Text = "Body, rounded, bold", FontDesign = FontDesign.Rounded, Bold = true },
 
+					new Label { Style = Styles.Caption, Text = "Typography — spacing, decoration, auto-shrink" },
+					new Label { Text = "S P A C E D  O U T", LetterSpacing = 3, Bold = true },
+					new Label { Text = "Two lines with extra\nbreathing room between them", LineSpacing = 8, MaxLines = 0 },
+					new Label { Text = "Underlined", Underline = true },
+					new Label { Text = "Struck through", Strikethrough = true },
+					new Label { Text = "This long line shrinks down instead of truncating away", AutoShrink = 0.5, MaxLines = 1 },
+
 					new Label { Style = Styles.Caption, Text = "Style — one shared block of setters" },
 					new Border
 					{
