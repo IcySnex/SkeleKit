@@ -39,16 +39,41 @@ public partial class ScrollView
 		if (refresh is null)
 			return;
 
+		UIScrollView host = (UIScrollView)Native;
+
 		if (IsRefreshing.Value)
 		{
 			if (!refresh.Refreshing)
 				refresh.BeginRefreshing();
+
+			return;
 		}
-		else
+
+		// finishing under a held finger yanks the inset mid-drag: wait for the release
+		if (host.Dragging)
 		{
-			refresh.EndRefreshing();
-			ApplyContentInsets();
+			endsAfterDrag = true;
+			return;
 		}
+
+		EndNativeRefresh();
+	}
+
+	bool endsAfterDrag;
+
+	internal void OnDragEnded()
+	{
+		if (!endsAfterDrag)
+			return;
+
+		endsAfterDrag = false;
+		EndNativeRefresh();
+	}
+
+	void EndNativeRefresh()
+	{
+		refresh?.EndRefreshing();
+		ApplyContentInsets();
 	}
 
 	void ApplyContentInsets()
@@ -258,6 +283,9 @@ internal sealed class ScrollHost : UIScrollView
 			base.ContentOffset = value;
 
 			element?.OnScrolled(value.Y + AdjustedContentInset.Top);
+
+			if (!Dragging)
+				element?.OnDragEnded();
 		}
 	}
 

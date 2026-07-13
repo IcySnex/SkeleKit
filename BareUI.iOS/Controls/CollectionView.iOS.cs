@@ -75,16 +75,39 @@ public partial class CollectionView<TItem>
 		{
 			if (!refresh.Refreshing)
 				refresh.BeginRefreshing();
+
+			return;
 		}
-		else
-			// land the refresh's own changes first, then collapse the spinner — running both in
-			// one turn animates the diff against a moving content inset
-			FlushSnapshot(() =>
-			{
-				refresh.EndRefreshing();
-				SyncInsets();
-			});
+
+		// finishing under a held finger yanks the inset mid-drag: wait for the release
+		if (Ui.Dragging)
+		{
+			endsAfterDrag = true;
+			return;
+		}
+
+		EndNativeRefresh();
 	}
+
+	bool endsAfterDrag;
+
+	internal void OnDragEnded()
+	{
+		if (!endsAfterDrag)
+			return;
+
+		endsAfterDrag = false;
+		EndNativeRefresh();
+	}
+
+	// land the refresh's own changes first, then collapse the spinner — running both in
+	// one turn animates the diff against a moving content inset
+	void EndNativeRefresh() =>
+		FlushSnapshot(() =>
+		{
+			refresh?.EndRefreshing();
+			SyncInsets();
+		});
 
 	/// <summary>
 	/// Scrolls the item into view.
@@ -541,6 +564,11 @@ internal sealed class CollectionDelegate<TItem>(
 	public override void Scrolled(
 		UIScrollView scrollView) =>
 		element.OnScrolled(scrollView.ContentOffset.Y + scrollView.AdjustedContentInset.Top);
+
+	public override void DraggingEnded(
+		UIScrollView scrollView,
+		bool willDecelerate) =>
+		element.OnDragEnded();
 
 	public override UIContextMenuConfiguration? GetContextMenuConfiguration(
 		UICollectionView collectionView,
