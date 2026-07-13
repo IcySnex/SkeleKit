@@ -25,24 +25,27 @@ public partial class ScrollView
 	void ApplyRefresh(
 		UIScrollView host)
 	{
-		if (Refresh is null || refresh is not null)
+		if (RefreshCommand is null || refresh is not null)
 			return;
 
 		refresh = new();
-		refresh.ValueChanged += async (_, _) =>
-		{
-			try
-			{
-				if (Refresh is { } command)
-					await command();
-			}
-			finally
-			{
-				refresh.EndRefreshing();
-			}
-		};
+		refresh.ValueChanged += (_, _) => OnRefreshTriggered();
 
 		host.RefreshControl = refresh;
+	}
+
+	partial void ApplyRefreshingCore()
+	{
+		if (refresh is null)
+			return;
+
+		if (IsRefreshing.Value)
+		{
+			if (!refresh.Refreshing)
+				refresh.BeginRefreshing();
+		}
+		else
+			refresh.EndRefreshing();
 	}
 
 	void ApplyContentInsets()

@@ -63,7 +63,8 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 	void AttachViewModel()
 	{
 		items.ItemsSource = Bindable.From<IReadOnlyList<TodoItem>?>(ViewModel!.Items);
-		items.Refresh = ViewModel.RefreshAsync;
+		items.RefreshCommand = ViewModel.RefreshCommand;
+		items.IsRefreshing = Bind(vm => vm.IsRefreshing, (vm, value) => vm.IsRefreshing = value);
 
 		// native swipe: UIKit owns the gesture and the full-swipe-to-delete
 		items.SwipeActions.Add(new()

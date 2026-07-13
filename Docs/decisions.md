@@ -319,5 +319,7 @@ covariant and `[RelayCommand]` generates `IRelayCommand`.
 - Page factories keep construction reflection-free (no `ActivatorUtilities`), preserving the
   AOT/trim story; the `new()` constraint and the probe instance are gone.
 - A singleton page now keeps the ViewModel it was built with: the pair is cached together.
-- Pull-to-refresh stays `Func<Task>` (`Refresh`): completion controls the spinner, which
-  `ICommand` cannot express. It is the one deliberate exception, named to not claim otherwise.
+- Pull-to-refresh is `RefreshCommand` + a two-way `IsRefreshing` (the `RefreshView` pattern):
+  the pull sets the flag true and fires the command; the ViewModel clears the flag when the work
+  completes, which collapses the spinner. Both halves are bindable-friendly, so no code-behind is
+  ever needed — the earlier `Func<Task>` exception is gone.

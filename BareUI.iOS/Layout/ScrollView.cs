@@ -1,3 +1,5 @@
+using System.Windows.Input;
+
 namespace BareUI;
 
 /// <summary>
@@ -27,9 +29,34 @@ public partial class ScrollView : Panel
 	public bool AvoidsKeyboard { get; set; } = true;
 
 	/// <summary>
-	/// Invoked when the user pulls to refresh. Setting it enables the refresh control; the spinner stops when the task completes.
+	/// Command invoked when the user pulls to refresh. Setting it enables the refresh control.
 	/// </summary>
-	public Func<Task>? Refresh { get; set; }
+	public ICommand? RefreshCommand { get; set; }
+
+	/// <summary>
+	/// Whether the refresh spinner is showing. Two-way: the pull sets it true, the ViewModel sets it false when done.
+	/// </summary>
+	public Bindable<bool> IsRefreshing
+	{
+		get => isRefreshing;
+		set => isRefreshingBinding = Register(isRefreshingBinding, value, value => Set(ref isRefreshing, value, ApplyRefreshing, affectsMeasure: false));
+	}
+	bool isRefreshing;
+	Binding<bool>? isRefreshingBinding;
+
+	internal void OnRefreshTriggered()
+	{
+		Set(ref isRefreshing, true, affectsMeasure: false);
+		isRefreshingBinding?.PushToSource(true);
+
+		if (RefreshCommand is { } command && command.CanExecute(null))
+			command.Execute(null);
+	}
+
+	void ApplyRefreshing() =>
+		ApplyRefreshingCore();
+
+	partial void ApplyRefreshingCore();
 
 	/// <summary>
 	/// Invoked as the view scrolls, with the offset in points.

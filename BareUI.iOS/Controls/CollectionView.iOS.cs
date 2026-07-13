@@ -57,26 +57,29 @@ public partial class CollectionView<TItem>
 	void ApplyRefresh(
 		UICollectionView collection)
 	{
-		if (Refresh is null)
+		if (RefreshCommand is null)
 			return;
 
 		refresh = new();
-		refresh.ValueChanged += async (_, _) =>
-		{
-			try
-			{
-				if (Refresh is { } command)
-					await command();
-			}
-			finally
-			{
-				// land the refresh's own changes first, then collapse the spinner — running both in
-				// one turn animates the diff against a moving content inset
-				FlushSnapshot(() => refresh.EndRefreshing());
-			}
-		};
+		refresh.ValueChanged += (_, _) => OnRefreshTriggered();
 
 		collection.RefreshControl = refresh;
+	}
+
+	partial void ApplyRefreshingCore()
+	{
+		if (refresh is null)
+			return;
+
+		if (IsRefreshing.Value)
+		{
+			if (!refresh.Refreshing)
+				refresh.BeginRefreshing();
+		}
+		else
+			// land the refresh's own changes first, then collapse the spinner — running both in
+			// one turn animates the diff against a moving content inset
+			FlushSnapshot(() => refresh.EndRefreshing());
 	}
 
 	/// <summary>

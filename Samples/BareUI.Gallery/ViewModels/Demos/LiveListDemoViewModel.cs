@@ -55,12 +55,23 @@ public partial class LiveListDemoViewModel : ObservableObject
 		Haptics.Impact(HapticStyle.Light);
 	}
 
-	public async Task RefreshAsync()
-	{
-		await Task.Delay(2000);
+	[ObservableProperty]
+	public partial bool IsRefreshing { get; set; }
 
-		Add();
-		Haptics.Selection();
+	[RelayCommand]
+	async Task Refresh()
+	{
+		try
+		{
+			await Task.Delay(2000);
+
+			Add();
+			Haptics.Selection();
+		}
+		finally
+		{
+			IsRefreshing = false;
+		}
 	}
 
 	public LiveListDemoViewModel()
