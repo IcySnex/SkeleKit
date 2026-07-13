@@ -51,6 +51,17 @@ public class BareApplication
 	/// </summary>
 	public IServiceProvider Services { get; }
 
+	internal static Color? Accent { get; set; }
+
+	internal Action? Backgrounded { get; set; }
+	internal Action? Foregrounded { get; set; }
+
+	internal void NotifyBackground() =>
+		Backgrounded?.Invoke();
+
+	internal void NotifyForeground() =>
+		Foregrounded?.Invoke();
+
 	internal BareApplication(
 		BareApplicationBuilder builder)
 	{
@@ -59,6 +70,9 @@ public class BareApplication
 		preferLargeTitles = builder.PreferLargeTitles;
 		tabsBuilder = builder.TabsBuilder;
 		rootViewModel = builder.RootViewModel;
+
+		Backgrounded = builder.LifecycleBackground;
+		Foregrounded = builder.LifecycleForeground;
 
 		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, CurrentStack));
 		Services = builder.Services.BuildServiceProvider();

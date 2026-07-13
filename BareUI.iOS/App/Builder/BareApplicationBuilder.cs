@@ -43,6 +43,36 @@ public sealed class BareApplicationBuilder
 	}
 
 	/// <summary>
+	/// Sets the app-wide accent color every control tints with.
+	/// </summary>
+	/// <param name="accent">The accent color.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public BareApplicationBuilder UseAccent(
+		Color accent)
+	{
+		BareApplication.Accent = accent;
+		return this;
+	}
+
+	/// <summary>
+	/// Registers app lifecycle hooks, invoked as the app leaves for and returns from the background.
+	/// </summary>
+	/// <param name="background">Invoked when the app enters the background, or null.</param>
+	/// <param name="foreground">Invoked when the app returns to the foreground, or null.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public BareApplicationBuilder UseLifecycle(
+		Action? background = null,
+		Action? foreground = null)
+	{
+		LifecycleBackground = background;
+		LifecycleForeground = foreground;
+		return this;
+	}
+
+	internal Action? LifecycleBackground { get; private set; }
+	internal Action? LifecycleForeground { get; private set; }
+
+	/// <summary>
 	/// Registers implicit styles applied to every view of a type as it is built.
 	/// </summary>
 	/// <param name="configure">A delegate to configure.</param>

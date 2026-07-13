@@ -20,6 +20,18 @@ public class BareWindowSceneDelegate : UIWindowSceneDelegate
 		{
 			RootViewController = app.BuildShell()
 		};
+
+		if (BareApplication.Accent is { } accent)
+			Window.TintColor = accent.ToUIColor();
+
 		Window.MakeKeyAndVisible();
 	}
+
+	public override void DidEnterBackground(
+		UIScene scene) =>
+		BareApplication.Current?.NotifyBackground();
+
+	public override void WillEnterForeground(
+		UIScene scene) =>
+		BareApplication.Current?.NotifyForeground();
 }
