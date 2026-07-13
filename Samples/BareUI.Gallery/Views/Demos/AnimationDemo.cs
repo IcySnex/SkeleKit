@@ -31,9 +31,19 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 			CornerRadius = 16,
 			Padding = new Thickness(20, 12),
 			HorizontalAlignment = HorizontalAlignment.Center,
-			Child = new Label { Style = Styles.Title, Text = "Tap to spring", TextColor = Colors.White }
+			Child = new Label { Style = Styles.Title, Text = "Tap, hold or pinch", TextColor = Colors.White }
 		};
 		badge.TapCommand = Bindable.From<ICommand?>(new RelayCommand(() => Bounce(badge)));
+		badge.OnLongPress(() => Bounce(badge));
+
+		// the pinch drives the transform live; the release springs it home
+		badge.OnPinch(pinch =>
+		{
+			if (pinch.State is GestureState.Changed)
+				badge.Scale = Math.Clamp(pinch.Scale, 0.5, 2.5);
+			else if (pinch.State is GestureState.Ended or GestureState.Cancelled)
+				View.Animate(Animation.Spring(damping: 0.5), () => badge.Scale = 1);
+		});
 
 		Border card = new()
 		{

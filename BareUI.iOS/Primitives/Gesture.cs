@@ -36,3 +36,25 @@ public readonly record struct PanGesture(
 	GestureState State,
 	Point Translation,
 	Point Velocity);
+
+/// <summary>
+/// One update of a pinch: the factor the touched distance has scaled by since the gesture began.
+/// </summary>
+/// <param name="State">The current execution state of the gesture lifecycle.</param>
+/// <param name="Scale">The cumulative scale factor, 1 at the start.</param>
+/// <param name="Velocity">The scale change per second.</param>
+public readonly record struct PinchGesture(
+	GestureState State,
+	double Scale,
+	double Velocity);
+
+/// <summary>
+/// One update of a two-finger rotation, in degrees since the gesture began.
+/// </summary>
+/// <param name="State">The current execution state of the gesture lifecycle.</param>
+/// <param name="Degrees">The cumulative rotation, clockwise positive.</param>
+/// <param name="Velocity">The rotation change in degrees per second.</param>
+public readonly record struct RotateGesture(
+	GestureState State,
+	double Degrees,
+	double Velocity);

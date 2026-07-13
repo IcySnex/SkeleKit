@@ -225,10 +225,10 @@ public class Button : Control
 			double points = double.IsNaN(iconSize)
 				? size switch
 				{
-					ButtonSize.Mini => 12,
-					ButtonSize.Small => 13,
-					ButtonSize.Large => 17,
-					_ => 15
+					ButtonSize.Mini => 10,
+					ButtonSize.Small => 11,
+					ButtonSize.Large => 15,
+					_ => 13
 				}
 				: iconSize;
 

@@ -34,7 +34,7 @@ public class ButtonDemo : ContentView<ButtonDemoViewModel>
 
 					new Label { Style = Styles.Caption, Text = "Subtitle, size, destructive, loading" },
 					new Button { Text = "Buy now", Subtitle = "Free shipping", Kind = ButtonStyle.Filled, Size = ButtonSize.Large },
-					new Button { Text = "Delete", Icon = "trash", IsDestructive = true, Kind = ButtonStyle.Tinted },
+					new Button { Text = "Delete", Icon = "trash" , IsDestructive = true, Kind = ButtonStyle.Tinted },
 					new Button { Text = "Loading", IsLoading = true, Kind = ButtonStyle.Gray },
 
 					new Label { Style = Styles.Caption, Text = "Menu button — tap opens a pull-down" },

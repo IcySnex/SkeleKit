@@ -489,19 +489,88 @@ public abstract partial class View
 			CGPoint velocity = recognizer.VelocityInView(recognizer.View?.Superview);
 
 			handler(new(
-				recognizer.State switch
-				{
-					UIGestureRecognizerState.Began => GestureState.Began,
-					UIGestureRecognizerState.Changed => GestureState.Changed,
-					UIGestureRecognizerState.Ended => GestureState.Ended,
-					_ => GestureState.Cancelled
-				},
+				StateOf(recognizer),
 				new(translation.X, translation.Y),
 				new(velocity.X, velocity.Y)));
 		});
 
 		AddGesture(recognizer);
 	}
+
+	/// <summary>
+	/// Calls <paramref name="handler"/> when the view is held down for <paramref name="seconds"/>.
+	/// </summary>
+	public void OnLongPress(
+		Action handler,
+		double seconds = 0.5)
+	{
+		UILongPressGestureRecognizer recognizer = null!;
+
+		recognizer = new(() =>
+		{
+			if (recognizer.State is UIGestureRecognizerState.Began)
+				handler();
+		})
+		{
+			MinimumPressDuration = seconds
+		};
+
+		AddGesture(recognizer);
+	}
+
+	/// <summary>
+	/// Calls <paramref name="handler"/> when the view is double-tapped.
+	/// </summary>
+	public void OnDoubleTap(
+		Action handler) =>
+		AddGesture(new UITapGestureRecognizer(handler)
+		{
+			NumberOfTapsRequired = 2
+		});
+
+	/// <summary>
+	/// Calls <paramref name="handler"/> as the view is pinched. Feed the scale into <see cref="Scale"/> to zoom it.
+	/// </summary>
+	public void OnPinch(
+		Action<PinchGesture> handler)
+	{
+		UIPinchGestureRecognizer recognizer = null!;
+
+		recognizer = new(() =>
+			handler(new(
+				StateOf(recognizer),
+				recognizer.Scale,
+				recognizer.Velocity)));
+
+		AddGesture(recognizer);
+	}
+
+	/// <summary>
+	/// Calls <paramref name="handler"/> as the view is rotated with two fingers. Feed the degrees into <see cref="Rotation"/> to turn it.
+	/// </summary>
+	public void OnRotate(
+		Action<RotateGesture> handler)
+	{
+		UIRotationGestureRecognizer recognizer = null!;
+
+		recognizer = new(() =>
+			handler(new(
+				StateOf(recognizer),
+				recognizer.Rotation * 180 / Math.PI,
+				recognizer.Velocity * 180 / Math.PI)));
+
+		AddGesture(recognizer);
+	}
+
+	static GestureState StateOf(
+		UIGestureRecognizer recognizer) =>
+		recognizer.State switch
+		{
+			UIGestureRecognizerState.Began => GestureState.Began,
+			UIGestureRecognizerState.Changed => GestureState.Changed,
+			UIGestureRecognizerState.Ended => GestureState.Ended,
+			_ => GestureState.Cancelled
+		};
 
 	/// <summary>
 	/// Adds a native gesture recognizer. An escape hatch for gestures the library does not wrap.
