@@ -47,6 +47,44 @@ public partial class ScrollView : Panel
 	KeyboardDismiss keyboardDismiss = KeyboardDismiss.Interactive;
 
 	/// <summary>
+	/// Whether scrolling snaps to whole viewport pages.
+	/// </summary>
+	public bool Paging
+	{
+		get => paging;
+		set => Set(ref paging, value, ApplyBehavior, affectsMeasure: false);
+	}
+	bool paging;
+
+	/// <summary>
+	/// Whether the scroll indicator is shown.
+	/// </summary>
+	public bool ShowsIndicator
+	{
+		get => showsIndicator;
+		set => Set(ref showsIndicator, value, ApplyBehavior, affectsMeasure: false);
+	}
+	bool showsIndicator = true;
+
+	/// <summary>
+	/// Scrolls to an offset along the scroll axis, in points.
+	/// </summary>
+	public void ScrollTo(
+		double offset,
+		bool animated = true) =>
+		ScrollToCore(offset, animated);
+
+
+	void ApplyBehavior() =>
+		ApplyBehaviorCore();
+
+	partial void ApplyBehaviorCore();
+
+	partial void ScrollToCore(
+		double offset,
+		bool animated);
+
+	/// <summary>
 	/// The single scrollable child.
 	/// </summary>
 	public View? Content

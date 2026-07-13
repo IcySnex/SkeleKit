@@ -178,7 +178,34 @@ public partial class ScrollView
 		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never;
 
 		ApplyKeyboardDismiss();
+		ApplyBehavior();
 		ApplyRefresh(host);
+	}
+
+	partial void ApplyBehaviorCore()
+	{
+		UIScrollView host = (UIScrollView)Native;
+		bool vertical = Orientation == Orientation.Vertical;
+
+		host.PagingEnabled = Paging;
+		host.ShowsVerticalScrollIndicator = ShowsIndicator && vertical;
+		host.ShowsHorizontalScrollIndicator = ShowsIndicator && !vertical;
+	}
+
+	partial void ScrollToCore(
+		double offset,
+		bool animated)
+	{
+		if (!IsRealized)
+			return;
+
+		UIScrollView host = (UIScrollView)Native;
+
+		host.SetContentOffset(
+			Orientation == Orientation.Vertical
+				? new(host.ContentOffset.X, (nfloat)offset)
+				: new((nfloat)offset, host.ContentOffset.Y),
+			animated);
 	}
 }
 
