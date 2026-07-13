@@ -43,8 +43,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ★ (skip) **Per-corner rounding + continuous curve** — `MaskedCorners` and
   `CornerCurve = .continuous` (the Apple squircle — today's radius is the "cheap" circular look).
 - ★ **TintColor** — propagating accent for buttons/images/controls under a subtree.
-- ★ **Typed gestures beyond pan/tap** — `OnLongPress`, `OnDoubleTap`, `OnPinch`, `OnRotate`
-  (pinch/rotate feed `Scale`/`Rotation` naturally, pairs with the Animator).
+- ~~★ **Typed gestures beyond pan/tap**~~ — **done** (`OnLongPress`, `OnDoubleTap`, `OnPinch`,
+  `OnRotate`).
 - ◆ (skip) **Pointer/hover effects (iPad)** — `UIPointerInteraction` lift/highlight; one enum property.
 - ◆ **Context menu on any view** — `UIContextMenuInteraction`; the list already has the
   `MenuAction` model, reuse it.
@@ -99,8 +99,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 ## Missing controls (all wrap one UIKit class)
 
-- ◆ **DatePicker** — `UIDatePicker`: date/time/date-and-time/countdown × compact/inline/wheels.
-  Most-requested control that isn't there.
+- ~~◆ **DatePicker**~~ — **done** (modes × styles, min/max, two-way `Date`); countdown mode left
+  out on purpose.
 - ~~★ **SegmentedControl**~~ — **done** (new control, `Items` + two-way `SelectedIndex`).
 - ★ **ColorWell** — `UIColorWell` (+ `UIColorPickerViewController` via navigator).
 - ★ **PageControl** — dots, pairs with the carousel layout.
