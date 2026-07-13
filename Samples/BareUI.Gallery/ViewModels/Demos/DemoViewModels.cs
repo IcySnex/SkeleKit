@@ -58,6 +58,12 @@ public partial class SegmentedDemoViewModel : ObservableObject
 	public partial int Selected { get; set; }
 }
 
+public partial class DatePickerDemoViewModel : ObservableObject
+{
+	[ObservableProperty]
+	public partial DateTime Birthday { get; set; } = new(2000, 1, 1);
+}
+
 public partial class SliderDemoViewModel : ObservableObject
 {
 	[ObservableProperty]

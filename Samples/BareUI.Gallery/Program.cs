@@ -23,6 +23,7 @@ BareApplication.CreateBuilder()
 		services.AddTransient<TextEditorDemoViewModel>();
 		services.AddTransient<SwitchDemoViewModel>();
 		services.AddTransient<SegmentedDemoViewModel>();
+		services.AddTransient<DatePickerDemoViewModel>();
 		services.AddTransient<SliderDemoViewModel>();
 		services.AddTransient<StepperDemoViewModel>();
 		services.AddTransient<ProgressBarDemoViewModel>();
@@ -53,6 +54,7 @@ BareApplication.CreateBuilder()
 		pages.AddTransient<TextEditorDemo>();
 		pages.AddTransient<SwitchDemo>();
 		pages.AddTransient<SegmentedDemo>();
+		pages.AddTransient<DatePickerDemo>();
 		pages.AddTransient<SliderDemo>();
 		pages.AddTransient<StepperDemo>();
 		pages.AddTransient<ProgressBarDemo>();
