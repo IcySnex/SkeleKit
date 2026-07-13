@@ -45,12 +45,21 @@ public partial class ScrollView
 				refresh.BeginRefreshing();
 		}
 		else
+		{
 			refresh.EndRefreshing();
+			ApplyContentInsets();
+		}
 	}
 
 	void ApplyContentInsets()
 	{
 		UIScrollView host = (UIScrollView)Native;
+
+		// while refreshing, UIKit holds the spinner open through the top inset; writing ours over
+		// it collapses the spinner mid-spin
+		if (refresh is { Refreshing: true })
+			return;
+
 		Thickness bled = BledInsets;
 		bool vertical = Orientation == Orientation.Vertical;
 

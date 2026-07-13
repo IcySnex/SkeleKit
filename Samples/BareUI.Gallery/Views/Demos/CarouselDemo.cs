@@ -1,4 +1,3 @@
-using System.Windows.Input;
 using BareUI.Gallery.Models;
 using BareUI.Gallery.ViewModels.Demos;
 using BareUI.Gallery.Views;
@@ -10,16 +9,6 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class CarouselDemo : ContentView<CarouselDemoViewModel>
 {
-	readonly CollectionView<Movie> movies = new()
-	{
-		Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12, snap: CarouselSnap.LeadingBoundary),
-		ItemTemplate = () => new MovieCell(),
-		Height = 260,
-
-		// only the row bleeds: it scrolls under the notch, the posters stay inside the safe area
-		IgnoresSafeArea = SafeAreaEdges.Leading | SafeAreaEdges.Trailing
-	};
-
 	public CarouselDemo(
 		CarouselDemoViewModel viewModel) : base(viewModel)
 	{
@@ -37,19 +26,21 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 					Text = "Swipe sideways — it settles on an item",
 					Margin = new Thickness(16, 0)
 				},
-				movies
+				new CollectionView<Movie>
+				{
+					Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12, snap: CarouselSnap.LeadingBoundary),
+					ItemTemplate = () => new MovieCell(),
+					ItemsSource = ViewModel.Movies,
+					SelectionCommand = ViewModel.OpenCommand,
+					Height = 260,
+
+					// only the row bleeds: it scrolls under the notch, the posters stay inside the safe area
+					IgnoresSafeArea = SafeAreaEdges.Leading | SafeAreaEdges.Trailing
+				}
 			}
 		};
-
-		AttachViewModel();
-		}
-
-	void AttachViewModel()
-	{
-		movies.ItemsSource = Bindable.From<IReadOnlyList<Movie>?>(ViewModel!.Movies);
-		movies.SelectionCommand = ViewModel.OpenCommand;
 	}
 
 	protected override void OnAppearing() =>
-		_ = ViewModel!.LoadAsync();
+		_ = ViewModel.LoadAsync();
 }

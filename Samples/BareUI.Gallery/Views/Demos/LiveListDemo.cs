@@ -1,4 +1,3 @@
-using System.Windows.Input;
 using BareUI.Gallery.Models;
 using BareUI.Gallery.ViewModels.Demos;
 using BareUI.Gallery.Views;
@@ -11,26 +10,13 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class LiveListDemo : ContentView<LiveListDemoViewModel>
 {
-	readonly CollectionView<TodoItem> items = new()
-	{
-		Layout = CollectionLayout.List(),
-		ItemTemplate = () => new TodoCell(),
-
-		// the list scrolls under the tab bar; its content stays above it
-		IgnoresSafeArea = SafeAreaEdges.Bottom,
-		EmptyView = new Label
-		{
-			Style = Styles.Detail,
-			Text = "Nothing here yet — tap Add",
-			TextAlignment = TextAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center
-		}
-	};
-
 	public LiveListDemo(
 		LiveListDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Live list";
+
+		ToolbarItems.Add(new() { Icon = "plus", IsPrimary = true, Command = ViewModel.AddCommand });
+		ToolbarItems.Add(new() { Text = "Clear", Side = ToolbarSide.Leading, Command = ViewModel.ClearCommand });
 
 		Content = new Grid
 		{
@@ -53,55 +39,36 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 					}
 				}.Row(0),
 
-				items.Row(1)
+				new CollectionView<TodoItem>
+				{
+					Layout = CollectionLayout.List(),
+					ItemTemplate = () => new TodoCell(),
+					ItemsSource = ViewModel.Items,
+					RefreshCommand = ViewModel.RefreshCommand,
+					IsRefreshing = Bind(vm => vm.IsRefreshing, (vm, value) => vm.IsRefreshing = value),
+
+					// the list scrolls under the tab bar; its content stays above it
+					IgnoresSafeArea = SafeAreaEdges.Bottom,
+					EmptyView = new Label
+					{
+						Style = Styles.Detail,
+						Text = "Nothing here yet — tap Add",
+						TextAlignment = TextAlignment.Center,
+						VerticalAlignment = VerticalAlignment.Center
+					},
+
+					// native swipe: UIKit owns the gesture and the full-swipe-to-delete
+					SwipeActions =
+					{
+						new() { Text = "Delete", Icon = "trash", IsDestructive = true, Command = ViewModel.DeleteCommand }
+					},
+					ContextMenu =
+					{
+						new() { Text = "Duplicate", Icon = "plus.square.on.square", Command = ViewModel.DuplicateCommand },
+						new() { Text = "Delete", Icon = "trash", IsDestructive = true, Command = ViewModel.DeleteCommand }
+					}
+				}.Row(1)
 			}
 		};
-
-		AttachViewModel();
-		}
-
-	void AttachViewModel()
-	{
-		items.ItemsSource = Bindable.From<IReadOnlyList<TodoItem>?>(ViewModel!.Items);
-		items.RefreshCommand = ViewModel.RefreshCommand;
-		items.IsRefreshing = Bind(vm => vm.IsRefreshing, (vm, value) => vm.IsRefreshing = value);
-
-		// native swipe: UIKit owns the gesture and the full-swipe-to-delete
-		items.SwipeActions.Add(new()
-		{
-			Text = "Delete",
-			Icon = "trash",
-			IsDestructive = true,
-			Command = ViewModel.DeleteCommand
-		});
-
-		items.ContextMenu.Add(new()
-		{
-			Text = "Duplicate",
-			Icon = "plus.square.on.square",
-			Command = ViewModel.DuplicateCommand
-		});
-
-		items.ContextMenu.Add(new()
-		{
-			Text = "Delete",
-			Icon = "trash",
-			IsDestructive = true,
-			Command = ViewModel.DeleteCommand
-		});
-
-		ToolbarItems.Add(new()
-		{
-			Icon = "plus",
-			IsPrimary = true,
-			Command = ViewModel.AddCommand
-		});
-
-		ToolbarItems.Add(new()
-		{
-			Text = "Clear",
-			Side = ToolbarSide.Leading,
-			Command = ViewModel.ClearCommand
-		});
 	}
 }

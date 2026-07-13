@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -81,7 +82,7 @@ public partial class StepperDemoViewModel : ObservableObject
 
 public partial class PickerDemoViewModel : ObservableObject
 {
-	public IReadOnlyList<string> Options { get; } =
+	public ObservableCollection<string> Options { get; } =
 		["Action", "Comedy", "Drama", "Science Fiction"];
 
 	[ObservableProperty]

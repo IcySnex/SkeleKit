@@ -1,7 +1,5 @@
-using System.Windows.Input;
 using BareUI.Gallery.Models;
 using BareUI.Gallery.ViewModels.Demos;
-using BareUI.Gallery.Views;
 
 namespace BareUI.Gallery.Views.Demos;
 
@@ -10,13 +8,6 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class ListDemo : ContentView<ListDemoViewModel>
 {
-	readonly CollectionView<SettingsEntry> entries = new()
-	{
-		Layout = CollectionLayout.List(grouped: true),
-		ItemTemplate = () => new SettingsCell(),
-		HeaderTemplate = () => new SectionHeader()
-	};
-
 	public ListDemo(
 		ListDemoViewModel viewModel) : base(viewModel)
 	{
@@ -25,14 +16,13 @@ public class ListDemo : ContentView<ListDemoViewModel>
 		// the large title collapses as the list scrolls
 		TitleStyle = TitleStyle.Large;
 
-		Content = entries;
-
-		AttachViewModel();
-		}
-
-	void AttachViewModel()
-	{
-		entries.GroupedItemsSource = Bindable.From<IReadOnlyList<Section<SettingsEntry>>?>(ViewModel!.Sections);
-		entries.SelectionCommand = ViewModel.OpenCommand;
+		Content = new CollectionView<SettingsEntry>
+		{
+			Layout = CollectionLayout.List(grouped: true),
+			ItemTemplate = () => new SettingsCell(),
+			HeaderTemplate = () => new SectionHeader(),
+			GroupedItemsSource = ViewModel.Sections,
+			SelectionCommand = ViewModel.OpenCommand
+		};
 	}
 }

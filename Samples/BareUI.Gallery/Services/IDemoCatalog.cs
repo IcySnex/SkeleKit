@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using BareUI.Gallery.Models;
 
 namespace BareUI.Gallery.Services;
@@ -7,5 +8,5 @@ namespace BareUI.Gallery.Services;
 /// </summary>
 public interface IDemoCatalog
 {
-	IReadOnlyList<DemoEntry> Demos { get; }
+	ObservableCollection<DemoEntry> Demos { get; }
 }

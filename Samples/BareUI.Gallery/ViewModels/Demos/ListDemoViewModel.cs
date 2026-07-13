@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using BareUI.Gallery.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -7,7 +8,7 @@ namespace BareUI.Gallery.ViewModels.Demos;
 public partial class ListDemoViewModel(
 	INavigator navigator) : ObservableObject
 {
-	public IReadOnlyList<Section<SettingsEntry>> Sections { get; } =
+	public ObservableCollection<Section<SettingsEntry>> Sections { get; } =
 	[
 		new("General",
 		[

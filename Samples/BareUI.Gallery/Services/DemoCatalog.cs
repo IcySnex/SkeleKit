@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using BareUI.Gallery.Models;
 using BareUI.Gallery.ViewModels.Demos;
 
@@ -5,7 +6,7 @@ namespace BareUI.Gallery.Services;
 
 public sealed class DemoCatalog : IDemoCatalog
 {
-	public IReadOnlyList<DemoEntry> Demos { get; } =
+	public ObservableCollection<DemoEntry> Demos { get; } =
 	[
 		new("Styling", typeof(StylingDemoViewModel)),
 		new("Animation", typeof(AnimationDemoViewModel)),

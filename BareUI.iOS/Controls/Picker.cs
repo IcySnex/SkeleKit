@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace BareUI;
 
 /// <summary>
@@ -8,15 +10,15 @@ public class Picker<TItem> : Control
 	where TItem : class
 {
 	/// <summary>
-	/// The selectable items. Interface-typed, so a literal needs <c>Bindable.From(...)</c>.
+	/// The selectable items.
 	/// </summary>
-	public Bindable<IReadOnlyList<TItem>?> ItemsSource
+	public Bindable<ObservableCollection<TItem>?> ItemsSource
 	{
-		get => Bindable.From<IReadOnlyList<TItem>?>(items);
+		get => items;
 		set => itemsBinding = Register(itemsBinding, value, value => Set(ref items, value ?? [], ApplyMenu));
 	}
-	IReadOnlyList<TItem> items = [];
-	Binding<IReadOnlyList<TItem>?>? itemsBinding;
+	ObservableCollection<TItem> items = [];
+	Binding<ObservableCollection<TItem>?>? itemsBinding;
 
 	/// <summary>
 	/// The selected item, or null for none.

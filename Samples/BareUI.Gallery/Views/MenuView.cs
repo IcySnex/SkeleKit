@@ -30,7 +30,7 @@ public class MenuView : ContentView<MenuViewModel>
 				{
 					Layout = CollectionLayout.List(),
 					ItemTemplate = () => new DemoRow(),
-					ItemsSource = Bind<IReadOnlyList<DemoEntry>?>(vm => vm.Demos),
+					ItemsSource = ViewModel.Demos,
 					SelectionCommand = ViewModel.OpenDemoCommand,
 					IgnoresSafeArea = SafeAreaEdges.Bottom
 				}.Row(1)

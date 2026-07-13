@@ -79,7 +79,11 @@ public partial class CollectionView<TItem>
 		else
 			// land the refresh's own changes first, then collapse the spinner — running both in
 			// one turn animates the diff against a moving content inset
-			FlushSnapshot(() => refresh.EndRefreshing());
+			FlushSnapshot(() =>
+			{
+				refresh.EndRefreshing();
+				SyncInsets();
+			});
 	}
 
 	/// <summary>
@@ -357,6 +361,11 @@ public partial class CollectionView<TItem>
 	void SyncInsets()
 	{
 		if (!IsRealized)
+			return;
+
+		// while refreshing, UIKit holds the spinner open through the top inset; writing ours over
+		// it collapses the spinner mid-spin. It restores our inset when EndRefreshing runs a sync
+		if (refresh is { Refreshing: true })
 			return;
 
 		Thickness bled = BledInsets;
