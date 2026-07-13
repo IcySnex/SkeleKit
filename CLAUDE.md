@@ -85,7 +85,18 @@ Acceptance target: rewrite its screens with zero UIKit imports.
   ILCompiler ships no `ios-*` RID (`NETSDK1203`); Velura sets it, but it is inert.
 - Public API stays UIKit-free except explicit escape hatches (`NativeView`, `.Native`).
 
-## Status (2026-07-12)
+## Status (2026-07-13)
+
+Active workstream: `Docs/api-gaps.md` — the UIKit capability audit. Items marked "(skip)" are
+declined, ~~struck~~ ones are done; work continues top-down by value. Done so far: page chrome
+(back button, prompt, status bar, tab-bar hiding, large-title collapse via `SetContentScrollView`),
+text-input traits (`ContentKind` autofill etc.), value-control tints, Button configuration pack
+(+ custom `IconSize`/`IconSpacing`/`Padding`), Label typography pack, ScrollView knobs,
+`UseAccent`/`UseLifecycle`, SegmentedControl, DatePicker, typed gestures. The animation system was
+rewritten (ADR-010: own display-link integrator, no UIViewPropertyAnimator) and the callback API
+redesigned (ADR-012: commands for intents / Actions for streams / ctor-injected ViewModels /
+`BindableList<T>` sources, `RefreshCommand`+`IsRefreshing`). Pull-to-refresh defers diffs and
+EndRefreshing while a drag is held, and the inset sync leaves a refreshing control alone.
 
 **M0–M7 complete** apart from validation that needs hardware or the reference app: the Velura
 two-screen port, the on-device 120 Hz scroll + runtime-DI checks, and a LICENSE file. Commits land
