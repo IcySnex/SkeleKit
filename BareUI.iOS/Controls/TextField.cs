@@ -1,3 +1,5 @@
+using System.Windows.Input;
+
 namespace BareUI;
 
 /// <summary>
@@ -134,9 +136,9 @@ public class TextField : Control
 	public Action<string>? TextChanged { get; set; }
 
 	/// <summary>
-	/// Invoked when the user taps the keyboard's return key.
+	/// Command invoked when the user taps the keyboard's return key.
 	/// </summary>
-	public Action? OnSubmit { get; set; }
+	public ICommand? SubmitCommand { get; set; }
 
 
 	private protected override UIView CreateNative()
@@ -153,7 +155,8 @@ public class TextField : Control
 		field.ShouldReturn = textField =>
 		{
 			textField.ResignFirstResponder();
-			OnSubmit?.Invoke();
+			if (SubmitCommand is { } submit && submit.CanExecute(null))
+				submit.Execute(null);
 
 			return true;
 		};

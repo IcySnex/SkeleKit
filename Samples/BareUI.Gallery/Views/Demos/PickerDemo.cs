@@ -15,7 +15,8 @@ public class PickerDemo : ContentView<PickerDemoViewModel>
 		HorizontalAlignment = HorizontalAlignment.Start
 	};
 
-	public PickerDemo()
+	public PickerDemo(
+		PickerDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Picker";
 
@@ -35,9 +36,11 @@ public class PickerDemo : ContentView<PickerDemoViewModel>
 				}
 			}
 		};
-	}
+
+		AttachViewModel();
+		}
 
 	// interface-typed, so a literal needs Bindable.From
-	protected override void OnViewModelAttached() =>
+	void AttachViewModel() =>
 		picker.ItemsSource = Bindable.From<IReadOnlyList<string>?>(ViewModel!.Options);
 }

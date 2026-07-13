@@ -9,7 +9,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class ProgressBarDemo : ContentView<ProgressBarDemoViewModel>
 {
-	public ProgressBarDemo()
+	public ProgressBarDemo(
+		ProgressBarDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "ProgressBar";
 

@@ -21,7 +21,8 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 	double panStart;
 	bool open;
 
-	public AnimationDemo()
+	public AnimationDemo(
+		AnimationDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Animation";
 
@@ -33,17 +34,17 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Child = new Label { Style = Styles.Title, Text = "Tap, hold or pinch", TextColor = Colors.White }
 		};
-		badge.TapCommand = Bindable.From<ICommand?>(new RelayCommand(() => Bounce(badge)));
-		badge.OnLongPress(() => Bounce(badge));
+		badge.TapCommand = Command.From(() => Bounce(badge));
+		badge.LongPressCommand = Command.From(() => Bounce(badge));
 
 		// the pinch drives the transform live; the release springs it home
-		badge.OnPinch(pinch =>
+		badge.Pinched = pinch =>
 		{
 			if (pinch.State is GestureState.Changed)
 				badge.Scale = Math.Clamp(pinch.Scale, 0.5, 2.5);
 			else if (pinch.State is GestureState.Ended or GestureState.Cancelled)
 				View.Animate(Animation.Spring(damping: 0.5), () => badge.Scale = 1);
-		});
+		};
 
 		Border card = new()
 		{
@@ -59,7 +60,7 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 				MaxLines = 2
 			}
 		};
-		card.OnPan(pan => Drag(card, pan));
+		card.Panned = pan => Drag(card, pan);
 
 		Content = new StackPanel
 		{

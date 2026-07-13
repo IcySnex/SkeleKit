@@ -10,7 +10,8 @@ public class SegmentedDemo : ContentView<SegmentedDemoViewModel>
 {
 	static readonly string[] Ranges = ["Day", "Week", "Month", "Year"];
 
-	public SegmentedDemo()
+	public SegmentedDemo(
+		SegmentedDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "SegmentedControl";
 

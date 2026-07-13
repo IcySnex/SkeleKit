@@ -17,7 +17,8 @@ public class ListDemo : ContentView<ListDemoViewModel>
 		HeaderTemplate = () => new SectionHeader()
 	};
 
-	public ListDemo()
+	public ListDemo(
+		ListDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "List";
 
@@ -25,11 +26,13 @@ public class ListDemo : ContentView<ListDemoViewModel>
 		TitleStyle = TitleStyle.Large;
 
 		Content = entries;
-	}
 
-	protected override void OnViewModelAttached()
+		AttachViewModel();
+		}
+
+	void AttachViewModel()
 	{
 		entries.GroupedItemsSource = Bindable.From<IReadOnlyList<Section<SettingsEntry>>?>(ViewModel!.Sections);
-		entries.SelectionCommand = Bindable.From<ICommand?>(ViewModel.OpenCommand);
+		entries.SelectionCommand = ViewModel.OpenCommand;
 	}
 }

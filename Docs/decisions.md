@@ -290,3 +290,34 @@ is simply cleared.
 **Consequences:** a cell can restyle itself on selection through ordinary bindings, because
 `IsSelected` is just another bindable property on `ItemView`. List sections get the native grey tap
 highlight for free.
+
+## ADR-012: Commands for intents, Actions for streams, ViewModels by constructor
+
+**Decision:** every discrete user intent (tap, long-press, double-tap, submit, selection, toolbar,
+swipe, menu) is a plain `ICommand?` property. Every continuous signal (pan, pinch, rotate, scroll,
+text-as-you-type, value-during-drag) is an `Action<T>` property named in the past tense with no
+`On` prefix (`On` belongs to lifecycle overrides alone). Commands are **not** bindable: a page's
+ViewModel arrives through its constructor (`ContentView<TVm>` stores it, `UsePages` registers a
+factory lambda `pages.AddTransient((FooViewModel vm) => new FooView(vm))`), so command properties
+are assigned directly — `Command = ViewModel.SaveCommand`. View-local handlers wrap with
+`Command.From(action)`.
+
+**Context:** four callback shapes had accreted (bindable commands, plain commands, Action
+properties, gesture registration *methods* that broke the object-initializer aesthetic), and
+`Bindable<ICommand?>` existed only because the ViewModel used to attach after construction — it
+also dragged in the `Bind<ICommand?>` explicit-type-argument wart, since `Bindable<T>` is not
+covariant and `[RelayCommand]` generates `IRelayCommand`.
+
+**Consequences:**
+- Command properties never change after construction; there is nothing to observe, so no binding
+  machinery runs for them at all.
+- Streams stay Actions deliberately: `ICommand.Execute(object?)` boxes every `double` tick at
+  60–120 Hz, `CanExecute` is meaningless mid-gesture, and the consumers are view-local state
+  machines (the Animator scrub). ViewModels receive settled values through two-way bindings.
+- In lists, commands live on the page's ViewModel and the *item* flows as the command parameter —
+  a recycled cell rebinds data, never commands.
+- Page factories keep construction reflection-free (no `ActivatorUtilities`), preserving the
+  AOT/trim story; the `new()` constraint and the probe instance are gone.
+- A singleton page now keeps the ViewModel it was built with: the pair is cached together.
+- Pull-to-refresh stays `Func<Task>` (`Refresh`): completion controls the spinner, which
+  `ICommand` cannot express. It is the one deliberate exception, named to not claim otherwise.

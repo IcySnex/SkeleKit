@@ -27,7 +27,8 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 		}
 	};
 
-	public LiveListDemo()
+	public LiveListDemo(
+		LiveListDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Live list";
 
@@ -45,22 +46,24 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 					Padding = new Thickness(16, 0),
 					Children =
 					{
-						new Button { Text = "Add", Kind = ButtonStyle.Tinted, Command = Bind<ICommand?>(vm => vm.AddCommand) },
-						new Button { Text = "Remove", Kind = ButtonStyle.Gray, Command = Bind<ICommand?>(vm => vm.RemoveCommand) },
-						new Button { Text = "Move", Kind = ButtonStyle.Gray, Command = Bind<ICommand?>(vm => vm.ShuffleCommand) },
-						new Button { Text = "Clear", Kind = ButtonStyle.Gray, Command = Bind<ICommand?>(vm => vm.ClearCommand) }
+						new Button { Text = "Add", Kind = ButtonStyle.Tinted, Command = ViewModel.AddCommand },
+						new Button { Text = "Remove", Kind = ButtonStyle.Gray, Command = ViewModel.RemoveCommand },
+						new Button { Text = "Move", Kind = ButtonStyle.Gray, Command = ViewModel.ShuffleCommand },
+						new Button { Text = "Clear", Kind = ButtonStyle.Gray, Command = ViewModel.ClearCommand }
 					}
 				}.Row(0),
 
 				items.Row(1)
 			}
 		};
-	}
 
-	protected override void OnViewModelAttached()
+		AttachViewModel();
+		}
+
+	void AttachViewModel()
 	{
 		items.ItemsSource = Bindable.From<IReadOnlyList<TodoItem>?>(ViewModel!.Items);
-		items.RefreshCommand = ViewModel.RefreshAsync;
+		items.Refresh = ViewModel.RefreshAsync;
 
 		// native swipe: UIKit owns the gesture and the full-swipe-to-delete
 		items.SwipeActions.Add(new()

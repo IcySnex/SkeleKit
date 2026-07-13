@@ -10,7 +10,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class NativeViewDemo : ContentView<NativeViewDemoViewModel>
 {
-	public NativeViewDemo()
+	public NativeViewDemo(
+		NativeViewDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "NativeView";
 

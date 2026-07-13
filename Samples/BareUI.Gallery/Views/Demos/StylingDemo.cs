@@ -7,7 +7,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class StylingDemo : ContentView<StylingDemoViewModel>
 {
-	public StylingDemo()
+	public StylingDemo(
+		StylingDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Styling";
 

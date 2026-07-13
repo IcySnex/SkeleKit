@@ -6,7 +6,8 @@ namespace BareUI.Gallery.Views;
 
 public class MenuView : ContentView<MenuViewModel>
 {
-	public MenuView()
+	public MenuView(
+		MenuViewModel viewModel) : base(viewModel)
 	{
 		Title = "BareUI Gallery";
 
@@ -22,7 +23,7 @@ public class MenuView : ContentView<MenuViewModel>
 					Text = "MovieInfo",
 					Kind = ButtonStyle.Filled,
 					Margin = new Thickness(16, 0),
-					Command = Bind<ICommand?>(vm => vm.OpenMovieCommand)
+					Command = ViewModel.OpenMovieCommand
 				}.Row(0),
 
 				new CollectionView<DemoEntry>
@@ -30,7 +31,7 @@ public class MenuView : ContentView<MenuViewModel>
 					Layout = CollectionLayout.List(),
 					ItemTemplate = () => new DemoRow(),
 					ItemsSource = Bind<IReadOnlyList<DemoEntry>?>(vm => vm.Demos),
-					SelectionCommand = Bind<ICommand?>(vm => vm.OpenDemoCommand),
+					SelectionCommand = ViewModel.OpenDemoCommand,
 					IgnoresSafeArea = SafeAreaEdges.Bottom
 				}.Row(1)
 			}

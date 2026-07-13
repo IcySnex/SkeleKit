@@ -104,11 +104,16 @@ Shape of the thing now:
 - **Bindings** (neutral, unit-tested): `Bindable<T>`, `BindingExpression<T>`, `Binding<T>` runtime,
   `BindingContext` inherited down the tree, `BindingFactory.Bind/BindPath`. Compiled getter
   delegates + `[CallerArgumentExpression]` paths, per-segment INPC subscription, zero reflection.
-  Commands are bindable (`Bindable<ICommand?>`).
+  Commands are **never bindable**: every intent is a plain `ICommand?` property assigned directly
+  from the ctor-injected ViewModel (ADR-012); `Command.From(action)` wraps view-local handlers.
+  Continuous streams (`Panned`, `Pinched`, `Rotated`, `Scrolled`, `TextChanged`, ...) are `Action<T>`
+  properties — past tense, no `On` prefix (`On` = lifecycle overrides only).
 - **App model**: `BareApp.Create().UseServices(...).UsePages(...).Tabs(...).Run(args)`.
-  `ContentView<TVm>` composes its tree in the **constructor** (XAML-compatible); `PageHost` is the
+  `ContentView<TVm>` takes its ViewModel **by constructor** (`: base(viewModel)`) and composes its
+  tree against it directly — no `OnViewModelAttached`; `PageHost` is the
   hidden `UIViewController`. `INavigator` = push/pop/present + alert/confirm/action sheet,
-  **ViewModel-first only**. Registration is one path: `UsePages` (`AddTransient`/`AddSingleton`).
+  **ViewModel-first only**. Registration is one path: `UsePages` with factory lambdas
+  (`pages.AddTransient((FooViewModel vm) => new FooView(vm))`) — reflection-free page construction.
 - **Styling** (neutral, unit-tested): `Style<T>` wraps an `Action<T>` (+ `BasedOn`); `View.Style`
   applies **in its setter** (so it goes first in an initializer); `Theme` (`BareApp.UseTheme`) holds
   the app-global implicit styles and applies them **in the `View` base ctor**, chain base-most first,
@@ -165,10 +170,8 @@ Hard-won rules (don't relearn these):
   shadow of every rounded card. A `Shadow` now turns that implicit clip off; an explicit
   `ClipsToBounds` still wins. To round *and* cast: shadow on an outer view, radius on the inner one.
 - **`Bindable<T>` can't take an interface `T`** (C# forbids user-defined conversions from
-  interfaces) → `Picker.Items` stays plain; literals need `Bindable.From<ICommand?>(cmd)`.
+  interfaces) → `Picker.Items` stays plain.
 - User-defined conversions don't chain → `Image.Source` needs `ImageSource.Symbol(...)`/`Url(...)`.
-- `[RelayCommand]` generates `IRelayCommand`, and `Bindable<T>` isn't covariant → bind with an
-  explicit type arg: `Bind<ICommand?>(vm => vm.SaveCommand)`.
 
 Framework surface (completion pass — every previously deferred item is now implemented):
 - **Text**: `Label.TextStyle` (the native hierarchy: LargeTitle…Caption2, each with its own Dynamic
@@ -189,8 +192,6 @@ Framework surface (completion pass — every previously deferred item is now imp
   control's own), `IsAccessibilityElement` (null = control default).
 - **Images**: default loader has an `NSCache` (64 MB, cost = decoded bytes), one download per
   url no matter how many cells ask, and pre-decodes via `PrepareForDisplayAsync`.
-- `CollectionView.SelectionCommand` is `Bindable<ICommand?>` (assign literals with
-  `Bindable.From<ICommand?>(...)`, like every command).
 - **Page chrome**: `ToolbarItems`, `TitleStyle.Large`, `HidesNavigationBar`, `BackgroundStyle`,
   `SearchPlaceholder`/`SearchChanged`; lifecycle `OnLoaded`/`OnUnloaded` alongside
   `OnAppearing`/`OnDisappearing`; `ContentView.Controller` escape hatch.

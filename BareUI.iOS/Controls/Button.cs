@@ -129,13 +129,12 @@ public class Button : Control
 	/// <summary>
 	/// Command invoked on tap; its CanExecute drives the enabled state.
 	/// </summary>
-	public Bindable<ICommand?> Command
+	public ICommand? Command
 	{
-		get => Bindable.From<ICommand?>(command);
-		set => commandBinding = Register(commandBinding, value, SetCommand);
+		get => command;
+		set => SetCommand(value);
 	}
 	ICommand? command;
-	Binding<ICommand?>? commandBinding;
 
 	void SetCommand(
 		ICommand? value)
@@ -163,12 +162,6 @@ public class Button : Control
 		set => Set(ref commandParameter, value, ApplyIsEnabled, affectsMeasure: false);
 	}
 	object? commandParameter;
-
-	/// <summary>
-	/// Invoked when the button is tapped.
-	/// </summary>
-	public Action? Clicked { get; set; }
-
 
 	private protected override UIView CreateNative()
 	{
@@ -312,8 +305,6 @@ public class Button : Control
 
 	void OnClicked()
 	{
-		Clicked?.Invoke();
-
 		if (command is { } current && current.CanExecute(commandParameter))
 			current.Execute(commandParameter);
 	}

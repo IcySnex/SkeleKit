@@ -20,7 +20,8 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 		IgnoresSafeArea = SafeAreaEdges.Leading | SafeAreaEdges.Trailing
 	};
 
-	public CarouselDemo()
+	public CarouselDemo(
+		CarouselDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Carousel";
 
@@ -39,12 +40,14 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 				movies
 			}
 		};
-	}
 
-	protected override void OnViewModelAttached()
+		AttachViewModel();
+		}
+
+	void AttachViewModel()
 	{
 		movies.ItemsSource = Bindable.From<IReadOnlyList<Movie>?>(ViewModel!.Movies);
-		movies.SelectionCommand = Bindable.From<ICommand?>(ViewModel.OpenCommand);
+		movies.SelectionCommand = ViewModel.OpenCommand;
 	}
 
 	protected override void OnAppearing() =>

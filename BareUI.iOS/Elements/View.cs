@@ -220,18 +220,72 @@ public abstract partial class View
 	/// <summary>
 	/// Command invoked when the view is tapped.
 	/// </summary>
-	public Bindable<ICommand?> TapCommand
+	public ICommand? TapCommand
 	{
-		get => Bindable.From<ICommand?>(tapCommand);
-		set => tapCommandBinding = Register(tapCommandBinding, value, value => Set(ref tapCommand, value, ApplyInteraction, affectsMeasure: false));
+		get => tapCommand;
+		set => Set(ref tapCommand, value, ApplyInteraction, affectsMeasure: false);
 	}
 	ICommand? tapCommand;
-	Binding<ICommand?>? tapCommandBinding;
 
 	/// <summary>
 	/// The parameter passed to <see cref="TapCommand"/>.
 	/// </summary>
 	public object? TapCommandParameter { get; set; }
+
+	/// <summary>
+	/// Command invoked when the view is double-tapped.
+	/// </summary>
+	public ICommand? DoubleTapCommand
+	{
+		get => doubleTapCommand;
+		set => Set(ref doubleTapCommand, value, ApplyInteraction, affectsMeasure: false);
+	}
+	ICommand? doubleTapCommand;
+
+	/// <summary>
+	/// Command invoked when the view is held down for <see cref="LongPressDuration"/>.
+	/// </summary>
+	public ICommand? LongPressCommand
+	{
+		get => longPressCommand;
+		set => Set(ref longPressCommand, value, ApplyInteraction, affectsMeasure: false);
+	}
+	ICommand? longPressCommand;
+
+	/// <summary>
+	/// How long a press must be held to count as a long press, in seconds.
+	/// </summary>
+	public double LongPressDuration { get; set; } = 0.5;
+
+	/// <summary>
+	/// Invoked as the view is dragged. Drive an <see cref="Animator"/> from it to make an animation interactive.
+	/// </summary>
+	public Action<PanGesture>? Panned
+	{
+		get => panned;
+		set => Set(ref panned, value, ApplyInteraction, affectsMeasure: false);
+	}
+	Action<PanGesture>? panned;
+
+	/// <summary>
+	/// Invoked as the view is pinched. Feed the scale into <see cref="Scale"/> to zoom it.
+	/// </summary>
+	public Action<PinchGesture>? Pinched
+	{
+		get => pinched;
+		set => Set(ref pinched, value, ApplyInteraction, affectsMeasure: false);
+	}
+	Action<PinchGesture>? pinched;
+
+	/// <summary>
+	/// Invoked as the view is rotated with two fingers. Feed the degrees into <see cref="Rotation"/> to turn it.
+	/// </summary>
+	public Action<RotateGesture>? Rotated
+	{
+		get => rotated;
+		set => Set(ref rotated, value, ApplyInteraction, affectsMeasure: false);
+	}
+	Action<RotateGesture>? rotated;
 
 	// Accessibility
 

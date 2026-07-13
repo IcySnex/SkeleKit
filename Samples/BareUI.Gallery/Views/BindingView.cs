@@ -8,7 +8,8 @@ namespace BareUI.Gallery.Views;
 /// </summary>
 public class BindingView : ContentView<BindingViewModel>
 {
-	public BindingView()
+	public BindingView(
+		BindingViewModel viewModel) : base(viewModel)
 	{
 		Title = "Bindings";
 
@@ -51,7 +52,7 @@ public class BindingView : ContentView<BindingViewModel>
 					{
 						Text = "Clear name",
 						Kind = ButtonStyle.Filled,
-						Command = Bind<ICommand?>(vm => vm.ClearNameCommand)
+						Command = ViewModel.ClearNameCommand
 					}
 				}
 			}

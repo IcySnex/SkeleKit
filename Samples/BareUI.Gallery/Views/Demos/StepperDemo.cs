@@ -8,7 +8,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class StepperDemo : ContentView<StepperDemoViewModel>
 {
-	public StepperDemo()
+	public StepperDemo(
+		StepperDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Stepper";
 

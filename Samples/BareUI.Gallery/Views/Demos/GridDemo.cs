@@ -16,17 +16,20 @@ public class GridDemo : ContentView<GridDemoViewModel>
 		ItemTemplate = () => new MovieCell()
 	};
 
-	public GridDemo()
+	public GridDemo(
+		GridDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Grid";
 
 		Content = movies;
-	}
 
-	protected override void OnViewModelAttached()
+		AttachViewModel();
+		}
+
+	void AttachViewModel()
 	{
 		movies.ItemsSource = Bindable.From<IReadOnlyList<Movie>?>(ViewModel!.Movies);
-		movies.SelectionCommand = Bindable.From<ICommand?>(ViewModel.OpenCommand);
+		movies.SelectionCommand = ViewModel.OpenCommand;
 	}
 
 	protected override void OnAppearing() =>

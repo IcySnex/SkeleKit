@@ -10,7 +10,8 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
 	protected override void OnAppearing() =>
 		_ = ViewModel!.LoadAsync();
 
-	public MovieInfoView()
+	public MovieInfoView(
+		MovieInfoViewModel viewModel) : base(viewModel)
 	{
 		Title = "MovieInfo";
 

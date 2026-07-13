@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using CoreAnimation;
 using CoreGraphics;
 using Foundation;
@@ -95,6 +96,11 @@ public abstract partial class View
 		native?.SetNeedsLayout();
 
 	UITapGestureRecognizer? tapRecognizer;
+	UITapGestureRecognizer? doubleTapRecognizer;
+	UILongPressGestureRecognizer? longPressRecognizer;
+	UIPanGestureRecognizer? panRecognizer;
+	UIPinchGestureRecognizer? pinchRecognizer;
+	UIRotationGestureRecognizer? rotationRecognizer;
 
 	partial void ApplyInteractionCore()
 	{
@@ -107,18 +113,100 @@ public abstract partial class View
 
 		if (tapCommand is not null && tapRecognizer is null)
 		{
-			tapRecognizer = new(OnTapped);
+			tapRecognizer = new(() => Run(tapCommand, TapCommandParameter));
 			native.AddGestureRecognizer(tapRecognizer);
+		}
+
+		if (doubleTapCommand is not null && doubleTapRecognizer is null)
+		{
+			doubleTapRecognizer = new(() => Run(doubleTapCommand, null)) { NumberOfTapsRequired = 2 };
+			native.AddGestureRecognizer(doubleTapRecognizer);
+
+			// a single tap must wait, or it fires on the double's first tap
+			tapRecognizer?.RequireGestureRecognizerToFail(doubleTapRecognizer);
+		}
+
+		if (longPressCommand is not null && longPressRecognizer is null)
+		{
+			UILongPressGestureRecognizer recognizer = null!;
+			recognizer = new(() =>
+			{
+				if (recognizer.State is UIGestureRecognizerState.Began)
+					Run(longPressCommand, null);
+			});
+
+			longPressRecognizer = recognizer;
+			native.AddGestureRecognizer(recognizer);
+		}
+
+		if (longPressRecognizer is not null)
+			longPressRecognizer.MinimumPressDuration = LongPressDuration;
+
+		if (panned is not null && panRecognizer is null)
+		{
+			UIPanGestureRecognizer recognizer = null!;
+			recognizer = new(() =>
+			{
+				// measured in the parent: the view's own space rotates and scales under the gesture
+				CGPoint translation = recognizer.TranslationInView(recognizer.View?.Superview);
+				CGPoint velocity = recognizer.VelocityInView(recognizer.View?.Superview);
+
+				panned?.Invoke(new(
+					StateOf(recognizer),
+					new(translation.X, translation.Y),
+					new(velocity.X, velocity.Y)));
+			});
+
+			panRecognizer = recognizer;
+			native.AddGestureRecognizer(recognizer);
+		}
+
+		if (pinched is not null && pinchRecognizer is null)
+		{
+			UIPinchGestureRecognizer recognizer = null!;
+			recognizer = new(() =>
+				pinched?.Invoke(new(
+					StateOf(recognizer),
+					recognizer.Scale,
+					recognizer.Velocity)));
+
+			pinchRecognizer = recognizer;
+			native.AddGestureRecognizer(recognizer);
+		}
+
+		if (rotated is not null && rotationRecognizer is null)
+		{
+			UIRotationGestureRecognizer recognizer = null!;
+			recognizer = new(() =>
+				rotated?.Invoke(new(
+					StateOf(recognizer),
+					recognizer.Rotation * 180 / Math.PI,
+					recognizer.Velocity * 180 / Math.PI)));
+
+			rotationRecognizer = recognizer;
+			native.AddGestureRecognizer(recognizer);
 		}
 
 		if (tapRecognizer is not null)
 			tapRecognizer.Enabled = tapCommand is not null && IsEnabled;
+		if (doubleTapRecognizer is not null)
+			doubleTapRecognizer.Enabled = doubleTapCommand is not null && IsEnabled;
+		if (longPressRecognizer is not null)
+			longPressRecognizer.Enabled = longPressCommand is not null && IsEnabled;
+		if (panRecognizer is not null)
+			panRecognizer.Enabled = panned is not null && IsEnabled;
+		if (pinchRecognizer is not null)
+			pinchRecognizer.Enabled = pinched is not null && IsEnabled;
+		if (rotationRecognizer is not null)
+			rotationRecognizer.Enabled = rotated is not null && IsEnabled;
 	}
 
-	void OnTapped()
+	static void Run(
+		ICommand? command,
+		object? parameter)
 	{
-		if (tapCommand is { } command && command.CanExecute(TapCommandParameter))
-			command.Execute(TapCommandParameter);
+		if (command is not null && command.CanExecute(parameter))
+			command.Execute(parameter);
 	}
 
 	// the control's own traits, captured before we layer ours on top
@@ -473,94 +561,6 @@ public abstract partial class View
 			Easing.EaseOut => UIViewAnimationOptions.CurveEaseOut,
 			_ => UIViewAnimationOptions.CurveEaseInOut
 		};
-
-	/// <summary>
-	/// Calls <paramref name="handler"/> as the view is dragged. Drive an <see cref="Animator"/> from it to make the animation interactive.
-	/// </summary>
-	public void OnPan(
-		Action<PanGesture> handler)
-	{
-		UIPanGestureRecognizer recognizer = null!;
-
-		recognizer = new(() =>
-		{
-			// measured in the parent: the view's own space rotates and scales under the gesture
-			CGPoint translation = recognizer.TranslationInView(recognizer.View?.Superview);
-			CGPoint velocity = recognizer.VelocityInView(recognizer.View?.Superview);
-
-			handler(new(
-				StateOf(recognizer),
-				new(translation.X, translation.Y),
-				new(velocity.X, velocity.Y)));
-		});
-
-		AddGesture(recognizer);
-	}
-
-	/// <summary>
-	/// Calls <paramref name="handler"/> when the view is held down for <paramref name="seconds"/>.
-	/// </summary>
-	public void OnLongPress(
-		Action handler,
-		double seconds = 0.5)
-	{
-		UILongPressGestureRecognizer recognizer = null!;
-
-		recognizer = new(() =>
-		{
-			if (recognizer.State is UIGestureRecognizerState.Began)
-				handler();
-		})
-		{
-			MinimumPressDuration = seconds
-		};
-
-		AddGesture(recognizer);
-	}
-
-	/// <summary>
-	/// Calls <paramref name="handler"/> when the view is double-tapped.
-	/// </summary>
-	public void OnDoubleTap(
-		Action handler) =>
-		AddGesture(new UITapGestureRecognizer(handler)
-		{
-			NumberOfTapsRequired = 2
-		});
-
-	/// <summary>
-	/// Calls <paramref name="handler"/> as the view is pinched. Feed the scale into <see cref="Scale"/> to zoom it.
-	/// </summary>
-	public void OnPinch(
-		Action<PinchGesture> handler)
-	{
-		UIPinchGestureRecognizer recognizer = null!;
-
-		recognizer = new(() =>
-			handler(new(
-				StateOf(recognizer),
-				recognizer.Scale,
-				recognizer.Velocity)));
-
-		AddGesture(recognizer);
-	}
-
-	/// <summary>
-	/// Calls <paramref name="handler"/> as the view is rotated with two fingers. Feed the degrees into <see cref="Rotation"/> to turn it.
-	/// </summary>
-	public void OnRotate(
-		Action<RotateGesture> handler)
-	{
-		UIRotationGestureRecognizer recognizer = null!;
-
-		recognizer = new(() =>
-			handler(new(
-				StateOf(recognizer),
-				recognizer.Rotation * 180 / Math.PI,
-				recognizer.Velocity * 180 / Math.PI)));
-
-		AddGesture(recognizer);
-	}
 
 	static GestureState StateOf(
 		UIGestureRecognizer recognizer) =>

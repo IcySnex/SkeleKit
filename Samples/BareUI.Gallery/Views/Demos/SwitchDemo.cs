@@ -8,7 +8,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class SwitchDemo : ContentView<SwitchDemoViewModel>
 {
-	public SwitchDemo()
+	public SwitchDemo(
+		SwitchDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Switch";
 

@@ -15,27 +15,35 @@ public sealed class PagesBuilder
 
 
 	/// <summary>
-	/// Registers a view that is recreated every time it is resolved.
+	/// Registers a view that is recreated every time its ViewModel is navigated to.
 	/// </summary>
+	/// <typeparam name="TViewModel">The ViewModel type driving the view.</typeparam>
 	/// <typeparam name="TView">The view type to register.</typeparam>
+	/// <param name="create">Constructs the view around its ViewModel.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public PagesBuilder AddTransient<TView>()
-		where TView : ContentView, new()
+	public PagesBuilder AddTransient<TViewModel, TView>(
+		Func<TViewModel, TView> create)
+		where TViewModel : class
+		where TView : ContentView
 	{
-		registry.Add<TView>(singleton: false);
+		registry.Add(create, singleton: false);
 
 		return this;
 	}
 
 	/// <summary>
-	/// Registers a view that keeps a single shared instance throughout the lifecycle.
+	/// Registers a view built once and kept for the app's lifetime, together with its ViewModel.
 	/// </summary>
+	/// <typeparam name="TViewModel">The ViewModel type driving the view.</typeparam>
 	/// <typeparam name="TView">The view type to register.</typeparam>
+	/// <param name="create">Constructs the view around its ViewModel.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public PagesBuilder AddSingleton<TView>()
-		where TView : ContentView, new()
+	public PagesBuilder AddSingleton<TViewModel, TView>(
+		Func<TViewModel, TView> create)
+		where TViewModel : class
+		where TView : ContentView
 	{
-		registry.Add<TView>(singleton: true);
+		registry.Add(create, singleton: true);
 
 		return this;
 	}

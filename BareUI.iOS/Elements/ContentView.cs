@@ -118,12 +118,6 @@ public abstract partial class ContentView : Panel
 	{ }
 
 	/// <summary>
-	/// Raised once the ViewModel is attached, after construction.
-	/// </summary>
-	protected virtual void OnViewModelAttached()
-	{ }
-
-	/// <summary>
 	/// Raised after the page appears on screen.
 	/// </summary>
 	protected virtual void OnAppearing()
@@ -152,11 +146,6 @@ public abstract partial class ContentView : Panel
 	internal void NotifyDisappearing() =>
 		OnDisappearing();
 
-
-	internal abstract void AttachViewModel(
-		object viewModel);
-
-	internal abstract Type ViewModelType { get; }
 
 	void ApplyTitle() =>
 		ApplyTitleCore();
@@ -192,24 +181,20 @@ public abstract class ContentView<TViewModel> : ContentView
 	where TViewModel : class
 {
 	/// <summary>
-	/// The ViewModel bindings resolve against.
+	/// Stores the ViewModel, so the derived constructor composes its tree against it directly.
 	/// </summary>
-	public TViewModel? ViewModel
+	/// <param name="viewModel">The ViewModel driving this page.</param>
+	protected ContentView(
+		TViewModel viewModel)
 	{
-		get => BindingContext as TViewModel;
-		set => BindingContext = value;
+		ViewModel = viewModel;
+		BindingContext = viewModel;
 	}
 
-	internal override Type ViewModelType =>
-		typeof(TViewModel);
-
-	internal override void AttachViewModel(
-		object viewModel)
-	{
-		ViewModel = (TViewModel)viewModel;
-
-		OnViewModelAttached();
-	}
+	/// <summary>
+	/// The ViewModel this page was built around. Bindings resolve against it.
+	/// </summary>
+	public TViewModel ViewModel { get; }
 
 
 	/// <summary>

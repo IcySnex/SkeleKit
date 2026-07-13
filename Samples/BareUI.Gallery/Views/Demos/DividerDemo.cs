@@ -9,7 +9,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class DividerDemo : ContentView<DividerDemoViewModel>
 {
-	public DividerDemo()
+	public DividerDemo(
+		DividerDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Divider";
 

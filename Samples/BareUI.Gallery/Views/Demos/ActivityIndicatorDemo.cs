@@ -9,7 +9,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class ActivityIndicatorDemo : ContentView<ActivityIndicatorDemoViewModel>
 {
-	public ActivityIndicatorDemo()
+	public ActivityIndicatorDemo(
+		ActivityIndicatorDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "ActivityIndicator";
 

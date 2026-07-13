@@ -9,7 +9,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class ImageDemo : ContentView<ImageDemoViewModel>
 {
-	public ImageDemo()
+	public ImageDemo(
+		ImageDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Image";
 

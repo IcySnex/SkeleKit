@@ -25,7 +25,7 @@ public partial class ScrollView
 	void ApplyRefresh(
 		UIScrollView host)
 	{
-		if (RefreshCommand is null || refresh is not null)
+		if (Refresh is null || refresh is not null)
 			return;
 
 		refresh = new();
@@ -33,7 +33,7 @@ public partial class ScrollView
 		{
 			try
 			{
-				if (RefreshCommand is { } command)
+				if (Refresh is { } command)
 					await command();
 			}
 			finally

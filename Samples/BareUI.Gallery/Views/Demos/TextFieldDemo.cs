@@ -8,7 +8,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 {
-	public TextFieldDemo()
+	public TextFieldDemo(
+		TextFieldDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "TextField";
 

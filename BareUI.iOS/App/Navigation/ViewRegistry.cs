@@ -18,23 +18,18 @@ internal sealed class ViewRegistry
 	readonly Dictionary<Type, Type> viewModelByView = [];
 
 
-	public void Add<TView>(
-		bool singleton) where TView : ContentView, new()
+	// the factory keeps page construction reflection-free: the ViewModel goes in by constructor
+	public void Add<TViewModel, TView>(
+		Func<TViewModel, TView> create,
+		bool singleton)
+		where TViewModel : class
+		where TView : ContentView
 	{
-		TView probe = new();
-		Type viewModel = probe.ViewModelType;
-
-		byViewModel[viewModel] = new(
-			instance =>
-			{
-				TView view = new();
-				view.AttachViewModel(instance);
-
-				return view;
-			},
+		byViewModel[typeof(TViewModel)] = new(
+			instance => create((TViewModel)instance),
 			singleton);
 
-		viewModelByView[typeof(TView)] = viewModel;
+		viewModelByView[typeof(TView)] = typeof(TViewModel);
 	}
 
 

@@ -8,7 +8,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class SliderDemo : ContentView<SliderDemoViewModel>
 {
-	public SliderDemo()
+	public SliderDemo(
+		SliderDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Slider";
 

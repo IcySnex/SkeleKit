@@ -29,7 +29,7 @@ public partial class ScrollView : Panel
 	/// <summary>
 	/// Invoked when the user pulls to refresh. Setting it enables the refresh control; the spinner stops when the task completes.
 	/// </summary>
-	public Func<Task>? RefreshCommand { get; set; }
+	public Func<Task>? Refresh { get; set; }
 
 	/// <summary>
 	/// Invoked as the view scrolls, with the offset in points.

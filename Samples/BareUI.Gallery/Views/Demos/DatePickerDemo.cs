@@ -8,7 +8,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class DatePickerDemo : ContentView<DatePickerDemoViewModel>
 {
-	public DatePickerDemo()
+	public DatePickerDemo(
+		DatePickerDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "DatePicker";
 

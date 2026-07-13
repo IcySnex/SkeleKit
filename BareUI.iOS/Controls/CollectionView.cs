@@ -56,13 +56,12 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 	/// <summary>
 	/// Invoked with the tapped item.
 	/// </summary>
-	public Bindable<ICommand?> SelectionCommand
+	public ICommand? SelectionCommand
 	{
-		get => Bindable.From<ICommand?>(selectionCommand);
-		set => selectionCommandBinding = Register(selectionCommandBinding, value, value => Set(ref selectionCommand, value, affectsMeasure: false));
+		get => selectionCommand;
+		set => Set(ref selectionCommand, value, affectsMeasure: false);
 	}
 	ICommand? selectionCommand;
-	Binding<ICommand?>? selectionCommandBinding;
 
 	internal ICommand? Selection =>
 		selectionCommand;
@@ -75,7 +74,7 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 	/// <summary>
 	/// Invoked when the user pulls to refresh. Setting it enables the refresh control; the spinner stops when the task completes.
 	/// </summary>
-	public Func<Task>? RefreshCommand { get; set; }
+	public Func<Task>? Refresh { get; set; }
 
 	/// <summary>
 	/// Actions revealed by swiping a row. List layouts only.

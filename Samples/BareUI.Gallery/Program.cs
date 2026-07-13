@@ -43,31 +43,31 @@ BareApplication.CreateBuilder()
 		.Style(new Style<Button>(button => button.Kind = ButtonStyle.Tinted)))
 	.UsePages(pages =>
 	{
-		pages.AddSingleton<MenuView>();
-		pages.AddTransient<MovieInfoView>();
-		pages.AddSingleton<BindingView>();
+		pages.AddSingleton((MenuViewModel vm) => new MenuView(vm));
+		pages.AddTransient((MovieInfoViewModel vm) => new MovieInfoView(vm));
+		pages.AddSingleton((BindingViewModel vm) => new BindingView(vm));
 
-		pages.AddTransient<StylingDemo>();
-		pages.AddTransient<AnimationDemo>();
-		pages.AddTransient<ButtonDemo>();
-		pages.AddTransient<TextFieldDemo>();
-		pages.AddTransient<TextEditorDemo>();
-		pages.AddTransient<SwitchDemo>();
-		pages.AddTransient<SegmentedDemo>();
-		pages.AddTransient<DatePickerDemo>();
-		pages.AddTransient<SliderDemo>();
-		pages.AddTransient<StepperDemo>();
-		pages.AddTransient<ProgressBarDemo>();
-		pages.AddTransient<ActivityIndicatorDemo>();
-		pages.AddTransient<DividerDemo>();
-		pages.AddTransient<PickerDemo>();
-		pages.AddTransient<ImageDemo>();
-		pages.AddTransient<NativeViewDemo>();
-		pages.AddTransient<KeyboardDemo>();
-		pages.AddTransient<GridDemo>();
-		pages.AddTransient<ListDemo>();
-		pages.AddTransient<CarouselDemo>();
-		pages.AddTransient<LiveListDemo>();
+		pages.AddTransient((StylingDemoViewModel vm) => new StylingDemo(vm));
+		pages.AddTransient((AnimationDemoViewModel vm) => new AnimationDemo(vm));
+		pages.AddTransient((ButtonDemoViewModel vm) => new ButtonDemo(vm));
+		pages.AddTransient((TextFieldDemoViewModel vm) => new TextFieldDemo(vm));
+		pages.AddTransient((TextEditorDemoViewModel vm) => new TextEditorDemo(vm));
+		pages.AddTransient((SwitchDemoViewModel vm) => new SwitchDemo(vm));
+		pages.AddTransient((SegmentedDemoViewModel vm) => new SegmentedDemo(vm));
+		pages.AddTransient((DatePickerDemoViewModel vm) => new DatePickerDemo(vm));
+		pages.AddTransient((SliderDemoViewModel vm) => new SliderDemo(vm));
+		pages.AddTransient((StepperDemoViewModel vm) => new StepperDemo(vm));
+		pages.AddTransient((ProgressBarDemoViewModel vm) => new ProgressBarDemo(vm));
+		pages.AddTransient((ActivityIndicatorDemoViewModel vm) => new ActivityIndicatorDemo(vm));
+		pages.AddTransient((DividerDemoViewModel vm) => new DividerDemo(vm));
+		pages.AddTransient((PickerDemoViewModel vm) => new PickerDemo(vm));
+		pages.AddTransient((ImageDemoViewModel vm) => new ImageDemo(vm));
+		pages.AddTransient((NativeViewDemoViewModel vm) => new NativeViewDemo(vm));
+		pages.AddTransient((KeyboardDemoViewModel vm) => new KeyboardDemo(vm));
+		pages.AddTransient((GridDemoViewModel vm) => new GridDemo(vm));
+		pages.AddTransient((ListDemoViewModel vm) => new ListDemo(vm));
+		pages.AddTransient((CarouselDemoViewModel vm) => new CarouselDemo(vm));
+		pages.AddTransient((LiveListDemoViewModel vm) => new LiveListDemo(vm));
 	})
 	.Tabs(tabs => tabs
 		.LargeTitles()

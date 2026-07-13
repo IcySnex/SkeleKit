@@ -57,7 +57,7 @@ public partial class CollectionView<TItem>
 	void ApplyRefresh(
 		UICollectionView collection)
 	{
-		if (RefreshCommand is null)
+		if (Refresh is null)
 			return;
 
 		refresh = new();
@@ -65,7 +65,7 @@ public partial class CollectionView<TItem>
 		{
 			try
 			{
-				if (RefreshCommand is { } command)
+				if (Refresh is { } command)
 					await command();
 			}
 			finally

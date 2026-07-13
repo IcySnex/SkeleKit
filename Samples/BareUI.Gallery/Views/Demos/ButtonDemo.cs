@@ -9,7 +9,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class ButtonDemo : ContentView<ButtonDemoViewModel>
 {
-	public ButtonDemo()
+	public ButtonDemo(
+		ButtonDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Button";
 
@@ -56,7 +57,7 @@ public class ButtonDemo : ContentView<ButtonDemoViewModel>
 					{
 						Text = "Tap me",
 						Kind = ButtonStyle.Filled,
-						Command = Bind<ICommand?>(vm => vm.TapCommand)
+						Command = ViewModel.TapCommand
 					},
 					new Label { Text = Bind(vm => vm.Status), TextColor = Palette.Secondary }
 				}

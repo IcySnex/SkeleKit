@@ -10,7 +10,8 @@ public class TextEditorDemo : ContentView<TextEditorDemoViewModel>
 {
 	static readonly Color Separator = Color.FromHex(0xC7C7CC);
 
-	public TextEditorDemo()
+	public TextEditorDemo(
+		TextEditorDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "TextEditor";
 

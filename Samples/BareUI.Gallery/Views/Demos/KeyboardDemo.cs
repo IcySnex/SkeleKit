@@ -8,7 +8,8 @@ namespace BareUI.Gallery.Views.Demos;
 /// </summary>
 public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 {
-	public KeyboardDemo()
+	public KeyboardDemo(
+		KeyboardDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "Keyboard";
 
