@@ -57,9 +57,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 - ▲ **Attributed spans** — ranges of bold/color/links with tap callbacks; the big one, maybe a
   `Span`-based `FormattedText` model. (Or markdown-lite via `NSAttributedString(markdown:)` — cheap!)
-- ★ **Letter spacing & line spacing** — kerning + paragraph style.
-- ★ **Underline / strikethrough** — attributed one-liners.
-- ★ **Auto-shrink** — `AdjustsFontSizeToFitWidth` + `MinimumScaleFactor`.
+- ~~★ **Letter spacing & line spacing**~~ — **done** (`LetterSpacing`, `LineSpacing`).
+- ~~★ **Underline / strikethrough**~~ — **done**.
+- ~~★ **Auto-shrink**~~ — **done** (`Label.AutoShrink`).
 - ★ **Dynamic Type cap** — `MaximumContentSizeCategory` (stop a title exploding at AX5).
 - ◆ **Selectable text / link detection** — readonly `UITextView` under the hood or iOS 17 text items.
 
@@ -118,11 +118,10 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 ## ScrollView
 
-- ★ **Paging** — `PagingEnabled`.
-- ★ **Indicator control** — show/hide per axis, `IndicatorStyle`, indicator insets.
+- ~~★ **Paging**~~ — **done** (`ScrollView.Paging`).
+- ★ **Indicator control** — ~~show/hide~~ **done** (`ShowsIndicator`); style/insets remain.
 - ★ (skip) **Bounce toggles** — `Bounces`, `AlwaysBounceVertical/Horizontal`.
-- ★ **Programmatic scroll** — `ScrollTo(offset|view, animated)`; `Scrolled` exists, the setter
-  doesn't.
+- ~~★ **Programmatic scroll**~~ — **done** (`ScrollView.ScrollTo(offset)`).
 - ★ (skip) **Deceleration rate** — normal/fast (fast = the "snappy" feel).
 - ◆ (skip) **Zoom** — min/max zoom + zoomable child; photo viewers.
 - ★ (skip) **Scrolls-to-top tap** — `ScrollsToTop` toggle.
@@ -149,8 +148,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 ## App level
 
-- ★ **Global accent** — `Window.TintColor` via `BareApp.UseAccent(color)`.
-- ★ **Scene lifecycle** — `OnBackground`/`OnForeground` app hooks (timers, refresh-on-return).
+- ~~★ **Global accent**~~ — **done** (`UseAccent`).
+- ~~★ **Scene lifecycle**~~ — **done** (`UseLifecycle(background, foreground)`).
 - ◆ (skip) **System pickers via navigator** — photo (`PHPickerViewController`), document
   (`UIDocumentPickerViewController`); both are present-and-await wrappers, AOT-safe.
 - ★ (skip) **Haptic patterns** — `Haptics` covers impact/notify/selection; `CHHapticEngine` patterns
