@@ -41,7 +41,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   (currently no source anchor, iPad needs it).
 - ★ (skip) **Share sheet** — `INavigator.ShareAsync(items)` over `UIActivityViewController`.
 - ★ (skip) **Open URL in-app** — `SFSafariViewController` wrapper on the navigator.
-- ◆ **Alert with text input** — `AlertAsync` variant returning a string (UIAlertController text fields).
+- ~~◆ **Alert with text input**~~ — **done** (`INavigator.PromptAsync`, returns the typed string or
+  null when cancelled).
 
 ## View (every element)
 

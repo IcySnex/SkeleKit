@@ -108,6 +108,24 @@ public interface INavigator
 		bool destructive = false);
 
 	/// <summary>
+	/// Displays an alert with a single text field, for a name or another short answer.
+	/// </summary>
+	/// <param name="title">The title text of the alert.</param>
+	/// <param name="message">The main message content body.</param>
+	/// <param name="placeholder">The text field's placeholder.</param>
+	/// <param name="text">The text the field starts with.</param>
+	/// <param name="accept">The text for the confirming button.</param>
+	/// <param name="cancel">The text for the canceling button.</param>
+	/// <returns>A task containing what was typed, or null if the alert was canceled.</returns>
+	Task<string?> PromptAsync(
+		string title,
+		string message,
+		string placeholder = "",
+		string text = "",
+		string accept = "OK",
+		string cancel = "Cancel");
+
+	/// <summary>
 	/// Displays an action sheet layout with multiple choices.
 	/// </summary>
 	/// <param name="title">The title text of the confirmation box.</param>

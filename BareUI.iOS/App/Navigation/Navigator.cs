@@ -188,6 +188,33 @@ internal sealed class Navigator(
 		return completion.Task;
 	}
 
+	public Task<string?> PromptAsync(
+		string title,
+		string message,
+		string placeholder = "",
+		string text = "",
+		string accept = "OK",
+		string cancel = "Cancel")
+	{
+		TaskCompletionSource<string?> completion = new();
+
+		UIAlertController alert = UIAlertController.Create(title, message, UIAlertControllerStyle.Alert);
+
+		alert.AddTextField(field =>
+		{
+			field.Placeholder = placeholder;
+			field.Text = text;
+		});
+
+		alert.AddAction(UIAlertAction.Create(cancel, UIAlertActionStyle.Cancel, _ => completion.SetResult(null)));
+		alert.AddAction(UIAlertAction.Create(accept, UIAlertActionStyle.Default, _ =>
+			completion.SetResult(alert.TextFields?.FirstOrDefault()?.Text ?? "")));
+
+		Present(alert, completion);
+
+		return completion.Task;
+	}
+
 	public Task<string?> ActionSheetAsync(
 		string title,
 		string cancel = "Cancel",

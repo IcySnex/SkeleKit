@@ -11,9 +11,27 @@ namespace BareUI.Gallery.ViewModels.Demos;
 /// </summary>
 public partial class LiveListDemoViewModel : ObservableObject
 {
+	readonly INavigator navigator;
+
 	int next = 1;
 
 	public ObservableCollection<TodoItem> Items { get; } = [];
+
+	[RelayCommand]
+	async Task Rename(
+		TodoItem item)
+	{
+		string? title = await navigator.PromptAsync(
+			"Rename",
+			"What should this be called?",
+			placeholder: "Title",
+			text: item.Title);
+
+		int index = Items.IndexOf(item);
+
+		if (title is { Length: > 0 } && index >= 0)
+			Items[index] = item with { Title = title };
+	}
 
 	[RelayCommand]
 	void Add()
@@ -74,8 +92,11 @@ public partial class LiveListDemoViewModel : ObservableObject
 		}
 	}
 
-	public LiveListDemoViewModel()
+	public LiveListDemoViewModel(
+		INavigator navigator)
 	{
+		this.navigator = navigator;
+
 		for (int index = 0; index < 3; index++)
 			Add();
 	}
