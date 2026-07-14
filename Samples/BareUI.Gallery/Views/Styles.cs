@@ -42,6 +42,12 @@ public static class Styles
 		label.Margin = new Thickness(16, 6, 16, 12));
 
 	/// <summary>
+	/// A date picker drawn as a full inline calendar.
+	/// </summary>
+	public static readonly Style<DatePicker> Calendar = new(picker =>
+		picker.Kind = DatePickerStyle.Inline);
+
+	/// <summary>
 	/// A rounded card holding a block of content.
 	/// </summary>
 	public static readonly Style<Border> Card = new(border =>

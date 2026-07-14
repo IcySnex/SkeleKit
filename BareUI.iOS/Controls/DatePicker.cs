@@ -31,12 +31,12 @@ public class DatePicker : Control
 	/// <summary>
 	/// How the picker presents itself.
 	/// </summary>
-	public DatePickerStyle Style
+	public DatePickerStyle Kind
 	{
-		get => style;
-		set => Set(ref style, value, ApplyStyle);
+		get => kind;
+		set => Set(ref kind, value, ApplyStyle);
 	}
-	DatePickerStyle style = DatePickerStyle.Compact;
+	DatePickerStyle kind = DatePickerStyle.Compact;
 
 	/// <summary>
 	/// The earliest pickable date, or null for no bound.
@@ -91,7 +91,7 @@ public class DatePicker : Control
 			_ => UIDatePickerMode.Date
 		};
 
-		Ui.PreferredDatePickerStyle = style switch
+		Ui.PreferredDatePickerStyle = kind switch
 		{
 			DatePickerStyle.Inline => UIDatePickerStyle.Inline,
 			DatePickerStyle.Wheels => UIDatePickerStyle.Wheels,

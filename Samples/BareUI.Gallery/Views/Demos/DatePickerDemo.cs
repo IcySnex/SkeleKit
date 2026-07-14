@@ -38,13 +38,13 @@ public class DatePickerDemo : ContentView<DatePickerDemoViewModel>
 					new DatePicker
 					{
 						Mode = DatePickerMode.Time,
-						Style = DatePickerStyle.Wheels
+						Kind = DatePickerStyle.Wheels
 					},
 
-					new Label { Style = Styles.Caption, Text = "Inline calendar" },
+					new Label { Style = Styles.Caption, Text = "Inline calendar, through a shared Style<DatePicker>" },
 					new DatePicker
 					{
-						Style = DatePickerStyle.Inline,
+						Style = Styles.Calendar,
 						Date = Bind(vm => vm.Birthday, (vm, value) => vm.Birthday = value)
 					}
 				}
