@@ -59,7 +59,7 @@ feature-complete for building a real app:
   keyboard avoidance. Engine is pure math, unit-tested on the neutral `net10.0` TFM.
 - **Controls**: `Label`, `Button`, `Image` (cached async loader), `TextField`/`SecureField`/
   `TextEditor`, `Switch`, `Slider`, `Stepper`, `ProgressBar`, `ActivityIndicator`, `Divider`,
-  `Picker<T>`, `NativeView`.
+  `Picker<T>`, `SegmentedControl`, `DatePicker`, `PageControl`, `ColorWell`, `NativeView`.
 - **Bindings**: AOT-safe, all four modes, converters, triggers, nested paths, main-thread
   marshalling of background INPC.
 - **App model**: `BareApp` bootstrap, DI, ViewModel-first `INavigator`, tabs/stack/single-page

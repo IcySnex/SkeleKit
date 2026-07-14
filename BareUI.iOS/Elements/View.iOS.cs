@@ -269,6 +269,9 @@ public abstract partial class View
 		native.Hidden = !isVisible;
 		native.Alpha = (nfloat)Opacity;
 
+		// null means "inherit": UIKit walks the superview chain for it
+		native.TintColor = Tint?.ToUIColor();
+
 		ApplyBackground();
 
 		// a clipped layer cannot draw a shadow: the shadow is outside the bounds. A corner radius alone

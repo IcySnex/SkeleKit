@@ -48,7 +48,12 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ★ (skip) **Border on any view** — `layer.borderWidth/borderColor`; today only the `Border` panel strokes.
 - ★ (skip) **Per-corner rounding + continuous curve** — `MaskedCorners` and
   `CornerCurve = .continuous` (the Apple squircle — today's radius is the "cheap" circular look).
-- ★ **TintColor** — propagating accent for buttons/images/controls under a subtree.
+- ~~★ **TintColor**~~ — **done** (`View.Tint`, inherited down the tree). Native `tintColor` inheritance
+  only reaches the controls that read it (`Slider`, `Stepper`, `ProgressBar`, symbols); a `UISwitch`
+  fill, a `UIActivityIndicatorView` and a `UIButton` configuration all paint from their own color, so
+  they fall back to `View.EffectiveTint` when the app sets none. A tint change walks the subtree
+  (`Panel` recurses, `CollectionView` forwards into live cells). An `Image` templates a raster only
+  from an *explicit* `Tint` — an inherited one would flatten a photo.
 - ~~★ **Typed gestures beyond pan/tap**~~ — **done** (`OnLongPress`, `OnDoubleTap`, `OnPinch`,
   `OnRotate`).
 - ◆ (skip) **Pointer/hover effects (iPad)** — `UIPointerInteraction` lift/highlight; one enum property.
@@ -66,7 +71,10 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Letter spacing & line spacing**~~ — **done** (`LetterSpacing`, `LineSpacing`).
 - ~~★ **Underline / strikethrough**~~ — **done**.
 - ~~★ **Auto-shrink**~~ — **done** (`Label.AutoShrink`).
-- ★ **Dynamic Type cap** — `MaximumContentSizeCategory` (stop a title exploding at AX5).
+- ~~★ **Dynamic Type cap**~~ — **done** (`Label.MaxFontSize`, NaN = uncapped). Not
+  `MaximumContentSizeCategory`: that caps scaling through the view's trait collection, and our fonts
+  are built in managed code by `Fonts.Preferred`/`Scaled`, which never read it. The cap goes where the
+  font is made — `UIFontMetrics.GetScaledFont(font, maximumPointSize)`.
 - ◆ **Selectable text / link detection** — readonly `UITextView` under the hood or iOS 17 text items.
 
 ## Button
@@ -81,7 +89,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 ## Image
 
-- ~~★ **Template rendering + tint**~~ — **done** (`Image.Tint`, rasters render as templates).
+- ~~★ **Template rendering + tint**~~ — **done** (`View.Tint`, rasters render as templates when the
+  tint is set on the image itself).
 - ~~◆ **Symbol configuration**~~ — **done** (`SymbolSize`/`SymbolWeight`/`SymbolScale`,
   `SymbolColors` — one is hierarchical, several are the palette — `PrefersMulticolor`,
   bindable `SymbolValue`).
@@ -100,16 +109,18 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ★ (skip) **Max length / input filter** — `ShouldChangeCharacters` hook as `Func<string, bool>`.
 - ★ (skip) **TextEditor placeholder** — UIKit has none natively; overlay label, everyone needs it.
 - ~~★ **Font weight/design on inputs**~~ — **done** (`FontWeight`/`FontDesign` on both).
-- ★ **Keyboard appearance** — dark keyboard override remains;
-  ~~`EnablesReturnKeyAutomatically`~~ **done** (`TextField.RequiresText`).
+- ~~★ **Keyboard appearance**~~ — **done** (`KeyboardLook` on `TextField`/`TextEditor`;
+  `EnablesReturnKeyAutomatically` is `TextField.RequiresText`).
 
 ## Missing controls (all wrap one UIKit class)
 
 - ~~◆ **DatePicker**~~ — **done** (modes × styles, min/max, two-way `Date`); countdown mode left
   out on purpose.
 - ~~★ **SegmentedControl**~~ — **done** (new control, `Items` + two-way `SelectedIndex`).
-- ★ **ColorWell** — `UIColorWell` (+ `UIColorPickerViewController` via navigator).
-- ★ **PageControl** — dots, pairs with the carousel layout.
+- ~~★ **ColorWell**~~ — **done** (two-way `Selected`, `Title`, `SupportsAlpha`).
+- ~~★ **PageControl**~~ — **done** (`Count`, two-way `Current`, dot colors, `AllowsScrubbing`). The
+  unfilled dots keep UIKit's own default, which is near-invisible on a plain light background — set
+  `DotColor` when the control doesn't sit over a photo.
 - ▲ **WebView** — `WKWebView`: url/html, navigation events, JS eval. Big but standard.
 - ▲ **MapView** — `MKMapView`; probably out of scope, listed for completeness.
 - ★ **MenuPicker** — the `UIButton` popup variant above may cover this; decide one spelling.
@@ -117,15 +128,17 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 ## Slider / Switch / Progress / Stepper
 
 - ~~★ **Slider**: min/max SF symbols, track tints, step value (snap)~~ — **done**
-  (`Min/MaxIcon`, `TrackColor`/`EmptyTrackColor`/`ThumbColor`, `Step`); `Continuous` toggle remains.
+  (`Min/MaxIcon`, `TrackColor`/`EmptyTrackColor`/`ThumbColor`, `Step`, `Continuous`).
 - ~~★ **Switch**: `OnTintColor`, `ThumbTintColor`~~ — **done** (`OnColor`, `ThumbColor`).
-- ~~★ **ProgressBar**: `TrackTintColor`~~ — **done** (`TrackColor`); indeterminate question open.
+- ~~★ **ProgressBar**: `TrackTintColor`~~ — **done** (`TrackColor`, and the filled part is
+  `FillColor` — renamed off `Tint`, which now means the inherited accent on every `View`);
+  indeterminate question open.
 - ~~★ **ActivityIndicator**: `Color`~~ — already existed; nothing to do.
 
 ## ScrollView
 
 - ~~★ **Paging**~~ — **done** (`ScrollView.Paging`).
-- ★ **Indicator control** — ~~show/hide~~ **done** (`ShowsIndicator`); style/insets remain.
+- ~~★ **Indicator control**~~ — **done** (`ShowsIndicator`, `IndicatorStyle`, `IndicatorInsets`).
 - ★ (skip) **Bounce toggles** — `Bounces`, `AlwaysBounceVertical/Horizontal`.
 - ~~★ **Programmatic scroll**~~ — **done** (`ScrollView.ScrollTo(offset)`).
 - ★ (skip) **Deceleration rate** — normal/fast (fast = the "snappy" feel).

@@ -55,9 +55,16 @@ public class ActivityIndicator : Control
 			Ui.StopAnimating();
 	}
 
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			ApplyColor();
+	}
+
 	void ApplyColor()
 	{
-		if (color is { } value)
+		// UIActivityIndicatorView paints from its own color, never the view tint
+		if ((color ?? EffectiveTint) is { } value)
 			Ui.Color = value.ToUIColor();
 	}
 }

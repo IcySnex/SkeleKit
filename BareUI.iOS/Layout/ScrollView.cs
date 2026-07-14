@@ -94,6 +94,26 @@ public partial class ScrollView : Panel
 	bool showsIndicator = true;
 
 	/// <summary>
+	/// The color of the scroll indicator.
+	/// </summary>
+	public IndicatorStyle IndicatorStyle
+	{
+		get => indicatorStyle;
+		set => Set(ref indicatorStyle, value, ApplyBehavior, affectsMeasure: false);
+	}
+	IndicatorStyle indicatorStyle = IndicatorStyle.Default;
+
+	/// <summary>
+	/// Insets the scroll indicator from the edges, or null to track the content insets.
+	/// </summary>
+	public Thickness? IndicatorInsets
+	{
+		get => indicatorInsets;
+		set => Set(ref indicatorInsets, value, ApplyBehavior, affectsMeasure: false);
+	}
+	Thickness? indicatorInsets;
+
+	/// <summary>
 	/// Scrolls to an offset along the scroll axis, in points.
 	/// </summary>
 	public void ScrollTo(

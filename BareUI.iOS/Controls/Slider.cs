@@ -47,6 +47,16 @@ public class Slider : Control
 	double step;
 
 	/// <summary>
+	/// Whether the value updates all through the drag, rather than only when the thumb is released.
+	/// </summary>
+	public bool Continuous
+	{
+		get => continuous;
+		set => Set(ref continuous, value, ApplyStyle, affectsMeasure: false);
+	}
+	bool continuous = true;
+
+	/// <summary>
 	/// The color of the filled part of the track, or null for the system tint.
 	/// </summary>
 	public Color? TrackColor
@@ -142,6 +152,8 @@ public class Slider : Control
 
 		Ui.MinValueImage = minIcon is { } min ? UIImage.GetSystemImage(min) : null;
 		Ui.MaxValueImage = maxIcon is { } max ? UIImage.GetSystemImage(max) : null;
+
+		Ui.Continuous = continuous;
 	}
 
 	void OnValueChanged()

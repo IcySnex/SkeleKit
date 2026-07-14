@@ -100,6 +100,16 @@ public class TextField : Control
 	bool requiresText;
 
 	/// <summary>
+	/// The color scheme of the raised keyboard.
+	/// </summary>
+	public KeyboardLook KeyboardLook
+	{
+		get => keyboardLook;
+		set => Set(ref keyboardLook, value, ApplyTraits, affectsMeasure: false);
+	}
+	KeyboardLook keyboardLook = KeyboardLook.Default;
+
+	/// <summary>
 	/// Font size in points.
 	/// </summary>
 	public Bindable<double> FontSize
@@ -206,6 +216,7 @@ public class TextField : Control
 		Ui.AutocorrectionType = autocorrection ? UITextAutocorrectionType.Yes : UITextAutocorrectionType.No;
 		Ui.SpellCheckingType = autocorrection ? UITextSpellCheckingType.Yes : UITextSpellCheckingType.No;
 		Ui.EnablesReturnKeyAutomatically = requiresText;
+		Ui.KeyboardAppearance = Keyboards.Appearance(keyboardLook);
 	}
 
 	// the binding setter rejects null: None leaves the system default alone, and clearing a

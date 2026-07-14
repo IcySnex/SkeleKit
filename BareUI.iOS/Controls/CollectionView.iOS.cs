@@ -254,6 +254,18 @@ public partial class CollectionView<TItem, TSection>
 		EmptyView?.ReapplyVisuals();
 	}
 
+	internal override void TintChanged()
+	{
+		if (!IsRealized)
+			return;
+
+		foreach (UICollectionViewCell cell in Ui.VisibleCells)
+			if (cell is BareCell { Hosted: { } hosted })
+				hosted.TintChanged();
+
+		EmptyView?.TintChanged();
+	}
+
 	// the row tapped on the way out un-highlights on the way back
 	internal override void PageAppeared()
 	{

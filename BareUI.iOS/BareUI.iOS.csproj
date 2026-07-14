@@ -54,5 +54,6 @@
         <Compile Remove="**/*.iOS.cs" />
         <Compile Remove="Elements/LayoutHost.cs" />
         <Compile Remove="Primitives/Fonts.cs" />
+        <Compile Remove="Primitives/Keyboards.cs" />
     </ItemGroup>
 </Project>

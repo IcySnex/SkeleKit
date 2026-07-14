@@ -25,6 +25,8 @@ BareApplication.CreateBuilder()
 		services.AddTransient<SwitchDemoViewModel>();
 		services.AddTransient<SegmentedDemoViewModel>();
 		services.AddTransient<DatePickerDemoViewModel>();
+		services.AddTransient<TintDemoViewModel>();
+		services.AddTransient<PageControlDemoViewModel>();
 		services.AddTransient<SliderDemoViewModel>();
 		services.AddTransient<StepperDemoViewModel>();
 		services.AddTransient<ProgressBarDemoViewModel>();
@@ -57,6 +59,8 @@ BareApplication.CreateBuilder()
 		pages.AddTransient((SwitchDemoViewModel vm) => new SwitchDemo(vm));
 		pages.AddTransient((SegmentedDemoViewModel vm) => new SegmentedDemo(vm));
 		pages.AddTransient((DatePickerDemoViewModel vm) => new DatePickerDemo(vm));
+		pages.AddTransient((TintDemoViewModel vm) => new TintDemo(vm));
+		pages.AddTransient((PageControlDemoViewModel vm) => new PageControlDemo(vm));
 		pages.AddTransient((SliderDemoViewModel vm) => new SliderDemo(vm));
 		pages.AddTransient((StepperDemoViewModel vm) => new StepperDemo(vm));
 		pages.AddTransient((ProgressBarDemoViewModel vm) => new ProgressBarDemo(vm));

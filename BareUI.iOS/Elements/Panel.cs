@@ -61,4 +61,10 @@ public abstract partial class Panel : View
 		foreach (View child in Children)
 			child.PageAppeared();
 	}
+
+	internal override void TintChanged()
+	{
+		foreach (View child in Children)
+			child.TintChanged();
+	}
 }

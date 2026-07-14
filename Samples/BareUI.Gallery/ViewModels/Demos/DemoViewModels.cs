@@ -97,6 +97,28 @@ public partial class DatePickerDemoViewModel : ObservableObject
 	public partial DateTime Birthday { get; set; } = new(2000, 1, 1);
 }
 
+public partial class TintDemoViewModel : ObservableObject
+{
+	[ObservableProperty]
+	public partial Color Accent { get; set; } = Colors.Indigo;
+}
+
+public partial class PageControlDemoViewModel : ObservableObject
+{
+	const int Pages = 5;
+
+	[ObservableProperty]
+	public partial int Page { get; set; }
+
+	[RelayCommand]
+	void Previous() =>
+		Page = Math.Max(0, Page - 1);
+
+	[RelayCommand]
+	void Next() =>
+		Page = Math.Min(Pages - 1, Page + 1);
+}
+
 public partial class SliderDemoViewModel : ObservableObject
 {
 	[ObservableProperty]
@@ -104,6 +126,9 @@ public partial class SliderDemoViewModel : ObservableObject
 
 	[ObservableProperty]
 	public partial double Percent { get; set; } = 50;
+
+	[ObservableProperty]
+	public partial double Settled { get; set; } = 0.5;
 }
 
 public partial class StepperDemoViewModel : ObservableObject

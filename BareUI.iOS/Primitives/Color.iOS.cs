@@ -22,6 +22,15 @@ internal static class ColorInterop
 		return Rgba(color.Red, color.Green, color.Blue, color.Alpha);
 	}
 
+	// a picked color is always concrete: no system semantics, no dark variant
+	public static Color ToColor(
+		this UIColor color)
+	{
+		color.GetRGBA(out nfloat red, out nfloat green, out nfloat blue, out nfloat alpha);
+
+		return new(red, green, blue, alpha);
+	}
+
 	static UIColor Rgba(
 		double red,
 		double green,

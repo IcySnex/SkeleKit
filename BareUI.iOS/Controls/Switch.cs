@@ -62,9 +62,16 @@ public class Switch : Control
 	void ApplyIsOn() =>
 		Ui.On = isOn;
 
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			ApplyColors();
+	}
+
 	void ApplyColors()
 	{
-		if (onColor is { } on)
+		// UISwitch paints its fill green whatever the view tint says
+		if ((onColor ?? EffectiveTint) is { } on)
 			Ui.OnTintColor = on.ToUIColor();
 
 		if (thumbColor is { } thumb)

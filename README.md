@@ -123,7 +123,8 @@ first) → explicit `Style` → whatever the initializer assigns after it.
   `ScrollView`, per-view `IgnoresSafeArea`. Two-pass measure/arrange engine, unit-testable off-device.
 - **Controls**: `Label`, `Button`, `Image` (async, cached), `TextField`, `SecureField`,
   `TextEditor`, `Switch`, `Slider`, `Stepper`, `ProgressBar`, `ActivityIndicator`, `Divider`,
-  `Picker<T>`, and `NativeView` as the UIKit escape hatch.
+  `Picker<T>`, `SegmentedControl`, `DatePicker`, `PageControl`, `ColorWell`, and `NativeView` as the
+  UIKit escape hatch.
 - **Lists**: virtualized `CollectionView<T>` over `UICollectionView` + diffable data source —
   list (incl. inset-grouped), grid, carousel; sections + headers; pull-to-refresh, swipe actions,
   context menus, empty view, live `INotifyCollectionChanged` updates.

@@ -161,6 +161,16 @@ public class Label : Control
 	}
 	double autoShrink;
 
+	/// <summary>
+	/// The largest point size Dynamic Type may scale the text to, or NaN to follow the accessibility sizes all the way up.
+	/// </summary>
+	public double MaxFontSize
+	{
+		get => maxFontSize;
+		set => Set(ref maxFontSize, value, ApplyFont);
+	}
+	double maxFontSize = double.NaN;
+
 
 	private protected override UIView CreateNative() =>
 		new UILabel
@@ -226,8 +236,8 @@ public class Label : Control
 	// both paths scale with the user's text-size setting; a weight of Regular leaves a text style's own
 	void ApplyFont() =>
 		Ui.Font = FontSpec.UsesTextStyle(textStyle, fontSize)
-			? Fonts.Preferred(textStyle!.Value, weight, design)
-			: Fonts.Scaled(FontSpec.SizeOf(fontSize), weight, design);
+			? Fonts.Preferred(textStyle!.Value, weight, design, maxFontSize)
+			: Fonts.Scaled(FontSpec.SizeOf(fontSize), weight, design, maxFontSize);
 
 	void ApplyTruncation()
 	{

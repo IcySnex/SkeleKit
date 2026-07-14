@@ -49,7 +49,17 @@ public class SliderDemo : ContentView<SliderDemoViewModel>
 						MaxIcon = "speaker.wave.3.fill",
 						TrackColor = Colors.Indigo,
 						Value = Bind(vm => vm.Percent, (vm, value) => vm.Percent = value)
-					}
+					},
+
+					new Label { Style = Styles.Caption, Text = "Commits on release, not during the drag" },
+					new Slider
+					{
+						Minimum = 0,
+						Maximum = 1,
+						Continuous = false,
+						Value = Bind(vm => vm.Settled, (vm, value) => vm.Settled = value)
+					},
+					new Label { Text = Bind(vm => vm.Settled, value => $"{value:F2}"), TextColor = Palette.Secondary }
 				}
 			}
 		};

@@ -251,18 +251,37 @@ public class Button : Control
 				(nfloat)insets.Bottom,
 				(nfloat)insets.Right);
 
+		bool filled = kind is ButtonStyle.Filled or ButtonStyle.FilledCapsule;
+
 		if (isDestructive)
 		{
 			configuration.BaseForegroundColor = UIColor.SystemRed;
 
-			if (kind is ButtonStyle.Filled or ButtonStyle.FilledCapsule)
+			if (filled)
 			{
 				configuration.BaseBackgroundColor = UIColor.SystemRed;
 				configuration.BaseForegroundColor = UIColor.White;
 			}
 		}
+		// a configuration paints from its own colors, so an inherited tint has to be written into it
+		else if (EffectiveTint is { } accent)
+		{
+			UIColor color = accent.ToUIColor();
+
+			if (filled || kind is ButtonStyle.Tinted)
+				configuration.BaseBackgroundColor = color;
+
+			if (!filled)
+				configuration.BaseForegroundColor = color;
+		}
 
 		Ui.Configuration = configuration;
+	}
+
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			ApplyConfiguration();
 	}
 
 	// the actions stay rooted here: UIKit's retain alone would let their managed peers die

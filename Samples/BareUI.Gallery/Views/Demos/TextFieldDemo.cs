@@ -64,6 +64,13 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 						Capitalization = Capitalization.Characters,
 						FontDesign = FontDesign.Monospaced,
 						RequiresText = true
+					},
+
+					new Label { Style = Styles.Caption, Text = "Dark keyboard, whatever the system appearance" },
+					new TextField
+					{
+						Placeholder = "Tap me in light mode",
+						KeyboardLook = KeyboardLook.Dark
 					}
 				}
 			}

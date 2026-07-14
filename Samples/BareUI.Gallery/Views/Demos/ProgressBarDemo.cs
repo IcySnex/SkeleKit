@@ -36,7 +36,7 @@ public class ProgressBarDemo : ContentView<ProgressBarDemoViewModel>
 						new ProgressBar { Progress = 1 },
 
 						new Label { Style = Styles.Caption, Text = "With tint" },
-						new ProgressBar { Progress = 0.5, Tint = Color.FromHex(0x34C759) }
+						new ProgressBar { Progress = 0.5, FillColor = Color.FromHex(0x34C759) }
 					}
 				}
 			};

@@ -61,17 +61,6 @@ public class Image : Control
 	}
 	Stretch stretch = Stretch.Uniform;
 
-	/// <summary>
-	/// Recolors the whole image with one color, rendering rasters as templates. For layered symbol looks use <see cref="SymbolColors"/> instead.
-	/// </summary>
-	public Color? Tint
-	{
-		get => tint;
-		set => Set(ref tint, value, ApplyTint, affectsMeasure: false);
-	}
-	Color? tint;
-
-
 	// Symbol styling: all of it only affects SF Symbol sources
 
 	/// <summary>
@@ -162,10 +151,16 @@ public class Image : Control
 	private protected override void ApplyProperties()
 	{
 		ApplyStretch();
-		ApplyTint();
 		ApplySymbolConfiguration();
 		ApplySource();
 		ApplySymbolEffect();
+	}
+
+	// only an explicit Tint renders a raster as a template — an inherited one would flatten a photo
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			Show(displayed, animated: false);
 	}
 
 	private protected override void OnUnrealized() =>
@@ -187,12 +182,6 @@ public class Image : Control
 		// aspect-fill spills outside the frame unless clipped
 		if (stretch is Stretch.UniformToFill)
 			Ui.ClipsToBounds = true;
-	}
-
-	void ApplyTint()
-	{
-		Ui.TintColor = tint?.ToUIColor();
-		Show(displayed, animated: false);
 	}
 
 	void ApplySymbolConfiguration()
@@ -271,7 +260,7 @@ public class Image : Control
 	{
 		displayed = image;
 
-		UIImage? rendered = tint is not null
+		UIImage? rendered = Tint is not null
 			? image?.ImageWithRenderingMode(UIImageRenderingMode.AlwaysTemplate)
 			: image;
 

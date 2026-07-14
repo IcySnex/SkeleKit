@@ -235,6 +235,23 @@ public partial class ScrollView
 		host.PagingEnabled = Paging;
 		host.ShowsVerticalScrollIndicator = ShowsIndicator && vertical;
 		host.ShowsHorizontalScrollIndicator = ShowsIndicator && !vertical;
+
+		host.IndicatorStyle = IndicatorStyle switch
+		{
+			IndicatorStyle.Dark => UIScrollViewIndicatorStyle.Black,
+			IndicatorStyle.Light => UIScrollViewIndicatorStyle.White,
+			_ => UIScrollViewIndicatorStyle.Default
+		};
+
+		host.AutomaticallyAdjustsScrollIndicatorInsets = IndicatorInsets is null;
+
+		if (IndicatorInsets is { } insets)
+		{
+			UIEdgeInsets native = new((nfloat)insets.Top, (nfloat)insets.Left, (nfloat)insets.Bottom, (nfloat)insets.Right);
+
+			host.VerticalScrollIndicatorInsets = native;
+			host.HorizontalScrollIndicatorInsets = native;
+		}
 	}
 
 	partial void ScrollToCore(
