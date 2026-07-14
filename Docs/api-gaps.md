@@ -34,9 +34,16 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Tab badges**~~ — **done** (`ContentView.TabBadge` bindable + `TabBadgeColor`; applies to
   never-opened tabs too).
 - ~~★ **Hide tab bar on push**~~ — **done** (`ContentView.HidesTabBar`).
-- ◆ **Sheet polish** — grabber (`PrefersGrabberVisible`), sheet corner radius,
-  `LargestUndimmedDetent` (non-blocking sheets), `PrefersScrollingExpandsWhenScrolledToEdge`,
-  dismiss prevention + `DidAttemptToDismiss` callback. Detents exist; these are the knobs around them.
+- ~~◆ **Sheet polish**~~ — **done**, but not as written. The real gap was that a sheet only ever got
+  *one* detent, so it could never be dragged: `ModalStyle.Sheet(Detent.Medium, Detent.Large)` now
+  opens half and grabs to full. The grabber follows from that (shown iff the sheet resizes) rather
+  than being a knob. Corner radius, `LargestUndimmedDetent` and
+  `PrefersScrollingExpandsWhenScrolledToEdge` are **declined** as API for a screenshot. Dismiss
+  prevention already exists — `ContentView.ConfirmLeave` funnels the sheet's swipe-down through the
+  same guard as the back button.
+- ★ **Custom detent heights** — `Detent` is only Medium/Large; `UISheetPresentationControllerDetent
+  .Create(id, resolver)` takes any height, which is what a mini-player or a Maps-style sheet needs.
+  `Detent` would become a struct (`Detent.Fraction(0.3)` / `Detent.Height(120)`).
 - ◆ **Popover anchoring** — present as popover from a view/toolbar item with arrow direction
   (currently no source anchor, iPad needs it).
 - ★ (skip) **Share sheet** — `INavigator.ShareAsync(items)` over `UIActivityViewController`.

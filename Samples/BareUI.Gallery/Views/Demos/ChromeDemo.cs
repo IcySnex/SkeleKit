@@ -71,6 +71,7 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 						{
 							new Button { Text = "Sheet", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "large" },
 							new Button { Text = "Medium", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "medium" },
+							new Button { Text = "Half → full", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "resizable" },
 							new Button { Text = "Form", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "form" },
 							new Button { Text = "Full", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "full" }
 						}

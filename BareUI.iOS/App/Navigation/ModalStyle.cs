@@ -11,57 +11,60 @@ public readonly struct ModalStyle
 	public ModalPresentation Presentation { get; }
 
 	/// <summary>
-	/// The sheet detent, ignored for other presentations.
+	/// The heights a sheet may rest at. It opens at the first and can be dragged between them. Ignored for other presentations.
 	/// </summary>
-	public Detent Detent { get; }
+	public IReadOnlyList<Detent> Detents { get; }
 
 	ModalStyle(
 		ModalPresentation presentation,
-		Detent detent)
+		IReadOnlyList<Detent> detents)
 	{
 		Presentation = presentation;
-		Detent = detent;
+		Detents = detents;
 	}
 
 
 	/// <summary>
 	/// Let the system choose the best presentation style dynamically.
 	/// </summary>
-	public static ModalStyle Automatic => new(ModalPresentation.Automatic, Detent.Large);
+	public static ModalStyle Automatic => new(ModalPresentation.Automatic, [Detent.Large]);
 
 	/// <summary>
 	/// Covers the entire screen and unloads the background.
 	/// </summary>
-	public static ModalStyle FullScreen => new(ModalPresentation.FullScreen, Detent.Large);
+	public static ModalStyle FullScreen => new(ModalPresentation.FullScreen, [Detent.Large]);
 
 	/// <summary>
 	/// A centered card layout on iPad/desktop, and a full sheet on iPhone.
 	/// </summary>
-	public static ModalStyle FormSheet => new(ModalPresentation.FormSheet, Detent.Large);
+	public static ModalStyle FormSheet => new(ModalPresentation.FormSheet, [Detent.Large]);
 
 	/// <summary>
 	/// Presents inside the parent bounds instead of the full screen.
 	/// </summary>
-	public static ModalStyle CurrentContext => new(ModalPresentation.CurrentContext, Detent.Large);
+	public static ModalStyle CurrentContext => new(ModalPresentation.CurrentContext, [Detent.Large]);
 
 	/// <summary>
 	/// Covers the whole screen but keeps the background loaded.
 	/// </summary>
-	public static ModalStyle OverFullScreen => new(ModalPresentation.OverFullScreen, Detent.Large);
+	public static ModalStyle OverFullScreen => new(ModalPresentation.OverFullScreen, [Detent.Large]);
 
 	/// <summary>
 	/// Presents inside the parent bounds while keeping the background loaded.
 	/// </summary>
-	public static ModalStyle OverCurrentContext => new(ModalPresentation.OverCurrentContext, Detent.Large);
+	public static ModalStyle OverCurrentContext => new(ModalPresentation.OverCurrentContext, [Detent.Large]);
 
 	/// <summary>
 	/// A contextual floating bubble modal on large displays.
 	/// </summary>
-	public static ModalStyle Popover => new(ModalPresentation.Popover, Detent.Large);
+	public static ModalStyle Popover => new(ModalPresentation.Popover, [Detent.Large]);
 
 	/// <summary>
-	/// An interactive, swipe-to-dismiss sheet that opens to a specific height.
+	/// An interactive, swipe-to-dismiss sheet. Pass more than one height to let the user drag between them, opening at the first.
 	/// </summary>
-	public static ModalStyle Sheet(Detent detent = Detent.Large) =>
-		new(ModalPresentation.PageSheet, detent);
+	/// <param name="detents">The heights the sheet may rest at, the first being the one it opens at. Defaults to full height.</param>
+	/// <returns>The sheet presentation style.</returns>
+	public static ModalStyle Sheet(
+		params Detent[] detents) =>
+		new(ModalPresentation.PageSheet, detents.Length > 0 ? detents : [Detent.Large]);
 }

@@ -39,6 +39,7 @@ public partial class ChromeDemoViewModel(
 			"full" => ModalStyle.FullScreen,
 			"form" => ModalStyle.FormSheet,
 			"medium" => ModalStyle.Sheet(Detent.Medium),
+			"resizable" => ModalStyle.Sheet(Detent.Medium, Detent.Large),
 			_ => ModalStyle.Sheet()
 		});
 

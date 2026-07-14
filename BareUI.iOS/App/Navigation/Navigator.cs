@@ -129,14 +129,32 @@ internal sealed class Navigator(
 		};
 
 		if (style.Presentation is ModalPresentation.PageSheet && wrapper.SheetPresentationController is UISheetPresentationController sheet)
-			sheet.Detents = style.Detent is Detent.Medium
-				? [UISheetPresentationControllerDetent.CreateMediumDetent()]
-				: [UISheetPresentationControllerDetent.CreateLargeDetent()];
+		{
+			sheet.Detents = [.. style.Detents.Select(NativeDetent)];
+
+			// the sheet rests at the first of them; UIKit would otherwise pick the smallest
+			sheet.SelectedDetentIdentifier = Identifier(style.Detents[0]);
+
+			// the handle is the affordance for dragging, so it only earns its place on a sheet that resizes
+			sheet.PrefersGrabberVisible = style.Detents.Count > 1;
+		}
 
 		presenter.PresentViewController(wrapper, true, null);
 
 		return Task.CompletedTask;
 	}
+
+	static UISheetPresentationControllerDetent NativeDetent(
+		Detent detent) =>
+		detent is Detent.Medium
+			? UISheetPresentationControllerDetent.CreateMediumDetent()
+			: UISheetPresentationControllerDetent.CreateLargeDetent();
+
+	static UISheetPresentationControllerDetentIdentifier Identifier(
+		Detent detent) =>
+		detent is Detent.Medium
+			? UISheetPresentationControllerDetentIdentifier.Medium
+			: UISheetPresentationControllerDetentIdentifier.Large;
 
 	public Task DismissAsync()
 	{
