@@ -17,6 +17,7 @@ BareApplication.CreateBuilder()
 		services.AddTransient<BindingViewModel>();
 
 		services.AddTransient<StylingDemoViewModel>();
+		services.AddTransient<ChromeDemoViewModel>();
 		services.AddTransient<AnimationDemoViewModel>();
 		services.AddTransient<ButtonDemoViewModel>();
 		services.AddTransient<TextFieldDemoViewModel>();
@@ -48,6 +49,7 @@ BareApplication.CreateBuilder()
 		pages.AddSingleton((BindingViewModel vm) => new BindingView(vm));
 
 		pages.AddTransient((StylingDemoViewModel vm) => new StylingDemo(vm));
+		pages.AddTransient((ChromeDemoViewModel vm) => new ChromeDemo(vm));
 		pages.AddTransient((AnimationDemoViewModel vm) => new AnimationDemo(vm));
 		pages.AddTransient((ButtonDemoViewModel vm) => new ButtonDemo(vm));
 		pages.AddTransient((TextFieldDemoViewModel vm) => new TextFieldDemo(vm));

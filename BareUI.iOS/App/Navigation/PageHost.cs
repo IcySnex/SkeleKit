@@ -45,13 +45,17 @@ internal sealed class PageHost : UIViewController
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
+		// item-level tint: iOS 26 glass buttons do not always follow the bar's TintColor
+		if (Page?.BarAccent is { } accent)
+			native.TintColor = accent.ToUIColor();
+
 		return native;
 	}
 
 	// the actions stay rooted here: UIKit's retain alone would let their managed peers die
 	readonly List<UIAction> menuActions = [];
 
-	UIBarButtonItem MenuBar(
+	UIMenu BuildMenu(
 		ToolbarItem item)
 	{
 		UIAction[] entries = new UIAction[item.Menu.Count];
@@ -76,12 +80,23 @@ internal sealed class PageHost : UIViewController
 
 		menuActions.AddRange(entries);
 
+		return UIMenu.Create(entries);
+	}
+
+	UIBarButtonItem MenuBar(
+		ToolbarItem item)
+	{
+		UIMenu menu = BuildMenu(item);
+
 		UIBarButtonItem native = item.Icon is { } icon
-			? new(UIImage.GetSystemImage(icon), UIMenu.Create(entries))
-			: new(item.Text ?? "", UIMenu.Create(entries));
+			? new(UIImage.GetSystemImage(icon), menu)
+			: new(item.Text ?? "", menu);
 
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
+
+		if (Page?.BarAccent is { } accent)
+			native.TintColor = accent.ToUIColor();
 
 		return native;
 	}
@@ -105,6 +120,9 @@ internal sealed class PageHost : UIViewController
 	nfloat keyboardCover;
 	IUITraitChangeRegistration? themeChange;
 	UISearchController? search;
+	UIAction? backAction;
+	SheetGuard? dismissGuard;
+	UITabAccessory? bottomAccessory;
 
 	public PageHost(
 		ContentView page)
@@ -194,8 +212,50 @@ internal sealed class PageHost : UIViewController
 		if (page.TitleStyle is TitleStyle.Large && NavigationController is { } stack)
 			stack.NavigationBar.PrefersLargeTitles = true;
 
+		if (page.TitleColor is not null || page.LargeTitleColor is not null)
+			ApplyBarAppearance(page);
+
 		ApplyToolbar(page);
 		ApplySearch(page);
+	}
+
+	// per-item appearances, so the colors leave every other page's bar alone
+	void ApplyBarAppearance(
+		ContentView page)
+	{
+		static UINavigationBarAppearance Transparent()
+		{
+			UINavigationBarAppearance appearance = new();
+			appearance.ConfigureWithTransparentBackground();
+
+			return appearance;
+		}
+
+		// start from the bar's live appearances: rebuilding from scratch loses the system look
+		// (and its collapse transition) just to recolor a title
+		UINavigationBar? bar = NavigationController?.NavigationBar;
+		UINavigationBarAppearance standard = bar?.StandardAppearance.Copy() as UINavigationBarAppearance ?? new();
+
+		// no scroll-edge appearance means transparent-at-edge; the override must keep that
+		UINavigationBarAppearance edge = bar?.ScrollEdgeAppearance?.Copy() as UINavigationBarAppearance ?? Transparent();
+
+		if (page.TitleColor is { } title)
+		{
+			UIStringAttributes attributes = new() { ForegroundColor = title.ToUIColor() };
+			standard.TitleTextAttributes = attributes;
+			edge.TitleTextAttributes = attributes;
+		}
+
+		if (page.LargeTitleColor is { } large)
+		{
+			UIStringAttributes attributes = new() { ForegroundColor = large.ToUIColor() };
+			standard.LargeTitleTextAttributes = attributes;
+			edge.LargeTitleTextAttributes = attributes;
+		}
+
+		NavigationItem.StandardAppearance = standard;
+		NavigationItem.ScrollEdgeAppearance = edge;
+		NavigationItem.CompactAppearance = standard;
 	}
 
 	void ApplyKeyboard(
@@ -250,6 +310,22 @@ internal sealed class PageHost : UIViewController
 		// leading items sit next to Back, they do not replace it
 		NavigationItem.LeftItemsSupplementBackButton = true;
 		NavigationItem.RightBarButtonItems = [.. trailing];
+
+		if (page.BottomToolbarItems.Count == 0)
+			return;
+
+		List<UIBarButtonItem> bottom = [];
+
+		foreach (ToolbarItem item in page.BottomToolbarItems)
+		{
+			// flexible spaces spread the actions across the bar
+			if (bottom.Count > 0)
+				bottom.Add(new(UIBarButtonSystemItem.FlexibleSpace));
+
+			bottom.Add(Bar(item));
+		}
+
+		SetToolbarItems([.. bottom], false);
 	}
 
 	void ApplySearch(
@@ -260,11 +336,18 @@ internal sealed class PageHost : UIViewController
 
 		search = new((UIViewController?)null)
 		{
-			ObscuresBackgroundDuringPresentation = false
+			ObscuresBackgroundDuringPresentation = page.SearchObscuresBackground
 		};
 
 		search.SearchBar.Placeholder = placeholder;
 		search.SearchBar.TextChanged += (_, e) => page.NotifySearch(e.SearchText);
+		search.SearchBar.CancelButtonClicked += (_, _) => page.NotifySearchCancelled();
+
+		if (page.SearchScopes.Count > 0)
+		{
+			search.SearchBar.ScopeButtonTitles = [.. page.SearchScopes];
+			search.SearchBar.SelectedScopeButtonIndexChanged += (_, e) => page.NotifySearchScope((int)e.SelectedScope);
+		}
 
 		NavigationItem.SearchController = search;
 		NavigationItem.HidesSearchBarWhenScrolling = page.HidesSearchBarWhenScrolling;
@@ -314,8 +397,81 @@ internal sealed class PageHost : UIViewController
 	{
 		base.ViewWillAppear(animated);
 
-		if (Page is not null)
-			NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
+		if (Page is null)
+			return;
+
+		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
+
+		// with a visible tab bar the items float above it as the tab accessory (the two bars share
+		// the bottom edge); everywhere else they get the classic navigation toolbar
+		bool floats = Page.BottomToolbarItems.Count > 0
+			&& !HidesBottomBarWhenPushed
+			&& TabBarController is not null
+			&& OperatingSystem.IsIOSVersionAtLeast(26);
+
+		NavigationController?.SetToolbarHidden(Page.BottomToolbarItems.Count == 0 || floats, animated);
+
+		if (TabBarController is { } tabs && OperatingSystem.IsIOSVersionAtLeast(26))
+			tabs.SetBottomAccessory(floats ? bottomAccessory ??= BuildAccessory(Page) : null, animated);
+
+		// bar-wide, so every page restores it; null falls back to the app accent
+		NavigationController?.NavigationBar.TintColor = Page.BarAccent?.ToUIColor();
+		NavigationController?.Toolbar.TintColor = Page.BarAccent?.ToUIColor();
+
+		// here and not ViewDidLoad: whether back has anywhere to go needs the containment settled.
+		// a pushed page's natural back keeps its look; a modal root synthesizes one that dismisses
+		if (Page.ConfirmLeave is not null
+			&& backAction is null
+			&& NavigationController is { } leavable
+			&& (leavable.ViewControllers?.Length > 1 || leavable.PresentingViewController is not null))
+		{
+			backAction = UIAction.Create("", null, null, _ => ConfirmBack());
+			NavigationItem.BackAction = backAction;
+		}
+
+		// a guarded page pins its sheet; DidAttemptToDismiss then routes the swipe into the confirm
+		if (NavigationController is { PresentingViewController: not null } sheet)
+		{
+			sheet.ModalInPresentation = Page.ConfirmLeave is not null;
+
+			if (Page.ConfirmLeave is not null && sheet.PresentationController is { } presentation)
+			{
+				dismissGuard ??= new(this);
+				presentation.Delegate = dismissGuard;
+			}
+		}
+	}
+
+	public override void ViewDidAppear(
+		bool animated)
+	{
+		base.ViewDidAppear(animated);
+
+		// after the transition: flipping it mid-pop would kill an in-flight swipe
+		if (NavigationController is { } stack)
+		{
+			bool free = Page?.ConfirmLeave is null;
+
+			if (stack.InteractivePopGestureRecognizer is { } swipe)
+				swipe.Enabled = free;
+
+			// iOS 26 pops from anywhere in the content, not just the edge
+			if (OperatingSystem.IsIOSVersionAtLeast(26) && stack.InteractiveContentPopGestureRecognizer is { } contentSwipe)
+				contentSwipe.Enabled = free;
+		}
+
+		Page?.NotifyAppearing();
+	}
+
+	// manual frames do not follow safe-area guides: without this, a chrome change that only moves
+	// the insets (search bar activation) leaves the page parked at its old frame. Laying out
+	// immediately keeps the reframe inside UIKit's own chrome animation instead of jumping after it
+	public override void ViewSafeAreaInsetsDidChange()
+	{
+		base.ViewSafeAreaInsetsDidChange();
+
+		View?.SetNeedsLayout();
+		View?.LayoutIfNeeded();
 	}
 
 	public override void ViewDidLayoutSubviews()
@@ -357,14 +513,6 @@ internal sealed class PageHost : UIViewController
 				shrunk.Height);
 	}
 
-	public override void ViewDidAppear(
-		bool animated)
-	{
-		base.ViewDidAppear(animated);
-
-		Page?.NotifyAppearing();
-	}
-
 	public override void ViewDidDisappear(
 		bool animated)
 	{
@@ -374,5 +522,120 @@ internal sealed class PageHost : UIViewController
 
 		if (IsMovingFromParentViewController)
 			Page?.Unrealize();
+	}
+
+
+	// on a modal root there is nothing to pop: the synthesized back button leaves by dismissing
+	async void ConfirmBack()
+	{
+		if (Page?.ConfirmLeave is not { } confirm)
+			return;
+
+		if (!await confirm())
+			return;
+
+		if (NavigationController is { ViewControllers.Length: > 1 } stack)
+			stack.PopViewController(true);
+		else
+			NavigationController?.DismissViewController(true, null);
+	}
+
+	async void ConfirmDismiss()
+	{
+		if (Page?.ConfirmLeave is not { } confirm)
+			return;
+
+		if (await confirm())
+			NavigationController?.DismissViewController(true, null);
+	}
+
+	UITabAccessory BuildAccessory(
+		ContentView page)
+	{
+		UIStackView stack = new()
+		{
+			Axis = UILayoutConstraintAxis.Horizontal,
+			Distribution = UIStackViewDistribution.EqualSpacing,
+			TranslatesAutoresizingMaskIntoConstraints = false
+		};
+
+		foreach (ToolbarItem item in page.BottomToolbarItems)
+			stack.AddArrangedSubview(AccessoryButton(item, page));
+
+		UIView content = new();
+		content.AddSubview(stack);
+		NSLayoutConstraint.ActivateConstraints(
+		[
+			stack.LeadingAnchor.ConstraintEqualTo(content.LeadingAnchor, 24),
+			stack.TrailingAnchor.ConstraintEqualTo(content.TrailingAnchor, -24),
+			stack.CenterYAnchor.ConstraintEqualTo(content.CenterYAnchor)
+		]);
+
+		return new(content);
+	}
+
+	UIButton AccessoryButton(
+		ToolbarItem item,
+		ContentView page)
+	{
+		UIButtonConfiguration configuration = UIButtonConfiguration.PlainButtonConfiguration;
+		configuration.Title = item.Text;
+
+		if (item.Icon is { } icon)
+			configuration.Image = UIImage.GetSystemImage(icon);
+
+		// a configuration paints from its own foreground color, not the view tint
+		if (page.BarAccent is { } foreground)
+			configuration.BaseForegroundColor = foreground.ToUIColor();
+
+		UIButton button = new() { Configuration = configuration };
+
+		if (item.Menu.Count > 0)
+		{
+			button.Menu = BuildMenu(item);
+			button.ShowsMenuAsPrimaryAction = true;
+		}
+		else
+		{
+			UIAction action = UIAction.Create(
+				"",
+				null,
+				null,
+				_ =>
+				{
+					if (item.Command is { } command && command.CanExecute(item.CommandParameter))
+						command.Execute(item.CommandParameter);
+				});
+
+			menuActions.Add(action);
+			button.AddAction(action, UIControlEvent.TouchUpInside);
+			button.Enabled = item.Command?.CanExecute(item.CommandParameter) ?? true;
+		}
+
+		if (page.BarAccent is { } accent)
+			button.TintColor = accent.ToUIColor();
+
+		return button;
+	}
+
+	// the presentation controller holds its delegate weakly; the dismissGuard field roots this
+	sealed class SheetGuard : UIAdaptivePresentationControllerDelegate
+	{
+		readonly PageHost? host;
+
+		public SheetGuard(
+			PageHost host)
+		{
+			this.host = host;
+		}
+
+		public SheetGuard(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override void DidAttemptToDismiss(
+			UIPresentationController presentationController) =>
+			host?.ConfirmDismiss();
 	}
 }

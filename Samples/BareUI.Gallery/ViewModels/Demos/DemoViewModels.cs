@@ -19,6 +19,34 @@ public partial class ImageDemoViewModel : ObservableObject
 
 public class StylingDemoViewModel;
 
+public partial class ChromeDemoViewModel(
+	INavigator navigator) : ObservableObject
+{
+	[ObservableProperty]
+	public partial bool GuardLeave { get; set; } = true;
+
+	[ObservableProperty]
+	public partial string SearchStatus { get; set; } = "Nothing yet";
+
+	public async Task<bool> ConfirmLeaveAsync() =>
+		!GuardLeave || await navigator.ConfirmAsync("Leave this page?", "The guard switch is on.", "Leave", "Stay", destructive: true);
+
+	[RelayCommand]
+	Task Present(
+		string style) =>
+		navigator.PresentAsync<ChromeDemoViewModel>(style switch
+		{
+			"full" => ModalStyle.FullScreen,
+			"form" => ModalStyle.FormSheet,
+			"medium" => ModalStyle.Sheet(Detent.Medium),
+			_ => ModalStyle.Sheet()
+		});
+
+	[RelayCommand]
+	Task Dismiss() =>
+		navigator.DismissAsync();
+}
+
 public class AnimationDemoViewModel;
 
 public class NativeViewDemoViewModel;

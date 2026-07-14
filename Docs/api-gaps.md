@@ -13,16 +13,22 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   wires the page's root scroll to the bar).
 - ~~★ **Back button title / display mode**~~ — **done** (`ContentView.BackButtonTitle` +
   `BackButtonStyle`).
-- ◆ **Pop interception** — "unsaved changes" confirm-before-back: wrap
-  `NavigationItem.BackAction` + `IsModalInPresentation` for sheets; surface as
-  `ContentView.ConfirmLeave(Func<Task<bool>>)`.
+- ~~◆ **Pop interception**~~ — **done** (`ContentView.ConfirmLeave`: back button, both pop
+  gestures (iOS 26 adds a content-wide one), and sheet swipe-down all funnel through it; a modal
+  root's synthesized back button dismisses).
 - ~~★ **Toolbar item pull-down menus**~~ — **done** (`ToolbarItem.Menu`, `MenuAction` list).
-- ★ **Nav bar tint & title attributes** — per-page accent, title color/font via
-  `UINavigationBarAppearance` (standard vs scroll-edge).
+- ~~★ **Nav bar tint & title attributes**~~ — **done** (`BarAccent`, `TitleColor`,
+  `LargeTitleColor`; per-item appearances copied from the live bar, item-level tints for iOS 26
+  glass buttons).
 - ~~★ **`NavigationItem.Prompt`**~~ — **done** (`ContentView.Prompt`).
-- ★ **Bottom toolbar** — `SetToolbarItems`; pages with persistent bottom actions.
-- ★ **Search**: ~~`HidesSearchBarWhenScrolling` is hardcoded false — expose~~ (**done**); scope
-  buttons, cancel event, `ObscuresBackgroundDuringPresentation` remain.
+- ~~★ **Bottom toolbar**~~ — **done** (`ContentView.BottomToolbarItems`: `UIToolbar` when the
+  bottom edge is free, floats as the iOS 26 tab-bar accessory when the tab bar is visible).
+  **Revisit:** the accessory path repurposes `UITabBarController.BottomAccessory` (Apple's
+  app-global mini-player slot) per page, ignores `IsPrimary`/`Side`, and hand-wires `UIButton`s —
+  a true shell-level `Tabs.Accessory(...)` would collide with it. Kevin unhappy with the
+  conflation; redesign candidate.
+- ~~★ **Search**~~ — **done** (`HidesSearchBarWhenScrolling`, `SearchScopes` +
+  `SearchScopeChanged`, `SearchCancelled`, `SearchObscuresBackground`).
 - ◆ **Search suggestions** — `UISearchSuggestionItem` (iOS 16); typed suggestion list + pick command.
 - ~~★ **Status bar style per page**~~ — **done** (`ContentView.StatusBar`, `BareStack` forwards).
 - ~~★ **Tab badges**~~ — **done** (`ContentView.TabBadge` bindable + `TabBadgeColor`; applies to

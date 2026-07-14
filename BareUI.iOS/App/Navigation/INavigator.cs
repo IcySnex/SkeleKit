@@ -98,12 +98,14 @@ public interface INavigator
 	/// <param name="message">The main message content body.</param>
 	/// <param name="accept">The text for the confirming button.</param>
 	/// <param name="cancel">The text for the canceling button.</param>
+	/// <param name="destructive">Whether the confirming button is styled red, for actions that discard something.</param>
 	/// <returns>A task containing true if accepted, or false if canceled.</returns>
 	Task<bool> ConfirmAsync(
 		string title,
 		string message,
 		string accept = "OK",
-		string cancel = "Cancel");
+		string cancel = "Cancel",
+		bool destructive = false);
 
 	/// <summary>
 	/// Displays an action sheet layout with multiple choices.

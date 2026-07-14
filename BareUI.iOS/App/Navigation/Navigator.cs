@@ -174,13 +174,14 @@ internal sealed class Navigator(
 		string title,
 		string message,
 		string accept = "OK",
-		string cancel = "Cancel")
+		string cancel = "Cancel",
+		bool destructive = false)
 	{
 		TaskCompletionSource<bool> completion = new();
 
 		UIAlertController alert = UIAlertController.Create(title, message, UIAlertControllerStyle.Alert);
 		alert.AddAction(UIAlertAction.Create(cancel, UIAlertActionStyle.Cancel, _ => completion.SetResult(false)));
-		alert.AddAction(UIAlertAction.Create(accept, UIAlertActionStyle.Default, _ => completion.SetResult(true)));
+		alert.AddAction(UIAlertAction.Create(accept, destructive ? UIAlertActionStyle.Destructive : UIAlertActionStyle.Default, _ => completion.SetResult(true)));
 
 		Present(alert, completion);
 

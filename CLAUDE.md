@@ -174,6 +174,17 @@ Hard-won rules (don't relearn these):
 - **`ApplyFrame` positions by bounds+centre, never `Frame`** (undefined under a transform, and an
   animation can leave the native transform non-identity while the model reads none). The bounds
   *origin* is preserved — it is a `UIScrollView`'s content offset.
+- **A safe-area-only change lays nothing out.** Manual frames don't follow safe-area guides:
+  chrome that only moves the insets (search-bar activation) leaves the page parked at its old
+  frame. `PageHost` overrides `ViewSafeAreaInsetsDidChange` → `SetNeedsLayout` + `LayoutIfNeeded`
+  (the immediate pass rides UIKit's own chrome animation instead of jumping after it). Downstream,
+  `ScrollView.ApplyContentInsets` re-anchors a scroll resting at the top when its owned insets
+  change, or the stale offset opens a gap and pins the linked large-title bar collapsed.
+- **iOS 26 chrome has extra paths.** Pop is *two* gestures (`InteractiveContentPopGestureRecognizer`
+  pops from anywhere — disable both to intercept). Glass bar buttons don't reliably follow the
+  bar's `TintColor` (set item-level tints), and a `UIButtonConfiguration` paints from its own
+  `BaseForegroundColor`, never the view tint. A bottom toolbar and the floating tab bar share the
+  same edge: with a visible tab bar, `BottomToolbarItems` renders as the tab-bar accessory instead.
 - **A fill sublayer needs `ZPosition = -1`.** Sublayer array order is not stable against subview
   layers — the card gradient ended up *above* the label and silently swallowed it.
 - **Clipping and a shadow are mutually exclusive on one layer** (the shadow is drawn outside the

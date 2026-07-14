@@ -9,6 +9,7 @@ public sealed class DemoCatalog : IDemoCatalog
 	public ObservableCollection<DemoEntry> Demos { get; } =
 	[
 		new("Styling", typeof(StylingDemoViewModel)),
+		new("Page chrome", typeof(ChromeDemoViewModel)),
 		new("Animation", typeof(AnimationDemoViewModel)),
 		new("Button", typeof(ButtonDemoViewModel)),
 		new("TextField", typeof(TextFieldDemoViewModel)),

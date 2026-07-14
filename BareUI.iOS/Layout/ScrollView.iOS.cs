@@ -94,12 +94,20 @@ public partial class ScrollView
 			(vertical ? (nfloat)bled.Bottom : 0) + keyboardCover,
 			vertical ? 0 : (nfloat)bled.Right);
 
-		if (host.ContentInset != insets)
-		{
-			host.ContentInset = insets;
-			host.VerticalScrollIndicatorInsets = insets;
-			host.HorizontalScrollIndicatorInsets = insets;
-		}
+		if (host.ContentInset == insets)
+			return;
+
+		// we own the insets, so UIKit will not re-anchor the offset when chrome resizes them
+		// (search bar activation, bar collapse): a scroll resting at the top must stay at the
+		// top, or the stale offset opens a gap and pins the linked bar collapsed
+		bool atTop = host.ContentOffset.Y <= -host.ContentInset.Top + 1;
+
+		host.ContentInset = insets;
+		host.VerticalScrollIndicatorInsets = insets;
+		host.HorizontalScrollIndicatorInsets = insets;
+
+		if (atTop && Orientation == Orientation.Vertical)
+			host.ContentOffset = new(host.ContentOffset.X, -insets.Top);
 	}
 
 

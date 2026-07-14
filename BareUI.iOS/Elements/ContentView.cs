@@ -64,6 +64,26 @@ public abstract partial class ContentView : Panel
 	public StatusBarStyle StatusBar { get; set; }
 
 	/// <summary>
+	/// The accent for this page's bar buttons and back button, or null for the app accent.
+	/// </summary>
+	public Color? BarAccent { get; set; }
+
+	/// <summary>
+	/// The navigation title's color, or null for the system default.
+	/// </summary>
+	public Color? TitleColor { get; set; }
+
+	/// <summary>
+	/// The expanded large title's color, or null for the system default.
+	/// </summary>
+	public Color? LargeTitleColor { get; set; }
+
+	/// <summary>
+	/// Asked before the page is left — back button or sheet swipe — so unsaved changes can veto. Return false to stay.
+	/// </summary>
+	public Func<Task<bool>>? ConfirmLeave { get; set; }
+
+	/// <summary>
 	/// Hides the tab bar while this page is on top of the stack.
 	/// </summary>
 	public bool HidesTabBar { get; set; }
@@ -103,6 +123,11 @@ public abstract partial class ContentView : Panel
 	public IList<ToolbarItem> ToolbarItems { get; } = [];
 
 	/// <summary>
+	/// Buttons in a persistent bar along the screen's bottom edge. Above a visible tab bar they float as its accessory; everywhere else they form the classic bottom toolbar.
+	/// </summary>
+	public IList<ToolbarItem> BottomToolbarItems { get; } = [];
+
+	/// <summary>
 	/// Placeholder for the navigation bar's search field. Setting it shows the search bar.
 	/// </summary>
 	public string? SearchPlaceholder { get; set; }
@@ -113,9 +138,29 @@ public abstract partial class ContentView : Panel
 	public bool HidesSearchBarWhenScrolling { get; set; }
 
 	/// <summary>
+	/// Whether the content dims behind an active search.
+	/// </summary>
+	public bool SearchObscuresBackground { get; set; }
+
+	/// <summary>
+	/// Titles of the scope buttons under an active search field. Empty for none.
+	/// </summary>
+	public IList<string> SearchScopes { get; } = [];
+
+	/// <summary>
 	/// Invoked as the user types in the search field.
 	/// </summary>
 	public Action<string>? SearchChanged { get; set; }
+
+	/// <summary>
+	/// Invoked with the selected index when the user switches search scope.
+	/// </summary>
+	public Action<int>? SearchScopeChanged { get; set; }
+
+	/// <summary>
+	/// Invoked when the user cancels out of the search field.
+	/// </summary>
+	public Action? SearchCancelled { get; set; }
 
 	/// <summary>
 	/// The page's element tree.
@@ -162,6 +207,13 @@ public abstract partial class ContentView : Panel
 	internal void NotifySearch(
 		string text) =>
 		SearchChanged?.Invoke(text);
+
+	internal void NotifySearchScope(
+		int index) =>
+		SearchScopeChanged?.Invoke(index);
+
+	internal void NotifySearchCancelled() =>
+		SearchCancelled?.Invoke();
 
 	internal void NotifyLoaded() =>
 		OnLoaded();
