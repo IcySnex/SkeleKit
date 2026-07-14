@@ -155,6 +155,23 @@ public class ImageDemo : ContentView<ImageDemoViewModel>
 							Tint = Colors.Indigo,
 							Width = 120,
 							Height = 120
+						},
+
+						new Label { Style = Styles.Caption, Text = "Long-press the poster: a context menu on a plain view" },
+						new Image
+						{
+							Source = ImageSource.Url("https://picsum.photos/id/1043/240/360"),
+							CornerRadius = 12,
+							Width = 160,
+							Height = 240,
+							Stretch = Stretch.UniformToFill,
+							HorizontalAlignment = HorizontalAlignment.Start,
+							ContextMenu =
+							{
+								new() { Text = "Copy link", Icon = "link", Command = ViewModel.CopyLinkCommand },
+								new() { Text = "Save", Icon = "square.and.arrow.down", Command = ViewModel.SaveCommand },
+								new() { Text = "Remove", Icon = "trash", IsDestructive = true, Command = ViewModel.RemoveCommand }
+							}
 						}
 					}
 				}

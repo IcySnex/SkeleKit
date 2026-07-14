@@ -229,6 +229,11 @@ public abstract partial class View
 	} = true;
 
 	/// <summary>
+	/// Entries in the view's long-press context menu. Empty for none.
+	/// </summary>
+	public IList<MenuAction> ContextMenu { get; } = [];
+
+	/// <summary>
 	/// Command invoked when the view is tapped.
 	/// </summary>
 	public ICommand? TapCommand

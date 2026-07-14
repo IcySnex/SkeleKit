@@ -72,7 +72,7 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 					{
 						new() { Text = "Delete", Icon = "trash", IsDestructive = true, Command = ViewModel.DeleteCommand }
 					},
-					ContextMenu =
+					ItemContextMenu =
 					{
 						new() { Text = "Rename", Icon = "pencil", Command = ViewModel.RenameCommand },
 						new() { Text = "Duplicate", Icon = "plus.square.on.square", Command = ViewModel.DuplicateCommand },

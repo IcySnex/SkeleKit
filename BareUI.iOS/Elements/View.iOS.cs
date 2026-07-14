@@ -2,6 +2,7 @@ using System.Windows.Input;
 using CoreAnimation;
 using CoreGraphics;
 using Foundation;
+using ObjCRuntime;
 using UIKit;
 
 namespace BareUI;
@@ -108,6 +109,7 @@ public abstract partial class View
 			return;
 
 		ApplyGestures();
+		ApplyContextMenu();
 
 		native.UserInteractionEnabled = IsEnabled;
 
@@ -207,6 +209,52 @@ public abstract partial class View
 	{
 		if (command is not null && command.CanExecute(parameter))
 			command.Execute(parameter);
+	}
+
+	// the delegate and the actions stay rooted here: UIKit's retain alone would let their peers die
+	ContextMenuDelegate? contextMenuDelegate;
+	UIContextMenuInteraction? contextMenuInteraction;
+	UIAction[]? contextMenuActions;
+
+	void ApplyContextMenu()
+	{
+		if (native is null || ContextMenu.Count == 0 || contextMenuInteraction is not null)
+			return;
+
+		contextMenuDelegate = new(this);
+		contextMenuInteraction = new(contextMenuDelegate);
+
+		native.AddInteraction(contextMenuInteraction);
+	}
+
+	internal UIContextMenuConfiguration? MenuConfiguration()
+	{
+		if (ContextMenu.Count == 0)
+			return null;
+
+		return UIContextMenuConfiguration.Create(
+			null,
+			null,
+			_ =>
+			{
+				contextMenuActions = new UIAction[ContextMenu.Count];
+
+				for (int index = 0; index < ContextMenu.Count; index++)
+				{
+					MenuAction entry = ContextMenu[index];
+
+					contextMenuActions[index] = UIAction.Create(
+						entry.Text,
+						entry.Icon is { } icon ? UIImage.GetSystemImage(icon) : null,
+						null,
+						_ => Run(entry.Command, null));
+
+					if (entry.IsDestructive)
+						contextMenuActions[index].Attributes = UIMenuElementAttributes.Destructive;
+				}
+
+				return UIMenu.Create(contextMenuActions);
+			});
 	}
 
 	// the control's own traits, captured before we layer ours on top
@@ -636,4 +684,25 @@ public abstract partial class View
 			native.SetNeedsLayout();
 		}
 	}
+}
+
+internal sealed class ContextMenuDelegate : NSObject, IUIContextMenuInteractionDelegate
+{
+	readonly View? element;
+
+	public ContextMenuDelegate(
+		View element)
+	{
+		this.element = element;
+	}
+
+	// see LayoutHost
+	public ContextMenuDelegate(
+		NativeHandle handle) : base(handle)
+	{ }
+
+	public UIContextMenuConfiguration? GetConfigurationForMenu(
+		UIContextMenuInteraction interaction,
+		CGPoint location) =>
+		element?.MenuConfiguration();
 }

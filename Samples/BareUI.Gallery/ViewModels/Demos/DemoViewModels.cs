@@ -11,10 +11,23 @@ public class ActivityIndicatorDemoViewModel;
 
 public class DividerDemoViewModel;
 
-public partial class ImageDemoViewModel : ObservableObject
+public partial class ImageDemoViewModel(
+	INavigator navigator) : ObservableObject
 {
 	[ObservableProperty]
 	public partial double Level { get; set; } = 0.6;
+
+	[RelayCommand]
+	Task CopyLink() =>
+		navigator.AlertAsync("Copied", "The poster's link is on the clipboard.");
+
+	[RelayCommand]
+	Task Save() =>
+		navigator.AlertAsync("Saved", "The poster went to your library.");
+
+	[RelayCommand]
+	Task Remove() =>
+		navigator.AlertAsync("Removed", "The poster is gone.");
 }
 
 public class StylingDemoViewModel;

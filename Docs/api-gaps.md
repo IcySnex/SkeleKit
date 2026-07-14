@@ -41,9 +41,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `PrefersScrollingExpandsWhenScrolledToEdge` are **declined** as API for a screenshot. Dismiss
   prevention already exists — `ContentView.ConfirmLeave` funnels the sheet's swipe-down through the
   same guard as the back button.
-- ★ **Custom detent heights** — `Detent` is only Medium/Large; `UISheetPresentationControllerDetent
-  .Create(id, resolver)` takes any height, which is what a mini-player or a Maps-style sheet needs.
-  `Detent` would become a struct (`Detent.Fraction(0.3)` / `Detent.Height(120)`).
+- ★ (skip) **Custom detent heights** — `UISheetPresentationControllerDetent.Create(id, resolver)`
+  takes any height (a mini-player peek, a Maps-style three-stop sheet). Declined: `Detent` would have
+  to stop being an enum, and the resolver is another NSObject peer to root — too niche for the cost.
 - ◆ **Popover anchoring** — present as popover from a view/toolbar item with arrow direction
   (currently no source anchor, iPad needs it).
 - ★ (skip) **Share sheet** — `INavigator.ShareAsync(items)` over `UIActivityViewController`.
@@ -65,8 +65,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Typed gestures beyond pan/tap**~~ — **done** (`OnLongPress`, `OnDoubleTap`, `OnPinch`,
   `OnRotate`).
 - ◆ (skip) **Pointer/hover effects (iPad)** — `UIPointerInteraction` lift/highlight; one enum property.
-- ◆ **Context menu on any view** — `UIContextMenuInteraction`; the list already has the
-  `MenuAction` model, reuse it.
+- ~~◆ **Context menu on any view**~~ — **done** (`View.ContextMenu`, same `MenuAction` model). The
+  list's row menu is now `CollectionView.ItemContextMenu` — a `CollectionView` is a `View`, so the
+  inherited name collided, and the row menu was always the more specific thing anyway.
 - ▲ (skip) **Drag & drop** — `UIDrag/DropInteraction`, typed item providers.
 - ★ (skip) **Anchor point** — transforms currently pivot the centre; corner-pivot rotations need it.
 - ◆ (skip) **Accessibility custom actions** — the known debt; `UIAccessibilityCustomAction` list.

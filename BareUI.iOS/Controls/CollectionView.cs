@@ -153,9 +153,9 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public IList<SwipeAction> SwipeActions { get; } = [];
 
 	/// <summary>
-	/// Entries in a row's long-press context menu.
+	/// Entries in a row's long-press context menu. Each command is invoked with the row's item.
 	/// </summary>
-	public IList<MenuAction> ContextMenu { get; } = [];
+	public IList<MenuAction> ItemContextMenu { get; } = [];
 
 	/// <summary>
 	/// Invoked as the collection scrolls, with the vertical offset in points.

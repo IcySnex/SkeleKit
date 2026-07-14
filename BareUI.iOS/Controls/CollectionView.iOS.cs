@@ -202,7 +202,7 @@ public partial class CollectionView<TItem, TSection>
 	internal UIContextMenuConfiguration? MenuConfiguration(
 		NSIndexPath indexPath)
 	{
-		if (ContextMenu.Count == 0 || ItemAt(indexPath.Section, indexPath.Row) is not { } item)
+		if (ItemContextMenu.Count == 0 || ItemAt(indexPath.Section, indexPath.Row) is not { } item)
 			return null;
 
 		return UIContextMenuConfiguration.Create(
@@ -210,11 +210,11 @@ public partial class CollectionView<TItem, TSection>
 			null,
 			_ =>
 			{
-				UIAction[] entries = new UIAction[ContextMenu.Count];
+				UIAction[] entries = new UIAction[ItemContextMenu.Count];
 
-				for (int index = 0; index < ContextMenu.Count; index++)
+				for (int index = 0; index < ItemContextMenu.Count; index++)
 				{
-					MenuAction entry = ContextMenu[index];
+					MenuAction entry = ItemContextMenu[index];
 
 					entries[index] = UIAction.Create(
 						entry.Text,
