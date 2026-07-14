@@ -4,8 +4,9 @@ Five layers, each depending only on the ones below it:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│ 5. App model      BareApp, INavigator, PageHost,    │
-│                   ContentView<TVm>, Haptics         │
+│ 5. App model      BareApplication, INavigator,      │
+│                   PageHost, ContentView<TVm>,       │
+│                   Haptics                           │
 ├─────────────────────────────────────────────────────┤
 │ 4. Binding        Bindable<T>, BindingExpression<T>,│
 │                   Binding<T>, commands, MainThread  │
@@ -98,7 +99,7 @@ See ADR-002 for why (vs Auto Layout translation).
 | Panel | Semantics |
 |---|---|
 | `Grid` | `Rows`/`Columns` of `GridLength` (`Auto`, `Star`/`N*`, pixels), `Row()/Column()/RowSpan()/ColumnSpan()` attached via extension methods storing into the child's `LayoutParams` bag; `RowSpacing`/`ColumnSpacing` |
-| `StackPanel` | `Orientation`, `Spacing`; measures unconstrained on the stacking axis. Convenience aliases `VStack`/`HStack` |
+| `StackPanel` | `Orientation`, `Spacing`; measures unconstrained on the stacking axis |
 | `ScrollView` | wraps `UIScrollView`; content measured unconstrained on scroll axis; owns keyboard-avoidance (content inset on keyboard frame notifications) |
 | `Border` | single child + `Padding`, `Stroke`, `StrokeThickness`, `CornerRadius` — also the generic "padding wrapper" (replaces Velura's `UIPaddedView`) |
 | `Overlay` | z-stack; children positioned by alignment + margin (poster-over-backdrop scenarios) |
@@ -116,7 +117,7 @@ v1 set and native mapping:
 |---|---|---|
 | `Label` | `UILabel` | `Text`, `TextStyle` (the native type hierarchy), `FontSize`/`FontWeight`/`FontDesign` (maps to `UIFontMetrics`-scaled dynamic fonts by default), `TextColor`, `MaxLines`, `Truncation`, `TextAlignment` |
 | `Button` | `UIButton` (UIButtonConfiguration) | `Text`, `Icon` (SF Symbol name), `Kind` (Plain/Tinted/Filled/Capsule…), `Command`/`CommandParameter` |
-| `Image` | `UIImageView` | `Source` (`ImageSource.Symbol/Bundle/Url`); the default `IImageLoader` caches (`NSCache`), dedups in-flight downloads and pre-decodes; swap it via `BareApp.UseImageLoader` |
+| `Image` | `UIImageView` | `Source` (`ImageSource.Symbol/Bundle/Url`); the default `IImageLoader` caches (`NSCache`), dedups in-flight downloads and pre-decodes; swap it via `UseImageLoader` |
 | `TextField` | `UITextField` | `Text` (TwoWay default), `Placeholder`, `Keyboard`, `ReturnKey`, `OnSubmit` |
 | `SecureField` | `UITextField` | secure entry preset |
 | `TextEditor` | `UITextView` | multi-line |
@@ -139,7 +140,8 @@ Text    = Bind(vm => vm.Name, (vm, v) => vm.Name = v);           // TwoWay (expl
 Text    = Bind<TimeSpan, string?>(vm => vm.Duration, d => d.L10N()); // converter
 IsOn    = Bind(vm => vm.Config.Appearance.AnimateTabBar,
                (vm, v) => vm.Config.Appearance.AnimateTabBar = v); // nested path, TwoWay
-Command = Bind<ICommand?>(vm => vm.PlayCommand);                  // commands are Bindable too
+// commands are never bindable (ADR-012) — assigned from the ctor-injected ViewModel
+Command = ViewModel.PlayCommand;
 ```
 
 **Mechanics**:
@@ -195,28 +197,29 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
 ### Navigation (ViewModel-first, AOT-safe)
 
 ```csharp
-BareApp.Create()
+BareApplication.CreateBuilder()
     .UseServices(s => { s.AddSingleton<IMovieService, MovieService>(); ... })
     .UsePages(pages => pages
-        .AddSingleton<HomeView>()            // explicit registry — no scanning, AOT-safe;
-        .AddTransient<MovieInfoView>())      // a view reports its own ViewModel type
+        .AddSingleton((HomeViewModel vm) => new HomeView(vm))          // explicit registry — no scanning,
+        .AddTransient((MovieInfoViewModel vm) => new MovieInfoView(vm))) // AOT-safe, reflection-free
     .Tabs(t => t
         .Tab<HomeView>("Home", icon: "house")
         .Tab<SearchView>("Search", icon: "magnifyingglass")
         .Tab<SettingsView>("Settings", icon: "gear")
         .SidebarOnIPad())
+    .Build()
     .Run(args);
 ```
 
 - `INavigator` (injectable into ViewModels, ViewModel-first only):
   - `PushAsync<TVm>()` / `PushAsync(vmInstance)` / `PopAsync()` / `PopToRootAsync()`
   - `PresentAsync<TVm>(ModalStyle)` — sheet (with detents), full-screen, form sheet
-  - `AlertAsync(...)`, `ConfirmAsync(...)`, `ActionSheetAsync(...)`
+  - `AlertAsync(...)`, `ConfirmAsync(...)`, `PromptAsync(...)`, `ActionSheetAsync(...)`
 - Shells: `Tabs(...)` (`UITabBarController`, incl. iPadOS sidebar via `SidebarOnIPad`),
   `Stack<TView>()` (`UINavigationController`), `SinglePage<TView>()`.
-- `BareApp` hides `Main.cs`/`AppDelegate`/`UIWindow` scene wiring (ships `BareAppDelegate` +
-  `BareSceneDelegate`); hosts the `IServiceProvider`
-  (Microsoft.Extensions.DependencyInjection). `UseImageLoader` swaps the image pipeline.
+- `BareApplication` hides `Main.cs`/`AppDelegate`/`UIWindow` scene wiring; hosts the
+  `IServiceProvider` (Microsoft.Extensions.DependencyInjection). `UseImageLoader` swaps the
+  image pipeline.
 
 ### CollectionView (virtualization)
 
@@ -228,7 +231,7 @@ new CollectionView<Movie>
     Layout      = CollectionLayout.Grid(columns: 3, spacing: 12),   // or .List(grouped: true), .Carousel()
     ItemsSource = Bind<IReadOnlyList<Movie>?>(vm => vm.Movies),
     ItemTemplate = () => new PosterCell(),                     // element tree built once per recycled cell
-    SelectionCommand = Bind<ICommand?>(vm => vm.OpenMovieCommand) // receives the tapped item
+    SelectionCommand = ViewModel.OpenMovieCommand              // receives the tapped item
 }
 ```
 

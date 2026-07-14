@@ -137,7 +137,7 @@ line) — accepted.
 **Decision:** a style is `Style<T> : IStyle` wrapping an `Action<T>` (plus optional
 `BasedOn`). Applied three ways: explicitly via a new `View.Style` property (applies
 immediately in the setter), implicitly via an app-global `Theme` registered with
-`BareApp.UseTheme(...)` (applied in the `View` base constructor, inheritance chain
+`UseTheme(...)` (applied in the `View` base constructor, inheritance chain
 base-most first), or manually (`style.Apply(view)`). Shared values ("resources") are plain
 C# statics — **no `ResourceDictionary`**.
 
@@ -203,7 +203,7 @@ machinery.
 - A material is a `UIVisualEffectView` inserted as subview 0, which *does* autoresize. `Panel`'s
   subview diff skips it and offsets the children by one slot, or the next `Children` change would
   tear the material out.
-- **A gradient or a material needs a `Panel`** (`Border`, `Overlay`, `VStack`, …) and throws on a
+- **A gradient or a material needs a `Panel`** (`Border`, `Overlay`, `StackPanel`, …) and throws on a
   leaf control. Both fills sit under the view's *subviews* but above the layer's own drawing, and a
   `UILabel` renders its text into that layer — the fill would cover the text. A solid brush works
   anywhere; wrap the control in a `Border` to fill behind it.

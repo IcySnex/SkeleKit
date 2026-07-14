@@ -55,14 +55,14 @@ M0–M7 delivered (M6's Velura two-screen port outstanding, see below). The libr
 feature-complete for building a real app:
 
 - **Element model + layout engine**: `View` (lazy realize, cached measure/arrange, invalidation),
-  `Panel`, `Grid`/`VStack`/`HStack`/`Overlay`/`Border`/`ScrollView`, safe-area regime,
+  `Panel`, `Grid`/`StackPanel`/`Overlay`/`Border`/`ScrollView`, safe-area regime,
   keyboard avoidance. Engine is pure math, unit-tested on the neutral `net10.0` TFM.
 - **Controls**: `Label`, `Button`, `Image` (cached async loader), `TextField`/`SecureField`/
   `TextEditor`, `Switch`, `Slider`, `Stepper`, `ProgressBar`, `ActivityIndicator`, `Divider`,
   `Picker<T>`, `SegmentedControl`, `DatePicker`, `PageControl`, `ColorWell`, `NativeView`.
 - **Bindings**: AOT-safe, all four modes, converters, triggers, nested paths, main-thread
   marshalling of background INPC.
-- **App model**: `BareApp` bootstrap, DI, ViewModel-first `INavigator`, tabs/stack/single-page
+- **App model**: `BareApplication` bootstrap, DI, ViewModel-first `INavigator`, tabs/stack/single-page
   shells, iPad sidebar, page chrome (titles, toolbar, search), lifecycle hooks.
 - **CollectionView**: diffable, virtualized; list/grid/carousel; sections, selection,
   refresh, swipe actions, context menus, empty view.

@@ -9,7 +9,7 @@ Replaces `Main.cs`, `AppDelegate.cs`, and the window/tab wiring in
 
 ```csharp
 // Program.cs — the entire iOS head entry point
-BareApp.Create()
+BareApplication.CreateBuilder()
     .UseServices(services =>
     {
         services.AddSingleton<Config>();
@@ -17,17 +17,19 @@ BareApp.Create()
         services.AddTransient<HomeViewModel>();
         // ... existing Velura service registrations unchanged
     })
+    // a factory lambda per page: reflection-free construction, and the ViewModel is injected
     .UsePages(pages => pages
-        .AddSingleton<HomeView>()          // keeps its state across navigations
-        .AddSingleton<SearchView>()
-        .AddSingleton<SettingsView>()
-        .AddTransient<MovieInfoView>())    // fresh instance per push
+        .AddSingleton((HomeViewModel vm) => new HomeView(vm))          // keeps its state across navigations
+        .AddSingleton((SearchViewModel vm) => new SearchView(vm))
+        .AddSingleton((SettingsViewModel vm) => new SettingsView(vm))
+        .AddTransient((MovieInfoViewModel vm) => new MovieInfoView(vm)))  // fresh instance per push
     .Tabs(tabs => tabs
         .LargeTitles()
         .Tab<HomeView>("home_title", icon: "house")
         .Tab<SearchView>("search_title", icon: "magnifyingglass")
         .Tab<SettingsView>("settings_title", icon: "gear")
         .SidebarOnIPad())
+    .Build()
     .Run(args);
 ```
 
@@ -39,7 +41,8 @@ What `SettingsGroupViewController` + `SettingsGroupItemViewCell` +
 ```csharp
 public class SettingsGroupView : ContentView<SettingsGroupViewModel>
 {
-    public SettingsGroupView()
+    public SettingsGroupView(
+        SettingsGroupViewModel viewModel) : base(viewModel)
     {
         Title = Bind(vm => vm.GroupName);
 
@@ -47,7 +50,9 @@ public class SettingsGroupView : ContentView<SettingsGroupViewModel>
         {
             Layout = CollectionLayout.List(grouped: true),
             GroupedItemsSource = Bind<IReadOnlyList<SettingsSection>?>(vm => vm.Sections),
-            SelectionCommand = Bind<ICommand?>(vm => vm.OpenGroupCommand),
+
+            // a command is never bound: it comes straight off the injected ViewModel
+            SelectionCommand = ViewModel.OpenGroupCommand,
             ItemTemplate = () => new SettingsRow(),
             HeaderTemplate = () => new SectionHeader(),
             FooterTemplate = () => new SectionFooter()
@@ -97,7 +102,7 @@ original), composed in the page's constructor:
 Content = new ScrollView
 {
     IgnoresSafeArea = SafeAreaEdges.All,      // full-bleed backdrop
-    Content = new VStack
+    Content = new StackPanel
     {
         Children =
         {
@@ -110,7 +115,7 @@ Content = new ScrollView
                         Source = Bind<string, ImageSource?>(vm => vm.BackdropUrl, u => ImageSource.Url(u)),
                         Stretch = Stretch.UniformToFill,
                     },
-                    new VStack
+                    new StackPanel
                     {
                         VerticalAlignment = VerticalAlignment.Center,
                         Padding = new Thickness(24, 0),
@@ -150,7 +155,7 @@ Content = new ScrollView
                                 Text = "media_play".L10N(),
                                 Icon = "play.fill",
                                 Kind = ButtonStyle.FilledCapsule,
-                                Command = Bind<ICommand?>(vm => vm.PlayCommand),
+                                Command = ViewModel.PlayCommand,
                                 Margin = new Thickness(0, 32, 0, 0),
                                 HorizontalAlignment = HorizontalAlignment.Center,
                             },
@@ -188,10 +193,11 @@ Text = Bind(vm => vm.Port, (vm, v) => vm.Port = v,
 // Update trigger
 Text = Bind(vm => vm.Query, (vm, v) => vm.Query = v).On(UpdateTrigger.FocusLost);
 
-// Commands — Bindable like everything else; explicit type arg because
-// [RelayCommand] generates IRelayCommand and Bindable<T> is not covariant
-Command = Bind<ICommand?>(vm => vm.CloseCommand);
-TapCommand = Bind<ICommand?>(vm => vm.OpenMovieCommand);   // any view is tappable
+// Commands are never bindable (ADR-012): an intent is a plain ICommand? assigned
+// straight from the ctor-injected ViewModel
+Command = ViewModel.CloseCommand;
+TapCommand = ViewModel.OpenMovieCommand;                   // any view is tappable
+Command = Command.From(Close);                             // ... or a view-local handler
 
 // Literals for interface-typed properties (no implicit conversion from interfaces)
 SelectionCommand = Bindable.From<ICommand?>(someCommand);
@@ -256,7 +262,7 @@ new Label { Style = Styles.Caption, Text = "Runtime" }
 new Border { Style = Styles.ProminentCard, Child = content }
 
 // Implicit use — app-wide defaults, applied to every instance of the type
-BareApp.Create()
+BareApplication.CreateBuilder()
     .UseTheme(theme => theme
         .Style(new Style<Label>(l => l.TextColor = Colors.Label))
         .Style(new Style<Button>(b => b.Kind = ButtonStyle.Tinted)))

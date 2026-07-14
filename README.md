@@ -19,14 +19,15 @@ controls behind C# object-initializer syntax with AOT-safe MVVM bindings. App co
 
 ```csharp
 // Program.cs — the whole bootstrap
-BareApp.Create()
+BareApplication.CreateBuilder()
 	.UseServices(services =>
 	{
 		services.AddSingleton<ICounterService, CounterService>();
 		services.AddTransient<CounterViewModel>();
 	})
-	.UsePages(pages => pages.AddSingleton<CounterView>())
+	.UsePages(pages => pages.AddSingleton((CounterViewModel vm) => new CounterView(vm)))
 	.SinglePage<CounterView>()
+	.Build()
 	.Run(args);
 ```
 
@@ -34,11 +35,12 @@ BareApp.Create()
 // CounterView.cs — a page composes its tree in the constructor
 public class CounterView : ContentView<CounterViewModel>
 {
-	public CounterView()
+	public CounterView(
+		CounterViewModel viewModel) : base(viewModel)
 	{
 		Title = "Counter";
 
-		Content = new VStack
+		Content = new StackPanel
 		{
 			Spacing = 12,
 			Padding = new Thickness(16),
@@ -55,7 +57,9 @@ public class CounterView : ContentView<CounterViewModel>
 				{
 					Text = "Tap me",
 					Kind = ButtonStyle.Filled,
-					Command = Bind<ICommand?>(vm => vm.IncrementCommand)
+
+					// a command is never bound: it comes straight off the injected ViewModel
+					Command = ViewModel.IncrementCommand
 				}
 			}
 		};
@@ -68,7 +72,7 @@ public class CounterView : ContentView<CounterViewModel>
 public partial class CounterViewModel : ObservableObject
 {
 	[ObservableProperty]
-	int count;
+	public partial int Count { get; set; }
 
 	[RelayCommand]
 	void Increment() => Count++;
@@ -108,7 +112,7 @@ static class Styles
 new Label { Style = Styles.Caption, Text = "Runtime" }
 
 // Implicit — one app-global theme, applied to every view of the type as it is built
-BareApp.Create()
+BareApplication.CreateBuilder()
 	.UseTheme(theme => theme
 		.Style(new Style<Label>(label => label.TextColor = Colors.Label))
 		.Style(new Style<Button>(button => button.Kind = ButtonStyle.Tinted)))
@@ -119,7 +123,7 @@ first) → explicit `Style` → whatever the initializer assigns after it.
 
 ## What's in the box
 
-- **Layout**: `Grid` (star/auto/pixel, spans, spacing), `VStack`/`HStack`, `Overlay`, `Border`,
+- **Layout**: `Grid` (star/auto/pixel, spans, spacing), `StackPanel`, `Overlay`, `Border`,
   `ScrollView`, per-view `IgnoresSafeArea`. Two-pass measure/arrange engine, unit-testable off-device.
 - **Controls**: `Label`, `Button`, `Image` (async, cached), `TextField`, `SecureField`,
   `TextEditor`, `Switch`, `Slider`, `Stepper`, `ProgressBar`, `ActivityIndicator`, `Divider`,
