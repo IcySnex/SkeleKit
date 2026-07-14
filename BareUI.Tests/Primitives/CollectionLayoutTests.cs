@@ -61,12 +61,16 @@ public class CollectionLayoutTests
 	}
 
 	[Fact]
-	public void Section_CarriesTitleAndItems()
+	public void Section_IsWhateverTheAppModelSays()
 	{
-		Section<string> section = new("General", ["Appearance", "Language"]);
+		ISection<string> section = new Group("General", "settings", ["Appearance", "Language"]);
 
-		Assert.Equal("General", section.Title);
 		Assert.Equal(2, section.Items.Count);
 		Assert.Equal("Appearance", section.Items[0]);
 	}
+
+	record Group(
+		string Title,
+		string Icon,
+		IReadOnlyList<string> Items) : ISection<string>;
 }

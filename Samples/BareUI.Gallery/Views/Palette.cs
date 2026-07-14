@@ -14,4 +14,9 @@ public static class Palette
 	/// The surface a card sits on.
 	/// </summary>
 	public static readonly Color Card = Colors.SecondaryGroupedBackground;
+
+	/// <summary>
+	/// The plate behind a tapped row.
+	/// </summary>
+	public static readonly Color Highlight = Colors.Blue.WithAlpha(0.15);
 }

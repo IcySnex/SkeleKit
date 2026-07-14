@@ -33,6 +33,7 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 					ItemsSource = ViewModel.Movies,
 					SelectionCommand = ViewModel.OpenCommand,
 					Height = 260,
+					HighlightsSelection = false,
 
 					// only the row bleeds: it scrolls under the notch, the posters stay inside the safe area
 					IgnoresSafeArea = SafeAreaEdges.Leading | SafeAreaEdges.Trailing

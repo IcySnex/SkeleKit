@@ -15,7 +15,17 @@ internal interface ICollectionHost
 /// A data-driven list, grid, or carousel scroll layout container wrapping native platform components.
 /// </summary>
 /// <typeparam name="TItem">The underlying object instance type managed by item container collections.</typeparam>
-public partial class CollectionView<TItem> : View, ICollectionHost where TItem : class
+public class CollectionView<TItem> : CollectionView<TItem, ISection<TItem>>
+	where TItem : class;
+
+/// <summary>
+/// A data-driven list, grid, or carousel scroll layout container whose groups carry their own section model.
+/// </summary>
+/// <typeparam name="TItem">The underlying object instance type managed by item container collections.</typeparam>
+/// <typeparam name="TSection">The section model the header and footer templates bind to.</typeparam>
+public partial class CollectionView<TItem, TSection> : View, ICollectionHost
+	where TItem : class
+	where TSection : class, ISection<TItem>
 {
 	/// <summary>
 	/// The items to show. Changes animate into place when the list is an <c>ObservableCollection</c>.
@@ -29,15 +39,15 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 	Binding<IReadOnlyList<TItem>?>? itemsSourceBinding;
 
 	/// <summary>
-	/// Titled groups, each with its own header. Takes precedence over <see cref="ItemsSource"/>.
+	/// Groups, each with its own header. Takes precedence over <see cref="ItemsSource"/>.
 	/// </summary>
-	public BindableList<Section<TItem>> GroupedItemsSource
+	public BindableList<TSection> GroupedItemsSource
 	{
 		get => new(sections);
 		set => sectionsBinding = Register(sectionsBinding, value.Expression, value.Value, SetSections);
 	}
-	IReadOnlyList<Section<TItem>>? sections;
-	Binding<IReadOnlyList<Section<TItem>>?>? sectionsBinding;
+	IReadOnlyList<TSection>? sections;
+	Binding<IReadOnlyList<TSection>?>? sectionsBinding;
 
 	/// <summary>
 	/// Builds the element tree for a cell. Called once per recycled cell, never per item.
@@ -45,9 +55,14 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 	public Func<ItemView<TItem>>? ItemTemplate { get; set; }
 
 	/// <summary>
-	/// Builds a section header. Bound to the <see cref="Section{TItem}"/>.
+	/// Builds a section header. Bound to the section model.
 	/// </summary>
-	public Func<ItemView<Section<TItem>>>? HeaderTemplate { get; set; }
+	public Func<ItemView<TSection>>? HeaderTemplate { get; set; }
+
+	/// <summary>
+	/// Builds a section footer. Bound to the section model.
+	/// </summary>
+	public Func<ItemView<TSection>>? FooterTemplate { get; set; }
 
 	/// <summary>
 	/// How the items are arranged.
@@ -66,6 +81,36 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 
 	internal ICommand? Selection =>
 		selectionCommand;
+
+	/// <summary>
+	/// Whether rows draw their separator lines. List layouts only.
+	/// </summary>
+	public bool ShowsSeparators { get; set; } = true;
+
+	/// <summary>
+	/// Leading/trailing insets for the separator lines, or null for the system default. List layouts only.
+	/// </summary>
+	public Thickness? SeparatorInsets { get; set; }
+
+	/// <summary>
+	/// Whether a tapped row shows a highlight until the page is next appeared.
+	/// </summary>
+	public bool HighlightsSelection { get; set; } = true;
+
+	/// <summary>
+	/// The tapped row's highlight color, or null for the system gray.
+	/// </summary>
+	public Color? HighlightColor { get; set; }
+
+	/// <summary>
+	/// Invoked when the user scrolls within <see cref="LoadMoreThreshold"/> items of the end. Fires once per item count.
+	/// </summary>
+	public ICommand? LoadMoreCommand { get; set; }
+
+	/// <summary>
+	/// How many items from the end <see cref="LoadMoreCommand"/> fires at.
+	/// </summary>
+	public int LoadMoreThreshold { get; set; } = 4;
 
 	/// <summary>
 	/// Shown instead of the items while the source is empty.
@@ -145,7 +190,7 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 	}
 
 	void SetSections(
-		IReadOnlyList<Section<TItem>>? value)
+		IReadOnlyList<TSection>? value)
 	{
 		if (ReferenceEquals(sections, value))
 			return;
@@ -158,8 +203,26 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 		if (sections is INotifyCollectionChanged live)
 			live.CollectionChanged += OnSectionsChanged;
 
+		HookSectionItems();
 		ReloadItems();
 	}
+
+	// each section's own items are a source in their own right, not just the list of sections
+	void HookSectionItems()
+	{
+		foreach (INotifyCollectionChanged hook in sectionItemHooks)
+			hook.CollectionChanged -= OnSectionItemsChanged;
+
+		sectionItemHooks.Clear();
+
+		foreach (TSection section in sections ?? [])
+			if (section.Items is INotifyCollectionChanged live)
+			{
+				live.CollectionChanged += OnSectionItemsChanged;
+				sectionItemHooks.Add(live);
+			}
+	}
+	readonly List<INotifyCollectionChanged> sectionItemHooks = [];
 
 	// a flat source change maps 1:1 onto the native batch update
 	void OnItemsChanged(
@@ -169,8 +232,16 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 
 	void OnSectionsChanged(
 		object? sender,
-		NotifyCollectionChangedEventArgs e) =>
+		NotifyCollectionChangedEventArgs e)
+	{
+		HookSectionItems();
 		ReloadItems();
+	}
+
+	void OnSectionItemsChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs e) =>
+		ApplyChange();
 
 	partial void ReloadItems();
 
@@ -200,7 +271,7 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 			: null;
 	}
 
-	internal Section<TItem>? SectionAt(
+	internal TSection? SectionAt(
 		int index) =>
 		sections is { } groups && index >= 0 && index < groups.Count
 			? groups[index]
@@ -218,4 +289,34 @@ public partial class CollectionView<TItem> : View, ICollectionHost where TItem :
 		}
 	}
 
+
+	int loadMoreFiredAt = -1;
+
+	internal void OnWillDisplay(
+		int section,
+		int row)
+	{
+		if (LoadMoreCommand is not { } command)
+			return;
+
+		int total = 0;
+		int position = row;
+
+		for (int index = 0; index < SectionCount; index++)
+		{
+			if (index < section)
+				position += CountIn(index);
+
+			total += CountIn(index);
+		}
+
+		// once per item count: one crossing asks for one page
+		if (total - position - 1 > LoadMoreThreshold || loadMoreFiredAt == total)
+			return;
+
+		loadMoreFiredAt = total;
+
+		if (command.CanExecute(null))
+			command.Execute(null);
+	}
 }

@@ -207,6 +207,10 @@ public abstract partial class View
 	internal virtual void ReapplyVisuals() =>
 		ApplyVisualState();
 
+	// the page came (back) on screen: a list uses this to release its still-selected row
+	internal virtual void PageAppeared()
+	{ }
+
 	private protected void ApplyInteraction() =>
 		ApplyInteractionCore();
 

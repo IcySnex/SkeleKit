@@ -138,19 +138,37 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ◆ **Reorder** — diffable + `ReorderingHandlers`; drag-to-reorder with a moved-command.
 - ◆ **Edit mode & multi-select** — `AllowsMultipleSelectionDuringEditing`, checkmarks,
   `SelectedItems` binding, Edit/Done toolbar pairing.
-- ★ **Section footers** — header templates exist; footers are the same plumbing.
-- ★ **Separator control** — hide/inset separators per list (config supports it).
 - ◆ **Expandable sections** — list-config header disclosure + snapshot section collapse.
 - ◆ **Mixed sections** — per-section layout (a carousel row inside a list) — compositional
   layout does this natively; the `CollectionLayout` model would grow a per-section variant.
-- ★ **Selection styling** — highlight color / disable highlight.
-- ★ **Near-end hook** — `LoadMore` threshold callback (infinite scroll), trivial via
-  `WillDisplayCell`.
+- ~~★ **Section footers**~~ — **done** (`FooterTemplate`, same plumbing as headers). Sections are
+  now the app's own model (`ISection<TItem>` = `Items` and nothing else), so a header/footer binds
+  whatever the app puts on it; `CollectionView<TItem, TSection>` carries the type, and
+  `CollectionView<TItem>` stays the flat spelling. A section's own `Items` is a live source too —
+  an `ObservableCollection` inside a section now diffs, which it never did.
+- ~~★ **Separator control**~~ — **done** (`ShowsSeparators`, `SeparatorInsets`).
+- ~~★ **Selection styling**~~ — **done** (`HighlightsSelection`, `HighlightColor`).
+- ~~★ **Near-end hook**~~ — **done** (`LoadMoreCommand` + `LoadMoreThreshold`, via `WillDisplayCell`).
+- ~~★ **Deselect on appear**~~ — **done** (`View.PageAppeared` walk off `ViewWillAppear`, so the row
+  fades out with the pop rather than after it).
+- ◆ **Reorder** — diffable + `ReorderingHandlers`; drag-to-reorder with a moved-command.
+- ◆ **Edit mode & multi-select** — `AllowsMultipleSelectionDuringEditing`, checkmarks,
+  `SelectedItems` binding, Edit/Done toolbar pairing.
 - ◆ **Prefetching** — `UICollectionViewDataSourcePrefetching` driving the image loader.
-- ★ **ScrollTo position** — top/centre/bottom parameter (top-only today).
 - ◆ **Context-menu previews** — custom preview view + `PreviewProvider` (peek content).
-- ★ **Deselect on appear** — the standard "tapped row un-highlights when you come back" nicety.
 - ★ (skip) **Section index** — A–Z fast-scroll strip (`IndexTitles`).
+
+### Bug — `ScrollTo` position lands wrong (2026-07-14)
+
+`ScrollTo(item, ScrollPosition)` ships but **does not work**. Verified on the sim with a 20+ row
+grid: `Top` lands ~3 rows below the target, `Bottom` ~2 rows below the top, `Center` is off as well.
+The enum maps onto `UICollectionViewScrollPosition` correctly, so the fault is elsewhere — prime
+suspect is that the cells are **self-sizing** (`PreferredLayoutAttributesFittingAttributes`), and
+`ScrollToItem` resolves the target from *estimated* layout attributes for rows it has never
+measured, so every unvisited row below the current viewport is mis-positioned. The usual fixes are
+to give the compositional group an absolute item height when the layout allows it, or to scroll in
+two passes (`ScrollToItem`, then re-measure on the next run-loop turn and correct the offset).
+Nothing else in the batch depends on it.
 
 ## App level
 

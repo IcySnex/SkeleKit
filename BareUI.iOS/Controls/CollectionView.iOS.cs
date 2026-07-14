@@ -3,16 +3,17 @@ using ObjCRuntime;
 
 namespace BareUI;
 
-public partial class CollectionView<TItem>
+public partial class CollectionView<TItem, TSection>
 {
 	internal const string CellId = "BareCell";
 	internal const string HeaderId = "BareHeader";
+	internal const string FooterId = "BareFooter";
 
 	readonly Dictionary<object, ItemKey> keys = new(ReferenceEqualityComparer.Instance);
 	readonly List<NSNumber> sectionKeys = [];
 
 	UICollectionViewDiffableDataSource<NSNumber, ItemKey>? data;
-	CollectionDelegate<TItem>? selection;
+	CollectionDelegate<TItem, TSection>? selection;
 
 	bool snapshotQueued;
 
@@ -20,7 +21,7 @@ public partial class CollectionView<TItem>
 	{
 		bool carousel = Layout.Kind is CollectionLayoutKind.Carousel;
 
-		CollectionHost collection = new(this, CreateLayout(Layout, HeaderTemplate is not null))
+		CollectionHost collection = new(this, CreateLayout(Layout, HeaderTemplate is not null, FooterTemplate is not null))
 		{
 			BackgroundColor = UIColor.Clear,
 
@@ -38,10 +39,14 @@ public partial class CollectionView<TItem>
 			typeof(BareHeader),
 			UICollectionElementKindSection.Header,
 			HeaderId);
+		collection.RegisterClassForSupplementaryView(
+			typeof(BareHeader),
+			UICollectionElementKindSection.Footer,
+			FooterId);
 
 		data = new(collection, CellFor)
 		{
-			SupplementaryViewProvider = HeaderFor
+			SupplementaryViewProvider = SupplementaryFor
 		};
 
 		selection = new(this);
@@ -116,15 +121,34 @@ public partial class CollectionView<TItem>
 	/// <summary>
 	/// Scrolls the item into view.
 	/// </summary>
+	/// <param name="item">The item to scroll to.</param>
+	/// <param name="position">Where the item lands in the viewport.</param>
+	/// <param name="animated">Whether the scroll is animated.</param>
 	public void ScrollTo(
 		TItem item,
+		ScrollPosition position = ScrollPosition.Top,
 		bool animated = true)
 	{
 		if (!IsRealized || data is null || !keys.TryGetValue(item, out ItemKey? key))
 			return;
 
+		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
+
+		UICollectionViewScrollPosition native = position switch
+		{
+			ScrollPosition.Center => horizontal
+				? UICollectionViewScrollPosition.CenteredHorizontally
+				: UICollectionViewScrollPosition.CenteredVertically,
+			ScrollPosition.Bottom => horizontal
+				? UICollectionViewScrollPosition.Right
+				: UICollectionViewScrollPosition.Bottom,
+			_ => horizontal
+				? UICollectionViewScrollPosition.Left
+				: UICollectionViewScrollPosition.Top
+		};
+
 		if (data.GetIndexPath(key) is { } path)
-			Ui.ScrollToItem(path, UICollectionViewScrollPosition.Top, animated);
+			Ui.ScrollToItem(path, native, animated);
 	}
 
 	internal void OnScrolled(
@@ -228,6 +252,16 @@ public partial class CollectionView<TItem>
 				hosted.ReapplyVisuals();
 
 		EmptyView?.ReapplyVisuals();
+	}
+
+	// the row tapped on the way out un-highlights on the way back
+	internal override void PageAppeared()
+	{
+		if (!IsRealized)
+			return;
+
+		foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
+			Ui.DeselectItem(path, true);
 	}
 
 	partial void ReloadItems() =>
@@ -357,7 +391,16 @@ public partial class CollectionView<TItem>
 
 		// the tree is built once per recycled cell, then only rebound
 		if (cell.Hosted is null)
+		{
 			cell.Attach(CreateItemView());
+
+			// a plain cell has no selection visual of its own
+			if (HighlightsSelection)
+				cell.SelectedBackgroundView = new UIView
+				{
+					BackgroundColor = HighlightColor?.ToUIColor() ?? UIColor.SystemGray4
+				};
+		}
 
 		if (cell.Hosted is ItemView<TItem> view && identifier is ItemKey { Item: TItem item })
 			view.Item = item;
@@ -365,20 +408,22 @@ public partial class CollectionView<TItem>
 		return cell;
 	}
 
-	BareHeader HeaderFor(
+	BareHeader SupplementaryFor(
 		UICollectionView collectionView,
 		string kind,
 		NSIndexPath indexPath)
 	{
+		bool footer = kind == UICollectionElementKindSectionKey.Footer.ToString();
+
 		BareHeader header = (BareHeader)collectionView.DequeueReusableSupplementaryView(
 			new NSString(kind),
-			HeaderId,
+			footer ? FooterId : HeaderId,
 			indexPath);
 
-		if (header.Hosted is null && CreateHeaderView() is { } view)
+		if (header.Hosted is null && (footer ? CreateFooterView() : CreateHeaderView()) is { } view)
 			header.Attach(view);
 
-		if (header.Hosted is ItemView<Section<TItem>> hosted)
+		if (header.Hosted is ItemView<TSection> hosted)
 			hosted.Item = SectionAt(indexPath.Section);
 
 		return header;
@@ -433,8 +478,11 @@ public partial class CollectionView<TItem>
 		?? throw new InvalidOperationException(
 			$"CollectionView<{typeof(TItem).Name}> needs an ItemTemplate.");
 
-	internal ItemView<Section<TItem>>? CreateHeaderView() =>
+	internal ItemView<TSection>? CreateHeaderView() =>
 		HeaderTemplate?.Invoke();
+
+	internal ItemView<TSection>? CreateFooterView() =>
+		FooterTemplate?.Invoke();
 
 	internal void Select(
 		int section,
@@ -449,28 +497,52 @@ public partial class CollectionView<TItem>
 
 	UICollectionViewLayout CreateLayout(
 		CollectionLayout layout,
-		bool headers)
+		bool headers,
+		bool footers)
 	{
 		switch (layout.Kind)
 		{
 			case CollectionLayoutKind.Grid:
-				return new UICollectionViewCompositionalLayout(GridSection(layout, headers));
+				return new UICollectionViewCompositionalLayout(GridSection(layout, headers, footers));
 
 			case CollectionLayoutKind.Carousel:
 				return new UICollectionViewCompositionalLayout(CarouselSection(layout));
 
 			default:
+				UICollectionLayoutListAppearance appearance = layout.Grouped
+					? UICollectionLayoutListAppearance.InsetGrouped
+					: UICollectionLayoutListAppearance.Plain;
+
 				// a list configuration paints its own opaque background, which would cover the empty view
-				UICollectionLayoutListConfiguration configuration = new(
-					layout.Grouped
-						? UICollectionLayoutListAppearance.InsetGrouped
-						: UICollectionLayoutListAppearance.Plain)
+				UICollectionLayoutListConfiguration configuration = new(appearance)
 				{
 					BackgroundColor = UIColor.Clear,
+					ShowsSeparators = ShowsSeparators,
 					HeaderMode = headers
 						? UICollectionLayoutListHeaderMode.Supplementary
-						: UICollectionLayoutListHeaderMode.None
+						: UICollectionLayoutListHeaderMode.None,
+					FooterMode = footers
+						? UICollectionLayoutListFooterMode.Supplementary
+						: UICollectionLayoutListFooterMode.None
 				};
+
+				// a separator configuration overrides ShowsSeparators, so it has to carry the visibility too
+				if (SeparatorInsets is { } separator)
+				{
+					NSDirectionalEdgeInsets insets = new(0, (nfloat)separator.Left, 0, (nfloat)separator.Right);
+
+					UIListSeparatorVisibility visibility = ShowsSeparators
+						? UIListSeparatorVisibility.Automatic
+						: UIListSeparatorVisibility.Hidden;
+
+					configuration.SeparatorConfiguration = new(appearance)
+					{
+						TopSeparatorInsets = insets,
+						BottomSeparatorInsets = insets,
+						TopSeparatorVisibility = visibility,
+						BottomSeparatorVisibility = visibility
+					};
+				}
 
 				// native swipe actions: UIKit owns the gesture, the animation and the full-swipe
 				if (SwipeActions.Count > 0)
@@ -486,17 +558,19 @@ public partial class CollectionView<TItem>
 		}
 	}
 
-	static NSCollectionLayoutBoundarySupplementaryItem Header() =>
+	static NSCollectionLayoutBoundarySupplementaryItem Boundary(
+		bool footer) =>
 		NSCollectionLayoutBoundarySupplementaryItem.Create(
 			NSCollectionLayoutSize.Create(
 				NSCollectionLayoutDimension.CreateFractionalWidth(1f),
 				NSCollectionLayoutDimension.CreateEstimated(44)),
-			UICollectionElementKindSectionKey.Header.ToString(),
-			NSRectAlignment.Top);
+			(footer ? UICollectionElementKindSectionKey.Footer : UICollectionElementKindSectionKey.Header).ToString(),
+			footer ? NSRectAlignment.Bottom : NSRectAlignment.Top);
 
 	static NSCollectionLayoutSection GridSection(
 		CollectionLayout layout,
-		bool headers)
+		bool headers,
+		bool footers)
 	{
 		nfloat spacing = (nfloat)layout.Spacing;
 
@@ -518,8 +592,16 @@ public partial class CollectionView<TItem>
 		section.InterGroupSpacing = spacing;
 		section.ContentInsets = new(spacing, spacing, spacing, spacing);
 
+		List<NSCollectionLayoutBoundarySupplementaryItem> boundaries = [];
+
 		if (headers)
-			section.BoundarySupplementaryItems = [Header()];
+			boundaries.Add(Boundary(footer: false));
+
+		if (footers)
+			boundaries.Add(Boundary(footer: true));
+
+		if (boundaries.Count > 0)
+			section.BoundarySupplementaryItems = [.. boundaries];
 
 		return section;
 	}
@@ -557,18 +639,27 @@ public partial class CollectionView<TItem>
 	}
 }
 
-internal sealed class CollectionDelegate<TItem>(
-	CollectionView<TItem> element) : UICollectionViewDelegate
+internal sealed class CollectionDelegate<TItem, TSection>(
+	CollectionView<TItem, TSection> element) : UICollectionViewDelegate
 	where TItem : class
+	where TSection : class, ISection<TItem>
 {
+	// PageAppeared releases it, so it stays lit under a pushed page
 	public override void ItemSelected(
 		UICollectionView collectionView,
 		NSIndexPath indexPath)
 	{
-		collectionView.DeselectItem(indexPath, true);
+		if (!element.HighlightsSelection)
+			collectionView.DeselectItem(indexPath, true);
 
 		element.Select(indexPath.Section, indexPath.Row);
 	}
+
+	public override void WillDisplayCell(
+		UICollectionView collectionView,
+		UICollectionViewCell cell,
+		NSIndexPath indexPath) =>
+		element.OnWillDisplay(indexPath.Section, indexPath.Row);
 
 	public override void Scrolled(
 		UIScrollView scrollView) =>

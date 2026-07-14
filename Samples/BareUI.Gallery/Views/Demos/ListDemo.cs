@@ -16,13 +16,18 @@ public class ListDemo : ContentView<ListDemoViewModel>
 		// the large title collapses as the list scrolls
 		TitleStyle = TitleStyle.Large;
 
-		Content = new CollectionView<SettingsEntry>
+		ToolbarItems.Add(new() { Icon = "plus", IsPrimary = true, Command = ViewModel.AddSettingCommand });
+
+		Content = new CollectionView<SettingsEntry, SettingsSection>
 		{
 			Layout = CollectionLayout.List(grouped: true),
 			ItemTemplate = () => new SettingsCell(),
 			HeaderTemplate = () => new SectionHeader(),
+			FooterTemplate = () => new SectionFooter(),
 			GroupedItemsSource = ViewModel.Sections,
-			SelectionCommand = ViewModel.OpenCommand
+			SelectionCommand = ViewModel.OpenCommand,
+			SeparatorInsets = new Thickness(52, 0, 0, 0),
+			HighlightsSelection = false
 		};
 	}
 }

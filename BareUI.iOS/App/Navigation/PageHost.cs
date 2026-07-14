@@ -400,6 +400,9 @@ internal sealed class PageHost : UIViewController
 		if (Page is null)
 			return;
 
+		// before the transition: a lit row fades out with the pop, not after it
+		Page.NotifyWillAppear();
+
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
 
 		// with a visible tab bar the items float above it as the tab accessory (the two bars share

@@ -32,7 +32,8 @@ public class MenuView : ContentView<MenuViewModel>
 					ItemTemplate = () => new DemoRow(),
 					ItemsSource = ViewModel.Demos,
 					SelectionCommand = ViewModel.OpenDemoCommand,
-					IgnoresSafeArea = SafeAreaEdges.Bottom
+					IgnoresSafeArea = SafeAreaEdges.Bottom,
+					HighlightColor = Palette.Highlight
 				}.Row(1)
 			}
 		};

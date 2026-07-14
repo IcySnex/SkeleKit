@@ -21,6 +21,20 @@ public partial class GridDemoViewModel(
 		Movie movie) =>
 		await navigator.AlertAsync(movie.Title, $"{movie.Year} · {movie.Minutes} min");
 
+	// fresh instances per page: items are keyed by reference
+	[RelayCommand]
+	async Task LoadMore()
+	{
+		if (Movies.Count == 0 || page >= 4)
+			return;
+
+		page++;
+
+		foreach (Movie movie in await movies.GetPopularAsync())
+			Movies.Add(movie with { Title = $"{movie.Title} ({page})" });
+	}
+	int page = 1;
+
 	public async Task LoadAsync()
 	{
 		if (Movies.Count > 0)

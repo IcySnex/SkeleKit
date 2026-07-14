@@ -55,4 +55,10 @@ public abstract partial class Panel : View
 		foreach (View child in Children)
 			child.ReapplyVisuals();
 	}
+
+	internal override void PageAppeared()
+	{
+		foreach (View child in Children)
+			child.PageAppeared();
+	}
 }

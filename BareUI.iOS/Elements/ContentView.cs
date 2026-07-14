@@ -221,6 +221,9 @@ public abstract partial class ContentView : Panel
 	internal void NotifyUnloaded() =>
 		OnUnloaded();
 
+	internal void NotifyWillAppear() =>
+		PageAppeared();
+
 	internal void NotifyAppearing() =>
 		OnAppearing();
 

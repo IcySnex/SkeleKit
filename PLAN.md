@@ -129,7 +129,7 @@ call site compiling.
 ### Feature 3 — collection completeness
 
 - **Per-section layouts**: a view-side `SectionStyle<TItem>` (layout + item template + optional
-  header template) resolved per `Section<T>` by a compositional *section provider*. Cell reuse
+  header template) resolved per section by a compositional *section provider*. Cell reuse
   identifiers become per-style. Reassigning the layout after realize now calls
   `SetCollectionViewLayout`.
 - **Cell state + accessories**: `BareCell` derives from `UICollectionViewListCell`;

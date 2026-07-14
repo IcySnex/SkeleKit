@@ -43,16 +43,23 @@ public class SettingsGroupView : ContentView<SettingsGroupViewModel>
     {
         Title = Bind(vm => vm.GroupName);
 
-        Content = new CollectionView<SettingsEntry>
+        Content = new CollectionView<SettingsEntry, SettingsSection>
         {
             Layout = CollectionLayout.List(grouped: true),
-            GroupedItemsSource = Bind<IReadOnlyList<Section<SettingsEntry>>?>(vm => vm.Sections),
+            GroupedItemsSource = Bind<IReadOnlyList<SettingsSection>?>(vm => vm.Sections),
             SelectionCommand = Bind<ICommand?>(vm => vm.OpenGroupCommand),
             ItemTemplate = () => new SettingsRow(),
-            HeaderTemplate = () => new SectionHeader()
+            HeaderTemplate = () => new SectionHeader(),
+            FooterTemplate = () => new SectionFooter()
         };
     }
 }
+
+// the section model is the app's own; the library only asks for Items
+record SettingsSection(
+    string Title,
+    string Footer,
+    IReadOnlyList<SettingsEntry> Items) : ISection<SettingsEntry>;
 
 class SettingsRow : ItemView<SettingsEntry>
 {

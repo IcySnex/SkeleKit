@@ -33,10 +33,13 @@ public static class Styles
 	/// A <see cref="Caption"/> in bold, heading a section of a list.
 	/// </summary>
 	public static readonly Style<Label> SectionHeader = new(Caption, label =>
-	{
-		label.Bold = true;
-		label.Margin = new Thickness(16, 8);
-	});
+		label.Bold = true);
+
+	/// <summary>
+	/// A <see cref="Caption"/> closing a section of a list.
+	/// </summary>
+	public static readonly Style<Label> SectionFooter = new(Caption, label =>
+		label.Margin = new Thickness(16, 6, 16, 12));
 
 	/// <summary>
 	/// A rounded card holding a block of content.
