@@ -11,7 +11,11 @@ public class ActivityIndicatorDemoViewModel;
 
 public class DividerDemoViewModel;
 
-public class ImageDemoViewModel;
+public partial class ImageDemoViewModel : ObservableObject
+{
+	[ObservableProperty]
+	public partial double Level { get; set; } = 0.6;
+}
 
 public class StylingDemoViewModel;
 

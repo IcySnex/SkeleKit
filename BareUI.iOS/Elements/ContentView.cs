@@ -69,6 +69,35 @@ public abstract partial class ContentView : Panel
 	public bool HidesTabBar { get; set; }
 
 	/// <summary>
+	/// The badge on this page's tab bar item, or null for none. Applies even while the tab was never opened.
+	/// </summary>
+	public Bindable<string?> TabBadge
+	{
+		get => tabBadge;
+		set => tabBadgeBinding = Register(tabBadgeBinding, value, value =>
+		{
+			// not routed through Set's apply: the badge must land on a tab that was never realized
+			tabBadge = value;
+			ApplyTabBadge();
+		});
+	}
+	string? tabBadge;
+	Binding<string?>? tabBadgeBinding;
+
+	/// <summary>
+	/// The badge's background color, or null for the system red.
+	/// </summary>
+	public Color? TabBadgeColor
+	{
+		get;
+		set
+		{
+			field = value;
+			ApplyTabBadge();
+		}
+	}
+
+	/// <summary>
 	/// Buttons in the navigation bar.
 	/// </summary>
 	public IList<ToolbarItem> ToolbarItems { get; } = [];
@@ -151,6 +180,11 @@ public abstract partial class ContentView : Panel
 		ApplyTitleCore();
 
 	partial void ApplyTitleCore();
+
+	internal void ApplyTabBadge() =>
+		ApplyTabBadgeCore();
+
+	partial void ApplyTabBadgeCore();
 
 
 	protected override Size MeasureOverride(

@@ -106,7 +106,12 @@ public class BareApplication
 					.Select(UIViewController (definition) =>
 					{
 						UINavigationController stack = Stack(definition.ViewModel, tabsBuilder.UseLargeTitles);
-						stack.ViewControllers![0].TabBarItem = new(definition.Title, UIImage.GetSystemImage(definition.Icon), null);
+
+						PageHost root = (PageHost)stack.ViewControllers![0];
+						root.TabBarItem = new(definition.Title, UIImage.GetSystemImage(definition.Icon), null);
+
+						// the fresh item wiped any badge the page set during construction
+						root.Page?.ApplyTabBadge();
 
 						return stack;
 					})

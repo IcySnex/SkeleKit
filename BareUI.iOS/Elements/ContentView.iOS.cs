@@ -17,6 +17,16 @@ public abstract partial class ContentView
 	partial void ApplyTitleCore() =>
 		Host?.NavigationItem.Title = Title.Value;
 
+	// TabBarItem is read fresh: BuildShell replaces the item after the host is constructed
+	partial void ApplyTabBadgeCore()
+	{
+		if (Host is not { } host)
+			return;
+
+		host.TabBarItem.BadgeValue = TabBadge.Value;
+		host.TabBarItem.BadgeColor = TabBadgeColor?.ToUIColor();
+	}
+
 	private protected override void OnRealized()
 	{
 		if (ScrollsUnderBars

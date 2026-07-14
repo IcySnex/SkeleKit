@@ -44,6 +44,11 @@ public sealed class ToolbarItem
 	public bool IsPrimary { get; set; }
 
 	/// <summary>
+	/// Menu entries shown on tap instead of invoking <see cref="Command"/>. Empty for a plain item.
+	/// </summary>
+	public IList<MenuAction> Menu { get; } = [];
+
+	/// <summary>
 	/// Invoked when the item is tapped; its CanExecute drives the enabled state.
 	/// </summary>
 	public ICommand? Command { get; set; }

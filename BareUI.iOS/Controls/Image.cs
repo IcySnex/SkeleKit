@@ -1,3 +1,5 @@
+using Symbols;
+
 namespace BareUI;
 
 /// <summary>
@@ -22,6 +24,34 @@ public class Image : Control
 	Binding<ImageSource?>? sourceBinding;
 
 	/// <summary>
+	/// A symbol or bundle image shown while a URL source is still loading, or null for none.
+	/// </summary>
+	public ImageSource? Placeholder
+	{
+		get;
+		set => Set(ref field, value, affectsMeasure: false);
+	}
+
+	/// <summary>
+	/// A symbol or bundle image shown when a URL source fails to load, or null to keep the placeholder.
+	/// </summary>
+	public ImageSource? Fallback
+	{
+		get;
+		set => Set(ref field, value, affectsMeasure: false);
+	}
+
+	/// <summary>
+	/// Whether a URL image cross-dissolves in once it arrives, instead of popping.
+	/// </summary>
+	public bool FadesIn
+	{
+		get => fadesIn;
+		set => Set(ref fadesIn, value, affectsMeasure: false);
+	}
+	bool fadesIn;
+
+	/// <summary>
 	/// How the image is scaled to fill its bounds.
 	/// </summary>
 	public Stretch Stretch
@@ -31,7 +61,99 @@ public class Image : Control
 	}
 	Stretch stretch = Stretch.Uniform;
 
+	/// <summary>
+	/// Recolors the whole image with one color, rendering rasters as templates. For layered symbol looks use <see cref="SymbolColors"/> instead.
+	/// </summary>
+	public Color? Tint
+	{
+		get => tint;
+		set => Set(ref tint, value, ApplyTint, affectsMeasure: false);
+	}
+	Color? tint;
+
+
+	// Symbol styling: all of it only affects SF Symbol sources
+
+	/// <summary>
+	/// The symbol's point size, or NaN for its natural size.
+	/// </summary>
+	public double SymbolSize
+	{
+		get;
+		set => Set(ref field, value, ApplySymbolConfiguration);
+	} = double.NaN;
+
+	/// <summary>
+	/// The symbol's stroke weight, or null for its default.
+	/// </summary>
+	public FontWeight? SymbolWeight
+	{
+		get;
+		set => Set(ref field, value, ApplySymbolConfiguration);
+	}
+
+	/// <summary>
+	/// The symbol's relative scale within its font metrics.
+	/// </summary>
+	public SymbolScale SymbolScale
+	{
+		get;
+		set => Set(ref field, value, ApplySymbolConfiguration);
+	}
+
+	/// <summary>
+	/// Colors for the symbol's layers: one gives the hierarchical look, several assign the palette explicitly.
+	/// </summary>
+	public IList<Color> SymbolColors { get; } = [];
+
+	/// <summary>
+	/// Whether a symbol with a built-in multicolor rendition uses it.
+	/// </summary>
+	public bool PrefersMulticolor
+	{
+		get;
+		set => Set(ref field, value, ApplySymbolConfiguration, affectsMeasure: false);
+	}
+
+	/// <summary>
+	/// The value 0–1 driving a variable symbol's layers (a wifi or speaker level), or NaN for none.
+	/// </summary>
+	public Bindable<double> SymbolValue
+	{
+		get => symbolValue;
+		set => symbolValueBinding = Register(symbolValueBinding, value, value => Set(ref symbolValue, value, ApplySource, affectsMeasure: false));
+	}
+	double symbolValue = double.NaN;
+	Binding<double>? symbolValueBinding;
+
+	/// <summary>
+	/// An ambient effect the symbol performs continuously while set.
+	/// </summary>
+	public SymbolEffect SymbolEffect
+	{
+		get;
+		set => Set(ref field, value, ApplySymbolEffect, affectsMeasure: false);
+	}
+
 	CancellationTokenSource? loadCancellation;
+	UIImage? displayed;
+
+
+	/// <summary>
+	/// Plays a symbol effect once, on top of any ambient <see cref="SymbolEffect"/>. No-op until realized.
+	/// </summary>
+	/// <param name="effect">The effect to perform.</param>
+	public void PlaySymbolEffect(
+		SymbolEffect effect)
+	{
+		if (!IsRealized || effect is SymbolEffect.None)
+			return;
+
+		Ui.AddSymbolEffect(
+			Effect(effect),
+			NSSymbolEffectOptions.Create(NSSymbolEffectOptionsRepeatBehavior.CreatePeriodic(1)),
+			animated: true);
+	}
 
 
 	private protected override UIView CreateNative() =>
@@ -40,7 +162,10 @@ public class Image : Control
 	private protected override void ApplyProperties()
 	{
 		ApplyStretch();
+		ApplyTint();
+		ApplySymbolConfiguration();
 		ApplySource();
+		ApplySymbolEffect();
 	}
 
 	private protected override void OnUnrealized() =>
@@ -64,26 +189,96 @@ public class Image : Control
 			Ui.ClipsToBounds = true;
 	}
 
+	void ApplyTint()
+	{
+		Ui.TintColor = tint?.ToUIColor();
+		Show(displayed, animated: false);
+	}
+
+	void ApplySymbolConfiguration()
+	{
+		UIImageSymbolConfiguration? configuration = null;
+
+		void Add(UIImageSymbolConfiguration next) =>
+			configuration = configuration is null
+				? next
+				: (UIImageSymbolConfiguration)configuration.GetConfiguration(next);
+
+		if (!double.IsNaN(SymbolSize))
+			Add(UIImageSymbolConfiguration.Create((nfloat)SymbolSize));
+
+		if (SymbolWeight is { } weight)
+			Add(UIImageSymbolConfiguration.Create(Weight(weight)));
+
+		if (SymbolScale is not SymbolScale.Default)
+			Add(UIImageSymbolConfiguration.Create(SymbolScale switch
+			{
+				SymbolScale.Small => UIImageSymbolScale.Small,
+				SymbolScale.Large => UIImageSymbolScale.Large,
+				_ => UIImageSymbolScale.Medium
+			}));
+
+		if (SymbolColors.Count == 1)
+			Add(UIImageSymbolConfiguration.Create(SymbolColors[0].ToUIColor()));
+		else if (SymbolColors.Count > 1)
+			Add(UIImageSymbolConfiguration.Create(SymbolColors.Select(color => color.ToUIColor()).ToArray()));
+
+		if (PrefersMulticolor)
+			Add(UIImageSymbolConfiguration.ConfigurationPreferringMulticolor);
+
+		Ui.PreferredSymbolConfiguration = configuration;
+	}
+
+	void ApplySymbolEffect()
+	{
+		Ui.RemoveAllSymbolEffects();
+
+		if (SymbolEffect is SymbolEffect.None)
+			return;
+
+		Ui.AddSymbolEffect(
+			Effect(SymbolEffect),
+			NSSymbolEffectOptions.Create(NSSymbolEffectOptionsRepeatBehavior.CreateContinuous()),
+			animated: true);
+	}
+
 	void ApplySource()
 	{
 		CancelLoad();
 
 		if (source is not { } current)
 		{
-			Ui.Image = null;
+			Show(null, animated: false);
 			return;
 		}
 
 		if (current.Kind is not ImageSourceKind.Url)
 		{
-			Ui.Image = ResolveSync(current);
+			Show(ResolveSync(current), animated: false);
 			return;
 		}
 
-		Ui.Image = null;
+		Show(Placeholder is { } waiting ? ResolveSync(waiting) : null, animated: false);
 		loadCancellation = new();
 
 		LoadUrlAsync(current, loadCancellation.Token);
+	}
+
+	// a template render leaves layered symbol colors alone only when no tint asks for it
+	void Show(
+		UIImage? image,
+		bool animated)
+	{
+		displayed = image;
+
+		UIImage? rendered = tint is not null
+			? image?.ImageWithRenderingMode(UIImageRenderingMode.AlwaysTemplate)
+			: image;
+
+		if (animated && fadesIn)
+			UIView.Transition(Ui, 0.3, UIViewAnimationOptions.TransitionCrossDissolve, () => Ui.Image = rendered, static () => { });
+		else
+			Ui.Image = rendered;
 	}
 
 	void CancelLoad()
@@ -94,55 +289,90 @@ public class Image : Control
 	}
 
 	// Auto: bundle asset beats symbol of same name
-	static UIImage? ResolveSync(
+	UIImage? ResolveSync(
 		ImageSource source) =>
 		source.Kind switch
 		{
-			ImageSourceKind.Symbol => UIImage.GetSystemImage(source.Value),
+			ImageSourceKind.Symbol => Symbol(source.Value),
 			ImageSourceKind.Bundle => UIImage.FromBundle(source.Value),
-			_ => UIImage.FromBundle(source.Value) ?? UIImage.GetSystemImage(source.Value)
+			ImageSourceKind.Url => null,
+			_ => UIImage.FromBundle(source.Value) ?? Symbol(source.Value)
+		};
+
+	UIImage? Symbol(
+		string name) =>
+		double.IsNaN(symbolValue)
+			? UIImage.GetSystemImage(name)
+			: UIImage.GetSystemImage(name, Math.Clamp(symbolValue, 0, 1), UIImageSymbolConfiguration.UnspecifiedConfiguration);
+
+	static NSSymbolEffect Effect(
+		SymbolEffect effect) =>
+		effect switch
+		{
+			SymbolEffect.Bounce => NSSymbolBounceEffect.Create(),
+			SymbolEffect.Pulse => NSSymbolPulseEffect.Create(),
+			SymbolEffect.VariableColor => NSSymbolVariableColorEffect.Create(),
+			SymbolEffect.Breathe => NSSymbolBreatheEffect.Create(),
+			SymbolEffect.Wiggle => NSSymbolWiggleEffect.Create(),
+			_ => NSSymbolRotateEffect.Create()
+		};
+
+	static UIImageSymbolWeight Weight(
+		FontWeight weight) =>
+		weight switch
+		{
+			FontWeight.UltraLight => UIImageSymbolWeight.UltraLight,
+			FontWeight.Thin => UIImageSymbolWeight.Thin,
+			FontWeight.Light => UIImageSymbolWeight.Light,
+			FontWeight.Medium => UIImageSymbolWeight.Medium,
+			FontWeight.Semibold => UIImageSymbolWeight.Semibold,
+			FontWeight.Bold => UIImageSymbolWeight.Bold,
+			FontWeight.Heavy => UIImageSymbolWeight.Heavy,
+			FontWeight.Black => UIImageSymbolWeight.Black,
+			_ => UIImageSymbolWeight.Regular
 		};
 
 	async void LoadUrlAsync(
 		ImageSource source,
 		CancellationToken cancellationToken)
 	{
+		UIImage? image = null;
 		try
 		{
-			UIImage? image;
-			try
-			{
-				image = await Loader.LoadAsync(source.Value, cancellationToken);
-			}
-			catch (OperationCanceledException)
-			{
-				return;
-			}
-			catch
-			{
-				// custom loader must not kill the process
-				return;
-			}
-
-			if (image is null || cancellationToken.IsCancellationRequested)
-				return;
-
-			MainThread.Post(() =>
-			{
-				// still realized, still same url?
-				if (cancellationToken.IsCancellationRequested || !IsRealized)
-					return;
-
-				if (this.source is not { Kind: ImageSourceKind.Url } current || current.Value != source.Value)
-					return;
-
-				Ui.Image = image;
-				InvalidateMeasure();
-			});
+			image = await Loader.LoadAsync(source.Value, cancellationToken);
+		}
+		catch (OperationCanceledException)
+		{
+			return;
 		}
 		catch
 		{
-			// ignore :3
+			// custom loader must not kill the process
 		}
+
+		if (cancellationToken.IsCancellationRequested)
+			return;
+
+		MainThread.Post(() =>
+		{
+			// still realized, still same url?
+			if (cancellationToken.IsCancellationRequested || !IsRealized)
+				return;
+
+			if (this.source is not { Kind: ImageSourceKind.Url } current || current.Value != source.Value)
+				return;
+
+			if (image is null)
+			{
+				// a load can fail without an exception; the placeholder stays unless a fallback exists
+				if (Fallback is { } failed)
+					Show(ResolveSync(failed), animated: true);
+
+				return;
+			}
+
+			Show(image, animated: true);
+			InvalidateMeasure();
+		});
 	}
 }

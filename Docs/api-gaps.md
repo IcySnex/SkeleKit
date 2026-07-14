@@ -16,8 +16,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ◆ **Pop interception** — "unsaved changes" confirm-before-back: wrap
   `NavigationItem.BackAction` + `IsModalInPresentation` for sheets; surface as
   `ContentView.ConfirmLeave(Func<Task<bool>>)`.
-- ★ **Toolbar item pull-down menus** — `UIBarButtonItem(menu:)`; a `ToolbarItem.Menu` list next to
-  `Command`. Also gets the "..." overflow pattern.
+- ~~★ **Toolbar item pull-down menus**~~ — **done** (`ToolbarItem.Menu`, `MenuAction` list).
 - ★ **Nav bar tint & title attributes** — per-page accent, title color/font via
   `UINavigationBarAppearance` (standard vs scroll-edge).
 - ~~★ **`NavigationItem.Prompt`**~~ — **done** (`ContentView.Prompt`).
@@ -26,7 +25,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   buttons, cancel event, `ObscuresBackgroundDuringPresentation` remain.
 - ◆ **Search suggestions** — `UISearchSuggestionItem` (iOS 16); typed suggestion list + pick command.
 - ~~★ **Status bar style per page**~~ — **done** (`ContentView.StatusBar`, `BareStack` forwards).
-- ★ **Tab badges** — `UITabBarItem.BadgeValue`/`BadgeColor`; bindable per tab.
+- ~~★ **Tab badges**~~ — **done** (`ContentView.TabBadge` bindable + `TabBadgeColor`; applies to
+  never-opened tabs too).
 - ~~★ **Hide tab bar on push**~~ — **done** (`ContentView.HidesTabBar`).
 - ◆ **Sheet polish** — grabber (`PrefersGrabberVisible`), sheet corner radius,
   `LargestUndimmedDetent` (non-blocking sheets), `PrefersScrollingExpandsWhenScrolledToEdge`,
@@ -75,12 +75,12 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 ## Image
 
-- ★ **Template rendering + tint** — SF-symbol-style recoloring of raster images.
-- ◆ **Symbol configuration** — point size/weight/scale, hierarchical & palette colors,
-  variable value (0–1 progress symbols like speaker/wifi).
-- ◆ **Symbol effects** — iOS 17 `UIImageView.AddSymbolEffect`: bounce, pulse, variable-color;
-  pairs beautifully with `Animator`.
-- ★ **URL loading UX** — placeholder image, error image, fade-in on load.
+- ~~★ **Template rendering + tint**~~ — **done** (`Image.Tint`, rasters render as templates).
+- ~~◆ **Symbol configuration**~~ — **done** (`SymbolSize`/`SymbolWeight`/`SymbolScale`,
+  `SymbolColors` — one is hierarchical, several are the palette — `PrefersMulticolor`,
+  bindable `SymbolValue`).
+- ~~◆ **Symbol effects**~~ — **done** (ambient `SymbolEffect` + one-shot `PlaySymbolEffect`).
+- ~~★ **URL loading UX**~~ — **done** (`Placeholder`, `Fallback`, opt-in `FadesIn`).
 
 ## Text input
 

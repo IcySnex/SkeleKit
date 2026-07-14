@@ -17,6 +17,16 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 
 		ToolbarItems.Add(new() { Icon = "plus", IsPrimary = true, Command = ViewModel.AddCommand });
 		ToolbarItems.Add(new() { Text = "Clear", Side = ToolbarSide.Leading, Command = ViewModel.ClearCommand });
+		ToolbarItems.Add(new()
+		{
+			Icon = "ellipsis.circle",
+			Menu =
+			{
+				new() { Text = "Add", Icon = "plus", Command = ViewModel.AddCommand },
+				new() { Text = "Shuffle", Icon = "shuffle", Command = ViewModel.ShuffleCommand },
+				new() { Text = "Clear", Icon = "trash", IsDestructive = true, Command = ViewModel.ClearCommand }
+			}
+		});
 
 		Content = new Grid
 		{

@@ -13,6 +13,10 @@ public class BindingView : ContentView<BindingViewModel>
 	{
 		Title = "Bindings";
 
+		// badge on the Bindings tab mirrors the name length, and clears with the name
+		TabBadge = Bind<string, string?>(vm => vm.Name, name => name.Length == 0 ? null : name.Length.ToString());
+		TabBadgeColor = Colors.Indigo;
+
 		Content = new ScrollView
 		{
 			Content = new StackPanel
@@ -21,7 +25,7 @@ public class BindingView : ContentView<BindingViewModel>
 				Margin = new Thickness(16),
 				Children =
 				{
-					new Label { Style = Styles.Caption, Text = "Two-way: type here" },
+					new Label { Style = Styles.Caption, Text = "Two-way: type here (the tab badge mirrors the length)" },
 					new TextField
 					{
 						Placeholder = "Name",

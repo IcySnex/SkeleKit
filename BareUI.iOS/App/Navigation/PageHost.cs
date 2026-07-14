@@ -21,9 +21,12 @@ internal sealed class PageHost : UIViewController
 			bounds.Height - top - bottom);
 	}
 
-	static UIBarButtonItem Bar(
+	UIBarButtonItem Bar(
 		ToolbarItem item)
 	{
+		if (item.Menu.Count > 0)
+			return MenuBar(item);
+
 		UIAction action = UIAction.Create(
 			item.Text ?? "",
 			item.Icon is { } icon ? UIImage.GetSystemImage(icon) : null,
@@ -38,6 +41,44 @@ internal sealed class PageHost : UIViewController
 		{
 			Enabled = item.Command?.CanExecute(item.CommandParameter) ?? true
 		};
+
+		if (item.IsPrimary)
+			native.Style = UIBarButtonItemStyle.Done;
+
+		return native;
+	}
+
+	// the actions stay rooted here: UIKit's retain alone would let their managed peers die
+	readonly List<UIAction> menuActions = [];
+
+	UIBarButtonItem MenuBar(
+		ToolbarItem item)
+	{
+		UIAction[] entries = new UIAction[item.Menu.Count];
+
+		for (int index = 0; index < item.Menu.Count; index++)
+		{
+			MenuAction entry = item.Menu[index];
+
+			entries[index] = UIAction.Create(
+				entry.Text,
+				entry.Icon is { } entryIcon ? UIImage.GetSystemImage(entryIcon) : null,
+				null,
+				_ =>
+				{
+					if (entry.Command is { } entryCommand && entryCommand.CanExecute(null))
+						entryCommand.Execute(null);
+				});
+
+			if (entry.IsDestructive)
+				entries[index].Attributes = UIMenuElementAttributes.Destructive;
+		}
+
+		menuActions.AddRange(entries);
+
+		UIBarButtonItem native = item.Icon is { } icon
+			? new(UIImage.GetSystemImage(icon), UIMenu.Create(entries))
+			: new(item.Text ?? "", UIMenu.Create(entries));
 
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
