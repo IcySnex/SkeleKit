@@ -23,9 +23,9 @@ public class GridDemo : ContentView<GridDemoViewModel>
 			Icon = "scope",
 			Menu =
 			{
-				new() { Text = $"{Target} to top", Icon = "arrow.up.to.line", Command = Command.From(() => Jump(ScrollPosition.Top)) },
-				new() { Text = $"{Target} to centre", Icon = "arrow.down.and.line.horizontal.and.arrow.up", Command = Command.From(() => Jump(ScrollPosition.Center)) },
-				new() { Text = $"{Target} to bottom", Icon = "arrow.down.to.line", Command = Command.From(() => Jump(ScrollPosition.Bottom)) }
+				new() { Text = $"Scroll to \"{Target}\" — align top", Icon = "arrow.up.to.line", Command = Command.From(() => Jump(ScrollPosition.Top)) },
+				new() { Text = $"Scroll to \"{Target}\" — align centre", Icon = "arrow.down.and.line.horizontal.and.arrow.up", Command = Command.From(() => Jump(ScrollPosition.Center)) },
+				new() { Text = $"Scroll to \"{Target}\" — align bottom", Icon = "arrow.down.to.line", Command = Command.From(() => Jump(ScrollPosition.Bottom)) }
 			}
 		});
 

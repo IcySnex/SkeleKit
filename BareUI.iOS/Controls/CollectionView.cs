@@ -178,12 +178,12 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		if (ReferenceEquals(itemsSource, value))
 			return;
 
-		if (itemsSource is INotifyCollectionChanged old)
+		if (hooked && itemsSource is INotifyCollectionChanged old)
 			old.CollectionChanged -= OnItemsChanged;
 
 		itemsSource = value;
 
-		if (itemsSource is INotifyCollectionChanged live)
+		if (hooked && itemsSource is INotifyCollectionChanged live)
 			live.CollectionChanged += OnItemsChanged;
 
 		ReloadItems();
@@ -195,25 +195,62 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		if (ReferenceEquals(sections, value))
 			return;
 
-		if (sections is INotifyCollectionChanged old)
+		if (hooked && sections is INotifyCollectionChanged old)
 			old.CollectionChanged -= OnSectionsChanged;
 
 		sections = value;
 
-		if (sections is INotifyCollectionChanged live)
+		if (hooked && sections is INotifyCollectionChanged live)
 			live.CollectionChanged += OnSectionsChanged;
 
 		HookSectionItems();
 		ReloadItems();
 	}
 
+	// a source outlives its view: hooks live only while realized
+	bool hooked;
+
+	readonly List<INotifyCollectionChanged> sectionItemHooks = [];
+
+	void HookSources()
+	{
+		if (hooked)
+			return;
+
+		hooked = true;
+
+		if (itemsSource is INotifyCollectionChanged items)
+			items.CollectionChanged += OnItemsChanged;
+
+		if (sections is INotifyCollectionChanged groups)
+			groups.CollectionChanged += OnSectionsChanged;
+
+		HookSectionItems();
+	}
+
+	void UnhookSources()
+	{
+		if (!hooked)
+			return;
+
+		if (itemsSource is INotifyCollectionChanged items)
+			items.CollectionChanged -= OnItemsChanged;
+
+		if (sections is INotifyCollectionChanged groups)
+			groups.CollectionChanged -= OnSectionsChanged;
+
+		UnhookSectionItems();
+
+		hooked = false;
+	}
+
 	// each section's own items are a source in their own right, not just the list of sections
 	void HookSectionItems()
 	{
-		foreach (INotifyCollectionChanged hook in sectionItemHooks)
-			hook.CollectionChanged -= OnSectionItemsChanged;
+		UnhookSectionItems();
 
-		sectionItemHooks.Clear();
+		if (!hooked)
+			return;
 
 		foreach (TSection section in sections ?? [])
 			if (section.Items is INotifyCollectionChanged live)
@@ -222,7 +259,14 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 				sectionItemHooks.Add(live);
 			}
 	}
-	readonly List<INotifyCollectionChanged> sectionItemHooks = [];
+
+	void UnhookSectionItems()
+	{
+		foreach (INotifyCollectionChanged hook in sectionItemHooks)
+			hook.CollectionChanged -= OnSectionItemsChanged;
+
+		sectionItemHooks.Clear();
+	}
 
 	// a flat source change maps 1:1 onto the native batch update
 	void OnItemsChanged(

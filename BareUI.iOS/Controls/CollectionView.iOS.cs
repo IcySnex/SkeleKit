@@ -119,10 +119,10 @@ public partial class CollectionView<TItem, TSection>
 		});
 
 	/// <summary>
-	/// Scrolls the item into view.
+	/// Scrolls the list until <paramref name="item"/> is visible, aligned to the given viewport edge.
 	/// </summary>
-	/// <param name="item">The item to scroll to.</param>
-	/// <param name="position">Where the item lands in the viewport.</param>
+	/// <param name="item">The item to bring into view.</param>
+	/// <param name="position">The viewport edge the item aligns to.</param>
 	/// <param name="animated">Whether the scroll is animated.</param>
 	public void ScrollTo(
 		TItem item,
@@ -234,8 +234,14 @@ public partial class CollectionView<TItem, TSection>
 			});
 	}
 
-	private protected override void ApplyProperties() =>
+	private protected override void ApplyProperties()
+	{
+		HookSources();
 		ReloadItems();
+	}
+
+	private protected override void OnUnrealized() =>
+		UnhookSources();
 
 	UICollectionView Ui =>
 		(UICollectionView)Native;
@@ -260,10 +266,11 @@ public partial class CollectionView<TItem, TSection>
 			return;
 
 		foreach (UICollectionViewCell cell in Ui.VisibleCells)
-			if (cell is BareCell { Hosted: { } hosted })
+			if (cell is BareCell { Hosted: { LocalTint: null } hosted })
 				hosted.TintChanged();
 
-		EmptyView?.TintChanged();
+		if (EmptyView is { LocalTint: null } empty)
+			empty.TintChanged();
 	}
 
 	// the row tapped on the way out un-highlights on the way back
@@ -404,7 +411,10 @@ public partial class CollectionView<TItem, TSection>
 		// the tree is built once per recycled cell, then only rebound
 		if (cell.Hosted is null)
 		{
-			cell.Attach(CreateItemView());
+			ItemView<TItem> created = CreateItemView();
+			created.TintHost = this;
+
+			cell.Attach(created);
 
 			// a plain cell has no selection visual of its own
 			if (HighlightsSelection)
@@ -433,7 +443,10 @@ public partial class CollectionView<TItem, TSection>
 			indexPath);
 
 		if (header.Hosted is null && (footer ? CreateFooterView() : CreateHeaderView()) is { } view)
+		{
+			view.TintHost = this;
 			header.Attach(view);
+		}
 
 		if (header.Hosted is ItemView<TSection> hosted)
 			hosted.Item = SectionAt(indexPath.Section);
@@ -477,6 +490,7 @@ public partial class CollectionView<TItem, TSection>
 		if (EmptyView is not { } empty || !IsRealized)
 			return;
 
+		empty.TintHost = this;
 		UIView native = empty.Realize();
 
 		if (!ReferenceEquals(Ui.BackgroundView, native))
