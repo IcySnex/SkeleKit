@@ -49,6 +49,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~◆ **Popover anchoring**~~ — **done** (`ModalStyle.Popover(anchor, arrows)` — the static
   property became a method; the anchor is a `View`, so a popover from a toolbar *item* still has
   no spelling. The style carries the anchor through the ViewModel's `PresentAsync` untouched).
+  A delegate blocks UIKit's compact-width adaptation, so it stays a bubble on iPhone; that wins
+  over `ConfirmLeave` on the same page — a popover has no dismiss swipe for the guard to catch.
 - ★ (skip) **Share sheet** — `INavigator.ShareAsync(items)` over `UIActivityViewController`.
 - ★ (skip) **Open URL in-app** — `SFSafariViewController` wrapper on the navigator.
 - ~~◆ **Alert with text input**~~ — **done** (`INavigator.PromptAsync`, returns the typed string or

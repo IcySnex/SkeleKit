@@ -1,3 +1,5 @@
+using ObjCRuntime;
+
 namespace BareUI;
 
 internal sealed class Navigator(
@@ -146,6 +148,9 @@ internal sealed class Navigator(
 			popover.SourceView = anchor.Native;
 			popover.SourceRect = anchor.Native.Bounds;
 			popover.PermittedArrowDirections = Directions(style.Arrows);
+
+			// UIKit would adapt the bubble into a full sheet on iPhone
+			popover.Delegate = popoverStay;
 		}
 
 		presenter.PresentViewController(wrapper, true, null);
@@ -164,6 +169,25 @@ internal sealed class Navigator(
 		detent is Detent.Medium
 			? UISheetPresentationControllerDetentIdentifier.Medium
 			: UISheetPresentationControllerDetentIdentifier.Large;
+
+	// the popover controller holds its delegate weakly; static so it stays rooted
+	static readonly PopoverStay popoverStay = new();
+
+	sealed class PopoverStay : UIPopoverPresentationControllerDelegate
+	{
+		public PopoverStay()
+		{ }
+
+		// see LayoutHost
+		public PopoverStay(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override UIModalPresentationStyle GetAdaptivePresentationStyle(
+			UIPresentationController forPresentationController) =>
+			UIModalPresentationStyle.None;
+	}
 
 	static UIPopoverArrowDirection Directions(
 		PopoverArrow arrows)

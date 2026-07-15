@@ -382,7 +382,7 @@ internal sealed class PageHost : UIViewController
 
 			suggestionItems[index] = new(
 				(NSString)suggestion.Text,
-				suggestion.Description,
+				null,
 				suggestion.Icon is { } icon ? UIImage.GetSystemImage(icon) : null)
 			{
 				RepresentedObject = NSNumber.FromInt32(index)
@@ -498,7 +498,8 @@ internal sealed class PageHost : UIViewController
 		{
 			sheet.ModalInPresentation = Page.ConfirmLeave is not null;
 
-			if (Page.ConfirmLeave is not null && sheet.PresentationController is { } presentation)
+			// a popover keeps its stay-a-popover delegate: there is no swipe for the guard to catch
+			if (Page.ConfirmLeave is not null && sheet.PresentationController is { } presentation and not UIPopoverPresentationController)
 			{
 				dismissGuard ??= new(this);
 				presentation.Delegate = dismissGuard;
