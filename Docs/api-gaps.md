@@ -29,9 +29,13 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   conflation; redesign candidate.
 - ~~★ **Search**~~ — **done** (`HidesSearchBarWhenScrolling`, `SearchScopes` +
   `SearchScopeChanged`, `SearchCancelled`, `SearchObscuresBackground`).
-- ~~◆ **Search suggestions**~~ — **done** (`ContentView.SearchSuggestions`, replaced live from
-  `SearchChanged`; tapping one invokes `SearchSuggestionCommand` with the `SearchSuggestion`.
-  The items and the `UISearchResultsUpdating` are rooted on the host — both are weak natively).
+- ◆ (skip) **Search suggestions** — built on `UISearchSuggestionItem` 2026-07-15, then **removed
+  the same day**: with a nil results controller, UIKit's built-in presentation is a flat gray
+  panel below an immovable dead gap (verified on the iOS 26.5 sim: scopes, `ObscuresBackground`
+  and title style all change nothing), and it never renders `localizedDescription`. Apple's own
+  apps (Files, Weather) ship *custom results lists* instead of this UI. If suggestions are ever
+  needed, the real path is a results overlay built from a `CollectionView` driven by
+  `SearchChanged` — not this API.
 - ~~★ **Status bar style per page**~~ — **done** (`ContentView.StatusBar`, `BareStack` forwards).
 - ~~★ **Tab badges**~~ — **done** (`ContentView.TabBadge` bindable + `TabBadgeColor`; applies to
   never-opened tabs too).

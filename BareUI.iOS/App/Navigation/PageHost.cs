@@ -350,70 +350,10 @@ internal sealed class PageHost : UIViewController
 			search.SearchBar.SelectedScopeButtonIndexChanged += (_, e) => page.NotifySearchScope((int)e.SelectedScope);
 		}
 
-		// rooted: SearchResultsUpdater is weak
-		searchUpdater = new(this);
-		search.SearchResultsUpdater = searchUpdater;
-		ApplySearchSuggestions(page);
-
 		NavigationItem.SearchController = search;
 		NavigationItem.HidesSearchBarWhenScrolling = page.HidesSearchBarWhenScrolling;
 
 		DefinesPresentationContext = true;
-	}
-
-	SearchUpdater? searchUpdater;
-	SearchSuggestion[]? suggestionModels;
-
-	// rooted: the controller's retain alone would let the peers die
-	UISearchSuggestionItem[]? suggestionItems;
-
-	internal void ApplySearchSuggestions(
-		ContentView page)
-	{
-		if (search is null)
-			return;
-
-		suggestionModels = [.. page.SearchSuggestions];
-		suggestionItems = new UISearchSuggestionItem[suggestionModels.Length];
-
-		for (int index = 0; index < suggestionModels.Length; index++)
-		{
-			SearchSuggestion suggestion = suggestionModels[index];
-
-			suggestionItems[index] = new(
-				(NSString)suggestion.Text,
-				null,
-				suggestion.Icon is { } icon ? UIImage.GetSystemImage(icon) : null)
-			{
-				RepresentedObject = NSNumber.FromInt32(index)
-			};
-		}
-
-		search.SearchSuggestions = suggestionItems;
-	}
-
-	internal void ReapplySearchSuggestions()
-	{
-		if (Page is { } page)
-			ApplySearchSuggestions(page);
-	}
-
-	internal void OnSuggestionSelected(
-		IUISearchSuggestion suggestion)
-	{
-		if (suggestion is not UISearchSuggestionItem { RepresentedObject: NSNumber number }
-			|| suggestionModels is not { } models
-			|| number.Int32Value >= models.Length)
-			return;
-
-		SearchSuggestion model = models[number.Int32Value];
-
-		// the tap fills the field, the way every system app treats a suggestion
-		if (search is not null)
-			search.SearchBar.Text = model.Text;
-
-		if (Page?.SearchSuggestionCommand is { } command && command.CanExecute(model))
-			command.Execute(model);
 	}
 
 
@@ -498,8 +438,7 @@ internal sealed class PageHost : UIViewController
 		{
 			sheet.ModalInPresentation = Page.ConfirmLeave is not null;
 
-			// a popover keeps its stay-a-popover delegate: there is no swipe for the guard to catch
-			if (Page.ConfirmLeave is not null && sheet.PresentationController is { } presentation and not UIPopoverPresentationController)
+			if (Page.ConfirmLeave is not null && sheet.PresentationController is { } presentation)
 			{
 				dismissGuard ??= new(this);
 				presentation.Delegate = dismissGuard;
@@ -703,31 +642,11 @@ internal sealed class PageHost : UIViewController
 		public override void DidAttemptToDismiss(
 			UIPresentationController presentationController) =>
 			host?.ConfirmDismiss();
+
+		// a guarded popover must stay a bubble too; a sheet is already its adapted form
+		public override UIModalPresentationStyle GetAdaptivePresentationStyle(
+			UIPresentationController forPresentationController) =>
+			UIModalPresentationStyle.None;
 	}
 
-	sealed class SearchUpdater : UISearchResultsUpdating
-	{
-		readonly PageHost? host;
-
-		public SearchUpdater(
-			PageHost host)
-		{
-			this.host = host;
-		}
-
-		public SearchUpdater(
-			NativeHandle handle) : base(handle)
-		{ }
-
-
-		// UIKit drops the suggestions on every text change: push the page's current list back
-		public override void UpdateSearchResultsForSearchController(
-			UISearchController searchController) =>
-			host?.ReapplySearchSuggestions();
-
-		public override void UpdateSearchResults(
-			UISearchController searchController,
-			IUISearchSuggestion suggestion) =>
-			host?.OnSuggestionSelected(suggestion);
-	}
 }

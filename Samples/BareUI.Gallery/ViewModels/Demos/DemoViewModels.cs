@@ -36,7 +36,7 @@ public partial class ChromeDemoViewModel(
 	INavigator navigator) : ObservableObject
 {
 	[ObservableProperty]
-	public partial bool GuardLeave { get; set; } = true;
+	public partial bool GuardLeave { get; set; } = false;
 
 	[ObservableProperty]
 	public partial string SearchStatus { get; set; } = "Nothing yet";
@@ -60,11 +60,6 @@ public partial class ChromeDemoViewModel(
 	Task PresentPopover(
 		ModalStyle style) =>
 		navigator.PresentAsync<ChromeDemoViewModel>(style);
-
-	[RelayCommand]
-	void Suggest(
-		SearchSuggestion suggestion) =>
-		SearchStatus = $"Picked: {suggestion.Text}";
 
 	[RelayCommand]
 	Task Dismiss() =>

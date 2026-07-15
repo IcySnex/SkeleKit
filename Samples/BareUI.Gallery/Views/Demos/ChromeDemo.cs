@@ -25,20 +25,12 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 		popoverButton.CommandParameter = ModalStyle.Popover(popoverButton, PopoverArrow.Up);
 
 		SearchPlaceholder = "Search chrome";
-		SearchObscuresBackground = true;
 		SearchScopes.Add("All");
 		SearchScopes.Add("Recent");
 		SearchScopes.Add("Starred");
 		SearchChanged = text => ViewModel.SearchStatus = $"Typing: {text}";
 		SearchScopeChanged = index => ViewModel.SearchStatus = $"Scope {index} selected";
 		SearchCancelled = () => ViewModel.SearchStatus = "Search cancelled";
-		SearchSuggestions =
-		[
-			new() { Text = "orange bars", Icon = "paintpalette" },
-			new() { Text = "leave guard", Icon = "hand.raised" },
-			new() { Text = "bottom toolbar", Icon = "dock.rectangle" }
-		];
-		SearchSuggestionCommand = ViewModel.SuggestCommand;
 
 		BottomToolbarItems.Add(new() { Icon = "square.and.arrow.up", Command = Command.From(() => ViewModel.SearchStatus = "Share tapped") });
 		BottomToolbarItems.Add(new() { Icon = "star", Command = Command.From(() => ViewModel.SearchStatus = "Star tapped") });
