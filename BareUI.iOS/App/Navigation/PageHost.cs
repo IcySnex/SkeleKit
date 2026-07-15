@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using ObjCRuntime;
 
 namespace BareUI;
@@ -552,6 +553,7 @@ internal sealed class PageHost : UIViewController
 			NavigationController?.DismissViewController(true, null);
 	}
 
+	[SupportedOSPlatform("ios26.0")]
 	UITabAccessory BuildAccessory(
 		ContentView page)
 	{
