@@ -392,6 +392,12 @@ internal sealed class PageHost : UIViewController
 		search.SearchSuggestions = suggestionItems;
 	}
 
+	internal void ReapplySearchSuggestions()
+	{
+		if (Page is { } page)
+			ApplySearchSuggestions(page);
+	}
+
 	internal void OnSuggestionSelected(
 		IUISearchSuggestion suggestion)
 	{
@@ -401,6 +407,10 @@ internal sealed class PageHost : UIViewController
 			return;
 
 		SearchSuggestion model = models[number.Int32Value];
+
+		// the tap fills the field, the way every system app treats a suggestion
+		if (search is not null)
+			search.SearchBar.Text = model.Text;
 
 		if (Page?.SearchSuggestionCommand is { } command && command.CanExecute(model))
 			command.Execute(model);
@@ -709,10 +719,10 @@ internal sealed class PageHost : UIViewController
 		{ }
 
 
-		// typing is already covered by the search bar's TextChanged
+		// UIKit drops the suggestions on every text change: push the page's current list back
 		public override void UpdateSearchResultsForSearchController(
-			UISearchController searchController)
-		{ }
+			UISearchController searchController) =>
+			host?.ReapplySearchSuggestions();
 
 		public override void UpdateSearchResults(
 			UISearchController searchController,

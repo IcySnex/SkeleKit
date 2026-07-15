@@ -11,7 +11,7 @@ public sealed class SearchSuggestion
 	public string Text { get; set; } = "";
 
 	/// <summary>
-	/// Secondary text shown with the suggestion, or null.
+	/// Secondary text for the suggestion, or null. iOS does not render it in every presentation.
 	/// </summary>
 	public string? Description { get; set; }
 
