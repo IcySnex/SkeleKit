@@ -21,7 +21,7 @@ public class BareWindowSceneDelegate : UIWindowSceneDelegate
 			RootViewController = app.BuildShell()
 		};
 
-		if (BareApplication.Accent is { } accent)
+		if (View.AppAccent is { } accent)
 			Window.TintColor = accent.ToUIColor();
 
 		Window.MakeKeyAndVisible();

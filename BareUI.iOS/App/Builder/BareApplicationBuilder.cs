@@ -50,7 +50,7 @@ public sealed class BareApplicationBuilder
 	public BareApplicationBuilder UseAccent(
 		Color accent)
 	{
-		BareApplication.Accent = accent;
+		View.AppAccent = accent;
 		return this;
 	}
 

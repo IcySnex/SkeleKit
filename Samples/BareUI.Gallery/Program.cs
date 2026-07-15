@@ -67,7 +67,8 @@ BareApplication.CreateBuilder()
 		pages.AddTransient((ActivityIndicatorDemoViewModel vm) => new ActivityIndicatorDemo(vm));
 		pages.AddTransient((DividerDemoViewModel vm) => new DividerDemo(vm));
 		pages.AddTransient((PickerDemoViewModel vm) => new PickerDemo(vm));
-		pages.AddTransient((ImageDemoViewModel vm) => new ImageDemo(vm));
+		// singleton on purpose: exercises re-realize on every push
+		pages.AddSingleton((ImageDemoViewModel vm) => new ImageDemo(vm));
 		pages.AddTransient((NativeViewDemoViewModel vm) => new NativeViewDemo(vm));
 		pages.AddTransient((KeyboardDemoViewModel vm) => new KeyboardDemo(vm));
 		pages.AddTransient((GridDemoViewModel vm) => new GridDemo(vm));

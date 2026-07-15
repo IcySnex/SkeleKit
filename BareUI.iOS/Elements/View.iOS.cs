@@ -72,12 +72,46 @@ public abstract partial class View
 
 		DropGradient();
 		DropMaterial();
+		DropInteractions();
 
 		native.RemoveFromSuperview();
 		if (OwnsNative)
 			native.Dispose();
 		native = null;
 		defaultTraits = null;
+	}
+
+	// kept ones would stick to the old native view and duplicate on re-realize
+	void DropInteractions()
+	{
+		DropRecognizer(ref tapRecognizer);
+		DropRecognizer(ref doubleTapRecognizer);
+		DropRecognizer(ref longPressRecognizer);
+		DropRecognizer(ref panRecognizer);
+		DropRecognizer(ref pinchRecognizer);
+		DropRecognizer(ref rotationRecognizer);
+
+		if (contextMenuInteraction is not null)
+		{
+			native?.RemoveInteraction(contextMenuInteraction);
+			contextMenuInteraction.Dispose();
+			contextMenuInteraction = null;
+		}
+
+		contextMenuDelegate?.Dispose();
+		contextMenuDelegate = null;
+		contextMenuActions = null;
+	}
+
+	void DropRecognizer<T>(
+		ref T? recognizer) where T : UIGestureRecognizer
+	{
+		if (recognizer is null)
+			return;
+
+		native?.RemoveGestureRecognizer(recognizer);
+		recognizer.Dispose();
+		recognizer = null;
 	}
 
 	private protected virtual void OnRealized()
@@ -317,8 +351,8 @@ public abstract partial class View
 		native.Hidden = !isVisible;
 		native.Alpha = (nfloat)Opacity;
 
-		// null means "inherit": UIKit walks the superview chain for it
-		native.TintColor = Tint?.ToUIColor();
+		// local only: nil lets UIKit inherit down the native tree
+		native.TintColor = LocalTint?.ToUIColor();
 
 		ApplyBackground();
 

@@ -51,8 +51,6 @@ public class BareApplication
 	/// </summary>
 	public IServiceProvider Services { get; }
 
-	internal static Color? Accent { get; set; }
-
 	internal Action? Backgrounded { get; set; }
 	internal Action? Foregrounded { get; set; }
 

@@ -512,18 +512,24 @@ public abstract partial class View
 	Brush? background;
 
 	/// <summary>
-	/// The accent color for this view and everything under it, or null to inherit the parent's. Controls that paint from their own color ignore it.
+	/// The accent color for this view and everything under it. Inherited from the parent unless set here, falling back to the app accent.
 	/// </summary>
 	public Color? Tint
 	{
-		get;
-		set => Set(ref field, value, ApplyTint, affectsMeasure: false);
+		get => tint ?? (Parent ?? TintHost)?.Tint ?? AppAccent;
+		set => Set(ref tint, value, ApplyTint, affectsMeasure: false);
 	}
+	Color? tint;
 
-	// the nearest tint up the tree: UIKit inherits its own tintColor, but a control that paints
-	// from its own color (a switch's fill, a button's configuration) never sees it
-	internal Color? EffectiveTint =>
-		Tint ?? Parent?.EffectiveTint;
+	// UseAccent's app-wide fallback
+	internal static Color? AppAccent;
+
+	// bridges inheritance into hosted trees (collection cells), where Parent is null
+	internal View? TintHost;
+
+	// set on this view itself, not inherited
+	internal Color? LocalTint =>
+		tint;
 
 	void ApplyTint()
 	{

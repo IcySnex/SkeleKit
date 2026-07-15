@@ -109,7 +109,7 @@ public class PageControl : Control
 		if (dotColor is { } dot)
 			Ui.PageIndicatorTintColor = dot.ToUIColor();
 
-		if ((currentDotColor ?? EffectiveTint) is { } currentDot)
+		if ((currentDotColor ?? Tint) is { } currentDot)
 			Ui.CurrentPageIndicatorTintColor = currentDot.ToUIColor();
 	}
 

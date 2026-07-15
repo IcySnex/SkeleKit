@@ -260,7 +260,7 @@ public class Image : Control
 	{
 		displayed = image;
 
-		UIImage? rendered = Tint is not null
+		UIImage? rendered = LocalTint is not null
 			? image?.ImageWithRenderingMode(UIImageRenderingMode.AlwaysTemplate)
 			: image;
 

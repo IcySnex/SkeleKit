@@ -264,7 +264,7 @@ public class Button : Control
 			}
 		}
 		// a configuration paints from its own colors, so an inherited tint has to be written into it
-		else if (EffectiveTint is { } accent)
+		else if (Tint is { } accent)
 		{
 			UIColor color = accent.ToUIColor();
 
