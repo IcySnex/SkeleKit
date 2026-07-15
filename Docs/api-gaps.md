@@ -56,12 +56,15 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ★ (skip) **Border on any view** — `layer.borderWidth/borderColor`; today only the `Border` panel strokes.
 - ★ (skip) **Per-corner rounding + continuous curve** — `MaskedCorners` and
   `CornerCurve = .continuous` (the Apple squircle — today's radius is the "cheap" circular look).
-- ~~★ **TintColor**~~ — **done** (`View.Tint`, inherited down the tree). Native `tintColor` inheritance
-  only reaches the controls that read it (`Slider`, `Stepper`, `ProgressBar`, symbols); a `UISwitch`
-  fill, a `UIActivityIndicatorView` and a `UIButton` configuration all paint from their own color, so
-  they fall back to `View.EffectiveTint` when the app sets none. A tint change walks the subtree
-  (`Panel` recurses, `CollectionView` forwards into live cells). An `Image` templates a raster only
-  from an *explicit* `Tint` — an inherited one would flatten a photo.
+- ~~★ **TintColor**~~ — **done** (`View.Tint`, an *inherited* property in the WPF sense: the getter
+  walks up to the parent unless set locally, the way SwiftUI's `.tint()` environment value does,
+  ending at the `UseAccent` color). UIKit's own `tintColor` inheritance only reaches the controls
+  that read it — a `UISwitch` fill, a `UIActivityIndicatorView` and a `UIButton` configuration each
+  paint from their own color and never see it, so they fall back to `Tint` when the app sets none
+  of their own. A tint change walks the subtree (a plain virtual-method walk, no events; `Panel`
+  recurses skipping locally-tinted branches, `CollectionView` forwards into live cells, whose trees
+  inherit across the cell boundary via `View.TintHost`). An `Image` templates a raster only from a
+  *locally* set tint (`View.LocalTint`) — an inherited one would flatten a photo.
 - ~~★ **Typed gestures beyond pan/tap**~~ — **done** (`OnLongPress`, `OnDoubleTap`, `OnPinch`,
   `OnRotate`).
 - ◆ (skip) **Pointer/hover effects (iPad)** — `UIPointerInteraction` lift/highlight; one enum property.
@@ -173,28 +176,25 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Near-end hook**~~ — **done** (`LoadMoreCommand` + `LoadMoreThreshold`, via `WillDisplayCell`).
 - ~~★ **Deselect on appear**~~ — **done** (`View.PageAppeared` walk off `ViewWillAppear`, so the row
   fades out with the pop rather than after it).
-- ◆ **Reorder** — diffable + `ReorderingHandlers`; drag-to-reorder with a moved-command.
-- ◆ **Edit mode & multi-select** — `AllowsMultipleSelectionDuringEditing`, checkmarks,
-  `SelectedItems` binding, Edit/Done toolbar pairing.
 - ◆ **Prefetching** — `UICollectionViewDataSourcePrefetching` driving the image loader.
 - ◆ **Context-menu previews** — custom preview view + `PreviewProvider` (peek content).
 - ★ (skip) **Section index** — A–Z fast-scroll strip (`IndexTitles`).
 
-### Bug — `ScrollTo` position lands wrong (2026-07-14)
+### Not a bug — `ScrollTo` was always correct (closed 2026-07-15)
 
-`ScrollTo(item, ScrollPosition)` ships but **does not work**. Verified on the sim with a 20+ row
-grid: `Top` lands ~3 rows below the target, `Bottom` ~2 rows below the top, `Center` is off as well.
-The enum maps onto `UICollectionViewScrollPosition` correctly, so the fault is elsewhere — prime
-suspect is that the cells are **self-sizing** (`PreferredLayoutAttributesFittingAttributes`), and
-`ScrollToItem` resolves the target from *estimated* layout attributes for rows it has never
-measured, so every unvisited row below the current viewport is mis-positioned. The usual fixes are
-to give the compositional group an absolute item height when the layout allows it, or to scroll in
-two passes (`ScrollToItem`, then re-measure on the next run-loop turn and correct the offset).
-Nothing else in the batch depends on it.
+The 2026-07-14 report ("Top lands ~3 rows below") was a misread of the demo: `ScrollTo(item,
+position)` brings *one item* into view aligned at a viewport edge (WPF `ScrollIntoView`), and the
+GridDemo target "Moon" sits in the 4th row — so "3 rows below the top" *is* the item at the top.
+Sim-verified with offset logs: all three positions land exact, even with `LoadMoreCommand` firing
+mid-jump. The interim self-sizing correction machinery was removed again; `ScrollTo` is one native
+`ScrollToItem` call. If real estimate drift ever shows on long unmeasured lists, the settle-loop
+approach lives in this file's history.
 
 ## App level
 
-- ~~★ **Global accent**~~ — **done** (`UseAccent`).
+- ~~★ **Global accent**~~ — **done** (`UseAccent`: window `TintColor` for the controls UIKit
+  reaches, plus the `View.Tint` root fallback for the self-painting ones — switch fills, spinners,
+  button configurations — which UIKit's inheritance never touches).
 - ~~★ **Scene lifecycle**~~ — **done** (`UseLifecycle(background, foreground)`).
 - ◆ (skip) **System pickers via navigator** — photo (`PHPickerViewController`), document
   (`UIDocumentPickerViewController`); both are present-and-await wrappers, AOT-safe.
