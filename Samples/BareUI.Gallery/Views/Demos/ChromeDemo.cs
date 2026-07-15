@@ -34,7 +34,7 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 		SearchCancelled = () => ViewModel.SearchStatus = "Search cancelled";
 		SearchSuggestions =
 		[
-			new() { Text = "orange bars", Description = "bar styling", Icon = "paintpalette" },
+			new() { Text = "orange bars", Icon = "paintpalette" },
 			new() { Text = "leave guard", Icon = "hand.raised" },
 			new() { Text = "bottom toolbar", Icon = "dock.rectangle" }
 		];
@@ -49,14 +49,15 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 			Content = new StackPanel
 			{
 				Spacing = 20,
-				Margin = new Thickness(16),
+				Margin = new Thickness(0, 16),
 				Children =
 				{
-					new Label { Style = Styles.Caption, Text = "Bar: orange accent, indigo title (collapse the large title)" },
+					new Label { Margin = new Thickness(16, 0), Style = Styles.Caption, Text = "Bar: orange accent, indigo title (collapse the large title)" },
 
-					new Label { Style = Styles.Caption, Text = "Leave guard: back button and sheet swipe ask first" },
+					new Label { Margin = new Thickness(16, 0), Style = Styles.Caption, Text = "Leave guard: back button and sheet swipe ask first" },
 					new StackPanel
 					{
+						Margin = new Thickness(16, 0),
 						Orientation = Orientation.Horizontal,
 						Spacing = 12,
 						Children =
@@ -70,16 +71,17 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 						}
 					},
 
-					new Label { Style = Styles.Caption, Text = "Search: type, switch scopes, cancel" },
-					new Label { Text = Bind(vm => vm.SearchStatus) },
+					new Label { Margin = new Thickness(16, 0), Style = Styles.Caption, Text = "Search: type, switch scopes, cancel" },
+					new Label { Margin = new Thickness(16, 0), Text = Bind(vm => vm.SearchStatus) },
 
-					new Label { Style = Styles.Caption, Text = "Modals: this page presented each way (guard blocks the swipe-down)" },
+					new Label { Margin = new Thickness(16, 0), Style = Styles.Caption, Text = "Modals: this page presented each way (guard blocks the swipe-down)" },
 					new ScrollView
 					{
 						Orientation = Orientation.Horizontal,
 						ShowsIndicator = false,
 						Content = new StackPanel
 						{
+							Margin = new Thickness(16, 0),
 							Orientation = Orientation.Horizontal,
 							Spacing = 8,
 							Children =
@@ -93,9 +95,9 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 							}
 						},
 					},
-					new Button { Text = "Dismiss this modal", Kind = ButtonStyle.Gray, Command = ViewModel.DismissCommand },
+					new Button { Margin = new Thickness(16, 0), Text = "Dismiss this modal", Kind = ButtonStyle.Gray, Command = ViewModel.DismissCommand },
 
-					new Label { Style = Styles.Caption, Text = "Bottom toolbar: share / star / trash" }
+					new Label { Margin = new Thickness(16, 0), Style = Styles.Caption, Text = "Bottom toolbar: share / star / trash" }
 				}
 			}
 		};
