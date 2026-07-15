@@ -139,6 +139,15 @@ internal sealed class Navigator(
 			sheet.PrefersGrabberVisible = style.Detents.Count > 1;
 		}
 
+		if (style.Presentation is ModalPresentation.Popover
+			&& style.Anchor is { IsRealized: true } anchor
+			&& wrapper.PopoverPresentationController is { } popover)
+		{
+			popover.SourceView = anchor.Native;
+			popover.SourceRect = anchor.Native.Bounds;
+			popover.PermittedArrowDirections = Directions(style.Arrows);
+		}
+
 		presenter.PresentViewController(wrapper, true, null);
 
 		return Task.CompletedTask;
@@ -155,6 +164,23 @@ internal sealed class Navigator(
 		detent is Detent.Medium
 			? UISheetPresentationControllerDetentIdentifier.Medium
 			: UISheetPresentationControllerDetentIdentifier.Large;
+
+	static UIPopoverArrowDirection Directions(
+		PopoverArrow arrows)
+	{
+		UIPopoverArrowDirection native = 0;
+
+		if (arrows.HasFlag(PopoverArrow.Up))
+			native |= UIPopoverArrowDirection.Up;
+		if (arrows.HasFlag(PopoverArrow.Down))
+			native |= UIPopoverArrowDirection.Down;
+		if (arrows.HasFlag(PopoverArrow.Left))
+			native |= UIPopoverArrowDirection.Left;
+		if (arrows.HasFlag(PopoverArrow.Right))
+			native |= UIPopoverArrowDirection.Right;
+
+		return native == 0 ? UIPopoverArrowDirection.Any : native;
+	}
 
 	public Task DismissAsync()
 	{
