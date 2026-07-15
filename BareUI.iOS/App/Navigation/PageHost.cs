@@ -350,10 +350,60 @@ internal sealed class PageHost : UIViewController
 			search.SearchBar.SelectedScopeButtonIndexChanged += (_, e) => page.NotifySearchScope((int)e.SelectedScope);
 		}
 
+		// rooted: SearchResultsUpdater is weak
+		searchUpdater = new(this);
+		search.SearchResultsUpdater = searchUpdater;
+		ApplySearchSuggestions(page);
+
 		NavigationItem.SearchController = search;
 		NavigationItem.HidesSearchBarWhenScrolling = page.HidesSearchBarWhenScrolling;
 
 		DefinesPresentationContext = true;
+	}
+
+	SearchUpdater? searchUpdater;
+	SearchSuggestion[]? suggestionModels;
+
+	// rooted: the controller's retain alone would let the peers die
+	UISearchSuggestionItem[]? suggestionItems;
+
+	internal void ApplySearchSuggestions(
+		ContentView page)
+	{
+		if (search is null)
+			return;
+
+		suggestionModels = [.. page.SearchSuggestions];
+		suggestionItems = new UISearchSuggestionItem[suggestionModels.Length];
+
+		for (int index = 0; index < suggestionModels.Length; index++)
+		{
+			SearchSuggestion suggestion = suggestionModels[index];
+
+			suggestionItems[index] = new(
+				(NSString)suggestion.Text,
+				suggestion.Description,
+				suggestion.Icon is { } icon ? UIImage.GetSystemImage(icon) : null)
+			{
+				RepresentedObject = NSNumber.FromInt32(index)
+			};
+		}
+
+		search.SearchSuggestions = suggestionItems;
+	}
+
+	internal void OnSuggestionSelected(
+		IUISearchSuggestion suggestion)
+	{
+		if (suggestion is not UISearchSuggestionItem { RepresentedObject: NSNumber number }
+			|| suggestionModels is not { } models
+			|| number.Int32Value >= models.Length)
+			return;
+
+		SearchSuggestion model = models[number.Int32Value];
+
+		if (Page?.SearchSuggestionCommand is { } command && command.CanExecute(model))
+			command.Execute(model);
 	}
 
 
@@ -642,5 +692,31 @@ internal sealed class PageHost : UIViewController
 		public override void DidAttemptToDismiss(
 			UIPresentationController presentationController) =>
 			host?.ConfirmDismiss();
+	}
+
+	sealed class SearchUpdater : UISearchResultsUpdating
+	{
+		readonly PageHost? host;
+
+		public SearchUpdater(
+			PageHost host)
+		{
+			this.host = host;
+		}
+
+		public SearchUpdater(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		// typing is already covered by the search bar's TextChanged
+		public override void UpdateSearchResultsForSearchController(
+			UISearchController searchController)
+		{ }
+
+		public override void UpdateSearchResults(
+			UISearchController searchController,
+			IUISearchSuggestion suggestion) =>
+			host?.OnSuggestionSelected(suggestion);
 	}
 }

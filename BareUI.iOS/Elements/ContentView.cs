@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 namespace BareUI;
 
@@ -163,6 +164,24 @@ public abstract partial class ContentView : Panel
 	public Action? SearchCancelled { get; set; }
 
 	/// <summary>
+	/// Suggestion rows under an active search field. Replace the list as the user types.
+	/// </summary>
+	public IReadOnlyList<SearchSuggestion> SearchSuggestions
+	{
+		get;
+		set
+		{
+			field = value;
+			ApplySearchSuggestionsCore();
+		}
+	} = [];
+
+	/// <summary>
+	/// Command invoked with the <see cref="SearchSuggestion"/> the user taps.
+	/// </summary>
+	public ICommand? SearchSuggestionCommand { get; set; }
+
+	/// <summary>
 	/// The page's element tree.
 	/// </summary>
 	public View? Content
@@ -240,6 +259,8 @@ public abstract partial class ContentView : Panel
 		ApplyTabBadgeCore();
 
 	partial void ApplyTabBadgeCore();
+
+	partial void ApplySearchSuggestionsCore();
 
 
 	protected override Size MeasureOverride(

@@ -27,6 +27,9 @@ public abstract partial class ContentView
 		host.TabBarItem.BadgeColor = TabBadgeColor?.ToUIColor();
 	}
 
+	partial void ApplySearchSuggestionsCore() =>
+		Host?.ApplySearchSuggestions(this);
+
 	private protected override void OnRealized()
 	{
 		if (ScrollsUnderBars
