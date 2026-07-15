@@ -127,6 +127,15 @@ public class Button : Control
 	public IList<MenuAction> Menu { get; } = [];
 
 	/// <summary>
+	/// When true the <see cref="Menu"/> acts as a popup picker: choosing an entry shows it as the button's title and fires its command.
+	/// </summary>
+	public bool SelectsFromMenu
+	{
+		get;
+		set => Set(ref field, value, ApplyMenu, affectsMeasure: false);
+	}
+
+	/// <summary>
 	/// Command invoked on tap; its CanExecute drives the enabled state.
 	/// </summary>
 	public ICommand? Command
@@ -314,6 +323,7 @@ public class Button : Control
 
 		Ui.Menu = UIMenu.Create(menuActions);
 		Ui.ShowsMenuAsPrimaryAction = true;
+		Ui.ChangesSelectionAsPrimaryAction = SelectsFromMenu;
 	}
 
 	void ApplyIsEnabled()
