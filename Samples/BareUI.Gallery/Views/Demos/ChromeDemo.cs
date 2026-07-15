@@ -25,6 +25,7 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 		popoverButton.CommandParameter = ModalStyle.Popover(popoverButton, PopoverArrow.Up);
 
 		SearchPlaceholder = "Search chrome";
+		SearchObscuresBackground = true;
 		SearchScopes.Add("All");
 		SearchScopes.Add("Recent");
 		SearchScopes.Add("Starred");
@@ -73,19 +74,24 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 					new Label { Text = Bind(vm => vm.SearchStatus) },
 
 					new Label { Style = Styles.Caption, Text = "Modals: this page presented each way (guard blocks the swipe-down)" },
-					new StackPanel
+					new ScrollView
 					{
 						Orientation = Orientation.Horizontal,
-						Spacing = 8,
-						Children =
+						ShowsIndicator = false,
+						Content = new StackPanel
 						{
-							new Button { Text = "Sheet", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "large" },
-							new Button { Text = "Medium", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "medium" },
-							new Button { Text = "Half → full", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "resizable" },
-							new Button { Text = "Form", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "form" },
-							new Button { Text = "Full", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "full" },
-							popoverButton
-						}
+							Orientation = Orientation.Horizontal,
+							Spacing = 8,
+							Children =
+							{
+								new Button { Text = "Sheet", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "large" },
+								new Button { Text = "Medium", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "medium" },
+								new Button { Text = "Half → full", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "resizable" },
+								new Button { Text = "Form", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "form" },
+								new Button { Text = "Full", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "full" },
+								popoverButton
+							}
+						},
 					},
 					new Button { Text = "Dismiss this modal", Kind = ButtonStyle.Gray, Command = ViewModel.DismissCommand },
 
