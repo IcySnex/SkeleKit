@@ -57,6 +57,16 @@ public partial class ChromeDemoViewModel(
 		});
 
 	[RelayCommand]
+	Task PresentPopover(
+		ModalStyle style) =>
+		navigator.PresentAsync<ChromeDemoViewModel>(style);
+
+	[RelayCommand]
+	void Suggest(
+		SearchSuggestion suggestion) =>
+		SearchStatus = $"Picked: {suggestion.Text}";
+
+	[RelayCommand]
 	Task Dismiss() =>
 		navigator.DismissAsync();
 }

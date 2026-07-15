@@ -29,7 +29,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   conflation; redesign candidate.
 - ~~★ **Search**~~ — **done** (`HidesSearchBarWhenScrolling`, `SearchScopes` +
   `SearchScopeChanged`, `SearchCancelled`, `SearchObscuresBackground`).
-- ◆ **Search suggestions** — `UISearchSuggestionItem` (iOS 16); typed suggestion list + pick command.
+- ~~◆ **Search suggestions**~~ — **done** (`ContentView.SearchSuggestions`, replaced live from
+  `SearchChanged`; tapping one invokes `SearchSuggestionCommand` with the `SearchSuggestion`.
+  The items and the `UISearchResultsUpdating` are rooted on the host — both are weak natively).
 - ~~★ **Status bar style per page**~~ — **done** (`ContentView.StatusBar`, `BareStack` forwards).
 - ~~★ **Tab badges**~~ — **done** (`ContentView.TabBadge` bindable + `TabBadgeColor`; applies to
   never-opened tabs too).
@@ -44,8 +46,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ★ (skip) **Custom detent heights** — `UISheetPresentationControllerDetent.Create(id, resolver)`
   takes any height (a mini-player peek, a Maps-style three-stop sheet). Declined: `Detent` would have
   to stop being an enum, and the resolver is another NSObject peer to root — too niche for the cost.
-- ◆ **Popover anchoring** — present as popover from a view/toolbar item with arrow direction
-  (currently no source anchor, iPad needs it).
+- ~~◆ **Popover anchoring**~~ — **done** (`ModalStyle.Popover(anchor, arrows)` — the static
+  property became a method; the anchor is a `View`, so a popover from a toolbar *item* still has
+  no spelling. The style carries the anchor through the ViewModel's `PresentAsync` untouched).
 - ★ (skip) **Share sheet** — `INavigator.ShareAsync(items)` over `UIActivityViewController`.
 - ★ (skip) **Open URL in-app** — `SFSafariViewController` wrapper on the navigator.
 - ~~◆ **Alert with text input**~~ — **done** (`INavigator.PromptAsync`, returns the typed string or
@@ -95,8 +98,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Image placement & padding**~~ — **done** (`Button.IconPlacement`); `ContentInsets` remain.
 - ~~★ **Size & shape**~~ — **done** (`Button.Size`; capsule already existed as `FilledCapsule`).
 - ~~★ **Role**~~ — **done** (`Button.IsDestructive`).
-- ◆ **Menu button** — ~~`Menu` + `ShowsMenuAsPrimaryAction`~~ **done** (`Button.Menu`); the
-  popup-selection variant (`ChangesSelectionAsPrimaryAction`) remains.
+- ~~◆ **Menu button**~~ — **done** (`Button.Menu`; the popup-selection variant is
+  `Button.SelectsFromMenu` — the chosen entry becomes the title and fires its command).
 - ~~★ **Loading state**~~ — **done** (`Button.IsLoading`, bindable).
 
 ## Image
@@ -135,7 +138,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `DotColor` when the control doesn't sit over a photo.
 - ▲ **WebView** — `WKWebView`: url/html, navigation events, JS eval. Big but standard.
 - ▲ **MapView** — `MKMapView`; probably out of scope, listed for completeness.
-- ★ **MenuPicker** — the `UIButton` popup variant above may cover this; decide one spelling.
+- ~~★ **MenuPicker**~~ — covered by `Button.SelectsFromMenu`; no separate control.
 
 ## Slider / Switch / Progress / Stepper
 

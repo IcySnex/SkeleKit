@@ -21,6 +21,9 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 
 		ConfirmLeave = ViewModel.ConfirmLeaveAsync;
 
+		Button popoverButton = new() { Text = "Popover", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentPopoverCommand };
+		popoverButton.CommandParameter = ModalStyle.Popover(popoverButton, PopoverArrow.Up);
+
 		SearchPlaceholder = "Search chrome";
 		SearchScopes.Add("All");
 		SearchScopes.Add("Recent");
@@ -28,6 +31,13 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 		SearchChanged = text => ViewModel.SearchStatus = $"Typing: {text}";
 		SearchScopeChanged = index => ViewModel.SearchStatus = $"Scope {index} selected";
 		SearchCancelled = () => ViewModel.SearchStatus = "Search cancelled";
+		SearchSuggestions =
+		[
+			new() { Text = "orange bars", Description = "bar styling", Icon = "paintpalette" },
+			new() { Text = "leave guard", Icon = "hand.raised" },
+			new() { Text = "bottom toolbar", Icon = "dock.rectangle" }
+		];
+		SearchSuggestionCommand = ViewModel.SuggestCommand;
 
 		BottomToolbarItems.Add(new() { Icon = "square.and.arrow.up", Command = Command.From(() => ViewModel.SearchStatus = "Share tapped") });
 		BottomToolbarItems.Add(new() { Icon = "star", Command = Command.From(() => ViewModel.SearchStatus = "Star tapped") });
@@ -73,7 +83,8 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 							new Button { Text = "Medium", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "medium" },
 							new Button { Text = "Half → full", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "resizable" },
 							new Button { Text = "Form", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "form" },
-							new Button { Text = "Full", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "full" }
+							new Button { Text = "Full", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentCommand, CommandParameter = "full" },
+							popoverButton
 						}
 					},
 					new Button { Text = "Dismiss this modal", Kind = ButtonStyle.Gray, Command = ViewModel.DismissCommand },

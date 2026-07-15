@@ -52,6 +52,19 @@ public class ButtonDemo : ContentView<ButtonDemoViewModel>
 						}
 					},
 
+					new Label { Style = Styles.Caption, Text = "Picker button — the choice becomes the title" },
+					new Button
+					{
+						Kind = ButtonStyle.Gray,
+						SelectsFromMenu = true,
+						Menu =
+						{
+							new MenuAction { Text = "Small" },
+							new MenuAction { Text = "Medium" },
+							new MenuAction { Text = "Large" }
+						}
+					},
+
 					new Label { Style = Styles.Caption, Text = "Bound command" },
 					new Button
 					{
