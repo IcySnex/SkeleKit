@@ -229,6 +229,9 @@ approach lives in this file's history.
   item-based bars).
 - ~~★ **Tab bar minimize**~~ — **done** (`Tabs.Minimizes()`, iOS 26; the accessory docks inline
   automatically).
+- ~~★ **Tab customization control**~~ — **done** (`Tab<TView>(title, icon, locked: true)` pins the
+  tab out of iPadOS's Edit mode: fixed placement, not hideable. Unlocked tabs keep the system
+  default of full user customization).
 
 - ~~★ **Global accent**~~ — **done** (`UseAccent`: window `TintColor` for the controls UIKit
   reaches, plus the `View.Tint` root fallback for the self-painting ones — switch fills, spinners,

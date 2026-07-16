@@ -154,6 +154,12 @@ public class BareApplication
 						definition.ViewModel.Name,
 						_ => stack);
 
+					if (definition.Locked)
+					{
+						tab.PreferredPlacement = UITabPlacement.Fixed;
+						tab.AllowsHiding = false;
+					}
+
 					root.Tab = tab;
 					root.Page?.ApplyTabBadge();
 

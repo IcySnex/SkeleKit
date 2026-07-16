@@ -8,7 +8,8 @@ public sealed class TabsBuilder
 	internal sealed record Definition(
 		Type ViewModel,
 		string Title,
-		string Icon);
+		string Icon,
+		bool Locked);
 
 
 	readonly ViewRegistry registry;
@@ -59,12 +60,14 @@ public sealed class TabsBuilder
 	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
 	/// <param name="title">The text displayed on the tab bar item.</param>
 	/// <param name="icon">The name or path of the icon resource for the tab.</param>
+	/// <param name="locked">Keeps the tab out of user customization: it cannot be hidden or moved.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Tab<TView>(
 		string title,
-		string icon) where TView : ContentView
+		string icon,
+		bool locked = false) where TView : ContentView
 	{
-		Definitions.Add(new(registry.ViewModelOf<TView>(), title, icon));
+		Definitions.Add(new(registry.ViewModelOf<TView>(), title, icon, locked));
 
 		return this;
 	}
