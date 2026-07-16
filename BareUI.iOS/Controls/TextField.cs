@@ -110,6 +110,24 @@ public class TextField : Control
 	KeyboardLook keyboardLook = KeyboardLook.Default;
 
 	/// <summary>
+	/// A bar above the raised keyboard with Done and optional previous/next arrows.
+	/// </summary>
+	public KeyboardToolbar KeyboardToolbar
+	{
+		get => keyboardToolbar;
+		set => Set(ref keyboardToolbar, value, ApplyToolbar, affectsMeasure: false);
+	}
+	KeyboardToolbar keyboardToolbar;
+
+	InputAccessory? accessory;
+
+	void ApplyToolbar()
+	{
+		accessory = keyboardToolbar is KeyboardToolbar.None ? null : new(this, keyboardToolbar);
+		Ui.InputAccessoryView = accessory?.Bar;
+	}
+
+	/// <summary>
 	/// Font size in points.
 	/// </summary>
 	public Bindable<double> FontSize
@@ -182,6 +200,7 @@ public class TextField : Control
 		ApplyKeyboard();
 		ApplyReturnKey();
 		ApplyTraits();
+		ApplyToolbar();
 	}
 
 	UITextField Ui => (UITextField)Native;

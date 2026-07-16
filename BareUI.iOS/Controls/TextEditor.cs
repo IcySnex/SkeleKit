@@ -60,6 +60,24 @@ public class TextEditor : Control
 	KeyboardLook keyboardLook = KeyboardLook.Default;
 
 	/// <summary>
+	/// A bar above the raised keyboard with Done and optional previous/next arrows.
+	/// </summary>
+	public KeyboardToolbar KeyboardToolbar
+	{
+		get => keyboardToolbar;
+		set => Set(ref keyboardToolbar, value, ApplyToolbar, affectsMeasure: false);
+	}
+	KeyboardToolbar keyboardToolbar;
+
+	InputAccessory? accessory;
+
+	void ApplyToolbar()
+	{
+		accessory = keyboardToolbar is KeyboardToolbar.None ? null : new(this, keyboardToolbar);
+		Ui.InputAccessoryView = accessory?.Bar;
+	}
+
+	/// <summary>
 	/// Font size in points.
 	/// </summary>
 	public Bindable<double> FontSize
@@ -115,6 +133,7 @@ public class TextEditor : Control
 		ApplyText();
 		ApplyFont();
 		ApplyTraits();
+		ApplyToolbar();
 	}
 
 	UITextView Ui => (UITextView)Native;

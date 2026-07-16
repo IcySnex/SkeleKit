@@ -138,8 +138,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `Autocorrection` drives both).
 - ~~★ **Clear button mode**~~ — **done** (`TextField.ClearButton`).
 - ◆ **Accessory icons in the field** — leading/trailing views (search icon, reveal-password eye).
-- ◆ **Keyboard toolbar** — `InputAccessoryView` with Done/arrows; one shared bar, big win with
-  `KeyboardDismiss`.
+- ~~◆ **Keyboard toolbar**~~ — **done** (`KeyboardToolbar` on `TextField`/`SecureField`/
+  `TextEditor`: `Done` dismisses, `Navigation` adds previous/next arrows walking the page's
+  inputs in tree order. The bar and its items are rooted on the control).
 - ★ (skip) **Max length / input filter** — `ShouldChangeCharacters` hook as `Func<string, bool>`.
 - ★ (skip) **TextEditor placeholder** — UIKit has none natively; overlay label, everyone needs it.
 - ~~★ **Font weight/design on inputs**~~ — **done** (`FontWeight`/`FontDesign` on both).
