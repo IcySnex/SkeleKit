@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace BareUI;
 
 /// <summary>
@@ -67,40 +65,17 @@ public sealed class TabsBuilder
 		return this;
 	}
 
-	internal Func<IServiceProvider, View>? AccessoryFactory { get; private set; }
+	internal Func<View>? AccessoryFactory { get; private set; }
 
 	/// <summary>
-	/// Shows a view in the tab bar's accessory slot, above the tabs. The view's IsVisible controls the slot. iOS 26 and later.
+	/// Shows a view of the given type in the tab bar's accessory slot. The view's IsVisible controls the slot. iOS 26 and later.
 	/// </summary>
-	/// <param name="create">Builds the accessory's view.</param>
+	/// <typeparam name="TView">The view type to host.</typeparam>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder Accessory(
-		Func<View> create)
+	public TabsBuilder Accessory<TView>()
+		where TView : View, new()
 	{
-		AccessoryFactory = _ => create();
-
-		return this;
-	}
-
-	/// <summary>
-	/// Shows a view in the tab bar's accessory slot, bound to a ViewModel from the services. iOS 26 and later.
-	/// </summary>
-	/// <typeparam name="TViewModel">The ViewModel type driving the accessory.</typeparam>
-	/// <param name="create">Builds the accessory's view around its ViewModel.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder Accessory<TViewModel>(
-		Func<TViewModel, View> create)
-		where TViewModel : class
-	{
-		AccessoryFactory = services =>
-		{
-			TViewModel viewModel = services.GetRequiredService<TViewModel>();
-
-			View view = create(viewModel);
-			view.BindingContext = viewModel;
-
-			return view;
-		};
+		AccessoryFactory = () => new TView();
 
 		return this;
 	}

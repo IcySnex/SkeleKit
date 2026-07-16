@@ -143,7 +143,7 @@ public class BareApplication
 
 				if (tabsBuilder?.AccessoryFactory is { } accessory && OperatingSystem.IsIOSVersionAtLeast(26))
 				{
-					accessoryContent = accessory(Services);
+					accessoryContent = accessory();
 					accessoryContent.VisibilityChanged = SyncAccessory;
 					accessoryHost = new(accessoryContent);
 					Accessory = new(accessoryHost);

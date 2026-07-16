@@ -29,9 +29,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `HidesBottomBarWhenPushed` idiom Apple's own apps use (Mail edit mode, Files). The 2026-07-15
   accessory path (per-page hand-built `UITabAccessory`) was removed — it repurposed Apple's
   app-global mini-player slot and hand-wired chrome.
-- ~~◆ **Tab accessory**~~ — **done** (`Tabs.Accessory(() => view)` or
-  `Tabs.Accessory((PlayerVm vm) => view)` with the ViewModel resolved from DI and set as the
-  root's BindingContext). The view's own `IsVisible` controls the slot — bind it or set it;
+- ~~◆ **Tab accessory**~~ — **done** (`Tabs.Accessory<PlayerBar>()`; the view resolves its
+  ViewModel from `BareApplication.Current.Services` in its ctor and sets its own
+  BindingContext). The view's own `IsVisible` controls the slot — bind it or set it;
   showing and hiding animates, and a page that hides the tab bar takes the accessory with it.
   Content rides in an `AccessoryHost` answering `IntrinsicContentSize` from our measure pass.
   iOS 26 only; earlier systems have no slot. **Gotcha (sim-verified):** the slot's glass
