@@ -21,35 +21,43 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 			Text = Bind(vm => vm.Message, (vm, value) => vm.Message = value ?? "")
 		};
 
-		// a custom keyboard bar: one view, Safari-style
+		// a custom keyboard bar: an inset glass capsule, Safari-style
 		field.KeyboardAccessory = new Overlay
 		{
-			Height = 54,
-			Background = new Material(MaterialKind.Glass),
+			Height = 66,
 			Children =
 			{
-				new StackPanel
+				new Overlay
 				{
-					Orientation = Orientation.Horizontal,
-					Spacing = 8,
-					Margin = new Thickness(12, 0),
-					HorizontalAlignment = HorizontalAlignment.Start,
-					VerticalAlignment = VerticalAlignment.Center,
+					Margin = new Thickness(16, 8),
+					CornerRadius = 25,
+					Background = new Material(MaterialKind.Glass),
 					Children =
 					{
-						new Button { Text = "👍", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "👍") },
-						new Button { Text = "🎬", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "🎬") }
-					}
-				},
+						new StackPanel
+						{
+							Orientation = Orientation.Horizontal,
+							Spacing = 8,
+							Margin = new Thickness(10, 0),
+							HorizontalAlignment = HorizontalAlignment.Start,
+							VerticalAlignment = VerticalAlignment.Center,
+							Children =
+							{
+								new Button { Text = "👍", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "👍") },
+								new Button { Text = "🎬", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "🎬") }
+							}
+						},
 
-				new Button
-				{
-					Text = "Done",
-					Kind = ButtonStyle.Plain,
-					Margin = new Thickness(0, 0, 12, 0),
-					HorizontalAlignment = HorizontalAlignment.End,
-					VerticalAlignment = VerticalAlignment.Center,
-					Command = Command.From(field.Unfocus)
+						new Button
+						{
+							Icon = "checkmark",
+							Kind = ButtonStyle.Plain,
+							Margin = new Thickness(0, 0, 10, 0),
+							HorizontalAlignment = HorizontalAlignment.End,
+							VerticalAlignment = VerticalAlignment.Center,
+							Command = Command.From(field.Unfocus)
+						}
+					}
 				}
 			}
 		};
