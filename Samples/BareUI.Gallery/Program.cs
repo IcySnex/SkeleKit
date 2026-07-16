@@ -11,8 +11,6 @@ BareApplication.CreateBuilder()
 	{
 		services.AddSingleton<IDemoCatalog, DemoCatalog>();
 		services.AddSingleton<IMovieService, MovieService>();
-		services.AddSingleton<PlayerBarViewModel>();
-
 		services.AddTransient<MenuViewModel>();
 		services.AddTransient<MovieInfoViewModel>();
 		services.AddTransient<BindingViewModel>();
@@ -41,6 +39,7 @@ BareApplication.CreateBuilder()
 		services.AddTransient<ListDemoViewModel>();
 		services.AddTransient<CarouselDemoViewModel>();
 		services.AddTransient<LiveListDemoViewModel>();
+		services.AddSingleton<PlayerBarViewModel>();
 	})
 	.UseTheme(theme => theme
 		.Style(new Style<Label>(label => label.TextColor = Colors.Label))

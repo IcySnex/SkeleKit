@@ -12,6 +12,13 @@ public class MenuView : ContentView<MenuViewModel>
 	{
 		Title = "BareUI Gallery";
 
+		// slim page (ADR-013): pushed as an instance, no ViewModel behind it
+		ToolbarItems.Add(new()
+		{
+			Icon = "info.circle",
+			Command = Command.From(() => Navigator.PushAsync(new AboutView("BareUI Gallery", "1.0")))
+		});
+
 		Content = new Grid
 		{
 			Rows = { GridLength.Auto, GridLength.Star },
