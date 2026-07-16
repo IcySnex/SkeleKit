@@ -380,11 +380,14 @@ public abstract partial class View
 		ApplyBackground();
 
 		// a clipped layer cannot draw a shadow: the shadow is outside the bounds. A corner radius alone
-		// still clips (an Image must round its content), a shadow turns that off
-		native.ClipsToBounds = ClipsToBounds || (CornerRadius > 0 && Shadow is null) || ClipsByDefault;
+		// still clips (an Image must round its content), a shadow turns that off. Glass rounds by
+		// corner configuration instead: a layer clip would scissor its rim lensing
+		bool glass = Background is Material { Kind: MaterialKind.Glass } && OperatingSystem.IsIOSVersionAtLeast(26);
+
+		native.ClipsToBounds = ClipsToBounds || (CornerRadius > 0 && Shadow is null && !glass) || ClipsByDefault;
 
 		ApplyShadow();
-		native.Layer.CornerRadius = (nfloat)CornerRadius;
+		native.Layer.CornerRadius = glass ? 0 : (nfloat)CornerRadius;
 
 		ApplyTransform();
 	}
@@ -534,6 +537,14 @@ public abstract partial class View
 		}
 		else
 			materialView.Effect = effect;
+
+		if (material.Kind is MaterialKind.Glass && OperatingSystem.IsIOSVersionAtLeast(26))
+		{
+			// the glass renderer draws its rim against this shape; a layer clip would flatten it
+			materialView.CornerConfiguration = UICornerConfiguration.CreateUniformCorners(UICornerRadius.CreateFixed((nfloat)CornerRadius));
+			materialView.ClipsToBounds = false;
+			return;
+		}
 
 		materialView.Layer.CornerRadius = (nfloat)CornerRadius;
 		materialView.ClipsToBounds = CornerRadius > 0;
