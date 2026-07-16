@@ -274,6 +274,16 @@ public abstract partial class View
 	public double LongPressDuration { get; set; } = 0.5;
 
 	/// <summary>
+	/// Invoked with true on touch-down anywhere in the view, false on release or cancel. Child controls still receive their touches.
+	/// </summary>
+	public Action<bool>? Pressed
+	{
+		get => pressed;
+		set => Set(ref pressed, value, ApplyInteraction, affectsMeasure: false);
+	}
+	Action<bool>? pressed;
+
+	/// <summary>
 	/// Invoked as the view is dragged. Drive an <see cref="Animator"/> from it to make an animation interactive.
 	/// </summary>
 	public Action<PanGesture>? Panned

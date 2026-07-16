@@ -87,6 +87,7 @@ public abstract partial class View
 		DropRecognizer(ref tapRecognizer);
 		DropRecognizer(ref doubleTapRecognizer);
 		DropRecognizer(ref longPressRecognizer);
+		DropRecognizer(ref pressRecognizer);
 		DropRecognizer(ref panRecognizer);
 		DropRecognizer(ref pinchRecognizer);
 		DropRecognizer(ref rotationRecognizer);
@@ -133,6 +134,7 @@ public abstract partial class View
 	UITapGestureRecognizer? tapRecognizer;
 	UITapGestureRecognizer? doubleTapRecognizer;
 	UILongPressGestureRecognizer? longPressRecognizer;
+	UILongPressGestureRecognizer? pressRecognizer;
 	UIPanGestureRecognizer? panRecognizer;
 	UIPinchGestureRecognizer? pinchRecognizer;
 	UIRotationGestureRecognizer? rotationRecognizer;
@@ -177,6 +179,25 @@ public abstract partial class View
 
 		if (longPressRecognizer is not null)
 			longPressRecognizer.MinimumPressDuration = LongPressDuration;
+
+		if (pressed is not null && pressRecognizer is null)
+		{
+			UILongPressGestureRecognizer recognizer = null!;
+			recognizer = new(() =>
+			{
+				if (recognizer.State is UIGestureRecognizerState.Began)
+					pressed?.Invoke(true);
+				else if (recognizer.State is UIGestureRecognizerState.Ended or UIGestureRecognizerState.Cancelled or UIGestureRecognizerState.Failed)
+					pressed?.Invoke(false);
+			});
+
+			// zero duration turns it into a touch-down tracker; not cancelling keeps child controls live
+			recognizer.MinimumPressDuration = 0;
+			recognizer.CancelsTouchesInView = false;
+
+			pressRecognizer = recognizer;
+			native.AddGestureRecognizer(recognizer);
+		}
 
 		if (panned is not null && panRecognizer is null)
 		{
@@ -229,6 +250,8 @@ public abstract partial class View
 			doubleTapRecognizer.Enabled = doubleTapCommand is not null && IsEnabled;
 		if (longPressRecognizer is not null)
 			longPressRecognizer.Enabled = longPressCommand is not null && IsEnabled;
+		if (pressRecognizer is not null)
+			pressRecognizer.Enabled = pressed is not null && IsEnabled;
 		if (panRecognizer is not null)
 			panRecognizer.Enabled = panned is not null && IsEnabled;
 		if (pinchRecognizer is not null)

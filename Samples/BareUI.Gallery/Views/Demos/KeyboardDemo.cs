@@ -22,44 +22,46 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 		};
 
 		// a custom keyboard bar: an inset glass capsule, Safari-style
+		Overlay capsule = new()
+		{
+			Margin = new Thickness(16, 8),
+			CornerRadius = 25,
+			Background = new Material(MaterialKind.Glass),
+			Children =
+			{
+				new StackPanel
+				{
+					Orientation = Orientation.Horizontal,
+					Spacing = 8,
+					Margin = new Thickness(10, 0),
+					HorizontalAlignment = HorizontalAlignment.Start,
+					VerticalAlignment = VerticalAlignment.Center,
+					Children =
+					{
+						new Button { Text = "👍", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "👍") },
+						new Button { Text = "🎬", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "🎬") }
+					}
+				},
+
+				new Button
+				{
+					Icon = "checkmark",
+					Kind = ButtonStyle.Plain,
+					Margin = new Thickness(0, 0, 10, 0),
+					HorizontalAlignment = HorizontalAlignment.End,
+					VerticalAlignment = VerticalAlignment.Center,
+					Command = Command.From(field.Unfocus)
+				}
+			}
+		};
+
+		// the whole bar swells under any touch; the buttons still fire
+		capsule.Pressed = down => View.Animate(0.2, () => capsule.Scale = down ? 1.04 : 1.0);
+
 		field.KeyboardAccessory = new Overlay
 		{
 			Height = 66,
-			Children =
-			{
-				new Overlay
-				{
-					Margin = new Thickness(16, 8),
-					CornerRadius = 25,
-					Background = new Material(MaterialKind.Glass),
-					Children =
-					{
-						new StackPanel
-						{
-							Orientation = Orientation.Horizontal,
-							Spacing = 8,
-							Margin = new Thickness(10, 0),
-							HorizontalAlignment = HorizontalAlignment.Start,
-							VerticalAlignment = VerticalAlignment.Center,
-							Children =
-							{
-								new Button { Text = "👍", Kind = ButtonStyle.ClearGlass, Command = Command.From(() => ViewModel.Message += "👍") },
-								new Button { Text = "🎬", Kind = ButtonStyle.ClearGlass, Command = Command.From(() => ViewModel.Message += "🎬") }
-							}
-						},
-
-						new Button
-						{
-							Icon = "checkmark",
-							Kind = ButtonStyle.ClearGlass,
-							Margin = new Thickness(0, 0, 10, 0),
-							HorizontalAlignment = HorizontalAlignment.End,
-							VerticalAlignment = VerticalAlignment.Center,
-							Command = Command.From(field.Unfocus)
-						}
-					}
-				}
-			}
+			Children = { capsule }
 		};
 
 		Content = new StackPanel
