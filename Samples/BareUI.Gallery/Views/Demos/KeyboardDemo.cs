@@ -25,7 +25,7 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 		Overlay capsule = new()
 		{
 			Margin = new Thickness(16, 8),
-			CornerRadius = 25,
+			CornerRadius = 23,
 			Background = new Material(MaterialKind.Glass),
 			Children =
 			{
@@ -55,12 +55,11 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 			}
 		};
 
-		// the whole bar springs under any touch; the glass draws rim and glow itself
-		capsule.Pressed = down => View.Animate(Animation.Spring(0.45, damping: 0.45), () => capsule.Scale = down ? 1.04 : 1.0);
+		capsule.Pressed = down => View.Animate(Animation.Spring(0.45, damping: 0.45), () => capsule.Scale = down ? 1.002 : 1.0);
 
 		field.KeyboardAccessory = new Overlay
 		{
-			Height = 66,
+			Height = 62,
 			Children = { capsule }
 		};
 
