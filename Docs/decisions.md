@@ -359,3 +359,34 @@ code, so no boundary is crossed.
 - `Navigator` on `ContentView` is protected and app-scoped; MVVM pages ignore it (their
   ViewModels take `INavigator` by constructor as before).
 - The generator's `[Page]` stays exclusively an MVVM concern.
+
+## ADR-014: Shell vocabulary — universal tabs, one iPad scope, one bubble
+
+**Decision:** the tab shell splits into a universal vocabulary and a single iPad scope.
+Universal: `Tab<TView>(title, icon)`, `Group(title, icon, children)` (a `UITabGroup`: collapsible
+sidebar section on iPad, drill-in tab on iPhone), `Search<TView>()`, `Accessory<TView>()`,
+`Minimizes()`. iPad-only, in one deletable block: `OnIPad(pad => ...)` with `Sidebar()`,
+`PlaceTab<TView>(TabPlacement)` overriding a universal tab's customization behaviour, `Tab`/`Group`
+declaring iPad-only destinations (default `SidebarOnly`; never constructed on iPhone), and
+`SidebarFooter<TView>()` hosting a view in the sidebar's bottom bar. The trailing bubble beside the
+tab pill is single and dual-mode: `Search<TView>()` or `Action(icon, ...)` — a FAB implemented by
+repurposing `UISearchTab` (custom icon/title, `AutomaticallyActivatesSearch` off, selection vetoed
+through `ShouldSelectTab` and routed into the action). Declaring both throws at build. `Action` has
+two overloads per the slim-page rule: `Action(icon, Action<INavigator>)` for code-behind apps and
+`Action<TViewModel>(icon, Func<TViewModel, ICommand>)` resolving from DI.
+
+**Context:** placement flags on the universal `Tab(...)` polluted iPhone-only code with iPad
+concepts; extra iPad destinations (`Optional`/`SidebarOnly`) declared universally would be
+unreachable on iPhone, which has no Edit UI; and Apple ships no API for a second bubble or custom
+views in the tab bar — `UISearchTab` is the only separated slot, so it is the FAB or the search,
+never both. Placement customization works on the iPad top bar without a sidebar, so the scope is
+named for the device, not the sidebar. iPadOS persists user customization keyed by tab identifier
+(our ViewModel type name): renaming a ViewModel resets the user's arrangement.
+
+**Consequences:**
+- An iPhone-only app's `Tabs` block contains zero iPad vocabulary; deleting `OnIPad(...)` changes
+  nothing else.
+- A page can be a sidebar destination on iPad and an ordinary pushed page on iPhone — tabs and the
+  page registry are independent.
+- Group children keep their own navigation stacks (`ManagingNavigationController` deferred).
+- Group identifiers derive from their titles: retitling a group resets its user arrangement.
