@@ -25,6 +25,7 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 					new Label { Style = Styles.Caption, Text = "Two-way" },
 					new TextField
 					{
+						KeyboardToolbar = KeyboardToolbar.Navigation,
 						Placeholder = "Name",
 						Text = Bind(vm => vm.Text, (vm, value) => vm.Text = value ?? "")
 					},
@@ -33,6 +34,7 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 					new Label { Style = Styles.Caption, Text = "Email keyboard" },
 					new TextField
 					{
+						KeyboardToolbar = KeyboardToolbar.Navigation,
 						Placeholder = "you@example.com",
 						Keyboard = KeyboardType.Email,
 						ReturnKey = ReturnKeyType.Next,
@@ -42,6 +44,7 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 					new Label { Style = Styles.Caption, Text = "SecureField — autofills a saved password" },
 					new SecureField
 					{
+						KeyboardToolbar = KeyboardToolbar.Navigation,
 						Placeholder = "Password",
 						ContentKind = ContentKind.Password,
 						ReturnKey = ReturnKeyType.Done,
@@ -51,6 +54,7 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 					new Label { Style = Styles.Caption, Text = "One-time code — autofills from Messages" },
 					new TextField
 					{
+						KeyboardToolbar = KeyboardToolbar.Done,
 						Placeholder = "123456",
 						ContentKind = ContentKind.OneTimeCode,
 						Keyboard = KeyboardType.Numeric

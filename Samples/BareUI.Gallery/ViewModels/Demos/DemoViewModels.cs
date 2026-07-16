@@ -77,7 +77,7 @@ public partial class SearchTabDemoViewModel : ObservableObject
 public partial class PlayerBarViewModel : ObservableObject
 {
 	[ObservableProperty]
-	public partial bool Visible { get; set; }
+	public partial bool Visible { get; set; } = false;
 
 	[RelayCommand]
 	void Play() =>
