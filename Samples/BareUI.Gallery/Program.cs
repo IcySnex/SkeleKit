@@ -53,7 +53,7 @@ BareApplication.CreateBuilder()
 		.Tab<MenuView>("Controls", "square.grid.2x2")
 		.Tab<BindingView>("Bindings", "link")
 		// .Search<SearchTabDemo>()
-		.Action("plus", () => BareApplication.Current?.Services.GetRequiredService<INavigator>().PushAsync<ListDemoViewModel>())
+		.Bubble<ListDemo>("List", "list.bullet")
 		.OnIPad(pad => pad
 			.Sidebar()
 			.PlaceTab<MenuView>(TabPlacement.Locked)

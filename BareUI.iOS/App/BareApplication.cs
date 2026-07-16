@@ -291,8 +291,8 @@ public class BareApplication
 				if (iPad is not null)
 					tabs.AddRange(iPad.Nodes.Select(node => BuildTab(node, false)));
 
-				if (tabsBuilder is { SearchViewModel: not null, ActionFactory: not null })
-					throw new InvalidOperationException("The bubble is single: declare Search or Action, not both.");
+				if (tabsBuilder is { SearchViewModel: not null } and ({ BubbleFactory: not null } or { BubbleViewModel: not null }))
+					throw new InvalidOperationException("The bubble is single: declare Search or Bubble, not both.");
 
 				if (tabsBuilder?.SearchViewModel is { } searchViewModel)
 				{
@@ -303,7 +303,22 @@ public class BareApplication
 
 					tabs.Add(search);
 				}
-				else if (tabsBuilder?.ActionFactory is { } action)
+				else if (tabsBuilder?.BubbleViewModel is { } bubbleViewModel)
+				{
+					// a destination bubble: a real page with native selection, no veto
+					UINavigationController stack = Stack(bubbleViewModel, tabsBuilder.UseLargeTitles);
+
+					UISearchTab bubble = new(_ => stack)
+					{
+						Title = tabsBuilder.BubbleTitle!,
+						Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
+						AutomaticallyActivatesSearch = false
+					};
+
+					((PageHost)stack.ViewControllers![0]).Tab = bubble;
+					tabs.Add(bubble);
+				}
+				else if (tabsBuilder?.BubbleFactory is { } action)
 				{
 					// the bubble repurposed: selection is vetoed by the delegate and runs this instead
 					BubbleAction = action(Services);
@@ -311,7 +326,7 @@ public class BareApplication
 					UISearchTab bubble = new(static _ => new UIViewController())
 					{
 						Title = "Action",
-						Image = UIImage.GetSystemImage(tabsBuilder.ActionIcon!),
+						Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
 						AutomaticallyActivatesSearch = false
 					};
 

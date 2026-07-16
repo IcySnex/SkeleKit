@@ -34,9 +34,13 @@ public sealed class TabsBuilder
 
 	internal Type? SearchViewModel { get; private set; }
 
-	internal string? ActionIcon { get; private set; }
+	internal string? BubbleIcon { get; private set; }
 
-	internal Func<IServiceProvider, Action>? ActionFactory { get; private set; }
+	internal Func<IServiceProvider, Action>? BubbleFactory { get; private set; }
+
+	internal Type? BubbleViewModel { get; private set; }
+
+	internal string? BubbleTitle { get; private set; }
 
 	internal TabBarMinimize Minimize { get; private set; } = TabBarMinimize.Never;
 
@@ -87,17 +91,17 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Puts an action button in the separated bubble instead of search. The bubble is single: Search and Action exclude each other.
+	/// Puts an action button in the separated bubble instead of search. The bubble is single: Search and Bubble exclude each other.
 	/// </summary>
 	/// <param name="icon">The SF Symbol shown in the bubble.</param>
 	/// <param name="tapped">Runs on tap.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder Action(
+	public TabsBuilder Bubble(
 		string icon,
 		Action tapped)
 	{
-		ActionIcon = icon;
-		ActionFactory = _ => tapped;
+		BubbleIcon = icon;
+		BubbleFactory = _ => tapped;
 
 		return this;
 	}
@@ -109,13 +113,13 @@ public sealed class TabsBuilder
 	/// <param name="icon">The SF Symbol shown in the bubble.</param>
 	/// <param name="command">Picks the command off the ViewModel.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder Action<TViewModel>(
+	public TabsBuilder Bubble<TViewModel>(
 		string icon,
 		Func<TViewModel, ICommand> command)
 		where TViewModel : class
 	{
-		ActionIcon = icon;
-		ActionFactory = services =>
+		BubbleIcon = icon;
+		BubbleFactory = services =>
 		{
 			ICommand resolved = command(services.GetRequiredService<TViewModel>());
 
@@ -125,6 +129,24 @@ public sealed class TabsBuilder
 					resolved.Execute(null);
 			};
 		};
+
+		return this;
+	}
+
+	/// <summary>
+	/// Puts a destination page in the separated bubble: selecting it shows the page with native selection.
+	/// </summary>
+	/// <typeparam name="TView">The type of the content view to host in the bubble.</typeparam>
+	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
+	/// <param name="icon">The SF Symbol shown in the bubble.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public TabsBuilder Bubble<TView>(
+		string title,
+		string icon) where TView : ContentView
+	{
+		BubbleTitle = title;
+		BubbleIcon = icon;
+		BubbleViewModel = registry.ViewModelOf<TView>();
 
 		return this;
 	}
