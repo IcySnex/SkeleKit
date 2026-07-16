@@ -83,8 +83,7 @@ public class BareApplication
 	// intercepts the bubble's touch before UIKit starts the selection slide; the delegate veto
 	// stays as the fallback wherever the bar's private structure hides the view from us
 	internal void AttachBubbleInterceptor(
-		UITabBarController controller,
-		int attempt = 0)
+		UITabBarController controller)
 	{
 		if (ActionTab is null || BubbleAction is null)
 			return;
@@ -93,14 +92,7 @@ public class BareApplication
 			return;
 
 		if (FindBubbleView(controller.View!) is not { } bubble)
-		{
-			if (attempt < 5)
-				CoreFoundation.DispatchQueue.MainQueue.DispatchAfter(
-					new CoreFoundation.DispatchTime(CoreFoundation.DispatchTime.Now, 300_000_000),
-					() => AttachBubbleInterceptor(controller, attempt + 1));
-
 			return;
-		}
 
 		UILongPressGestureRecognizer recognizer = null!;
 		recognizer = new(() =>
