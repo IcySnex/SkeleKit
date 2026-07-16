@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using UIKit;
 
 namespace BareUI;
@@ -6,6 +7,13 @@ namespace BareUI;
 public abstract partial class ContentView
 {
 	internal PageHost? Host { get; set; }
+
+	/// <summary>
+	/// The application's navigator, for navigation from page code. ViewModels take INavigator by constructor instead.
+	/// </summary>
+	protected INavigator Navigator =>
+		BareApplication.Current?.Services.GetRequiredService<INavigator>()
+		?? throw new InvalidOperationException("There is no running application.");
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public UIViewController? Controller =>

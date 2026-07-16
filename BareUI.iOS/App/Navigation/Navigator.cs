@@ -82,6 +82,27 @@ internal sealed class Navigator(
 		return Task.CompletedTask;
 	}
 
+	public Task PushAsync(
+		ContentView page)
+	{
+		if (currentStack() is not UINavigationController stack)
+			throw new InvalidOperationException("There is no navigation stack to push onto.");
+
+		stack.PushViewController(Host(page), true);
+
+		return Task.CompletedTask;
+	}
+
+	// a page instance navigates once: a shown one is still owned by its controller
+	PageHost Host(
+		ContentView page)
+	{
+		if (page is { Host: not null, IsRealized: true })
+			throw new InvalidOperationException($"This {page.GetType().Name} is already presented. Create a new instance per navigation.");
+
+		return Track(page);
+	}
+
 	public Task PopAsync()
 	{
 		currentStack()?.PopViewController(true);
@@ -110,12 +131,21 @@ internal sealed class Navigator(
 
 	public Task PresentAsync(
 		object viewModel,
+		ModalStyle style) =>
+		PresentCore(Track(registry.CreatePage(viewModel)), style);
+
+	public Task PresentAsync(
+		ContentView page,
+		ModalStyle style) =>
+		PresentCore(Host(page), style);
+
+	Task PresentCore(
+		PageHost host,
 		ModalStyle style)
 	{
 		if (Top() is not { } presenter)
 			return Task.CompletedTask;
 
-		PageHost host = Track(registry.CreatePage(viewModel));
 		UINavigationController wrapper = new(host);
 
 		wrapper.ModalPresentationStyle = style.Presentation switch

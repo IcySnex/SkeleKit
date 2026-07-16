@@ -28,6 +28,14 @@ public interface INavigator
 	Task PushAsync(
 		object viewModel);
 
+	/// <summary>
+	/// Pushes a page instance directly, without a ViewModel or registration. Create a new instance per navigation.
+	/// </summary>
+	/// <param name="page">The page to push.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PushAsync(
+		ContentView page);
+
 
 	/// <summary>
 	/// Pops the top page off the current navigation stack.
@@ -69,6 +77,16 @@ public interface INavigator
 	/// <returns>A task representing the async operation.</returns>
 	Task PresentAsync(
 		object viewModel,
+		ModalStyle style);
+
+	/// <summary>
+	/// Presents a page instance directly, without a ViewModel or registration. Create a new instance per navigation.
+	/// </summary>
+	/// <param name="page">The page to present.</param>
+	/// <param name="style">The modal style and presentation configuration.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PresentAsync(
+		ContentView page,
 		ModalStyle style);
 
 
