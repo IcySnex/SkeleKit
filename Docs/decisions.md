@@ -372,8 +372,9 @@ declaring iPad-only destinations (default `SidebarOnly`; never constructed on iP
 tab pill is single and dual-mode: `Search<TView>()` or `Action(icon, ...)` — a FAB implemented by
 repurposing `UISearchTab` (custom icon/title, `AutomaticallyActivatesSearch` off, selection vetoed
 through `ShouldSelectTab` and routed into the action). Declaring both throws at build. `Action` has
-two overloads per the slim-page rule: `Action(icon, Action<INavigator>)` for code-behind apps and
-`Action<TViewModel>(icon, Func<TViewModel, ICommand>)` resolving from DI.
+two overloads per the slim-page rule: `Action(icon, Action)` for code-behind apps (fetch the
+navigator yourself if needed) and `Action<TViewModel>(icon, Func<TViewModel, ICommand>)` resolving
+from DI.
 
 **Context:** placement flags on the universal `Tab(...)` polluted iPhone-only code with iPad
 concepts; extra iPad destinations (`Optional`/`SidebarOnly`) declared universally would be
