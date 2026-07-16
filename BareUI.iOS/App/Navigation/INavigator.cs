@@ -6,6 +6,14 @@ namespace BareUI;
 public interface INavigator
 {
 	/// <summary>
+	/// Selects the tab with the given title, as declared on <c>Tab(title, ...)</c>.
+	/// </summary>
+	/// <param name="title">The tab's title.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task SelectTabAsync(
+		string title);
+
+	/// <summary>
 	/// Pushes a new page onto the stack, resolving its view model from the service container.
 	/// </summary>
 	/// <typeparam name="TViewModel">The type of the view model to resolve.</typeparam>

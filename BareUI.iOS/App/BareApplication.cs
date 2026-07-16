@@ -82,6 +82,32 @@ public class BareApplication
 
 	// intercepts the bubble's touch before UIKit starts the selection slide; the delegate veto
 	// stays as the fallback wherever the bar's private structure hides the view from us
+	// the platform convention on retapping the selected tab: pop to root, else scroll to top;
+	// a page's TabReselected replaces it
+	internal void HandleReselect(
+		UITabBarController controller)
+	{
+		if (controller.SelectedViewController is not UINavigationController stack)
+			return;
+
+		PageHost? root = stack.ViewControllers?.FirstOrDefault() as PageHost;
+
+		if (root?.Page?.TabReselected is { } handler)
+		{
+			handler();
+			return;
+		}
+
+		if (stack.ViewControllers?.Length > 1)
+		{
+			stack.PopToRootViewController(true);
+			return;
+		}
+
+		if (root?.Page?.Native.Subviews.FirstOrDefault() is UIScrollView scroll)
+			scroll.SetContentOffset(new(scroll.ContentOffset.X, -scroll.AdjustedContentInset.Top), true);
+	}
+
 	internal void AttachBubbleInterceptor(
 		UITabBarController controller)
 	{
@@ -333,14 +359,15 @@ public class BareApplication
 					ActionTab = bubble;
 					tabs.Add(bubble);
 
-					tabsDelegate = new(this);
-					controller.Delegate = tabsDelegate;
-
 					// the bar's views exist only after the first layout
 					CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => AttachBubbleInterceptor(controller));
 				}
 
 				controller.SetTabs([.. tabs], false);
+
+				// always: it also handles the reselect convention
+				tabsDelegate = new(this);
+				controller.Delegate = tabsDelegate;
 
 				if (iPad?.UseSidebar is true)
 					controller.Mode = UITabBarControllerMode.TabSidebar;
@@ -425,6 +452,9 @@ internal sealed class TabsDelegate : UITabBarControllerDelegate
 
 			return false;
 		}
+
+		if (tabBarController.SelectedTab?.Identifier == tab.Identifier)
+			app?.HandleReselect(tabBarController);
 
 		return true;
 	}

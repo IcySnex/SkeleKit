@@ -43,6 +43,45 @@ internal sealed class Navigator(
 	}
 
 
+	public Task SelectTabAsync(
+		string title)
+	{
+		if (Tabs() is not { } tabs)
+			throw new InvalidOperationException("There is no tab shell to select in.");
+
+		if (Find(tabs.Tabs, title) is not { } tab)
+			throw new InvalidOperationException($"No tab titled '{title}'.");
+
+		tabs.SelectedTab = tab;
+
+		return Task.CompletedTask;
+	}
+
+	static UITab? Find(
+		UITab[] tabs,
+		string title)
+	{
+		foreach (UITab tab in tabs)
+		{
+			if (tab.Title == title)
+				return tab;
+
+			if (tab is UITabGroup group && Find(group.Children, title) is { } match)
+				return match;
+		}
+
+		return null;
+	}
+
+	static UITabBarController? Tabs() =>
+		UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows)
+			.FirstOrDefault(window => window.IsKeyWindow)?
+			.RootViewController as UITabBarController;
+
+
 	readonly List<PageHost> hosts = [];
 
 

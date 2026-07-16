@@ -97,6 +97,11 @@ public abstract partial class ContentView : Panel
 	public bool HidesTabBar { get; set; }
 
 	/// <summary>
+	/// Invoked when this page's tab is tapped while already selected, replacing the default pop-to-root / scroll-to-top.
+	/// </summary>
+	public Action? TabReselected { get; set; }
+
+	/// <summary>
 	/// The badge on this page's tab bar item, or null for none. Applies even while the tab was never opened.
 	/// </summary>
 	public Bindable<string?> TabBadge
