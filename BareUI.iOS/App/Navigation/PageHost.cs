@@ -415,7 +415,7 @@ internal sealed class PageHost : UIViewController
 		if (TabBarController is { } tabs
 			&& OperatingSystem.IsIOSVersionAtLeast(26)
 			&& BareApplication.Current is { Accessory: { } accessory } app)
-			tabs.SetBottomAccessory(app.AccessoryShown && !HidesBottomBarWhenPushed ? accessory : null, animated);
+			tabs.SetBottomAccessory(app.AccessoryWanted && !HidesBottomBarWhenPushed ? accessory : null, animated);
 
 		// bar-wide, so every page restores it; null falls back to the app accent
 		NavigationController?.NavigationBar.TintColor = Page.BarAccent?.ToUIColor();

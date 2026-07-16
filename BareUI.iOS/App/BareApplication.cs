@@ -22,22 +22,24 @@ public class BareApplication
 	public static BareApplication? Current { get; private set; }
 
 
-	static UINavigationController? CurrentStack()
-	{
-		UIViewController? root = UIApplication.SharedApplication
+	static UIViewController? Root() =>
+		UIApplication.SharedApplication
 			.ConnectedScenes
 			.OfType<UIWindowScene>()
 			.SelectMany(scene => scene.Windows)
 			.FirstOrDefault(window => window.IsKeyWindow)?
 			.RootViewController;
 
-		return root switch
+	static UINavigationController? CurrentStack() =>
+		Root() switch
 		{
 			UITabBarController tabs => tabs.SelectedViewController as UINavigationController,
 			UINavigationController stack => stack,
 			_ => null
 		};
-	}
+
+	static UITabBarController? CurrentTabs() =>
+		Root() as UITabBarController;
 
 
 	readonly ViewRegistry registry;
@@ -56,8 +58,21 @@ public class BareApplication
 	View? accessoryContent;
 	AccessoryHost? accessoryHost;
 
-	// the app's intent; a page hiding the tab bar takes the accessory with it regardless
-	internal bool AccessoryShown { get; set; } = true;
+	// intent lives on the view itself; a page hiding the tab bar overrides it
+	internal bool AccessoryWanted =>
+		accessoryContent?.IsVisible.Value is true;
+
+	void SyncAccessory()
+	{
+		if (Accessory is null
+			|| !OperatingSystem.IsIOSVersionAtLeast(26)
+			|| CurrentTabs() is not { } tabs)
+			return;
+
+		bool barHidden = (CurrentStack()?.TopViewController as PageHost)?.HidesBottomBarWhenPushed is true;
+
+		tabs.SetBottomAccessory(AccessoryWanted && !barHidden ? Accessory : null, animated: true);
+	}
 
 	internal Action? Backgrounded { get; set; }
 	internal Action? Foregrounded { get; set; }
@@ -129,11 +144,11 @@ public class BareApplication
 				if (tabsBuilder?.AccessoryFactory is { } accessory && OperatingSystem.IsIOSVersionAtLeast(26))
 				{
 					accessoryContent = accessory(Services);
+					accessoryContent.VisibilityChanged = SyncAccessory;
 					accessoryHost = new(accessoryContent);
 					Accessory = new(accessoryHost);
-					AccessoryShown = tabsBuilder.AccessoryVisibleInitially;
 
-					if (AccessoryShown)
+					if (AccessoryWanted)
 						controller.BottomAccessory = Accessory;
 				}
 

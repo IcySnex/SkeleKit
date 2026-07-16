@@ -43,35 +43,6 @@ internal sealed class Navigator(
 	}
 
 
-	static UITabBarController? Tabs() =>
-		UIApplication.SharedApplication
-			.ConnectedScenes
-			.OfType<UIWindowScene>()
-			.SelectMany(scene => scene.Windows)
-			.FirstOrDefault(window => window.IsKeyWindow)?
-			.RootViewController as UITabBarController;
-
-	public bool AccessoryVisible
-	{
-		get => BareApplication.Current is { Accessory: not null, AccessoryShown: true };
-		set
-		{
-			if (BareApplication.Current is not { Accessory: { } accessory } app)
-				return;
-
-			app.AccessoryShown = value;
-
-			if (!OperatingSystem.IsIOSVersionAtLeast(26) || Tabs() is not { } tabs)
-				return;
-
-			// a page that hides the tab bar keeps the accessory away no matter the intent
-			bool barHidden = (currentStack()?.TopViewController as PageHost)?.HidesBottomBarWhenPushed is true;
-
-			tabs.SetBottomAccessory(value && !barHidden ? accessory : null, animated: true);
-		}
-	}
-
-
 	readonly List<PageHost> hosts = [];
 
 

@@ -68,22 +68,28 @@ public partial class ChromeDemoViewModel(
 
 public class AnimationDemoViewModel;
 
+public partial class PlayerBarViewModel : ObservableObject
+{
+	[ObservableProperty]
+	public partial bool Visible { get; set; }
+}
+
 public partial class AccessoryDemoViewModel(
-	INavigator navigator) : ObservableObject
+	PlayerBarViewModel player) : ObservableObject
 {
 	[ObservableProperty]
 	public partial bool ShowsAccessory { get; set; } = true;
 
 	partial void OnShowsAccessoryChanged(
 		bool value) =>
-		navigator.AccessoryVisible = value;
+		player.Visible = value;
 
 	// the accessory only accompanies this page: the rest of the gallery stays clean
 	public void Entered() =>
-		navigator.AccessoryVisible = ShowsAccessory;
+		player.Visible = ShowsAccessory;
 
 	public void Left() =>
-		navigator.AccessoryVisible = false;
+		player.Visible = false;
 }
 
 public class NativeViewDemoViewModel;

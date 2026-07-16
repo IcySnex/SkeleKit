@@ -493,10 +493,19 @@ public abstract partial class View
 	public Bindable<bool> IsVisible
 	{
 		get => isVisible;
-		set => isVisibleBinding = Register(isVisibleBinding, value, value => Set(ref isVisible, value, ApplyVisualState));
+		set => isVisibleBinding = Register(isVisibleBinding, value, value => Set(ref isVisible, value, ApplyVisibility));
 	}
 	bool isVisible = true;
 	Binding<bool>? isVisibleBinding;
+
+	// set only on the tab accessory root: the shell removes the slot when it hides
+	internal Action? VisibilityChanged;
+
+	void ApplyVisibility()
+	{
+		ApplyVisualState();
+		VisibilityChanged?.Invoke();
+	}
 
 
 	// Visual properties

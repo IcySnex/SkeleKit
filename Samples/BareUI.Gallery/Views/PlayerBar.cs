@@ -1,4 +1,5 @@
 using BareUI;
+using BareUI.Gallery.ViewModels.Demos;
 
 namespace BareUI.Gallery.Views;
 
@@ -9,23 +10,25 @@ public class PlayerBar : Overlay
 {
 	public PlayerBar()
 	{
+		IsVisible = BindingFactory.Bind((PlayerBarViewModel vm) => vm.Visible);
+
 		Children.Add(new StackPanel
 		{
 			Orientation = Orientation.Horizontal,
 			Spacing = 12,
-			Margin = new Thickness(12, 8),
+			Margin = new Thickness(12, 12),
 			HorizontalAlignment = HorizontalAlignment.Start,
 			VerticalAlignment = VerticalAlignment.Center,
 			Children =
 			{
+				// a flat background here would be repainted by the slot's glass treatment
 				new Image
 				{
 					Source = ImageSource.Symbol("music.note"),
-					SymbolSize = 20,
-					Width = 36,
-					Height = 36,
-					CornerRadius = 8,
-					Background = Colors.Gray5
+					SymbolSize = 22,
+					Width = 32,
+					Height = 32,
+					VerticalAlignment = VerticalAlignment.Center
 				},
 
 				new Label

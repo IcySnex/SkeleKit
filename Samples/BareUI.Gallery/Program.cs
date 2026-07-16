@@ -19,6 +19,7 @@ BareApplication.CreateBuilder()
 		services.AddTransient<StylingDemoViewModel>();
 		services.AddTransient<ChromeDemoViewModel>();
 		services.AddTransient<AccessoryDemoViewModel>();
+		services.AddSingleton<PlayerBarViewModel>();
 		services.AddTransient<AnimationDemoViewModel>();
 		services.AddTransient<ButtonDemoViewModel>();
 		services.AddTransient<TextFieldDemoViewModel>();
@@ -80,7 +81,7 @@ BareApplication.CreateBuilder()
 	})
 	.Tabs(tabs => tabs
 		.LargeTitles()
-		.Accessory(() => new PlayerBar(), visible: false)
+		.Accessory((PlayerBarViewModel vm) => new PlayerBar())
 		.Tab<MenuView>("Controls", "square.grid.2x2")
 		.Tab<BindingView>("Bindings", "link"))
 	.Build()

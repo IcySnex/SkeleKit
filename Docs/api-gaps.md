@@ -30,12 +30,15 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   accessory path (per-page hand-built `UITabAccessory`) was removed — it repurposed Apple's
   app-global mini-player slot and hand-wired chrome.
 - ~~◆ **Tab accessory**~~ — **done** (`Tabs.Accessory(() => view)` or
-  `Tabs.Accessory((PlayerVm vm) => view)` with the ViewModel resolved from DI, the `UsePages`
-  closure trick; `INavigator.AccessoryVisible` shows/hides it, animated). The content rides in an
-  `AccessoryHost` that answers `IntrinsicContentSize` from our measure pass. iOS 26 only; on
-  older systems the slot silently does not exist. **Follow-up:** the compact/minimized variant
-  (`TabBarMinimizeBehavior` + the accessory environment trait) — untouched, the bar never
-  minimizes today.
+  `Tabs.Accessory((PlayerVm vm) => view)` with the ViewModel resolved from DI and set as the
+  root's BindingContext). The view's own `IsVisible` controls the slot — bind it or set it;
+  showing and hiding animates, and a page that hides the tab bar takes the accessory with it.
+  Content rides in an `AccessoryHost` answering `IntrinsicContentSize` from our measure pass.
+  iOS 26 only; earlier systems have no slot. **Gotcha (sim-verified):** the slot's glass
+  treatment repaints flat `Background` fills as tint- or vibrancy-colored shapes — use real
+  content (symbols, images, text), not colored tiles. **Follow-up:** the compact/minimized
+  variant (`TabBarMinimizeBehavior` + the accessory environment trait); the bar never minimizes
+  today.
 - ~~★ **Search**~~ — **done** (`HidesSearchBarWhenScrolling`, `SearchScopes` +
   `SearchScopeChanged`, `SearchCancelled`, `SearchObscuresBackground`).
 - ◆ (skip) **Search suggestions** — built on `UISearchSuggestionItem` 2026-07-15, then **removed

@@ -6,11 +6,6 @@ namespace BareUI;
 public interface INavigator
 {
 	/// <summary>
-	/// Whether the tab accessory registered with <c>Tabs.Accessory</c> is shown, while the tab bar itself is. Changes animate. False when none is registered.
-	/// </summary>
-	bool AccessoryVisible { get; set; }
-
-	/// <summary>
 	/// Pushes a new page onto the stack, resolving its view model from the service container.
 	/// </summary>
 	/// <typeparam name="TViewModel">The type of the view model to resolve.</typeparam>

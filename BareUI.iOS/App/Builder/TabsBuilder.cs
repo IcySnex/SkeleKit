@@ -69,38 +69,38 @@ public sealed class TabsBuilder
 
 	internal Func<IServiceProvider, View>? AccessoryFactory { get; private set; }
 
-	internal bool AccessoryVisibleInitially { get; private set; } = true;
-
 	/// <summary>
-	/// Hosts a view in the tab bar's accessory slot — the app-global bar floating above the tabs, like Music's mini player. Toggle it with <see cref="INavigator.AccessoryVisible"/>. iOS 26 and later.
+	/// Shows a view in the tab bar's accessory slot, above the tabs. The view's IsVisible controls the slot. iOS 26 and later.
 	/// </summary>
 	/// <param name="create">Builds the accessory's view.</param>
-	/// <param name="visible">Whether the accessory starts out shown.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Accessory(
-		Func<View> create,
-		bool visible = true)
+		Func<View> create)
 	{
 		AccessoryFactory = _ => create();
-		AccessoryVisibleInitially = visible;
 
 		return this;
 	}
 
 	/// <summary>
-	/// Hosts a view in the tab bar's accessory slot, built around a ViewModel resolved from the services. iOS 26 and later.
+	/// Shows a view in the tab bar's accessory slot, bound to a ViewModel from the services. iOS 26 and later.
 	/// </summary>
 	/// <typeparam name="TViewModel">The ViewModel type driving the accessory.</typeparam>
 	/// <param name="create">Builds the accessory's view around its ViewModel.</param>
-	/// <param name="visible">Whether the accessory starts out shown.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Accessory<TViewModel>(
-		Func<TViewModel, View> create,
-		bool visible = true)
+		Func<TViewModel, View> create)
 		where TViewModel : class
 	{
-		AccessoryFactory = services => create(services.GetRequiredService<TViewModel>());
-		AccessoryVisibleInitially = visible;
+		AccessoryFactory = services =>
+		{
+			TViewModel viewModel = services.GetRequiredService<TViewModel>();
+
+			View view = create(viewModel);
+			view.BindingContext = viewModel;
+
+			return view;
+		};
 
 		return this;
 	}
