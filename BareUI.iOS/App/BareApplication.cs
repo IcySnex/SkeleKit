@@ -78,6 +78,57 @@ public class BareApplication
 	internal UITab? ActionTab { get; private set; }
 	internal Action? BubbleAction { get; private set; }
 	TabsDelegate? tabsDelegate;
+	UILongPressGestureRecognizer? bubbleTap;
+
+	// intercepts the bubble's touch before UIKit starts the selection slide; the delegate veto
+	// stays as the fallback wherever the bar's private structure hides the view from us
+	internal void AttachBubbleInterceptor(
+		UITabBarController controller,
+		int attempt = 0)
+	{
+		if (ActionTab?.Title is not { } label || BubbleAction is null)
+			return;
+
+		if (bubbleTap is { View: not null })
+			return;
+
+		if (FindByLabel(controller.TabBar, label) is not { } bubble)
+		{
+			if (attempt < 5)
+				CoreFoundation.DispatchQueue.MainQueue.DispatchAfter(
+					new CoreFoundation.DispatchTime(CoreFoundation.DispatchTime.Now, 300_000_000),
+					() => AttachBubbleInterceptor(controller, attempt + 1));
+
+			return;
+		}
+
+		UILongPressGestureRecognizer recognizer = null!;
+		recognizer = new(() =>
+		{
+			if (recognizer.State is UIGestureRecognizerState.Began)
+				BubbleAction?.Invoke();
+		});
+
+		recognizer.MinimumPressDuration = 0;
+		recognizer.CancelsTouchesInView = true;
+
+		bubbleTap = recognizer;
+		bubble.AddGestureRecognizer(recognizer);
+	}
+
+	static UIView? FindByLabel(
+		UIView root,
+		string label)
+	{
+		if (root.AccessibilityLabel == label)
+			return root;
+
+		foreach (UIView subview in root.Subviews)
+			if (FindByLabel(subview, label) is { } match)
+				return match;
+
+		return null;
+	}
 
 	// the sidebar footer, rooted here
 	View? footerContent;
@@ -260,6 +311,9 @@ public class BareApplication
 
 					tabsDelegate = new(this);
 					controller.Delegate = tabsDelegate;
+
+					// the bar's views exist only after the first layout
+					CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => AttachBubbleInterceptor(controller));
 				}
 
 				controller.SetTabs([.. tabs], false);
@@ -341,6 +395,10 @@ internal sealed class TabsDelegate : UITabBarControllerDelegate
 		{
 			// next turn: running it inside the veto collides its animation with the capsule's return
 			CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => app.BubbleAction?.Invoke());
+
+			// landing here means the interceptor is missing (first run or a rebuilt bar): re-attach
+			app.AttachBubbleInterceptor(tabBarController);
+
 			return false;
 		}
 
