@@ -485,14 +485,16 @@ public abstract partial class View
 	void ApplyMaterial(
 		Material material)
 	{
-		UIBlurEffect effect = UIBlurEffect.FromStyle(material.Kind switch
-		{
-			MaterialKind.UltraThin => UIBlurEffectStyle.SystemUltraThinMaterial,
-			MaterialKind.Thin => UIBlurEffectStyle.SystemThinMaterial,
-			MaterialKind.Thick => UIBlurEffectStyle.SystemThickMaterial,
-			MaterialKind.Chrome => UIBlurEffectStyle.SystemChromeMaterial,
-			_ => UIBlurEffectStyle.SystemMaterial
-		});
+		UIVisualEffect effect = material.Kind is MaterialKind.Glass && OperatingSystem.IsIOSVersionAtLeast(26)
+			? new UIGlassEffect { Interactive = true }
+			: UIBlurEffect.FromStyle(material.Kind switch
+			{
+				MaterialKind.UltraThin => UIBlurEffectStyle.SystemUltraThinMaterial,
+				MaterialKind.Thin => UIBlurEffectStyle.SystemThinMaterial,
+				MaterialKind.Thick => UIBlurEffectStyle.SystemThickMaterial,
+				MaterialKind.Chrome or MaterialKind.Glass => UIBlurEffectStyle.SystemChromeMaterial,
+				_ => UIBlurEffectStyle.SystemMaterial
+			});
 
 		if (materialView is null)
 		{
@@ -500,7 +502,9 @@ public abstract partial class View
 			{
 				Frame = native!.Bounds,
 				AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
-				UserInteractionEnabled = false
+
+				// interactive glass lights up under the finger, so it has to receive touches
+				UserInteractionEnabled = material.Kind is MaterialKind.Glass
 			};
 
 			native.InsertSubview(materialView, 0);

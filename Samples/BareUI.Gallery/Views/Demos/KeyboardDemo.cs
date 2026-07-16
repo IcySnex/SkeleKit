@@ -25,7 +25,7 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 		field.KeyboardAccessory = new Overlay
 		{
 			Height = 54,
-			Background = new Material(MaterialKind.Chrome),
+			Background = new Material(MaterialKind.Glass),
 			Children =
 			{
 				new StackPanel
@@ -37,15 +37,15 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 					VerticalAlignment = VerticalAlignment.Center,
 					Children =
 					{
-						new Button { Text = "👍", Kind = ButtonStyle.Glass, Command = Command.From(() => ViewModel.Message += "👍") },
-						new Button { Text = "🎬", Kind = ButtonStyle.Glass, Command = Command.From(() => ViewModel.Message += "🎬") }
+						new Button { Text = "👍", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "👍") },
+						new Button { Text = "🎬", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "🎬") }
 					}
 				},
 
 				new Button
 				{
 					Text = "Done",
-					Kind = ButtonStyle.ProminentGlass,
+					Kind = ButtonStyle.Plain,
 					Margin = new Thickness(0, 0, 12, 0),
 					HorizontalAlignment = HorizontalAlignment.End,
 					VerticalAlignment = VerticalAlignment.Center,

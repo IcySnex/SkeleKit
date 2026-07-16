@@ -170,7 +170,12 @@ public enum MaterialKind
 	/// <summary>
 	/// The material used behind bars and toolbars.
 	/// </summary>
-	Chrome
+	Chrome,
+
+	/// <summary>
+	/// The Liquid Glass surface; touches light it up. Renders as Chrome before iOS 26.
+	/// </summary>
+	Glass
 }
 
 /// <summary>
