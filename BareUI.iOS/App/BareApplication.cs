@@ -154,6 +154,21 @@ public class BareApplication
 
 				// stacks build eagerly so a badge set during page construction lands on a never-opened tab.
 				// A group shares one navigation controller; its children provide bare pages into it
+				void Place(UITab tab, TabPlacement placement)
+				{
+					if (placement is not TabPlacement.Automatic)
+						tab.PreferredPlacement = placement switch
+						{
+							TabPlacement.Pinned => UITabPlacement.Pinned,
+							TabPlacement.SidebarOnly => UITabPlacement.SidebarOnly,
+							TabPlacement.Optional => UITabPlacement.Optional,
+							_ => UITabPlacement.Fixed
+						};
+
+					if (placement is TabPlacement.Locked)
+						tab.AllowsHiding = false;
+				}
+
 				UITab BuildTab(TabsBuilder.Node node, bool grouped)
 				{
 					if (node is TabsBuilder.GroupNode group)
@@ -173,6 +188,8 @@ public class BareApplication
 
 							native.ManagingNavigationController = shared;
 						}
+
+						Place(native, iPad?.GroupPlacements.GetValueOrDefault(group.Title, group.Placement) ?? group.Placement);
 
 						return native;
 					}
@@ -200,19 +217,7 @@ public class BareApplication
 						leaf.ViewModel.Name,
 						provider);
 
-					TabPlacement placement = iPad?.Placements.GetValueOrDefault(leaf.ViewModel, leaf.Placement) ?? leaf.Placement;
-
-					if (placement is not TabPlacement.Automatic)
-						tab.PreferredPlacement = placement switch
-						{
-							TabPlacement.Pinned => UITabPlacement.Pinned,
-							TabPlacement.SidebarOnly => UITabPlacement.SidebarOnly,
-							TabPlacement.Optional => UITabPlacement.Optional,
-							_ => UITabPlacement.Fixed
-						};
-
-					if (placement is TabPlacement.Locked)
-						tab.AllowsHiding = false;
+					Place(tab, iPad?.Placements.GetValueOrDefault(leaf.ViewModel, leaf.Placement) ?? leaf.Placement);
 
 					root.Tab = tab;
 					root.Page?.ApplyTabBadge();
