@@ -22,6 +22,13 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 		};
 
 		// a custom keyboard bar: an inset glass capsule, Safari-style
+		// the wash sits over the glass and under the content: pressing lights the whole capsule
+		Overlay highlight = new()
+		{
+			Background = Colors.White.WithAlpha(0.12),
+			Opacity = 0
+		};
+
 		Overlay capsule = new()
 		{
 			Margin = new Thickness(16, 8),
@@ -29,6 +36,8 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 			Background = new Material(MaterialKind.Glass),
 			Children =
 			{
+				highlight,
+
 				new StackPanel
 				{
 					Orientation = Orientation.Horizontal,
@@ -45,7 +54,7 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 
 				new Button
 				{
-					Icon = "checkmark",
+					Text = "Done",
 					Kind = ButtonStyle.Plain,
 					Margin = new Thickness(0, 0, 10, 0),
 					HorizontalAlignment = HorizontalAlignment.End,
@@ -55,8 +64,12 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 			}
 		};
 
-		// the whole bar swells under any touch; the buttons still fire
-		capsule.Pressed = down => View.Animate(0.2, () => capsule.Scale = down ? 1.04 : 1.0);
+		// the whole bar swells and lights under any touch; the buttons still fire
+		capsule.Pressed = down => View.Animate(0.15, () =>
+		{
+			capsule.Scale = down ? 1.04 : 1.0;
+			highlight.Opacity = down ? 1 : 0;
+		});
 
 		field.KeyboardAccessory = new Overlay
 		{
