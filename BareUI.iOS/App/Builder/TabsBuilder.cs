@@ -93,13 +93,16 @@ public sealed class TabsBuilder
 	/// <summary>
 	/// Puts an action button in the separated bubble instead of search. The bubble is single: Search and Bubble exclude each other.
 	/// </summary>
+	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
 	/// <param name="icon">The SF Symbol shown in the bubble.</param>
 	/// <param name="tapped">Runs on tap.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Bubble(
+		string title,
 		string icon,
 		Action tapped)
 	{
+		BubbleTitle = title;
 		BubbleIcon = icon;
 		BubbleFactory = _ => tapped;
 
@@ -110,14 +113,17 @@ public sealed class TabsBuilder
 	/// Puts an action button in the separated bubble, firing a command from a ViewModel resolved from the services.
 	/// </summary>
 	/// <typeparam name="TViewModel">The ViewModel type carrying the command.</typeparam>
+	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
 	/// <param name="icon">The SF Symbol shown in the bubble.</param>
 	/// <param name="command">Picks the command off the ViewModel.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Bubble<TViewModel>(
+		string title,
 		string icon,
 		Func<TViewModel, ICommand> command)
 		where TViewModel : class
 	{
+		BubbleTitle = title;
 		BubbleIcon = icon;
 		BubbleFactory = services =>
 		{

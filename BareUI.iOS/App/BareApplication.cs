@@ -325,7 +325,7 @@ public class BareApplication
 
 					UISearchTab bubble = new(static _ => new UIViewController())
 					{
-						Title = "Action",
+						Title = tabsBuilder.BubbleTitle!,
 						Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
 						AutomaticallyActivatesSearch = false
 					};
