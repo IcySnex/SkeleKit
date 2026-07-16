@@ -417,6 +417,17 @@ public abstract partial class View
 	internal UIView? BackgroundView =>
 		materialView;
 
+	// interactive glass only glows for touches inside its own tree: a glass panel hosts its
+	// children in the effect's content view, everything else in the layout host
+	internal UIView ChildHost =>
+		materialView is { } material && Background is Material { Kind: MaterialKind.Glass }
+			? material.ContentView
+			: Native;
+
+	// a background swap can change the child host: the panel re-parents its children
+	private protected virtual void ChildHostChanged()
+	{ }
+
 	void ApplyBackground()
 	{
 		if (native is null)
@@ -453,6 +464,8 @@ public abstract partial class View
 				DropMaterial();
 				break;
 		}
+
+		ChildHostChanged();
 	}
 
 	// both fills sit under the view's *subviews*, but over a control's own drawing — a UILabel renders

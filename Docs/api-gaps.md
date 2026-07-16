@@ -88,7 +88,13 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   inherit across the cell boundary via `View.TintHost`). An `Image` templates a raster only from a
   *locally* set tint (`View.LocalTint`) — an inherited one would flatten a photo.
 - ~~★ **Typed gestures beyond pan/tap**~~ — **done** (`OnLongPress`, `OnDoubleTap`, `OnPinch`,
-  `OnRotate`).
+  `OnRotate`; plus the `Pressed` touch-down stream, which observes without stealing).
+- ~~◆ **Liquid Glass**~~ — **done** (`MaterialKind.Glass` renders an interactive `UIGlassEffect`:
+  the rim shapes through `CornerConfiguration` off the same `View.CornerRadius` — a layer clip
+  would flatten it — and a glass panel hosts its children in the effect's content view, so the
+  glow tracks touches on them too. `ButtonStyle.Glass`/`ProminentGlass`/`ClearGlass` wrap the
+  button configurations. Not exposed: `UIGlassContainerEffect` droplet merging — add when a real
+  screen needs it).
 - ◆ (skip) **Pointer/hover effects (iPad)** — `UIPointerInteraction` lift/highlight; one enum property.
 - ~~◆ **Context menu on any view**~~ — **done** (`View.ContextMenu`, same `MenuAction` model). The
   list's row menu is now `CollectionView.ItemContextMenu` — a `CollectionView` is a `View`, so the

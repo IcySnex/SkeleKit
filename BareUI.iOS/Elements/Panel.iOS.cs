@@ -22,10 +22,16 @@ public abstract partial class Panel
 			SyncNativeChildren();
 	}
 
+	private protected override void ChildHostChanged()
+	{
+		if (IsRealized)
+			SyncNativeChildren();
+	}
+
 	// diff the host's subviews against Children: keep what is still there, only add/remove/move
 	void SyncNativeChildren()
 	{
-		UIView host = Native;
+		UIView host = ChildHost;
 
 		HashSet<UIView> wanted = [];
 		foreach (View child in Children)
@@ -38,8 +44,8 @@ public abstract partial class Panel
 
 		UIView[] subviews = host.Subviews;
 
-		// a material background holds subview 0, so the children start one slot in
-		int offset = BackgroundView is null ? 0 : 1;
+		// in the layout host a material background holds subview 0; the effect's content view is clean
+		int offset = ReferenceEquals(host, Native) && BackgroundView is not null ? 1 : 0;
 
 		for (int index = 0; index < Children.Count; index++)
 		{
