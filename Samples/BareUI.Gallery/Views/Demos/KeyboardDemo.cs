@@ -55,8 +55,12 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 			}
 		};
 
-		// the whole bar swells under any touch; the glass itself draws the glow
-		capsule.Pressed = down => View.Animate(0.15, () => capsule.Scale = down ? 1.04 : 1.0);
+		// the whole bar springs and glows under any touch; the glass itself draws the rim
+		capsule.Pressed = down => View.Animate(Animation.Spring(0.45, damping: 0.45), () =>
+		{
+			capsule.Scale = down ? 1.04 : 1.0;
+			capsule.Shadow = down ? new Shadow { Color = Colors.Blue, Radius = 25, Opacity = 0.4 } : null;
+		});
 
 		field.KeyboardAccessory = new Overlay
 		{
