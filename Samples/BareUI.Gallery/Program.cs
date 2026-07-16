@@ -40,6 +40,7 @@ BareApplication.CreateBuilder()
 		services.AddTransient<CarouselDemoViewModel>();
 		services.AddTransient<LiveListDemoViewModel>();
 		services.AddSingleton<PlayerBarViewModel>();
+		services.AddTransient<SearchTabDemoViewModel>();
 	})
 	.UseTheme(theme => theme
 		.Style(new Style<Label>(label => label.TextColor = Colors.Label))
@@ -49,6 +50,8 @@ BareApplication.CreateBuilder()
 		.LargeTitles()
 		.Accessory<PlayerBar>()
 		.Tab<MenuView>("Controls", "square.grid.2x2")
-		.Tab<BindingView>("Bindings", "link"))
+		.Tab<BindingView>("Bindings", "link")
+		.SearchTab<SearchTabDemo>()
+		.Minimizes())
 	.Build()
 	.Run(args);

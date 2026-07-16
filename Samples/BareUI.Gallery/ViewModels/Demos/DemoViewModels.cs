@@ -68,6 +68,12 @@ public partial class ChromeDemoViewModel(
 
 public class AnimationDemoViewModel;
 
+public partial class SearchTabDemoViewModel : ObservableObject
+{
+	[ObservableProperty]
+	public partial string Status { get; set; } = "Nothing searched yet";
+}
+
 public partial class PlayerBarViewModel : ObservableObject
 {
 	[ObservableProperty]
