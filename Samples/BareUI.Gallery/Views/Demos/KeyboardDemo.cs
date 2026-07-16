@@ -14,6 +14,45 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 	{
 		Title = "Keyboard";
 
+		TextField field = new()
+		{
+			Placeholder = "Type here",
+			ReturnKey = ReturnKeyType.Done,
+			Text = Bind(vm => vm.Message, (vm, value) => vm.Message = value ?? "")
+		};
+
+		// a custom keyboard bar: one view, Safari-style
+		field.KeyboardAccessory = new Overlay
+		{
+			Height = 44,
+			Children =
+			{
+				new StackPanel
+				{
+					Orientation = Orientation.Horizontal,
+					Spacing = 4,
+					Margin = new Thickness(12, 0),
+					HorizontalAlignment = HorizontalAlignment.Start,
+					VerticalAlignment = VerticalAlignment.Center,
+					Children =
+					{
+						new Button { Text = "👍", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "👍") },
+						new Button { Text = "🎬", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "🎬") }
+					}
+				},
+
+				new Button
+				{
+					Text = "Done",
+					Kind = ButtonStyle.Plain,
+					Margin = new Thickness(0, 0, 12, 0),
+					HorizontalAlignment = HorizontalAlignment.End,
+					VerticalAlignment = VerticalAlignment.Center,
+					Command = Command.From(field.Unfocus)
+				}
+			}
+		};
+
 		Content = new StackPanel
 		{
 			Margin = new Thickness(16),
@@ -31,12 +70,7 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 					Bold = true
 				},
 
-				new TextField
-				{
-					Placeholder = "Type here",
-					ReturnKey = ReturnKeyType.Done,
-					Text = Bind(vm => vm.Message, (vm, value) => vm.Message = value ?? "")
-				}
+				field
 			}
 		};
 	}

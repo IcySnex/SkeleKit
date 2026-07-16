@@ -139,8 +139,10 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Clear button mode**~~ — **done** (`TextField.ClearButton`).
 - ◆ **Accessory icons in the field** — leading/trailing views (search icon, reveal-password eye).
 - ~~◆ **Keyboard toolbar**~~ — **done** (`KeyboardToolbar` on `TextField`/`SecureField`/
-  `TextEditor`: `Done` dismisses, `Navigation` adds previous/next arrows walking the page's
-  inputs in tree order. The bar and its items are rooted on the control).
+  `TextEditor`: `Done` dismisses, `Navigation` adds previous/next arrows walking the top page's
+  inputs in tree order. One shared bar per kind, rooted statically — per-field bars made the
+  iOS 26 glass buttons flash on every focus change. `KeyboardAccessory` hosts a custom view
+  instead (an `AccessoryHost` per view, shared across fields), the Safari-style single bar).
 - ★ (skip) **Max length / input filter** — `ShouldChangeCharacters` hook as `Func<string, bool>`.
 - ★ (skip) **TextEditor placeholder** — UIKit has none natively; overlay label, everyone needs it.
 - ~~★ **Font weight/design on inputs**~~ — **done** (`FontWeight`/`FontDesign` on both).

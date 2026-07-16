@@ -119,8 +119,22 @@ public class TextField : Control
 	}
 	KeyboardToolbar keyboardToolbar;
 
+	/// <summary>
+	/// A custom view above the raised keyboard. Wins over <see cref="KeyboardToolbar"/>. Share one instance across fields for a single bar.
+	/// </summary>
+	public View? KeyboardAccessory
+	{
+		get => keyboardAccessory;
+		set => Set(ref keyboardAccessory, value, ApplyToolbar, affectsMeasure: false);
+	}
+	View? keyboardAccessory;
+
 	void ApplyToolbar() =>
-		Ui.InputAccessoryView = keyboardToolbar is KeyboardToolbar.None ? null : InputAccessory.Bar(keyboardToolbar);
+		Ui.InputAccessoryView = keyboardAccessory is { } custom
+			? InputAccessory.Host(custom)
+			: keyboardToolbar is KeyboardToolbar.None
+				? null
+				: InputAccessory.Bar(keyboardToolbar);
 
 	/// <summary>
 	/// Font size in points.

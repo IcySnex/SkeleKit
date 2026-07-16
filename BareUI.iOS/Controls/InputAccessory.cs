@@ -40,7 +40,22 @@ internal static class InputAccessory
 		UIToolbar toolbar = new() { Items = bar };
 		toolbar.SizeToFit();
 
+		// the press effect scales the glass outside the fitted bounds, which the container clips
+		toolbar.Frame = new(0, 0, toolbar.Frame.Width, toolbar.Frame.Height + 10);
+
 		return toolbar;
+	}
+
+	// one host per view, so fields sharing an accessory share the native instance too
+	static readonly Dictionary<View, AccessoryHost> hosts = [];
+
+	public static AccessoryHost Host(
+		View view)
+	{
+		if (!hosts.TryGetValue(view, out AccessoryHost? host))
+			hosts[view] = host = new(view);
+
+		return host;
 	}
 
 
