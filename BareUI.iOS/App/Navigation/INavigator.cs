@@ -6,7 +6,7 @@ namespace BareUI;
 public interface INavigator
 {
 	/// <summary>
-	/// Whether the tab accessory registered with <c>Tabs.Accessory</c> is shown. Changes animate. False when none is registered.
+	/// Whether the tab accessory registered with <c>Tabs.Accessory</c> is shown, while the tab bar itself is. Changes animate. False when none is registered.
 	/// </summary>
 	bool AccessoryVisible { get; set; }
 

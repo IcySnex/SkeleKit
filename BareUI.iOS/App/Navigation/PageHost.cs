@@ -411,6 +411,12 @@ internal sealed class PageHost : UIViewController
 
 		NavigationController?.SetToolbarHidden(!hasToolbar, animated);
 
+		// hiding the tab bar does not hide its accessory: keep the two in sync
+		if (TabBarController is { } tabs
+			&& OperatingSystem.IsIOSVersionAtLeast(26)
+			&& BareApplication.Current is { Accessory: { } accessory } app)
+			tabs.SetBottomAccessory(app.AccessoryShown && !HidesBottomBarWhenPushed ? accessory : null, animated);
+
 		// bar-wide, so every page restores it; null falls back to the app accent
 		NavigationController?.NavigationBar.TintColor = Page.BarAccent?.ToUIColor();
 		NavigationController?.Toolbar.TintColor = Page.BarAccent?.ToUIColor();

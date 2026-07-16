@@ -53,15 +53,21 @@ internal sealed class Navigator(
 
 	public bool AccessoryVisible
 	{
-		get => OperatingSystem.IsIOSVersionAtLeast(26) && Tabs()?.BottomAccessory is not null;
+		get => BareApplication.Current is { Accessory: not null, AccessoryShown: true };
 		set
 		{
-			if (!OperatingSystem.IsIOSVersionAtLeast(26)
-				|| Tabs() is not { } tabs
-				|| BareApplication.Current?.Accessory is not { } accessory)
+			if (BareApplication.Current is not { Accessory: { } accessory } app)
 				return;
 
-			tabs.SetBottomAccessory(value ? accessory : null, animated: true);
+			app.AccessoryShown = value;
+
+			if (!OperatingSystem.IsIOSVersionAtLeast(26) || Tabs() is not { } tabs)
+				return;
+
+			// a page that hides the tab bar keeps the accessory away no matter the intent
+			bool barHidden = (currentStack()?.TopViewController as PageHost)?.HidesBottomBarWhenPushed is true;
+
+			tabs.SetBottomAccessory(value && !barHidden ? accessory : null, animated: true);
 		}
 	}
 

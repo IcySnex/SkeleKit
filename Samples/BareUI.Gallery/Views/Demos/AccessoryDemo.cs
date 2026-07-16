@@ -40,4 +40,11 @@ public class AccessoryDemo : ContentView<AccessoryDemoViewModel>
 			}
 		};
 	}
+
+
+	protected override void OnAppearing() =>
+		ViewModel.Entered();
+
+	protected override void OnDisappearing() =>
+		ViewModel.Left();
 }

@@ -13,8 +13,9 @@ public class PlayerBar : Overlay
 		{
 			Orientation = Orientation.Horizontal,
 			Spacing = 12,
-			Margin = new Thickness(16, 8),
+			Margin = new Thickness(12, 8),
 			HorizontalAlignment = HorizontalAlignment.Start,
+			VerticalAlignment = VerticalAlignment.Center,
 			Children =
 			{
 				new Image

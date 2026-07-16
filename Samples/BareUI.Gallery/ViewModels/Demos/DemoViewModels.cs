@@ -77,6 +77,13 @@ public partial class AccessoryDemoViewModel(
 	partial void OnShowsAccessoryChanged(
 		bool value) =>
 		navigator.AccessoryVisible = value;
+
+	// the accessory only accompanies this page: the rest of the gallery stays clean
+	public void Entered() =>
+		navigator.AccessoryVisible = ShowsAccessory;
+
+	public void Left() =>
+		navigator.AccessoryVisible = false;
 }
 
 public class NativeViewDemoViewModel;

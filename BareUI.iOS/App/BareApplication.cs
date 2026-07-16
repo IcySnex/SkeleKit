@@ -56,6 +56,9 @@ public class BareApplication
 	View? accessoryContent;
 	AccessoryHost? accessoryHost;
 
+	// the app's intent; a page hiding the tab bar takes the accessory with it regardless
+	internal bool AccessoryShown { get; set; } = true;
+
 	internal Action? Backgrounded { get; set; }
 	internal Action? Foregrounded { get; set; }
 
@@ -128,8 +131,10 @@ public class BareApplication
 					accessoryContent = accessory(Services);
 					accessoryHost = new(accessoryContent);
 					Accessory = new(accessoryHost);
+					AccessoryShown = tabsBuilder.AccessoryVisibleInitially;
 
-					controller.BottomAccessory = Accessory;
+					if (AccessoryShown)
+						controller.BottomAccessory = Accessory;
 				}
 
 				return controller;

@@ -80,7 +80,7 @@ BareApplication.CreateBuilder()
 	})
 	.Tabs(tabs => tabs
 		.LargeTitles()
-		.Accessory(() => new PlayerBar())
+		.Accessory(() => new PlayerBar(), visible: false)
 		.Tab<MenuView>("Controls", "square.grid.2x2")
 		.Tab<BindingView>("Bindings", "link"))
 	.Build()

@@ -69,15 +69,20 @@ public sealed class TabsBuilder
 
 	internal Func<IServiceProvider, View>? AccessoryFactory { get; private set; }
 
+	internal bool AccessoryVisibleInitially { get; private set; } = true;
+
 	/// <summary>
 	/// Hosts a view in the tab bar's accessory slot — the app-global bar floating above the tabs, like Music's mini player. Toggle it with <see cref="INavigator.AccessoryVisible"/>. iOS 26 and later.
 	/// </summary>
 	/// <param name="create">Builds the accessory's view.</param>
+	/// <param name="visible">Whether the accessory starts out shown.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Accessory(
-		Func<View> create)
+		Func<View> create,
+		bool visible = true)
 	{
 		AccessoryFactory = _ => create();
+		AccessoryVisibleInitially = visible;
 
 		return this;
 	}
@@ -87,12 +92,15 @@ public sealed class TabsBuilder
 	/// </summary>
 	/// <typeparam name="TViewModel">The ViewModel type driving the accessory.</typeparam>
 	/// <param name="create">Builds the accessory's view around its ViewModel.</param>
+	/// <param name="visible">Whether the accessory starts out shown.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Accessory<TViewModel>(
-		Func<TViewModel, View> create)
+		Func<TViewModel, View> create,
+		bool visible = true)
 		where TViewModel : class
 	{
 		AccessoryFactory = services => create(services.GetRequiredService<TViewModel>());
+		AccessoryVisibleInitially = visible;
 
 		return this;
 	}
