@@ -43,15 +43,15 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 							VerticalAlignment = VerticalAlignment.Center,
 							Children =
 							{
-								new Button { Text = "👍", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "👍") },
-								new Button { Text = "🎬", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "🎬") }
+								new Button { Text = "👍", Kind = ButtonStyle.ClearGlass, Command = Command.From(() => ViewModel.Message += "👍") },
+								new Button { Text = "🎬", Kind = ButtonStyle.ClearGlass, Command = Command.From(() => ViewModel.Message += "🎬") }
 							}
 						},
 
 						new Button
 						{
 							Icon = "checkmark",
-							Kind = ButtonStyle.Plain,
+							Kind = ButtonStyle.ClearGlass,
 							Margin = new Thickness(0, 0, 10, 0),
 							HorizontalAlignment = HorizontalAlignment.End,
 							VerticalAlignment = VerticalAlignment.Center,

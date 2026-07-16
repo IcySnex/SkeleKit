@@ -38,7 +38,12 @@ public enum ButtonStyle
 	/// <summary>
 	/// A prominent, tinted Liquid Glass capsule. Filled on earlier systems.
 	/// </summary>
-	ProminentGlass
+	ProminentGlass,
+
+	/// <summary>
+	/// Invisible Liquid Glass: flat at rest, lights up and swells under the finger. For buttons on a glass bar. Plain on earlier systems.
+	/// </summary>
+	ClearGlass
 }
 
 /// <summary>

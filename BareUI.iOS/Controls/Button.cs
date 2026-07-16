@@ -207,6 +207,7 @@ public class Button : Control
 			ButtonStyle.Filled or ButtonStyle.FilledCapsule => UIButtonConfiguration.FilledButtonConfiguration,
 			ButtonStyle.Glass when glassy => UIButtonConfiguration.GlassButtonConfiguration,
 			ButtonStyle.ProminentGlass when glassy => UIButtonConfiguration.ProminentGlassButtonConfiguration,
+			ButtonStyle.ClearGlass when glassy => UIButtonConfiguration.ClearGlassButtonConfiguration,
 			_ => UIButtonConfiguration.PlainButtonConfiguration
 		};
 
