@@ -9,7 +9,7 @@ public sealed class TabsBuilder
 		Type ViewModel,
 		string Title,
 		string Icon,
-		bool Locked);
+		TabPlacement Placement);
 
 
 	readonly ViewRegistry registry;
@@ -60,14 +60,14 @@ public sealed class TabsBuilder
 	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
 	/// <param name="title">The text displayed on the tab bar item.</param>
 	/// <param name="icon">The name or path of the icon resource for the tab.</param>
-	/// <param name="locked">Keeps the tab out of user customization: it cannot be hidden or moved.</param>
+	/// <param name="placement">How the tab takes part in iPad user customization.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Tab<TView>(
 		string title,
 		string icon,
-		bool locked = false) where TView : ContentView
+		TabPlacement placement = TabPlacement.Automatic) where TView : ContentView
 	{
-		Definitions.Add(new(registry.ViewModelOf<TView>(), title, icon, locked));
+		Definitions.Add(new(registry.ViewModelOf<TView>(), title, icon, placement));
 
 		return this;
 	}

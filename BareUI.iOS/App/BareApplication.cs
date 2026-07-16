@@ -154,11 +154,17 @@ public class BareApplication
 						definition.ViewModel.Name,
 						_ => stack);
 
-					if (definition.Locked)
-					{
-						tab.PreferredPlacement = UITabPlacement.Fixed;
+					if (definition.Placement is not TabPlacement.Automatic)
+						tab.PreferredPlacement = definition.Placement switch
+						{
+							TabPlacement.Pinned => UITabPlacement.Pinned,
+							TabPlacement.SidebarOnly => UITabPlacement.SidebarOnly,
+							TabPlacement.Optional => UITabPlacement.Optional,
+							_ => UITabPlacement.Fixed
+						};
+
+					if (definition.Placement is TabPlacement.Locked)
 						tab.AllowsHiding = false;
-					}
 
 					root.Tab = tab;
 					root.Page?.ApplyTabBadge();

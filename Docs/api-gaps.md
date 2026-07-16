@@ -229,9 +229,15 @@ approach lives in this file's history.
   item-based bars).
 - ~~★ **Tab bar minimize**~~ — **done** (`Tabs.Minimizes()`, iOS 26; the accessory docks inline
   automatically).
-- ~~★ **Tab customization control**~~ — **done** (`Tab<TView>(title, icon, locked: true)` pins the
-  tab out of iPadOS's Edit mode: fixed placement, not hideable. Unlocked tabs keep the system
-  default of full user customization).
+- ~~★ **Tab customization control**~~ — **done** (`Tab<TView>(title, icon, TabPlacement.Locked)`;
+  also `Pinned`, `SidebarOnly` and `Optional`. iPadOS persists the user's layout automatically,
+  keyed by the tab identifier — ours is the ViewModel type name, so renaming a ViewModel resets
+  the user's arrangement).
+- ◆ **Sidebar footer view** — `UITabBarControllerSidebar.BottomBarView` hosting a BareUI view
+  (profile card, branding); `AccessoryHost` fits, ~10 lines when wanted.
+- ▲ **Tab groups** — `UITabGroup`: collapsible sidebar sections with children and their own
+  navigation (the Mail folder tree). Restructures TabsBuilder into a hierarchy; build when an
+  app needs sidebar sections.
 
 - ~~★ **Global accent**~~ — **done** (`UseAccent`: window `TintColor` for the controls UIKit
   reaches, plus the `View.Tint` root fallback for the self-painting ones — switch fills, spinners,
