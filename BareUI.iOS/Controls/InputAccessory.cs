@@ -53,7 +53,14 @@ internal static class InputAccessory
 		View view)
 	{
 		if (!hosts.TryGetValue(view, out AccessoryHost? host))
+		{
 			hosts[view] = host = new(view);
+
+			// the keyboard sizes an accessory by its frame; intrinsic size is never consulted
+			double width = UIScreen.MainScreen.Bounds.Width;
+			view.Measure(new(width, double.PositiveInfinity));
+			host.Frame = new(0, 0, width, view.DesiredSize.Height);
+		}
 
 		return host;
 	}
