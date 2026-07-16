@@ -10,6 +10,7 @@ public sealed class DemoCatalog : IDemoCatalog
 	[
 		new("Styling", typeof(StylingDemoViewModel)),
 		new("Page chrome", typeof(ChromeDemoViewModel)),
+		new("Tab accessory", typeof(AccessoryDemoViewModel)),
 		new("Animation", typeof(AnimationDemoViewModel)),
 		new("Button", typeof(ButtonDemoViewModel)),
 		new("TextField", typeof(TextFieldDemoViewModel)),

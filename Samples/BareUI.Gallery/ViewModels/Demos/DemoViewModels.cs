@@ -68,6 +68,17 @@ public partial class ChromeDemoViewModel(
 
 public class AnimationDemoViewModel;
 
+public partial class AccessoryDemoViewModel(
+	INavigator navigator) : ObservableObject
+{
+	[ObservableProperty]
+	public partial bool ShowsAccessory { get; set; } = true;
+
+	partial void OnShowsAccessoryChanged(
+		bool value) =>
+		navigator.AccessoryVisible = value;
+}
+
 public class NativeViewDemoViewModel;
 
 public partial class ButtonDemoViewModel : ObservableObject
