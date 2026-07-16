@@ -189,7 +189,8 @@ public class BareApplication
 							native.ManagingNavigationController = shared;
 						}
 
-						Place(native, iPad?.GroupPlacements.GetValueOrDefault(group.Title, group.Placement) ?? group.Placement);
+						// a group is a sidebar section, never a bar item
+						Place(native, TabPlacement.SidebarOnly);
 
 						return native;
 					}
@@ -285,7 +286,7 @@ public class BareApplication
 				if (iPad?.FooterFactory is { } footer && OperatingSystem.IsIOSVersionAtLeast(26))
 				{
 					footerContent = footer();
-					footerHost = new(footerContent);
+					footerHost = AccessoryHost.ForKeyboard(footerContent);
 					controller.Sidebar.BottomBarView = footerHost;
 				}
 
@@ -338,7 +339,8 @@ internal sealed class TabsDelegate : UITabBarControllerDelegate
 	{
 		if (app is { ActionTab.Identifier: { } action } && tab.Identifier == action)
 		{
-			app.BubbleAction?.Invoke();
+			// next turn: running it inside the veto collides its animation with the capsule's return
+			CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => app.BubbleAction?.Invoke());
 			return false;
 		}
 

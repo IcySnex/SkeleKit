@@ -51,16 +51,15 @@ BareApplication.CreateBuilder()
 		.Accessory<PlayerBar>()
 		.Minimizes()
 		.Tab<MenuView>("Controls", "square.grid.2x2")
-		.Group("Collections", "square.grid.2x2", collections => collections
-			.Tab<GridDemo>("Grid", "square.grid.3x3")
-			.Tab<CarouselDemo>("Carousel", "film"))
 		.Tab<BindingView>("Bindings", "link")
 		// .Search<SearchTabDemo>()
 		.Action("plus", () => BareApplication.Current?.Services.GetRequiredService<INavigator>().PushAsync<ListDemoViewModel>())
 		.OnIPad(pad => pad
 			.Sidebar()
 			.PlaceTab<MenuView>(TabPlacement.Locked)
-			.PlaceGroup("Collections", TabPlacement.SidebarOnly)
+			.Group("Collections", "square.grid.2x2", collections => collections
+				.Tab<GridDemo>("Grid", "square.grid.3x3")
+				.Tab<CarouselDemo>("Carousel", "film"))
 			.SidebarFooter<FooterCard>()))
 	.Build()
 	.Run(args);

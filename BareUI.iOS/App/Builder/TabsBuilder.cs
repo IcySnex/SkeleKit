@@ -19,8 +19,7 @@ public sealed class TabsBuilder
 	internal sealed record GroupNode(
 		string Title,
 		string Icon,
-		List<Node> Children,
-		TabPlacement Placement) : Node;
+		List<Node> Children) : Node;
 
 
 	readonly ViewRegistry registry;
@@ -71,26 +70,6 @@ public sealed class TabsBuilder
 		string icon) where TView : ContentView
 	{
 		Nodes.Add(new Leaf(registry.ViewModelOf<TView>(), title, icon, TabPlacement.Automatic));
-
-		return this;
-	}
-
-	/// <summary>
-	/// Adds a group of tabs: a collapsible section in the iPad sidebar, a drill-in tab on iPhone.
-	/// </summary>
-	/// <param name="title">The group's title.</param>
-	/// <param name="icon">The group's SF Symbol.</param>
-	/// <param name="children">Declares the tabs inside the group.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder Group(
-		string title,
-		string icon,
-		Action<GroupBuilder> children)
-	{
-		GroupBuilder group = new(registry);
-		children(group);
-
-		Nodes.Add(new GroupNode(title, icon, group.Nodes, TabPlacement.Automatic));
 
 		return this;
 	}
@@ -238,7 +217,7 @@ public sealed class GroupBuilder
 		GroupBuilder group = new(registry);
 		children(group);
 
-		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes, TabPlacement.Automatic));
+		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes));
 
 		return this;
 	}
@@ -260,8 +239,6 @@ public sealed class IPadTabsBuilder
 	internal bool UseSidebar { get; private set; }
 
 	internal Dictionary<Type, TabPlacement> Placements { get; } = [];
-
-	internal Dictionary<string, TabPlacement> GroupPlacements { get; } = [];
 
 	internal List<TabsBuilder.Node> Nodes { get; } = [];
 
@@ -312,38 +289,21 @@ public sealed class IPadTabsBuilder
 	}
 
 	/// <summary>
-	/// Adds an iPad-only group.
+	/// Adds a sidebar section: a group of tabs, always sidebar-only.
 	/// </summary>
 	/// <param name="title">The group's title.</param>
 	/// <param name="icon">The group's SF Symbol.</param>
 	/// <param name="children">Declares the tabs inside the group.</param>
-	/// <param name="placement">How the group takes part in user customization.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public IPadTabsBuilder Group(
 		string title,
 		string icon,
-		Action<GroupBuilder> children,
-		TabPlacement placement = TabPlacement.SidebarOnly)
+		Action<GroupBuilder> children)
 	{
 		GroupBuilder group = new(registry);
 		children(group);
 
-		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes, placement));
-
-		return this;
-	}
-
-	/// <summary>
-	/// Overrides how a declared group takes part in user customization, by its title.
-	/// </summary>
-	/// <param name="title">The group's title.</param>
-	/// <param name="placement">The placement to apply.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public IPadTabsBuilder PlaceGroup(
-		string title,
-		TabPlacement placement)
-	{
-		GroupPlacements[title] = placement;
+		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes));
 
 		return this;
 	}
