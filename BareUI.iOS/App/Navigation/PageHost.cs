@@ -381,8 +381,8 @@ internal sealed class PageHost : UIViewController
 
 		// we own the insets, so UIKit cannot find the scroll view on its own: telling it which one
 		// drives the bar is what collapses a large title (and blurs the bar edge) on scroll
-		if (Page.Native.Subviews.FirstOrDefault() is UIScrollView scroll)
-			SetContentScrollView(scroll, NSDirectionalRectEdge.Top);
+		if (FindScrolling(Page)?.Native is UIScrollView scroll)
+			SetContentScrollView(scroll, NSDirectionalRectEdge.Top | NSDirectionalRectEdge.Bottom);
 
 		// numeric keyboards have no return key, so tapping outside is the only way out
 		dismissKeyboard = new(() => View.EndEditing(true))
@@ -559,6 +559,21 @@ internal sealed class PageHost : UIViewController
 			Page?.Unrealize();
 	}
 
+
+	// the page's scrolling view, found through our own tree rather than UIKit guessing
+	internal static View? FindScrolling(
+		View view)
+	{
+		if (view.Scrolls)
+			return view;
+
+		if (view is Panel panel)
+			foreach (View child in panel.Children)
+				if (FindScrolling(child) is { } match)
+					return match;
+
+		return null;
+	}
 
 	// on a modal root there is nothing to pop: the synthesized back button leaves by dismissing.
 	// a cleared guard passes straight through — the synthesized back stays installed

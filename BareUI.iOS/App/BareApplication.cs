@@ -104,7 +104,7 @@ public class BareApplication
 			return;
 		}
 
-		if (root?.Page?.Native.Subviews.FirstOrDefault() is UIScrollView scroll)
+		if (root?.Page is { } page && PageHost.FindScrolling(page)?.Native is UIScrollView scroll)
 			scroll.SetContentOffset(new(scroll.ContentOffset.X, -scroll.AdjustedContentInset.Top), true);
 	}
 
