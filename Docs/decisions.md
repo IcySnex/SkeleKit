@@ -323,3 +323,39 @@ covariant and `[RelayCommand]` generates `IRelayCommand`.
   the pull sets the flag true and fires the command; the ViewModel clears the flag when the work
   completes, which collapses the spinner. Both halves are bindable-friendly, so no code-behind is
   ever needed — the earlier `Func<Task>` exception is gone.
+
+## ADR-013: Slim pages — instance navigation beside VM-first
+
+**Decision:** a page is either an *MVVM page* or a *slim page*, mixed freely within one app, on
+one `INavigator`. An MVVM page is what exists today: `ContentView<TVm>`, `[Page]` registration,
+navigated by ViewModel — `PushAsync<TVm>()` / `PushAsync(vmInstance)` — unchanged. A slim page is
+a plain `ContentView` subclass with **no ViewModel, no attribute, no registration, no DI**: it is
+navigated as a living instance — `Navigator.PushAsync(new MovieView(movie))` — with the payload as
+ordinary constructor arguments. `INavigator` gains the instance overloads (`PushAsync(ContentView)`,
+`PresentAsync(ContentView, ModalStyle)`); pop, dismiss and dialogs are already page-agnostic.
+Views reach the navigator through a protected `ContentView.Navigator` property (the app-level
+navigator; no DI visible). Slim pages update their UI by direct manipulation — `label.Text = ...` —
+with no `BindingContext`, no INPC; bindings simply stay inert unless the page opts in by setting a
+context itself.
+
+**Context:** the ViewModel type is the navigation key, so even a stateless page needed a marker
+ViewModel plus a service registration — for a settings page in a three-page app that is an entire
+MVVM architecture as an entry fee. String routes (UWP) were rejected: the payload degrades to
+`object` + cast at the destination and a class rename breaks navigation silently. View-*type* keys
+were rejected as the primary model: they put view types into ViewModels for every app, taxing the
+MVVM core to pay for the slim edge. Pushing instances keeps both sides whole — the compiler owns
+the payload, nothing needs a key, and a page that navigates from view code is already view-layer
+code, so no boundary is crossed.
+
+**Consequences:**
+- The entry fee for a non-MVVM app drops to `CreateBuilder().Stack<MainView>()...` and plain
+  classes; marker ViewModels become unnecessary and the idiom is retired.
+- One builder remains the single entry point; the container still exists internally but a slim
+  app never touches it.
+- An instance is pushed at most once: pages are created per navigation (`new` at the call site),
+  matching UIKit controller semantics; pushing an already-presented page throws.
+- ViewModels keep navigating VM-first only — a ViewModel never sees a view type. Slim navigation
+  is initiated from views, where knowing view types is the job.
+- `Navigator` on `ContentView` is protected and app-scoped; MVVM pages ignore it (their
+  ViewModels take `INavigator` by constructor as before).
+- The generator's `[Page]` stays exclusively an MVVM concern.
