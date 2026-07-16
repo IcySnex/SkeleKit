@@ -74,6 +74,15 @@ public class BareApplication
 	View? accessoryContent;
 	AccessoryHost? accessoryHost;
 
+	// the action bubble and its delegate, rooted here
+	internal UITab? ActionTab { get; private set; }
+	internal Action? BubbleAction { get; private set; }
+	TabsDelegate? tabsDelegate;
+
+	// the sidebar footer, rooted here
+	View? footerContent;
+	AccessoryHost? footerHost;
+
 	// intent lives on the view itself; a page hiding the tab bar overrides it
 	internal bool AccessoryWanted =>
 		accessoryContent?.IsVisible.Value is true;
@@ -140,22 +149,61 @@ public class BareApplication
 			case ShellKind.Tabs:
 				UITabBarController controller = new();
 
-				// stacks build eagerly so a badge set during page construction lands on a never-opened tab
-				List<UITab> tabs = [];
+				bool pad = UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad;
+				IPadTabsBuilder? iPad = pad ? tabsBuilder?.IPad : null;
 
-				foreach (TabsBuilder.Definition definition in tabsBuilder?.Definitions ?? [])
+				// stacks build eagerly so a badge set during page construction lands on a never-opened tab.
+				// A group shares one navigation controller; its children provide bare pages into it
+				UITab BuildTab(TabsBuilder.Node node, bool grouped)
 				{
-					UINavigationController stack = Stack(definition.ViewModel, tabsBuilder!.UseLargeTitles);
-					PageHost root = (PageHost)stack.ViewControllers![0];
+					if (node is TabsBuilder.GroupNode group)
+					{
+						UITabGroup native = new(
+							group.Title,
+							UIImage.GetSystemImage(group.Icon),
+							$"group:{group.Title}",
+							[.. group.Children.Select(child => BuildTab(child, true))],
+							null!);
+
+						// only the outermost group manages the stack; nested ones inherit it
+						if (!grouped)
+						{
+							UINavigationController shared = new();
+							shared.NavigationBar.PrefersLargeTitles = tabsBuilder!.UseLargeTitles;
+
+							native.ManagingNavigationController = shared;
+						}
+
+						return native;
+					}
+
+					TabsBuilder.Leaf leaf = (TabsBuilder.Leaf)node;
+
+					PageHost root;
+					Func<UITab, UIViewController> provider;
+
+					if (grouped)
+					{
+						root = Page(leaf.ViewModel);
+						provider = _ => root;
+					}
+					else
+					{
+						UINavigationController stack = Stack(leaf.ViewModel, tabsBuilder!.UseLargeTitles);
+						root = (PageHost)stack.ViewControllers![0];
+						provider = _ => stack;
+					}
 
 					UITab tab = new(
-						definition.Title,
-						UIImage.GetSystemImage(definition.Icon),
-						definition.ViewModel.Name,
-						_ => stack);
+						leaf.Title,
+						UIImage.GetSystemImage(leaf.Icon),
+						leaf.ViewModel.Name,
+						provider);
 
-					if (definition.Placement is not TabPlacement.Automatic)
-						tab.PreferredPlacement = definition.Placement switch
+					TabPlacement placement = iPad?.Placements.GetValueOrDefault(leaf.ViewModel, leaf.Placement) ?? leaf.Placement;
+
+					if (placement is not TabPlacement.Automatic)
+						tab.PreferredPlacement = placement switch
 						{
 							TabPlacement.Pinned => UITabPlacement.Pinned,
 							TabPlacement.SidebarOnly => UITabPlacement.SidebarOnly,
@@ -163,14 +211,22 @@ public class BareApplication
 							_ => UITabPlacement.Fixed
 						};
 
-					if (definition.Placement is TabPlacement.Locked)
+					if (placement is TabPlacement.Locked)
 						tab.AllowsHiding = false;
 
 					root.Tab = tab;
 					root.Page?.ApplyTabBadge();
 
-					tabs.Add(tab);
+					return tab;
 				}
+
+				List<UITab> tabs = [.. (tabsBuilder?.Nodes ?? []).Select(node => BuildTab(node, false))];
+
+				if (iPad is not null)
+					tabs.AddRange(iPad.Nodes.Select(node => BuildTab(node, false)));
+
+				if (tabsBuilder is { SearchViewModel: not null, ActionFactory: not null })
+					throw new InvalidOperationException("The bubble is single: declare Search or Action, not both.");
 
 				if (tabsBuilder?.SearchViewModel is { } searchViewModel)
 				{
@@ -181,10 +237,28 @@ public class BareApplication
 
 					tabs.Add(search);
 				}
+				else if (tabsBuilder?.ActionFactory is { } action)
+				{
+					// the bubble repurposed: selection is vetoed by the delegate and runs this instead
+					BubbleAction = action(Services);
+
+					UISearchTab bubble = new(static _ => new UIViewController())
+					{
+						Title = "Action",
+						Image = UIImage.GetSystemImage(tabsBuilder.ActionIcon!),
+						AutomaticallyActivatesSearch = false
+					};
+
+					ActionTab = bubble;
+					tabs.Add(bubble);
+
+					tabsDelegate = new(this);
+					controller.Delegate = tabsDelegate;
+				}
 
 				controller.SetTabs([.. tabs], false);
 
-				if (tabsBuilder?.UseSidebar is true)
+				if (iPad?.UseSidebar is true)
 					controller.Mode = UITabBarControllerMode.TabSidebar;
 
 				if (tabsBuilder?.Minimize is { } minimize and not TabBarMinimize.Never && OperatingSystem.IsIOSVersionAtLeast(26))
@@ -201,6 +275,13 @@ public class BareApplication
 
 					if (AccessoryWanted)
 						controller.BottomAccessory = Accessory;
+				}
+
+				if (iPad?.FooterFactory is { } footer && OperatingSystem.IsIOSVersionAtLeast(26))
+				{
+					footerContent = footer();
+					footerHost = new(footerContent);
+					controller.Sidebar.BottomBarView = footerHost;
 				}
 
 				return controller;
@@ -226,6 +307,37 @@ public class BareApplication
 	{
 		Current = this;
 		UIApplication.Main(args, null, typeof(BareApplicationDelegate));
+	}
+}
+
+// vetoes selecting the action bubble and fires its action instead
+internal sealed class TabsDelegate : UITabBarControllerDelegate
+{
+	readonly BareApplication? app;
+
+	public TabsDelegate(
+		BareApplication app)
+	{
+		this.app = app;
+	}
+
+	// see LayoutHost
+	public TabsDelegate(
+		ObjCRuntime.NativeHandle handle) : base(handle)
+	{ }
+
+
+	public override bool ShouldSelectTab(
+		UITabBarController tabBarController,
+		UITab tab)
+	{
+		if (app is { ActionTab.Identifier: { } action } && tab.Identifier == action)
+		{
+			app.BubbleAction?.Invoke();
+			return false;
+		}
+
+		return true;
 	}
 }
 

@@ -48,12 +48,16 @@ BareApplication.CreateBuilder()
 	.UsePages()
 	.Tabs(tabs => tabs
 		.LargeTitles()
-		.SidebarOnIPad()
 		.Accessory<PlayerBar>()
 		.Minimizes()
-		.SidebarOnIPad()
-		.Tab<MenuView>("Controls", "square.grid.2x2", TabPlacement.Locked)
+		.Tab<MenuView>("Controls", "square.grid.2x2")
 		.Tab<BindingView>("Bindings", "link")
-		.SearchTab<SearchTabDemo>())
+		.Search<SearchTabDemo>()
+		.OnIPad(pad => pad
+			.Sidebar()
+			.PlaceTab<MenuView>(TabPlacement.Locked)
+			.Group("Collections", "square.grid.2x2", collections => collections
+				.Tab<GridDemo>("Grid", "square.grid.3x3")
+				.Tab<CarouselDemo>("Carousel", "film"))))
 	.Build()
 	.Run(args);
