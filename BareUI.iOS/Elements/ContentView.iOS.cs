@@ -25,11 +25,17 @@ public abstract partial class ContentView
 	partial void ApplyTitleCore() =>
 		Host?.NavigationItem.Title = Title.Value;
 
-	// TabBarItem is read fresh: BuildShell replaces the item after the host is constructed
+	// a UITab-based bar renders from the tab, not the TabBarItem; UITab has no badge color
 	partial void ApplyTabBadgeCore()
 	{
 		if (Host is not { } host)
 			return;
+
+		if (host.Tab is { } tab)
+		{
+			tab.BadgeValue = TabBadge.Value;
+			return;
+		}
 
 		host.TabBarItem.BadgeValue = TabBadge.Value;
 		host.TabBarItem.BadgeColor = TabBadgeColor?.ToUIColor();

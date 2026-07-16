@@ -21,6 +21,10 @@ public sealed class TabsBuilder
 
 	internal List<Definition> Definitions { get; } = [];
 
+	internal Type? SearchViewModel { get; private set; }
+
+	internal TabBarMinimize Minimize { get; private set; } = TabBarMinimize.Never;
+
 
 	internal bool UseLargeTitles { get; private set; }
 
@@ -61,6 +65,31 @@ public sealed class TabsBuilder
 		string icon) where TView : ContentView
 	{
 		Definitions.Add(new(registry.ViewModelOf<TView>(), title, icon));
+
+		return this;
+	}
+
+	/// <summary>
+	/// Adds the system search tab: it sits apart from the other tabs and morphs the bar into the search field.
+	/// </summary>
+	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public TabsBuilder SearchTab<TView>() where TView : ContentView
+	{
+		SearchViewModel = registry.ViewModelOf<TView>();
+
+		return this;
+	}
+
+	/// <summary>
+	/// Lets the tab bar minimize as the content scrolls. iOS 26 and later.
+	/// </summary>
+	/// <param name="minimize">When the bar minimizes.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public TabsBuilder Minimizes(
+		TabBarMinimize minimize = TabBarMinimize.OnScrollDown)
+	{
+		Minimize = minimize;
 
 		return this;
 	}

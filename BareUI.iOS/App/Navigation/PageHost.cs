@@ -123,6 +123,9 @@ internal sealed class PageHost : UIViewController
 	UIAction? backAction;
 	SheetGuard? dismissGuard;
 
+	// the UITab rendering this page's tab, when the shell is tab-based
+	internal UITab? Tab { get; set; }
+
 	public PageHost(
 		ContentView page)
 	{

@@ -123,23 +123,46 @@ public class BareApplication
 
 			case ShellKind.Tabs:
 				UITabBarController controller = new();
-				controller.ViewControllers = tabsBuilder?.Definitions
-					.Select(UIViewController (definition) =>
-					{
-						UINavigationController stack = Stack(definition.ViewModel, tabsBuilder.UseLargeTitles);
 
-						PageHost root = (PageHost)stack.ViewControllers![0];
-						root.TabBarItem = new(definition.Title, UIImage.GetSystemImage(definition.Icon), null);
+				// stacks build eagerly so a badge set during page construction lands on a never-opened tab
+				List<UITab> tabs = [];
 
-						// the fresh item wiped any badge the page set during construction
-						root.Page?.ApplyTabBadge();
+				foreach (TabsBuilder.Definition definition in tabsBuilder?.Definitions ?? [])
+				{
+					UINavigationController stack = Stack(definition.ViewModel, tabsBuilder!.UseLargeTitles);
+					PageHost root = (PageHost)stack.ViewControllers![0];
 
-						return stack;
-					})
-					.ToArray();
+					UITab tab = new(
+						definition.Title,
+						UIImage.GetSystemImage(definition.Icon),
+						definition.ViewModel.Name,
+						_ => stack);
 
-				if (tabsBuilder?.UseSidebar is true && OperatingSystem.IsIOSVersionAtLeast(18))
+					root.Tab = tab;
+					root.Page?.ApplyTabBadge();
+
+					tabs.Add(tab);
+				}
+
+				if (tabsBuilder?.SearchViewModel is { } searchViewModel)
+				{
+					UINavigationController stack = Stack(searchViewModel, tabsBuilder.UseLargeTitles);
+
+					UISearchTab search = new(_ => stack);
+					((PageHost)stack.ViewControllers![0]).Tab = search;
+
+					tabs.Add(search);
+				}
+
+				controller.SetTabs([.. tabs], false);
+
+				if (tabsBuilder?.UseSidebar is true)
 					controller.Mode = UITabBarControllerMode.TabSidebar;
+
+				if (tabsBuilder?.Minimize is { } minimize and not TabBarMinimize.Never && OperatingSystem.IsIOSVersionAtLeast(26))
+					controller.TabBarMinimizeBehavior = minimize is TabBarMinimize.OnScrollUp
+						? UITabBarMinimizeBehavior.OnScrollUp
+						: UITabBarMinimizeBehavior.OnScrollDown;
 
 				if (tabsBuilder?.AccessoryFactory is { } accessory && OperatingSystem.IsIOSVersionAtLeast(26))
 				{

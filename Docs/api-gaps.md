@@ -36,9 +36,10 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   Content rides in an `AccessoryHost` answering `IntrinsicContentSize` from our measure pass.
   iOS 26 only; earlier systems have no slot. **Gotcha (sim-verified):** the slot's glass
   treatment repaints flat `Background` fills as tint- or vibrancy-colored shapes — use real
-  content (symbols, images, text), not colored tiles. **Follow-up:** the compact/minimized
-  variant (`TabBarMinimizeBehavior` + the accessory environment trait); the bar never minimizes
-  today.
+  content (symbols, images, text), not colored tiles. **Follow-up:** compact accessory *content*
+  via the accessory environment trait — the bar minimizes now (`Tabs.Minimizes()`) and the
+  accessory docks inline automatically, but there is no API yet for a condensed tree in that
+  state.
 - ~~★ **Search**~~ — **done** (`HidesSearchBarWhenScrolling`, `SearchScopes` +
   `SearchScopeChanged`, `SearchCancelled`, `SearchObscuresBackground`).
 - ◆ (skip) **Search suggestions** — built on `UISearchSuggestionItem` 2026-07-15, then **removed
@@ -212,6 +213,13 @@ mid-jump. The interim self-sizing correction machinery was removed again; `Scrol
 approach lives in this file's history.
 
 ## App level
+
+- ~~◆ **Search tab**~~ — **done** (`Tabs.SearchTab<TView>()`: the system trailing search tab that
+  morphs the bar into the field; the shell now builds on `UITab`/`SetTabs`, and `TabBadge` routes
+  through `UITab.BadgeValue` — UITab has no badge *color*, so `TabBadgeColor` only applies on
+  item-based bars).
+- ~~★ **Tab bar minimize**~~ — **done** (`Tabs.Minimizes()`, iOS 26; the accessory docks inline
+  automatically).
 
 - ~~★ **Global accent**~~ — **done** (`UseAccent`: window `TintColor` for the controls UIKit
   reaches, plus the `View.Tint` root fallback for the self-painting ones — switch fills, spinners,
