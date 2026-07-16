@@ -24,6 +24,7 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 		Button popoverButton = new() { Text = "Popover", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentPopoverCommand };
 		popoverButton.CommandParameter = ModalStyle.Popover(popoverButton, PopoverArrow.Up);
 
+
 		SearchPlaceholder = "Search chrome";
 		SearchScopes.Add("All");
 		SearchScopes.Add("Recent");

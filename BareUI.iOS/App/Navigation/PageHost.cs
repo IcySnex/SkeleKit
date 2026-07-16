@@ -433,10 +433,14 @@ internal sealed class PageHost : UIViewController
 			NavigationItem.BackAction = backAction;
 		}
 
-		// a guarded page pins its sheet; DidAttemptToDismiss then routes the swipe into the confirm
+		// a guarded page pins its sheet; DidAttemptToDismiss then routes the swipe into the confirm.
+		// A pinned popover swallows outside taps with no callback at all, so it stays unpinned and
+		// the guard intercepts through ShouldDismiss instead
 		if (NavigationController is { PresentingViewController: not null } sheet)
 		{
-			sheet.ModalInPresentation = Page.ConfirmLeave is not null;
+			bool popover = sheet.PresentationController is UIPopoverPresentationController;
+
+			sheet.ModalInPresentation = Page.ConfirmLeave is not null && !popover;
 
 			if (Page.ConfirmLeave is not null && sheet.PresentationController is { } presentation)
 			{
@@ -642,6 +646,17 @@ internal sealed class PageHost : UIViewController
 		public override void DidAttemptToDismiss(
 			UIPresentationController presentationController) =>
 			host?.ConfirmDismiss();
+
+		// the popover path: it is not pinned, so the attempt arrives here — hold it, ask, dismiss manually
+		public override bool ShouldDismiss(
+			UIPresentationController presentationController)
+		{
+			if (presentationController is not UIPopoverPresentationController)
+				return true;
+
+			host?.ConfirmDismiss();
+			return false;
+		}
 
 		// a guarded popover must stay a bubble too; a sheet is already its adapted form
 		public override UIModalPresentationStyle GetAdaptivePresentationStyle(
