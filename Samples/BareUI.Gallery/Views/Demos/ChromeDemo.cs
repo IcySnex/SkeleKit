@@ -15,11 +15,16 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 		Title = "Page chrome";
 		TitleStyle = TitleStyle.Large;
 
+		// the bottom toolbar and the tab bar share the screen edge: this page trades the tab bar away
+		HidesTabBar = true;
+
 		BarAccent = Colors.Orange;
 		TitleColor = Colors.Indigo;
 		LargeTitleColor = Colors.Indigo;
 
-		ConfirmLeave = ViewModel.ConfirmLeaveAsync;
+		// only guarded while the switch is on: a set ConfirmLeave also disables the pop swipe
+		if (ViewModel.GuardLeave)
+			ConfirmLeave = ViewModel.ConfirmLeaveAsync;
 
 		Button popoverButton = new() { Text = "Popover", Kind = ButtonStyle.Tinted, Command = ViewModel.PresentPopoverCommand };
 		popoverButton.CommandParameter = ModalStyle.Popover(popoverButton, PopoverArrow.Up);
@@ -55,7 +60,11 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 						Spacing = 12,
 						Children =
 						{
-							new Switch { IsOn = Bind(vm => vm.GuardLeave, (vm, value) => vm.GuardLeave = value) },
+							new Switch
+							{
+								IsOn = Bind(vm => vm.GuardLeave, (vm, value) => vm.GuardLeave = value),
+								Toggled = value => ConfirmLeave = value ? ViewModel.ConfirmLeaveAsync : null
+							},
 							new Label
 							{
 								VerticalAlignment = VerticalAlignment.Center,

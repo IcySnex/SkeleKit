@@ -13,20 +13,25 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   wires the page's root scroll to the bar).
 - ~~★ **Back button title / display mode**~~ — **done** (`ContentView.BackButtonTitle` +
   `BackButtonStyle`).
-- ~~◆ **Pop interception**~~ — **done** (`ContentView.ConfirmLeave`: back button, both pop
-  gestures (iOS 26 adds a content-wide one), and sheet swipe-down all funnel through it; a modal
-  root's synthesized back button dismisses).
+- ~~◆ **Pop interception**~~ — **done** (`ContentView.ConfirmLeave`: back button, sheet
+  swipe-down and popover tap-out funnel through it; both pop gestures (iOS 26 adds a
+  content-wide one) are *disabled* while it is set — an in-flight interactive pop cannot await a
+  confirm. The property is live: set it null while nothing needs guarding and the swipe returns;
+  a modal root's synthesized back button dismisses).
 - ~~★ **Toolbar item pull-down menus**~~ — **done** (`ToolbarItem.Menu`, `MenuAction` list).
 - ~~★ **Nav bar tint & title attributes**~~ — **done** (`BarAccent`, `TitleColor`,
   `LargeTitleColor`; per-item appearances copied from the live bar, item-level tints for iOS 26
   glass buttons).
 - ~~★ **`NavigationItem.Prompt`**~~ — **done** (`ContentView.Prompt`).
-- ~~★ **Bottom toolbar**~~ — **done** (`ContentView.BottomToolbarItems`: `UIToolbar` when the
-  bottom edge is free, floats as the iOS 26 tab-bar accessory when the tab bar is visible).
-  **Revisit:** the accessory path repurposes `UITabBarController.BottomAccessory` (Apple's
-  app-global mini-player slot) per page, ignores `IsPrimary`/`Side`, and hand-wires `UIButton`s —
-  a true shell-level `Tabs.Accessory(...)` would collide with it. Kevin unhappy with the
-  conflation; redesign candidate.
+- ~~★ **Bottom toolbar**~~ — **done** (`ContentView.BottomToolbarItems` → the system `UIToolbar`,
+  nothing else). UIKit has no toolbar-plus-floating-tab-bar combo — they share the edge — so the
+  toolbar only shows when the tab bar is gone: a page that wants one sets `HidesTabBar`, the
+  `HidesBottomBarWhenPushed` idiom Apple's own apps use (Mail edit mode, Files). The 2026-07-15
+  accessory path (per-page hand-built `UITabAccessory`) was removed — it repurposed Apple's
+  app-global mini-player slot and hand-wired chrome.
+- ◆ **Tab accessory** — shell-level `Tabs.Accessory(...)` hosting a BareUI `View` in
+  `UITabBarController.BottomAccessory`: app-global, minimizes into the tab bar on scroll — the
+  Music mini-player slot, and Velura's. Design agreed 2026-07-16; build when Velura needs it.
 - ~~★ **Search**~~ — **done** (`HidesSearchBarWhenScrolling`, `SearchScopes` +
   `SearchScopeChanged`, `SearchCancelled`, `SearchObscuresBackground`).
 - ◆ (skip) **Search suggestions** — built on `UISearchSuggestionItem` 2026-07-15, then **removed

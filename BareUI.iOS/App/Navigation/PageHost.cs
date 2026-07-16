@@ -1,4 +1,3 @@
-using System.Runtime.Versioning;
 using ObjCRuntime;
 
 namespace BareUI;
@@ -123,7 +122,6 @@ internal sealed class PageHost : UIViewController
 	UISearchController? search;
 	UIAction? backAction;
 	SheetGuard? dismissGuard;
-	UITabAccessory? bottomAccessory;
 
 	public PageHost(
 		ContentView page)
@@ -406,25 +404,26 @@ internal sealed class PageHost : UIViewController
 
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
 
-		// with a visible tab bar the items float above it as the tab accessory (the two bars share
-		// the bottom edge); everywhere else they get the classic navigation toolbar
-		bool floats = Page.BottomToolbarItems.Count > 0
-			&& !HidesBottomBarWhenPushed
-			&& TabBarController is not null
-			&& OperatingSystem.IsIOSVersionAtLeast(26);
+		// a bottom toolbar and the floating tab bar share the same edge: the toolbar only shows when
+		// the tab bar is gone — a page that wants one sets HidesTabBar
+		bool hasToolbar = Page.BottomToolbarItems.Count > 0
+			&& (HidesBottomBarWhenPushed || TabBarController is null);
 
-		NavigationController?.SetToolbarHidden(Page.BottomToolbarItems.Count == 0 || floats, animated);
-
-		if (TabBarController is { } tabs && OperatingSystem.IsIOSVersionAtLeast(26))
-			tabs.SetBottomAccessory(floats ? bottomAccessory ??= BuildAccessory(Page) : null, animated);
+		NavigationController?.SetToolbarHidden(!hasToolbar, animated);
 
 		// bar-wide, so every page restores it; null falls back to the app accent
 		NavigationController?.NavigationBar.TintColor = Page.BarAccent?.ToUIColor();
 		NavigationController?.Toolbar.TintColor = Page.BarAccent?.ToUIColor();
 
-		// here and not ViewDidLoad: whether back has anywhere to go needs the containment settled.
-		// a pushed page's natural back keeps its look; a modal root synthesizes one that dismisses
-		if (Page.ConfirmLeave is not null
+		// here and not ViewDidLoad: whether back has anywhere to go needs the containment settled
+		ApplyBackGuard();
+		ApplySheetGuard();
+	}
+
+	// a pushed page's natural back keeps its look; a modal root synthesizes one that dismisses
+	void ApplyBackGuard()
+	{
+		if (Page?.ConfirmLeave is not null
 			&& backAction is null
 			&& NavigationController is { } leavable
 			&& (leavable.ViewControllers?.Length > 1 || leavable.PresentingViewController is not null))
@@ -432,22 +431,51 @@ internal sealed class PageHost : UIViewController
 			backAction = UIAction.Create("", null, null, _ => ConfirmBack());
 			NavigationItem.BackAction = backAction;
 		}
+	}
 
-		// a guarded page pins its sheet; DidAttemptToDismiss then routes the swipe into the confirm.
-		// A pinned popover swallows outside taps with no callback at all, so it stays unpinned and
-		// the guard intercepts through ShouldDismiss instead
-		if (NavigationController is { PresentingViewController: not null } sheet)
+	// a guarded page pins its sheet; DidAttemptToDismiss then routes the swipe into the confirm.
+	// A pinned popover swallows outside taps with no callback at all, so it stays unpinned and
+	// the guard intercepts through ShouldDismiss instead
+	void ApplySheetGuard()
+	{
+		if (NavigationController is not { PresentingViewController: not null } sheet)
+			return;
+
+		bool popover = sheet.PresentationController is UIPopoverPresentationController;
+
+		sheet.ModalInPresentation = Page?.ConfirmLeave is not null && !popover;
+
+		if (Page?.ConfirmLeave is not null && sheet.PresentationController is { } presentation)
 		{
-			bool popover = sheet.PresentationController is UIPopoverPresentationController;
-
-			sheet.ModalInPresentation = Page.ConfirmLeave is not null && !popover;
-
-			if (Page.ConfirmLeave is not null && sheet.PresentationController is { } presentation)
-			{
-				dismissGuard ??= new(this);
-				presentation.Delegate = dismissGuard;
-			}
+			dismissGuard ??= new(this);
+			presentation.Delegate = dismissGuard;
 		}
+	}
+
+	// ConfirmLeave can change while the page shows: re-arm everything that hangs off it
+	internal void ApplyLeaveGuard()
+	{
+		if (Page is null || !IsViewLoaded)
+			return;
+
+		ApplyBackGuard();
+		ApplySheetGuard();
+		ApplyPopGestures();
+	}
+
+	void ApplyPopGestures()
+	{
+		if (NavigationController is not { } stack)
+			return;
+
+		bool free = Page?.ConfirmLeave is null;
+
+		if (stack.InteractivePopGestureRecognizer is { } swipe)
+			swipe.Enabled = free;
+
+		// iOS 26 pops from anywhere in the content, not just the edge
+		if (OperatingSystem.IsIOSVersionAtLeast(26) && stack.InteractiveContentPopGestureRecognizer is { } contentSwipe)
+			contentSwipe.Enabled = free;
 	}
 
 	public override void ViewDidAppear(
@@ -455,18 +483,8 @@ internal sealed class PageHost : UIViewController
 	{
 		base.ViewDidAppear(animated);
 
-		// after the transition: flipping it mid-pop would kill an in-flight swipe
-		if (NavigationController is { } stack)
-		{
-			bool free = Page?.ConfirmLeave is null;
-
-			if (stack.InteractivePopGestureRecognizer is { } swipe)
-				swipe.Enabled = free;
-
-			// iOS 26 pops from anywhere in the content, not just the edge
-			if (OperatingSystem.IsIOSVersionAtLeast(26) && stack.InteractiveContentPopGestureRecognizer is { } contentSwipe)
-				contentSwipe.Enabled = free;
-		}
+		// after the transition: flipping the gestures mid-pop would kill an in-flight swipe
+		ApplyPopGestures();
 
 		Page?.NotifyAppearing();
 	}
@@ -533,13 +551,11 @@ internal sealed class PageHost : UIViewController
 	}
 
 
-	// on a modal root there is nothing to pop: the synthesized back button leaves by dismissing
+	// on a modal root there is nothing to pop: the synthesized back button leaves by dismissing.
+	// a cleared guard passes straight through — the synthesized back stays installed
 	async void ConfirmBack()
 	{
-		if (Page?.ConfirmLeave is not { } confirm)
-			return;
-
-		if (!await confirm())
+		if (Page?.ConfirmLeave is { } confirm && !await confirm())
 			return;
 
 		if (NavigationController is { ViewControllers.Length: > 1 } stack)
@@ -550,81 +566,10 @@ internal sealed class PageHost : UIViewController
 
 	async void ConfirmDismiss()
 	{
-		if (Page?.ConfirmLeave is not { } confirm)
+		if (Page?.ConfirmLeave is { } confirm && !await confirm())
 			return;
 
-		if (await confirm())
-			NavigationController?.DismissViewController(true, null);
-	}
-
-	[SupportedOSPlatform("ios26.0")]
-	UITabAccessory BuildAccessory(
-		ContentView page)
-	{
-		UIStackView stack = new()
-		{
-			Axis = UILayoutConstraintAxis.Horizontal,
-			Distribution = UIStackViewDistribution.EqualSpacing,
-			TranslatesAutoresizingMaskIntoConstraints = false
-		};
-
-		foreach (ToolbarItem item in page.BottomToolbarItems)
-			stack.AddArrangedSubview(AccessoryButton(item, page));
-
-		UIView content = new();
-		content.AddSubview(stack);
-		NSLayoutConstraint.ActivateConstraints(
-		[
-			stack.LeadingAnchor.ConstraintEqualTo(content.LeadingAnchor, 24),
-			stack.TrailingAnchor.ConstraintEqualTo(content.TrailingAnchor, -24),
-			stack.CenterYAnchor.ConstraintEqualTo(content.CenterYAnchor)
-		]);
-
-		return new(content);
-	}
-
-	UIButton AccessoryButton(
-		ToolbarItem item,
-		ContentView page)
-	{
-		UIButtonConfiguration configuration = UIButtonConfiguration.PlainButtonConfiguration;
-		configuration.Title = item.Text;
-
-		if (item.Icon is { } icon)
-			configuration.Image = UIImage.GetSystemImage(icon);
-
-		// a configuration paints from its own foreground color, not the view tint
-		if (page.BarAccent is { } foreground)
-			configuration.BaseForegroundColor = foreground.ToUIColor();
-
-		UIButton button = new() { Configuration = configuration };
-
-		if (item.Menu.Count > 0)
-		{
-			button.Menu = BuildMenu(item);
-			button.ShowsMenuAsPrimaryAction = true;
-		}
-		else
-		{
-			UIAction action = UIAction.Create(
-				"",
-				null,
-				null,
-				_ =>
-				{
-					if (item.Command is { } command && command.CanExecute(item.CommandParameter))
-						command.Execute(item.CommandParameter);
-				});
-
-			menuActions.Add(action);
-			button.AddAction(action, UIControlEvent.TouchUpInside);
-			button.Enabled = item.Command?.CanExecute(item.CommandParameter) ?? true;
-		}
-
-		if (page.BarAccent is { } accent)
-			button.TintColor = accent.ToUIColor();
-
-		return button;
+		NavigationController?.DismissViewController(true, null);
 	}
 
 	// the presentation controller holds its delegate weakly; the dismissGuard field roots this
