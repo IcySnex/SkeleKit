@@ -1,26 +1,31 @@
-using CoreGraphics;
-
 namespace BareUI;
 
-// the control roots this: UIKit's retain alone would let the item peers die
-internal sealed class InputAccessory
+// one bar per kind, shared app-wide: swapping fields keeps the same native instance, and the
+// static root keeps the item peers alive
+internal static class InputAccessory
 {
-	readonly UIBarButtonItem[] items;
+	static UIToolbar? done;
+	static UIToolbar? navigation;
 
-	public UIToolbar Bar { get; }
+	static readonly List<UIBarButtonItem> items = [];
 
 
-	public InputAccessory(
-		Control owner,
-		KeyboardToolbar kind)
+	public static UIToolbar Bar(
+		KeyboardToolbar kind) =>
+		kind is KeyboardToolbar.Navigation
+			? navigation ??= Build(arrows: true)
+			: done ??= Build(arrows: false);
+
+	static UIToolbar Build(
+		bool arrows)
 	{
-		UIBarButtonItem done = new(UIBarButtonSystemItem.Done, (_, _) => owner.Unfocus());
+		UIBarButtonItem done = new(UIBarButtonSystemItem.Done, (_, _) => Focused()?.Unfocus());
 
-		items = kind is KeyboardToolbar.Navigation
+		UIBarButtonItem[] bar = arrows
 			?
 			[
-				new(UIImage.GetSystemImage("chevron.up"), UIBarButtonItemStyle.Plain, (_, _) => Move(owner, -1)),
-				new(UIImage.GetSystemImage("chevron.down"), UIBarButtonItemStyle.Plain, (_, _) => Move(owner, +1)),
+				new(UIImage.GetSystemImage("chevron.up"), UIBarButtonItemStyle.Plain, (_, _) => Move(-1)),
+				new(UIImage.GetSystemImage("chevron.down"), UIBarButtonItemStyle.Plain, (_, _) => Move(+1)),
 				new(UIBarButtonSystemItem.FlexibleSpace),
 				done
 			]
@@ -30,26 +35,41 @@ internal sealed class InputAccessory
 				done
 			];
 
-		Bar = new(new CGRect(0, 0, 0, 44)) { Items = items };
-		Bar.SizeToFit();
+		items.AddRange(bar);
+
+		UIToolbar toolbar = new() { Items = bar };
+		toolbar.SizeToFit();
+
+		return toolbar;
 	}
 
 
 	static void Move(
-		Control owner,
 		int direction)
 	{
-		View root = owner;
-		while (root.Parent is { } parent)
-			root = parent;
+		List<View> inputs = Inputs();
 
-		List<View> inputs = [];
-		Collect(root, inputs);
+		int index = inputs.FindIndex(static input => input.IsFocused);
+		if (index < 0)
+			return;
 
-		int target = inputs.IndexOf(owner) + direction;
+		int target = index + direction;
 
 		if (target >= 0 && target < inputs.Count)
 			inputs[target].Focus();
+	}
+
+	static View? Focused() =>
+		Inputs().Find(static input => input.IsFocused);
+
+	static List<View> Inputs()
+	{
+		List<View> inputs = [];
+
+		if (BareApplication.TopPage() is { } page)
+			Collect(page, inputs);
+
+		return inputs;
 	}
 
 	static void Collect(

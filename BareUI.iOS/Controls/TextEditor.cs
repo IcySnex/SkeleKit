@@ -69,13 +69,8 @@ public class TextEditor : Control
 	}
 	KeyboardToolbar keyboardToolbar;
 
-	InputAccessory? accessory;
-
-	void ApplyToolbar()
-	{
-		accessory = keyboardToolbar is KeyboardToolbar.None ? null : new(this, keyboardToolbar);
-		Ui.InputAccessoryView = accessory?.Bar;
-	}
+	void ApplyToolbar() =>
+		Ui.InputAccessoryView = keyboardToolbar is KeyboardToolbar.None ? null : InputAccessory.Bar(keyboardToolbar);
 
 	/// <summary>
 	/// Font size in points.

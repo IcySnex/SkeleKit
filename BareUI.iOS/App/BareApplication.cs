@@ -41,6 +41,22 @@ public class BareApplication
 	static UITabBarController? CurrentTabs() =>
 		Root() as UITabBarController;
 
+	internal static ContentView? TopPage()
+	{
+		UIViewController? top = Root();
+
+		while (top?.PresentedViewController is { } presented)
+			top = presented;
+
+		if (top is UITabBarController tabs)
+			top = tabs.SelectedViewController;
+
+		if (top is UINavigationController stack)
+			top = stack.TopViewController;
+
+		return (top as PageHost)?.Page;
+	}
+
 
 	readonly ViewRegistry registry;
 	readonly ShellKind shell;
