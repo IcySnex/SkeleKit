@@ -81,7 +81,7 @@ BareApplication.CreateBuilder()
 	})
 	.Tabs(tabs => tabs
 		.LargeTitles()
-		.Accessory((PlayerBarViewModel vm) => new PlayerBar())
+		.Accessory((PlayerBarViewModel vm) => new PlayerBar(vm))
 		.Tab<MenuView>("Controls", "square.grid.2x2")
 		.Tab<BindingView>("Bindings", "link"))
 	.Build()

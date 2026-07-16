@@ -72,6 +72,10 @@ public partial class PlayerBarViewModel : ObservableObject
 {
 	[ObservableProperty]
 	public partial bool Visible { get; set; }
+
+	[RelayCommand]
+	void Play() =>
+		Haptics.Impact();
 }
 
 public partial class AccessoryDemoViewModel(

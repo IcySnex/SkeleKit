@@ -8,7 +8,8 @@ namespace BareUI.Gallery.Views;
 /// </summary>
 public class PlayerBar : Overlay
 {
-	public PlayerBar()
+	public PlayerBar(
+		PlayerBarViewModel viewModel)
 	{
 		IsVisible = BindingFactory.Bind((PlayerBarViewModel vm) => vm.Visible);
 
@@ -47,7 +48,7 @@ public class PlayerBar : Overlay
 			Margin = new Thickness(0, 0, 12, 0),
 			HorizontalAlignment = HorizontalAlignment.End,
 			VerticalAlignment = VerticalAlignment.Center,
-			Command = Command.From(() => Haptics.Impact())
+			Command = viewModel.PlayCommand
 		});
 	}
 }
