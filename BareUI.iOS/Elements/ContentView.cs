@@ -79,9 +79,17 @@ public abstract partial class ContentView : Panel
 	public Color? LargeTitleColor { get; set; }
 
 	/// <summary>
-	/// Asked before the page is left — back button or sheet swipe — so unsaved changes can veto. Return false to stay.
+	/// Asked before the page is left — back button, sheet swipe or popover tap-out — so unsaved changes can veto. Return false to stay. Set null while nothing needs guarding: it also disables the pop swipe.
 	/// </summary>
-	public Func<Task<bool>>? ConfirmLeave { get; set; }
+	public Func<Task<bool>>? ConfirmLeave
+	{
+		get;
+		set
+		{
+			field = value;
+			ApplyLeaveGuardCore();
+		}
+	}
 
 	/// <summary>
 	/// Hides the tab bar while this page is on top of the stack.
@@ -240,6 +248,8 @@ public abstract partial class ContentView : Panel
 		ApplyTabBadgeCore();
 
 	partial void ApplyTabBadgeCore();
+
+	partial void ApplyLeaveGuardCore();
 
 
 	protected override Size MeasureOverride(

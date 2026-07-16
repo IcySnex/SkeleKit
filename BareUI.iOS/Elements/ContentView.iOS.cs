@@ -27,6 +27,9 @@ public abstract partial class ContentView
 		host.TabBarItem.BadgeColor = TabBadgeColor?.ToUIColor();
 	}
 
+	partial void ApplyLeaveGuardCore() =>
+		Host?.ApplyLeaveGuard();
+
 	private protected override void OnRealized()
 	{
 		if (ScrollsUnderBars
