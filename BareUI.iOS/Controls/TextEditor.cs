@@ -70,7 +70,7 @@ public class TextEditor : Control
 	KeyboardToolbar keyboardToolbar;
 
 	/// <summary>
-	/// A custom view above the raised keyboard. Wins over <see cref="KeyboardToolbar"/>. Share one instance across fields for a single bar.
+	/// A custom view above the raised keyboard. Wins over <see cref="KeyboardToolbar"/>. One view per field.
 	/// </summary>
 	public View? KeyboardAccessory
 	{
@@ -79,12 +79,16 @@ public class TextEditor : Control
 	}
 	View? keyboardAccessory;
 
+	// roots the bar and its item peers for as long as the field lives
+	(UIToolbar Bar, UIBarButtonItem[] Items)? accessoryBar;
+	AccessoryHost? accessoryHost;
+
 	void ApplyToolbar() =>
 		Ui.InputAccessoryView = keyboardAccessory is { } custom
-			? InputAccessory.Host(custom)
+			? (accessoryHost ??= AccessoryHost.ForKeyboard(custom))
 			: keyboardToolbar is KeyboardToolbar.None
 				? null
-				: InputAccessory.Bar(keyboardToolbar);
+				: (accessoryBar ??= Keyboards.Toolbar(this, keyboardToolbar)).Bar;
 
 	/// <summary>
 	/// Font size in points.

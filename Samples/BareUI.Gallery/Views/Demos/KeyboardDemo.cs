@@ -24,27 +24,28 @@ public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 		// a custom keyboard bar: one view, Safari-style
 		field.KeyboardAccessory = new Overlay
 		{
-			Height = 44,
+			Height = 54,
+			Background = new Material(MaterialKind.Chrome),
 			Children =
 			{
 				new StackPanel
 				{
 					Orientation = Orientation.Horizontal,
-					Spacing = 4,
+					Spacing = 8,
 					Margin = new Thickness(12, 0),
 					HorizontalAlignment = HorizontalAlignment.Start,
 					VerticalAlignment = VerticalAlignment.Center,
 					Children =
 					{
-						new Button { Text = "👍", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "👍") },
-						new Button { Text = "🎬", Kind = ButtonStyle.Plain, Command = Command.From(() => ViewModel.Message += "🎬") }
+						new Button { Text = "👍", Kind = ButtonStyle.Glass, Command = Command.From(() => ViewModel.Message += "👍") },
+						new Button { Text = "🎬", Kind = ButtonStyle.Glass, Command = Command.From(() => ViewModel.Message += "🎬") }
 					}
 				},
 
 				new Button
 				{
 					Text = "Done",
-					Kind = ButtonStyle.Plain,
+					Kind = ButtonStyle.ProminentGlass,
 					Margin = new Thickness(0, 0, 12, 0),
 					HorizontalAlignment = HorizontalAlignment.End,
 					VerticalAlignment = VerticalAlignment.Center,

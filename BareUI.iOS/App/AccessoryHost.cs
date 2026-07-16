@@ -24,6 +24,19 @@ internal sealed class AccessoryHost : UIView
 		NativeHandle handle) : base(handle)
 	{ }
 
+	// the keyboard sizes an accessory by its frame; intrinsic size is never consulted
+	internal static AccessoryHost ForKeyboard(
+		View content)
+	{
+		AccessoryHost host = new(content);
+
+		double width = UIScreen.MainScreen.Bounds.Width;
+		content.Measure(new(width, double.PositiveInfinity));
+		host.Frame = new(0, 0, width, content.DesiredSize.Height);
+
+		return host;
+	}
+
 
 	public override CGSize IntrinsicContentSize
 	{

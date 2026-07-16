@@ -198,11 +198,16 @@ public class Button : Control
 
 	void ApplyConfiguration()
 	{
+		bool glassy = OperatingSystem.IsIOSVersionAtLeast(26);
+
 		UIButtonConfiguration configuration = kind switch
 		{
 			ButtonStyle.Gray => UIButtonConfiguration.GrayButtonConfiguration,
 			ButtonStyle.Tinted => UIButtonConfiguration.TintedButtonConfiguration,
 			ButtonStyle.Filled or ButtonStyle.FilledCapsule => UIButtonConfiguration.FilledButtonConfiguration,
+			ButtonStyle.Glass when glassy => UIButtonConfiguration.GlassButtonConfiguration,
+			ButtonStyle.ProminentGlass when glassy => UIButtonConfiguration.ProminentGlassButtonConfiguration,
+			ButtonStyle.ProminentGlass => UIButtonConfiguration.FilledButtonConfiguration,
 			_ => UIButtonConfiguration.PlainButtonConfiguration
 		};
 

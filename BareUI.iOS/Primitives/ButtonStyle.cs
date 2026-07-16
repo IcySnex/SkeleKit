@@ -28,7 +28,17 @@ public enum ButtonStyle
 	/// <summary>
 	/// Solid filled background with fully rounded (capsule) corners.
 	/// </summary>
-	FilledCapsule
+	FilledCapsule,
+
+	/// <summary>
+	/// A Liquid Glass capsule. Plain on earlier systems.
+	/// </summary>
+	Glass,
+
+	/// <summary>
+	/// A prominent, tinted Liquid Glass capsule. Filled on earlier systems.
+	/// </summary>
+	ProminentGlass
 }
 
 /// <summary>
