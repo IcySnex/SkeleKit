@@ -86,13 +86,13 @@ public class BareApplication
 		UITabBarController controller,
 		int attempt = 0)
 	{
-		if (ActionTab?.Title is not { } label || BubbleAction is null)
+		if (ActionTab is null || BubbleAction is null)
 			return;
 
 		if (bubbleTap is { View: not null })
 			return;
 
-		if (FindByLabel(controller.TabBar, label) is not { } bubble)
+		if (FindBubbleView(controller.View!) is not { } bubble)
 		{
 			if (attempt < 5)
 				CoreFoundation.DispatchQueue.MainQueue.DispatchAfter(
@@ -116,15 +116,32 @@ public class BareApplication
 		bubble.AddGestureRecognizer(recognizer);
 	}
 
-	static UIView? FindByLabel(
-		UIView root,
-		string label)
+	// the separated trailing slot of the floating bar; the bubble is its trailing-most item.
+	// private *structure*, public API only — the delegate veto covers any future rearrangement
+	static UIView? FindBubbleView(
+		UIView root)
 	{
-		if (root.AccessibilityLabel == label)
+		if (FindByClass(root, "_UIFloatingTabBarPinnedItemsView") is not { } pinned)
+			return null;
+
+		UIView? bubble = null;
+
+		foreach (UIView subview in pinned.Subviews)
+			if (subview.Class?.Name == "_UIFloatingTabBarItemView" && (bubble is null || subview.Frame.X > bubble.Frame.X))
+				bubble = subview;
+
+		return bubble ?? pinned;
+	}
+
+	static UIView? FindByClass(
+		UIView root,
+		string name)
+	{
+		if (root.Class?.Name == name)
 			return root;
 
 		foreach (UIView subview in root.Subviews)
-			if (FindByLabel(subview, label) is { } match)
+			if (FindByClass(subview, name) is { } match)
 				return match;
 
 		return null;
