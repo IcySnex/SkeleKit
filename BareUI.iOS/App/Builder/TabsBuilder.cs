@@ -192,12 +192,14 @@ public sealed class GroupBuilder
 	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
 	/// <param name="title">The text displayed on the tab bar item.</param>
 	/// <param name="icon">The name or path of the icon resource for the tab.</param>
+	/// <param name="placement">How the tab takes part in user customization.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public GroupBuilder Tab<TView>(
 		string title,
-		string icon) where TView : ContentView
+		string icon,
+		TabPlacement placement = TabPlacement.Automatic) where TView : ContentView
 	{
-		Nodes.Add(new TabsBuilder.Leaf(registry.ViewModelOf<TView>(), title, icon, TabPlacement.Automatic));
+		Nodes.Add(new TabsBuilder.Leaf(registry.ViewModelOf<TView>(), title, icon, placement));
 
 		return this;
 	}
