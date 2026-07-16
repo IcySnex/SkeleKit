@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BareUI;
@@ -85,10 +86,11 @@ public sealed class BareApplicationBuilder
 	}
 
 	/// <summary>
-	/// Registers the pages the app can show.
+	/// Registers pages by hand. Prefer the [Page] attribute, whose generated UsePages() calls this.
 	/// </summary>
 	/// <param name="configure">A delegate to configure.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public BareApplicationBuilder UsePages(
 		Action<PagesBuilder> configure)
 	{
