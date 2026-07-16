@@ -51,6 +51,11 @@ public class BareApplication
 	/// </summary>
 	public IServiceProvider Services { get; }
 
+	// roots the accessory: UIKit's retain alone would let the peers die
+	internal UITabAccessory? Accessory { get; private set; }
+	View? accessoryContent;
+	AccessoryHost? accessoryHost;
+
 	internal Action? Backgrounded { get; set; }
 	internal Action? Foregrounded { get; set; }
 
@@ -117,6 +122,15 @@ public class BareApplication
 
 				if (tabsBuilder?.UseSidebar is true && OperatingSystem.IsIOSVersionAtLeast(18))
 					controller.Mode = UITabBarControllerMode.TabSidebar;
+
+				if (tabsBuilder?.AccessoryFactory is { } accessory && OperatingSystem.IsIOSVersionAtLeast(26))
+				{
+					accessoryContent = accessory(Services);
+					accessoryHost = new(accessoryContent);
+					Accessory = new(accessoryHost);
+
+					controller.BottomAccessory = Accessory;
+				}
 
 				return controller;
 

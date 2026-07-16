@@ -43,6 +43,29 @@ internal sealed class Navigator(
 	}
 
 
+	static UITabBarController? Tabs() =>
+		UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows)
+			.FirstOrDefault(window => window.IsKeyWindow)?
+			.RootViewController as UITabBarController;
+
+	public bool AccessoryVisible
+	{
+		get => OperatingSystem.IsIOSVersionAtLeast(26) && Tabs()?.BottomAccessory is not null;
+		set
+		{
+			if (!OperatingSystem.IsIOSVersionAtLeast(26)
+				|| Tabs() is not { } tabs
+				|| BareApplication.Current?.Accessory is not { } accessory)
+				return;
+
+			tabs.SetBottomAccessory(value ? accessory : null, animated: true);
+		}
+	}
+
+
 	readonly List<PageHost> hosts = [];
 
 

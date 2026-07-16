@@ -29,9 +29,13 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `HidesBottomBarWhenPushed` idiom Apple's own apps use (Mail edit mode, Files). The 2026-07-15
   accessory path (per-page hand-built `UITabAccessory`) was removed — it repurposed Apple's
   app-global mini-player slot and hand-wired chrome.
-- ◆ **Tab accessory** — shell-level `Tabs.Accessory(...)` hosting a BareUI `View` in
-  `UITabBarController.BottomAccessory`: app-global, minimizes into the tab bar on scroll — the
-  Music mini-player slot, and Velura's. Design agreed 2026-07-16; build when Velura needs it.
+- ~~◆ **Tab accessory**~~ — **done** (`Tabs.Accessory(() => view)` or
+  `Tabs.Accessory((PlayerVm vm) => view)` with the ViewModel resolved from DI, the `UsePages`
+  closure trick; `INavigator.AccessoryVisible` shows/hides it, animated). The content rides in an
+  `AccessoryHost` that answers `IntrinsicContentSize` from our measure pass. iOS 26 only; on
+  older systems the slot silently does not exist. **Follow-up:** the compact/minimized variant
+  (`TabBarMinimizeBehavior` + the accessory environment trait) — untouched, the bar never
+  minimizes today.
 - ~~★ **Search**~~ — **done** (`HidesSearchBarWhenScrolling`, `SearchScopes` +
   `SearchScopeChanged`, `SearchCancelled`, `SearchObscuresBackground`).
 - ◆ (skip) **Search suggestions** — built on `UISearchSuggestionItem` 2026-07-15, then **removed
