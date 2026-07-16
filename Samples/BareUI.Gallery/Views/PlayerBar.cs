@@ -1,5 +1,6 @@
 using BareUI;
 using BareUI.Gallery.ViewModels.Demos;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BareUI.Gallery.Views;
 
@@ -8,9 +9,11 @@ namespace BareUI.Gallery.Views;
 /// </summary>
 public class PlayerBar : Overlay
 {
-	public PlayerBar(
-		PlayerBarViewModel viewModel)
+	public PlayerBar()
 	{
+		PlayerBarViewModel viewModel = BareApplication.Current!.Services.GetRequiredService<PlayerBarViewModel>();
+		BindingContext = viewModel;
+
 		IsVisible = BindingFactory.Bind((PlayerBarViewModel vm) => vm.Visible);
 
 		Children.Add(new StackPanel

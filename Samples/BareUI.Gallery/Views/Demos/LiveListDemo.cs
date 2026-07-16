@@ -8,6 +8,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// An ObservableCollection driving a CollectionView: every change animates, and the EmptyView shows
 /// itself once the list runs dry.
 /// </summary>
+[Page]
 public class LiveListDemo : ContentView<LiveListDemoViewModel>
 {
 	public LiveListDemo(

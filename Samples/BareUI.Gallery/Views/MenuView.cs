@@ -4,6 +4,7 @@ using BareUI.Gallery.ViewModels;
 
 namespace BareUI.Gallery.Views;
 
+[Page(Singleton = true)]
 public class MenuView : ContentView<MenuViewModel>
 {
 	public MenuView(

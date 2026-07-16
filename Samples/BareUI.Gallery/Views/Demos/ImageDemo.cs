@@ -7,6 +7,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="Image"/>: symbol styling, effects, tinting, and URL loading UX.
 /// </summary>
+[Page(Singleton = true)]
 public class ImageDemo : ContentView<ImageDemoViewModel>
 {
 	public ImageDemo(

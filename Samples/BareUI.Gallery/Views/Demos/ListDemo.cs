@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// A native inset-grouped list, the shape Velura's Settings screen needs.
 /// </summary>
+[Page]
 public class ListDemo : ContentView<ListDemoViewModel>
 {
 	public ListDemo(

@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="Switch"/> bound two-way to the ViewModel.
 /// </summary>
+[Page]
 public class SwitchDemo : ContentView<SwitchDemoViewModel>
 {
 	public SwitchDemo(

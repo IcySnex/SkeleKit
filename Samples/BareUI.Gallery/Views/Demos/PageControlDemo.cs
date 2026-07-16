@@ -5,6 +5,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// The dots that mark a paged scroll. Two-way: tap or scrub the dots, or drive them from the ViewModel.
 /// </summary>
+[Page]
 public class PageControlDemo : ContentView<PageControlDemoViewModel>
 {
 	public PageControlDemo(

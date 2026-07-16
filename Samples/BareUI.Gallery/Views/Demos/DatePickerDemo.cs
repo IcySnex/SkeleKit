@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="DatePicker"/> modes and styles, bound two-way.
 /// </summary>
+[Page]
 public class DatePickerDemo : ContentView<DatePickerDemoViewModel>
 {
 	public DatePickerDemo(

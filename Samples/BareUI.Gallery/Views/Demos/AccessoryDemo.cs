@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates the tab accessory: the app-global bar floating above the tabs.
 /// </summary>
+[Page]
 public class AccessoryDemo : ContentView<AccessoryDemoViewModel>
 {
 	public AccessoryDemo(

@@ -5,6 +5,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// A tint set on one panel colors every control under it: UIKit inherits the tint down the view tree.
 /// </summary>
+[Page]
 public class TintDemo : ContentView<TintDemoViewModel>
 {
 	public TintDemo(

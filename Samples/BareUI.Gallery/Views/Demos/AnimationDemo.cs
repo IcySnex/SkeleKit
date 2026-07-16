@@ -7,6 +7,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates spring animations and an interruptible, drag-scrubbed <see cref="Animator"/>.
 /// </summary>
+[Page]
 public class AnimationDemo : ContentView<AnimationDemoViewModel>
 {
 	const double Distance = 240;

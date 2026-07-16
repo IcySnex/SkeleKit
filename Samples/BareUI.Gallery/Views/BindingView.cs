@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views;
 /// <summary>
 /// One-way, two-way, converted and command bindings against a CommunityToolkit.Mvvm ViewModel.
 /// </summary>
+[Page(Singleton = true)]
 public class BindingView : ContentView<BindingViewModel>
 {
 	public BindingView(

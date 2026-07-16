@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="Picker"/> with a bound selection.
 /// </summary>
+[Page]
 public class PickerDemo : ContentView<PickerDemoViewModel>
 {
 	public PickerDemo(

@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="TextEditor"/> bound two-way inside a bordered box.
 /// </summary>
+[Page]
 public class TextEditorDemo : ContentView<TextEditorDemoViewModel>
 {
 	static readonly Color Separator = Color.FromHex(0xC7C7CC);

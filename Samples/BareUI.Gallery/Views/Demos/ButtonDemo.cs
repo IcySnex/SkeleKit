@@ -7,6 +7,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="Button"/> styles, an icon, and a bound command.
 /// </summary>
+[Page]
 public class ButtonDemo : ContentView<ButtonDemoViewModel>
 {
 	public ButtonDemo(

@@ -7,6 +7,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// A horizontally scrolling carousel of posters.
 /// </summary>
+[Page]
 public class CarouselDemo : ContentView<CarouselDemoViewModel>
 {
 	public CarouselDemo(

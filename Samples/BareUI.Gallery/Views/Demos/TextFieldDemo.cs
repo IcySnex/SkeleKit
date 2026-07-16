@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="TextField"/> and <see cref="SecureField"/>, bound two-way.
 /// </summary>
+[Page]
 public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 {
 	public TextFieldDemo(

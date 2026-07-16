@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// A page with no ScrollView and an input pinned to the bottom: the keyboard must still not cover it.
 /// </summary>
+[Page]
 public class KeyboardDemo : ContentView<KeyboardDemoViewModel>
 {
 	public KeyboardDemo(

@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="Slider"/> ranges, bound two-way.
 /// </summary>
+[Page]
 public class SliderDemo : ContentView<SliderDemoViewModel>
 {
 	public SliderDemo(

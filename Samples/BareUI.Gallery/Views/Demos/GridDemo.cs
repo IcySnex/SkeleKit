@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Velura's Home poster grid: a virtualized CollectionView with recycled cells.
 /// </summary>
+[Page]
 public class GridDemo : ContentView<GridDemoViewModel>
 {
 	const string Target = "Moon";

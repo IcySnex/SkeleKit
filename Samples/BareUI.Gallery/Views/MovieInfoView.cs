@@ -5,6 +5,7 @@ namespace BareUI.Gallery.Views;
 /// <summary>
 /// Velura's MovieInfo top section, bound to a ViewModel that loads asynchronously.
 /// </summary>
+[Page]
 public class MovieInfoView : ContentView<MovieInfoViewModel>
 {
 	protected override void OnAppearing() =>

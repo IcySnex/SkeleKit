@@ -7,6 +7,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="ActivityIndicator"/> in medium and large sizes, animating and stopped, with and without custom color.
 /// </summary>
+[Page]
 public class ActivityIndicatorDemo : ContentView<ActivityIndicatorDemoViewModel>
 {
 	public ActivityIndicatorDemo(

@@ -7,6 +7,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates page chrome: bar colors, leave confirmation, bottom toolbar, and search scopes.
 /// </summary>
+[Page]
 public class ChromeDemo : ContentView<ChromeDemoViewModel>
 {
 	public ChromeDemo(

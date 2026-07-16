@@ -7,6 +7,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="ProgressBar"/> at different progress values and with a custom tint.
 /// </summary>
+[Page]
 public class ProgressBarDemo : ContentView<ProgressBarDemoViewModel>
 {
 	public ProgressBarDemo(

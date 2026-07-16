@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="Stepper"/> bound two-way.
 /// </summary>
+[Page]
 public class StepperDemo : ContentView<StepperDemoViewModel>
 {
 	public StepperDemo(

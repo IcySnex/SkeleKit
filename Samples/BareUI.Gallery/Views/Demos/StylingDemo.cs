@@ -5,6 +5,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates the native type hierarchy, shared styles, BasedOn, and style precedence.
 /// </summary>
+[Page]
 public class StylingDemo : ContentView<StylingDemoViewModel>
 {
 	public StylingDemo(

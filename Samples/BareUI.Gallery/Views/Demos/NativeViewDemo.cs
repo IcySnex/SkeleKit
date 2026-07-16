@@ -8,6 +8,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="NativeView"/> wrapping native UIKit controls (escape hatch for controls not yet in BareUI).
 /// </summary>
+[Page]
 public class NativeViewDemo : ContentView<NativeViewDemoViewModel>
 {
 	public NativeViewDemo(

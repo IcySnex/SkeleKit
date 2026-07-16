@@ -7,6 +7,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="Divider"/> with default and custom colors between labeled sections.
 /// </summary>
+[Page]
 public class DividerDemo : ContentView<DividerDemoViewModel>
 {
 	public DividerDemo(

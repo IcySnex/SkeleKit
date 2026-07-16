@@ -6,6 +6,7 @@ namespace BareUI.Gallery.Views.Demos;
 /// <summary>
 /// Demonstrates <see cref="SegmentedControl"/> bound two-way.
 /// </summary>
+[Page]
 public class SegmentedDemo : ContentView<SegmentedDemoViewModel>
 {
 	static readonly string[] Ranges = ["Day", "Week", "Month", "Year"];
