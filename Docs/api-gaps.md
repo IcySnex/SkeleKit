@@ -222,8 +222,15 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Near-end hook**~~ — **done** (`LoadMoreCommand` + `LoadMoreThreshold`, via `WillDisplayCell`).
 - ~~★ **Deselect on appear**~~ — **done** (`View.PageAppeared` walk off `ViewWillAppear`, so the row
   fades out with the pop rather than after it).
-- ◆ **Prefetching** — `UICollectionViewDataSourcePrefetching` driving the image loader.
-- ◆ **Context-menu previews** — custom preview view + `PreviewProvider` (peek content).
+- ~~◆ **Prefetching**~~ — **done** (`Prefetch`: map an item to its image url and the delegate
+  becomes the collection's `PrefetchDataSource`, warming the shared image loader (whose cache and
+  per-url dedupe make the cell's later load a hit) with a `CancellationTokenSource` per index
+  path honoured on cancel. Sim-verified: rows a screen ahead warm during a scroll).
+- ~~◆ **Context-menu previews**~~ — **done** (`ItemPreview` builds a BareUI tree as the floating
+  peek — hosted in a `PreviewHost` controller sized by our measure pass, rooted on the element
+  while UIKit presents it — and `PreviewCommand` fires with the item when the preview is tapped.
+  A preview with no `ItemContextMenu` entries is valid: peek without menu. Needs a hand check —
+  a long-press cannot be scripted on the sim).
 - ★ (skip) **Section index** — A–Z fast-scroll strip (`IndexTitles`).
 
 ### Not a bug — `ScrollTo` was always correct (closed 2026-07-15)

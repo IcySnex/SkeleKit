@@ -52,6 +52,9 @@ public partial class CollectionView<TItem, TSection>
 		selection = new(this);
 		collection.Delegate = selection;
 
+		if (Prefetch is not null)
+			collection.PrefetchDataSource = selection;
+
 		ApplyRefresh(collection);
 		ApplyReorder(collection);
 
@@ -315,15 +318,28 @@ public partial class CollectionView<TItem, TSection>
 			: UISwipeActionsConfiguration.FromActions([.. actions]);
 	}
 
+	// roots the preview controller while UIKit presents it, or its managed peer dies mid-peek
+	PreviewHost? activePreview;
+	TItem? menuItem;
+
 	internal UIContextMenuConfiguration? MenuConfiguration(
 		NSIndexPath indexPath)
 	{
-		if (ItemContextMenu.Count == 0 || ItemAt(indexPath.Section, indexPath.Row) is not { } item)
+		if (ItemContextMenu.Count == 0 && ItemPreview is null)
 			return null;
+
+		if (ItemAt(indexPath.Section, indexPath.Row) is not { } item)
+			return null;
+
+		menuItem = item;
+
+		UIContextMenuContentPreviewProvider? preview = ItemPreview is { } factory
+			? () => activePreview = new(factory(item), Ui.Bounds.Width)
+			: null;
 
 		return UIContextMenuConfiguration.Create(
 			null,
-			null,
+			preview,
 			_ =>
 			{
 				UIAction[] entries = new UIAction[ItemContextMenu.Count];
@@ -349,6 +365,18 @@ public partial class CollectionView<TItem, TSection>
 				return UIMenu.Create(entries);
 			});
 	}
+
+	internal void CommitPreview()
+	{
+		if (PreviewCommand is not { } command || menuItem is not { } item)
+			return;
+
+		if (command.CanExecute(item))
+			command.Execute(item);
+	}
+
+	internal void EndPreview() =>
+		activePreview = null;
 
 	private protected override void ApplyProperties()
 	{
@@ -795,7 +823,7 @@ public partial class CollectionView<TItem, TSection>
 }
 
 internal sealed class CollectionDelegate<TItem, TSection>(
-	CollectionView<TItem, TSection> element) : UICollectionViewDelegate
+	CollectionView<TItem, TSection> element) : UICollectionViewDelegate, IUICollectionViewDataSourcePrefetching
 	where TItem : class
 	where TSection : class, ISection<TItem>
 {
@@ -844,6 +872,68 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 		NSIndexPath indexPath,
 		CGPoint point) =>
 		element.MenuConfiguration(indexPath);
+
+	public override void WillPerformPreviewAction(
+		UICollectionView collectionView,
+		UIContextMenuConfiguration configuration,
+		IUIContextMenuInteractionCommitAnimating animator) =>
+		element.CommitPreview();
+
+	public override void WillEndContextMenuInteraction(
+		UICollectionView collectionView,
+		UIContextMenuConfiguration configuration,
+		IUIContextMenuInteractionAnimating animator) =>
+		element.EndPreview();
+
+
+	readonly Dictionary<NSIndexPath, CancellationTokenSource> prefetches = [];
+
+	public void PrefetchItems(
+		UICollectionView collectionView,
+		NSIndexPath[] indexPaths)
+	{
+		foreach (NSIndexPath path in indexPaths)
+		{
+			if (element.PrefetchUrl(path.Section, path.Row) is not { } url || prefetches.ContainsKey(path))
+				continue;
+
+			CancellationTokenSource cancellation = new();
+			prefetches[path] = cancellation;
+
+			_ = WarmAsync(url, path, cancellation);
+		}
+	}
+
+	public void CancelPrefetching(
+		UICollectionView collectionView,
+		NSIndexPath[] indexPaths)
+	{
+		foreach (NSIndexPath path in indexPaths)
+			if (prefetches.Remove(path, out CancellationTokenSource? cancellation))
+			{
+				cancellation.Cancel();
+				cancellation.Dispose();
+			}
+	}
+
+	// warming the loader's cache is the whole job; a failed prefetch is invisible by design
+	async Task WarmAsync(
+		string url,
+		NSIndexPath path,
+		CancellationTokenSource cancellation)
+	{
+		try
+		{
+			await Image.Loader.LoadAsync(url, cancellation.Token);
+		}
+		catch
+		{ }
+		finally
+		{
+			prefetches.Remove(path);
+			cancellation.Dispose();
+		}
+	}
 }
 
 internal sealed class CollectionHost : UICollectionView
@@ -869,6 +959,47 @@ internal sealed class CollectionHost : UICollectionView
 		base.LayoutSubviews();
 
 		element?.SyncEmptyState();
+	}
+}
+
+internal sealed class PreviewHost : UIViewController
+{
+	readonly View? content;
+	readonly nfloat width;
+
+	public PreviewHost(
+		View content,
+		nfloat width)
+	{
+		this.content = content;
+		this.width = width;
+	}
+
+	// see LayoutHost
+	public PreviewHost(
+		NativeHandle handle) : base(handle)
+	{ }
+
+
+	public override void ViewDidLoad()
+	{
+		base.ViewDidLoad();
+
+		if (content is null)
+			return;
+
+		View.BackgroundColor = UIColor.SystemBackground;
+		View.AddSubview(content.Realize());
+
+		content.Measure(new(width, double.PositiveInfinity));
+		PreferredContentSize = new CGSize(width, (nfloat)content.DesiredSize.Height);
+	}
+
+	public override void ViewDidLayoutSubviews()
+	{
+		base.ViewDidLayoutSubviews();
+
+		content?.Arrange(new(0, 0, View.Bounds.Width, View.Bounds.Height));
 	}
 }
 

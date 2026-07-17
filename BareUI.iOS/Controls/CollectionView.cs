@@ -168,6 +168,28 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public IList<MenuAction> ItemContextMenu { get; } = [];
 
 	/// <summary>
+	/// Builds the floating preview shown over a row's context menu, given the row's item. Without it the row itself is the preview.
+	/// </summary>
+	public Func<TItem, View>? ItemPreview { get; set; }
+
+	/// <summary>
+	/// Invoked with the row's item when its context-menu preview is tapped.
+	/// </summary>
+	public ICommand? PreviewCommand { get; set; }
+
+	/// <summary>
+	/// Maps an item to the image url to warm before its row scrolls on. Setting it enables prefetching through the app's image loader.
+	/// </summary>
+	public Func<TItem, string?>? Prefetch { get; set; }
+
+	internal string? PrefetchUrl(
+		int section,
+		int index) =>
+		ItemAt(section, index) is { } item
+			? Prefetch?.Invoke(item)
+			: null;
+
+	/// <summary>
 	/// Invoked after a drag-to-reorder with an <see cref="ItemMove{TItem}"/>. Setting it enables the drag; the move is already applied to the source when it fires.
 	/// </summary>
 	public ICommand? ReorderCommand { get; set; }

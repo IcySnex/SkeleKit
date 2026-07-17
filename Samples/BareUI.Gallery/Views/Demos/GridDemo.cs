@@ -37,7 +37,28 @@ public class GridDemo : ContentView<GridDemoViewModel>
 			ItemsSource = ViewModel.Movies,
 			SelectionCommand = ViewModel.OpenCommand,
 			LoadMoreCommand = ViewModel.LoadMoreCommand,
-			HighlightsSelection = false
+			HighlightsSelection = false,
+
+			// warm the poster cache a screen ahead of the scroll
+			Prefetch = movie => movie.PosterUrl,
+
+			// long-press peek: a large poster card; tapping it opens the movie
+			ItemPreview = movie => new StackPanel
+			{
+				Spacing = 8,
+				Padding = new Thickness(16),
+				Children =
+				{
+					new Image
+					{
+						Source = ImageSource.Url(movie.PosterUrl),
+						Height = 360,
+						CornerRadius = 12
+					},
+					new Label { Text = movie.Title, TextStyle = TextStyle.Headline }
+				}
+			},
+			PreviewCommand = ViewModel.OpenCommand
 		};
 	}
 
