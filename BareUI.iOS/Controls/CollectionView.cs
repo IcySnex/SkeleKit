@@ -9,6 +9,16 @@ internal interface ICollectionHost
 	void SyncEmptyState();
 
 	void SyncInsets();
+
+	bool CanMove(
+		int section,
+		int index);
+
+	void Move(
+		int fromSection,
+		int fromIndex,
+		int toSection,
+		int toIndex);
 }
 
 /// <summary>
@@ -156,6 +166,11 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	/// Entries in a row's long-press context menu. Each command is invoked with the row's item.
 	/// </summary>
 	public IList<MenuAction> ItemContextMenu { get; } = [];
+
+	/// <summary>
+	/// Invoked after a drag-to-reorder with an <see cref="ItemMove{TItem}"/>. Setting it enables the drag; the move is already applied to the source when it fires.
+	/// </summary>
+	public ICommand? ReorderCommand { get; set; }
 
 	/// <summary>
 	/// Invoked as the collection scrolls, with the vertical offset in points.
@@ -332,6 +347,73 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 			return true;
 		}
 	}
+
+
+	// reorder needs a list it can write back into
+	IList<TItem>? WritableIn(
+		int section) =>
+		sections is { } groups
+			? section >= 0 && section < groups.Count ? groups[section].Items as IList<TItem> : null
+			: itemsSource as IList<TItem>;
+
+	internal bool CanMove(
+		int section,
+		int index) =>
+		ReorderCommand is not null && WritableIn(section) is not null && ItemAt(section, index) is not null;
+
+	internal void Move(
+		int fromSection,
+		int fromIndex,
+		int toSection,
+		int toIndex)
+	{
+		if (WritableIn(fromSection) is not { } from || WritableIn(toSection) is not { } to)
+			return;
+
+		if (fromIndex < 0 || fromIndex >= from.Count)
+			return;
+
+		TItem item = from[fromIndex];
+
+		if (ReferenceEquals(from, to))
+		{
+			if (toIndex >= from.Count)
+				toIndex = from.Count - 1;
+
+			if (fromIndex == toIndex)
+				return;
+
+			if (from is ObservableCollection<TItem> observable)
+				observable.Move(fromIndex, toIndex);
+			else
+			{
+				from.RemoveAt(fromIndex);
+				from.Insert(toIndex, item);
+			}
+		}
+		else
+		{
+			from.RemoveAt(fromIndex);
+
+			if (toIndex > to.Count)
+				toIndex = to.Count;
+
+			to.Insert(toIndex, item);
+		}
+
+		MovedInSource();
+
+		if (ReorderCommand is { } command)
+		{
+			ItemMove<TItem> move = new(item, fromSection, fromIndex, toSection, toIndex);
+
+			if (command.CanExecute(move))
+				command.Execute(move);
+		}
+	}
+
+	// the native side lands the matching snapshot before UIKit's drop animation settles
+	partial void MovedInSource();
 
 
 	int loadMoreFiredAt = -1;

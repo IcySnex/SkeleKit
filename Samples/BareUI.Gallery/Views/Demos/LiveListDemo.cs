@@ -56,6 +56,7 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 					ItemTemplate = () => new TodoCell(),
 					ItemsSource = ViewModel.Items,
 					RefreshCommand = ViewModel.RefreshCommand,
+					ReorderCommand = ViewModel.ReorderCommand,
 					IsRefreshing = Bind(vm => vm.IsRefreshing, (vm, value) => vm.IsRefreshing = value),
 
 					// the list scrolls under the tab bar; its content stays above it

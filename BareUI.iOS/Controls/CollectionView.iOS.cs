@@ -12,7 +12,7 @@ public partial class CollectionView<TItem, TSection>
 	readonly Dictionary<object, ItemKey> keys = new(ReferenceEqualityComparer.Instance);
 	readonly List<NSNumber> sectionKeys = [];
 
-	UICollectionViewDiffableDataSource<NSNumber, ItemKey>? data;
+	CollectionSource? data;
 	CollectionDelegate<TItem, TSection>? selection;
 
 	bool snapshotQueued;
@@ -44,7 +44,7 @@ public partial class CollectionView<TItem, TSection>
 			UICollectionElementKindSection.Footer,
 			FooterId);
 
-		data = new(collection, CellFor)
+		data = new(this, collection, CellFor)
 		{
 			SupplementaryViewProvider = SupplementaryFor
 		};
@@ -53,6 +53,7 @@ public partial class CollectionView<TItem, TSection>
 		collection.Delegate = selection;
 
 		ApplyRefresh(collection);
+		ApplyReorder(collection);
 
 		return collection;
 	}
@@ -117,6 +118,64 @@ public partial class CollectionView<TItem, TSection>
 			refresh?.EndRefreshing();
 			SyncInsets();
 		});
+
+	UILongPressGestureRecognizer? reorderRecognizer;
+	bool reordering;
+
+	void ApplyReorder(
+		UICollectionView collection)
+	{
+		if (ReorderCommand is null)
+			return;
+
+		UILongPressGestureRecognizer recognizer = null!;
+		recognizer = new(() => TrackReorder(recognizer));
+
+		reorderRecognizer = recognizer;
+		collection.AddGestureRecognizer(recognizer);
+	}
+
+	void TrackReorder(
+		UILongPressGestureRecognizer recognizer)
+	{
+		UICollectionView ui = Ui;
+
+		switch (recognizer.State)
+		{
+			case UIGestureRecognizerState.Began:
+				if (ui.IndexPathForItemAtPoint(recognizer.LocationInView(ui)) is { } path)
+					reordering = ui.BeginInteractiveMovementForItem(path);
+				break;
+
+			case UIGestureRecognizerState.Changed:
+				if (reordering)
+					ui.UpdateInteractiveMovement(recognizer.LocationInView(ui));
+				break;
+
+			case UIGestureRecognizerState.Ended:
+				if (reordering)
+				{
+					reordering = false;
+					ui.EndInteractiveMovement();
+				}
+				break;
+
+			default:
+				if (reordering)
+				{
+					reordering = false;
+					ui.CancelInteractiveMovement();
+				}
+				break;
+		}
+	}
+
+	// the drop animation must settle against the moved data, not a stale snapshot
+	partial void MovedInSource()
+	{
+		QueueSnapshot();
+		FlushSnapshot();
+	}
 
 	/// <summary>
 	/// Scrolls the list until <paramref name="item"/> is visible, aligned to the given viewport edge.
@@ -460,6 +519,18 @@ public partial class CollectionView<TItem, TSection>
 	void ICollectionHost.SyncInsets() =>
 		SyncInsets();
 
+	bool ICollectionHost.CanMove(
+		int section,
+		int index) =>
+		CanMove(section, index);
+
+	void ICollectionHost.Move(
+		int fromSection,
+		int fromIndex,
+		int toSection,
+		int toIndex) =>
+		Move(fromSection, fromIndex, toSection, toIndex);
+
 	void SyncInsets()
 	{
 		if (!IsRealized)
@@ -727,6 +798,37 @@ internal sealed class CollectionHost : UICollectionView
 
 		element?.SyncEmptyState();
 	}
+}
+
+internal sealed class CollectionSource : UICollectionViewDiffableDataSource<NSNumber, ItemKey>
+{
+	readonly ICollectionHost? element;
+
+	public CollectionSource(
+		ICollectionHost element,
+		UICollectionView collectionView,
+		UICollectionViewDiffableDataSourceCellProvider cellProvider) : base(collectionView, cellProvider)
+	{
+		this.element = element;
+	}
+
+	// see LayoutHost
+	public CollectionSource(
+		NativeHandle handle) : base(handle)
+	{ }
+
+
+	public override bool CanMoveItem(
+		UICollectionView collectionView,
+		NSIndexPath indexPath) =>
+		element?.CanMove(indexPath.Section, indexPath.Row) == true;
+
+	// the binding's ReorderingHandlers is an empty stub, so the element applies the move itself
+	public override void MoveItem(
+		UICollectionView collectionView,
+		NSIndexPath sourceIndexPath,
+		NSIndexPath destinationIndexPath) =>
+		element?.Move(sourceIndexPath.Section, sourceIndexPath.Row, destinationIndexPath.Section, destinationIndexPath.Row);
 }
 
 internal sealed class BareCell(

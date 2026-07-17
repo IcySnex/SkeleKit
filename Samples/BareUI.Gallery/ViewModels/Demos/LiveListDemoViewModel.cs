@@ -66,6 +66,11 @@ public partial class LiveListDemoViewModel : ObservableObject
 	}
 
 	[RelayCommand]
+	void Reorder(
+		ItemMove<TodoItem> move) =>
+		Haptics.Impact(HapticStyle.Light);
+
+	[RelayCommand]
 	void Duplicate(
 		TodoItem item)
 	{

@@ -191,7 +191,15 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 ## CollectionView
 
-- ◆ **Reorder** — diffable + `ReorderingHandlers`; drag-to-reorder with a moved-command.
+- ~~◆ **Reorder**~~ — **done** (`ReorderCommand`: setting it enables a long-press drag via
+  interactive movement; the framework applies the move to the writable source first
+  (`IList<TItem>` / a section's `Items`, `ObservableCollection.Move` when it is one) and then
+  fires the command with an `ItemMove<TItem>`. Not `ReorderingHandlers`: the binding class is an
+  empty stub (no handler properties, verified against the 26.0 ref pack), so `CollectionSource`
+  overrides `CanMoveItem`/`MoveItem` on the diffable data source instead, and the matching
+  snapshot lands synchronously so the drop settles against moved data. Programmatic-drag
+  sim-verified; the finger drag next to `ItemContextMenu` (both live on a long-press) still
+  wants a hand check).
 - ◆ **Edit mode & multi-select** — `AllowsMultipleSelectionDuringEditing`, checkmarks,
   `SelectedItems` binding, Edit/Done toolbar pairing.
 - ◆ **Expandable sections** — list-config header disclosure + snapshot section collapse.
