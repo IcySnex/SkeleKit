@@ -173,6 +173,11 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public Func<TItem, View>? ItemPreview { get; set; }
 
 	/// <summary>
+	/// Shapes the row itself as the lifted platter: padding around the content and a corner radius. Null keeps the system shape.
+	/// </summary>
+	public PreviewShape? PreviewShape { get; set; }
+
+	/// <summary>
 	/// Invoked with the row's item when its context-menu preview is tapped.
 	/// </summary>
 	public ICommand? PreviewCommand { get; set; }
@@ -190,7 +195,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 			: null;
 
 	/// <summary>
-	/// Invoked after a drag-to-reorder with an <see cref="ItemMove{TItem}"/>. Setting it enables the drag; the move is already applied to the source when it fires.
+	/// Invoked after a drag-to-reorder with an <see cref="ItemMove{TItem}"/>. Setting it enables a long-press drag, unless a context menu owns that gesture; the edit-mode handle always drags. The move is already applied to the source when it fires.
 	/// </summary>
 	public ICommand? ReorderCommand { get; set; }
 
@@ -464,12 +469,16 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	}
 
 
-	// reorder needs a list it can write back into
+	// reorder needs a list it can write back into; an array answers IList but throws on RemoveAt
 	IList<TItem>? WritableIn(
-		int section) =>
-		sections is { } groups
+		int section)
+	{
+		IList<TItem>? list = sections is { } groups
 			? section >= 0 && section < groups.Count ? groups[section].Items as IList<TItem> : null
 			: itemsSource as IList<TItem>;
+
+		return list is { IsReadOnly: false } ? list : null;
+	}
 
 	internal bool CanMove(
 		int section,

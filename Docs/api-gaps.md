@@ -226,11 +226,20 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   becomes the collection's `PrefetchDataSource`, warming the shared image loader (whose cache and
   per-url dedupe make the cell's later load a hit) with a `CancellationTokenSource` per index
   path honoured on cancel. Sim-verified: rows a screen ahead warm during a scroll).
-- ~~◆ **Context-menu previews**~~ — **done** (`ItemPreview` builds a BareUI tree as the floating
-  peek — hosted in a `PreviewHost` controller sized by our measure pass, rooted on the element
-  while UIKit presents it — and `PreviewCommand` fires with the item when the preview is tapped.
-  A preview with no `ItemContextMenu` entries is valid: peek without menu. Needs a hand check —
-  a long-press cannot be scripted on the sim).
+- ~~◆ **Context-menu previews**~~ — **done** as `ItemPreview` only: a BareUI tree as the floating
+  peek (hosted in a `PreviewHost` controller sized by our measure pass, rooted on the element
+  while UIKit presents it), plus `PreviewCommand` fired with the item on a preview tap — deferred
+  through `animator.AddCompletion`, or the dismissal tears the presented alert down with it. A
+  preview with no `ItemContextMenu` entries is a plain peek. **Shaped row platters
+  (`UITargetedPreview` + `VisiblePath`, the Velura pattern) were built and removed**: on the 26.5
+  sim any custom targeted preview from our delegate leaves the pressed cell render-suppressed for
+  ~1s after dismissal (portal teardown waits on something GC-timed). Bisected hard — clean-room
+  lab page reproduced it with a minimal grid; survived deterministic disposal of the preview, the
+  parameters, the animator/configuration wrappers, matched highlight+dismissal targets, and a
+  forced `GC.Collect` at interaction end; identical code is clean in Velura. Root cause never
+  found on our stack; only the system platter is reliable there. Also: exporting the iOS 16
+  `GetContextMenuConfiguration*Preview` selectors kills the interaction outright — never override
+  those.
 - ★ (skip) **Section index** — A–Z fast-scroll strip (`IndexTitles`).
 
 ### Not a bug — `ScrollTo` was always correct (closed 2026-07-15)

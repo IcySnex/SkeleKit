@@ -32,6 +32,11 @@ public partial class ListDemoViewModel : ObservableObject
 		SettingsEntry entry) =>
 		await navigator.AlertAsync(entry.Title, entry.Detail.Length > 0 ? entry.Detail : "No detail");
 
+	[RelayCommand]
+	void Reorder(
+		ItemMove<SettingsEntry> move) =>
+		Haptics.Impact(HapticStyle.Light);
+
 	public ListDemoViewModel(
 		INavigator navigator)
 	{
@@ -41,18 +46,18 @@ public partial class ListDemoViewModel : ObservableObject
 		[
 			new("General", "gearshape", "Follows the system setting unless you pick one here.", General),
 
-			new("Playback", "play.rectangle", "Downloads over cellular are off by default.",
-			[
+			new("Playback", "play.rectangle", "Downloads over cellular are off by default.", new ObservableCollection<SettingsEntry>
+			{
 				new("Quality", "play.circle", "Auto"),
 				new("Downloads", "arrow.down.circle", "Wi-Fi only"),
 				new("Storage", "internaldrive", "2.4 GB")
-			]),
+			}),
 
-			new("About", "info.square", "Built with BareUI — no XAML, no MAUI.",
-			[
+			new("About", "info.square", "Built with BareUI — no XAML, no MAUI.", new ObservableCollection<SettingsEntry>
+			{
 				new("Privacy", "hand.raised", ""),
 				new("Version", "info.circle", "1.0.0")
-			])
+			})
 		];
 	}
 }

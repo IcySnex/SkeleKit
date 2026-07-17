@@ -36,6 +36,24 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 					Height = 260,
 					HighlightsSelection = false,
 
+					// the other peek flavour: a fully custom card instead of the lifted tile
+					ItemPreview = movie => new StackPanel
+					{
+						Spacing = 8,
+						Padding = new Thickness(16),
+						Children =
+						{
+							new Image
+							{
+								Source = ImageSource.Url(movie.PosterUrl),
+								Height = 360,
+								CornerRadius = 12
+							},
+							new Label { Text = movie.Title, TextStyle = TextStyle.Headline }
+						}
+					},
+					PreviewCommand = ViewModel.OpenCommand,
+
 					// only the row bleeds: it scrolls under the notch, the posters stay inside the safe area
 					IgnoresSafeArea = SafeAreaEdges.Leading | SafeAreaEdges.Trailing
 				}

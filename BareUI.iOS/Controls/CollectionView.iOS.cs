@@ -128,7 +128,8 @@ public partial class CollectionView<TItem, TSection>
 	void ApplyReorder(
 		UICollectionView collection)
 	{
-		if (ReorderCommand is null)
+		// a row context menu owns the long-press; reorder then lives on the edit-mode handle
+		if (ReorderCommand is null || ItemContextMenu.Count > 0 || ItemPreview is not null)
 			return;
 
 		UILongPressGestureRecognizer recognizer = null!;
@@ -325,7 +326,7 @@ public partial class CollectionView<TItem, TSection>
 	internal UIContextMenuConfiguration? MenuConfiguration(
 		NSIndexPath indexPath)
 	{
-		if (ItemContextMenu.Count == 0 && ItemPreview is null)
+		if (ItemContextMenu.Count == 0 && ItemPreview is null && PreviewShape is null)
 			return null;
 
 		if (ItemAt(indexPath.Section, indexPath.Row) is not { } item)
@@ -337,8 +338,9 @@ public partial class CollectionView<TItem, TSection>
 			? () => activePreview = new(factory(item), Ui.Bounds.Width)
 			: null;
 
+		// the identifier carries the path to the platter-shaping callbacks
 		return UIContextMenuConfiguration.Create(
-			null,
+			indexPath,
 			preview,
 			_ =>
 			{
@@ -377,6 +379,31 @@ public partial class CollectionView<TItem, TSection>
 
 	internal void EndPreview() =>
 		activePreview = null;
+
+	// deliberately Velura-verbatim: no caching, no disposal, VisiblePath only
+	internal UITargetedPreview? ShapedPreview(
+		UIContextMenuConfiguration configuration)
+	{
+		if (PreviewShape is not { } shape || !IsRealized || configuration.Identifier is not NSIndexPath indexPath)
+			return null;
+
+		if (Ui.CellForItem(indexPath) is not { } cell)
+			return null;
+
+		nfloat padding = (nfloat)shape.Padding;
+
+		UIPreviewParameters parameters = new()
+		{
+			VisiblePath = UIBezierPath.FromRoundedRect(
+				cell.ContentView.Frame.Inset(-padding, -padding),
+				(nfloat)shape.CornerRadius)
+		};
+
+		if (shape.Background is { } background)
+			parameters.BackgroundColor = background.ToUIColor();
+
+		return new(cell.ContentView, parameters);
+	}
 
 	private protected override void ApplyProperties()
 	{
@@ -514,6 +541,10 @@ public partial class CollectionView<TItem, TSection>
 			data.ApplySnapshot(snapshot, animated);
 		else
 			data.ApplySnapshot(snapshot, animated, completed);
+
+		// the first real item corrects the row height the empty template guessed
+		if (Layout.Kind is CollectionLayoutKind.Grid && !sizedWithItem && ItemAt(0, 0) is not null)
+			Ui.CollectionViewLayout.InvalidateLayout();
 
 		// a diff can shuffle index paths under the checkmarks
 		ApplySelectionCore();
@@ -686,7 +717,9 @@ public partial class CollectionView<TItem, TSection>
 		switch (layout.Kind)
 		{
 			case CollectionLayoutKind.Grid:
-				return new UICollectionViewCompositionalLayout(GridSection(layout, headers, footers));
+				// absolute row heights from our measure; estimated sizing breaks the peek portal
+				return new UICollectionViewCompositionalLayout((_, environment) =>
+					GridSection(layout, headers, footers, environment.Container.EffectiveContentSize.Width));
 
 			case CollectionLayoutKind.Carousel:
 				return new UICollectionViewCompositionalLayout(CarouselSection(layout));
@@ -750,22 +783,43 @@ public partial class CollectionView<TItem, TSection>
 			(footer ? UICollectionElementKindSectionKey.Footer : UICollectionElementKindSectionKey.Header).ToString(),
 			footer ? NSRectAlignment.Bottom : NSRectAlignment.Top);
 
-	static NSCollectionLayoutSection GridSection(
+	ItemView<TItem>? sizingCell;
+	bool sizedWithItem;
+
+	double RowHeight(
+		double width)
+	{
+		sizingCell ??= CreateItemView();
+
+		if (ItemAt(0, 0) is { } item)
+		{
+			sizingCell.Item = item;
+			sizedWithItem = true;
+		}
+
+		sizingCell.Measure(new(width, double.PositiveInfinity));
+		return sizingCell.DesiredSize.Height;
+	}
+
+	NSCollectionLayoutSection GridSection(
 		CollectionLayout layout,
 		bool headers,
-		bool footers)
+		bool footers,
+		nfloat width)
 	{
 		nfloat spacing = (nfloat)layout.Spacing;
+		double column = Math.Max(1, (width - spacing * (layout.Columns + 1)) / layout.Columns);
+		nfloat height = (nfloat)Math.Max(1, RowHeight(column));
 
 		NSCollectionLayoutItem item = NSCollectionLayoutItem.Create(
 			NSCollectionLayoutSize.Create(
 				NSCollectionLayoutDimension.CreateFractionalWidth(1f / layout.Columns),
-				NSCollectionLayoutDimension.CreateEstimated(160)));
+				NSCollectionLayoutDimension.CreateAbsolute(height)));
 
 		NSCollectionLayoutGroup group = NSCollectionLayoutGroup.CreateHorizontal(
 			NSCollectionLayoutSize.Create(
 				NSCollectionLayoutDimension.CreateFractionalWidth(1f),
-				NSCollectionLayoutDimension.CreateEstimated(160)),
+				NSCollectionLayoutDimension.CreateAbsolute(height)),
 			item,
 			layout.Columns);
 
@@ -873,11 +927,22 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 		CGPoint point) =>
 		element.MenuConfiguration(indexPath);
 
+	public override UITargetedPreview? GetPreviewForHighlightingContextMenu(
+		UICollectionView collectionView,
+		UIContextMenuConfiguration configuration) =>
+		element.ShapedPreview(configuration);
+
+	public override UITargetedPreview? GetPreviewForDismissingContextMenu(
+		UICollectionView collectionView,
+		UIContextMenuConfiguration configuration) =>
+		element.ShapedPreview(configuration);
+
+	// the commit waits out the dismissal: anything presented mid-teardown is torn down with it
 	public override void WillPerformPreviewAction(
 		UICollectionView collectionView,
 		UIContextMenuConfiguration configuration,
 		IUIContextMenuInteractionCommitAnimating animator) =>
-		element.CommitPreview();
+		animator.AddCompletion(element.CommitPreview);
 
 	public override void WillEndContextMenuInteraction(
 		UICollectionView collectionView,
@@ -991,8 +1056,11 @@ internal sealed class PreviewHost : UIViewController
 		View.BackgroundColor = UIColor.SystemBackground;
 		View.AddSubview(content.Realize());
 
-		content.Measure(new(width, double.PositiveInfinity));
-		PreferredContentSize = new CGSize(width, (nfloat)content.DesiredSize.Height);
+		// an explicit Width on the preview root sizes the peek; default is the list's width
+		nfloat effective = double.IsFinite(content.Width) ? (nfloat)content.Width : width;
+
+		content.Measure(new(effective, double.PositiveInfinity));
+		PreferredContentSize = new CGSize(effective, (nfloat)content.DesiredSize.Height);
 	}
 
 	public override void ViewDidLayoutSubviews()
@@ -1050,9 +1118,12 @@ internal sealed class BareCell(
 		Hosted = view;
 		this.highlight = highlight;
 
+		// one write; repaints during a peek desync the portal
+		BackgroundConfiguration = UIBackgroundConfiguration.ClearConfiguration;
+
 		ContentView.AddSubview(view.Realize());
 
-		// list-cell edit accessories: the circle and the drag handle only surface in edit mode
+		// edit-mode accessories: the circle and the drag handle
 		List<UICellAccessory> accessories = [];
 
 		if (multiselects)
@@ -1065,16 +1136,34 @@ internal sealed class BareCell(
 			Accessories = [.. accessories];
 	}
 
-	// a list cell paints from a background configuration; SelectedBackgroundView is dead here
+	bool lit;
+
+	// a list cell ignores SelectedBackgroundView
 	public override void UpdateConfiguration(
 		UICellConfigurationState state)
 	{
+		if (highlight is null)
+			return;
+
+		bool wantsLit = state.Selected || state.Highlighted;
+		if (wantsLit == lit && Hosted is not null)
+			return;
+
+		lit = wantsLit;
+
 		UIBackgroundConfiguration background = UIBackgroundConfiguration.ClearConfiguration;
 
-		if (highlight is not null && (state.Selected || state.Highlighted))
+		if (wantsLit)
 			background.BackgroundColor = highlight;
 
 		BackgroundConfiguration = background;
+	}
+
+	public override void LayoutSubviews()
+	{
+		base.LayoutSubviews();
+
+		Hosted?.Arrange(new(0, 0, ContentView.Bounds.Width, ContentView.Bounds.Height));
 	}
 
 	// self-sizing: the compositional layout asks, our engine answers
@@ -1091,13 +1180,6 @@ internal sealed class BareCell(
 		layoutAttributes.Frame = frame;
 
 		return layoutAttributes;
-	}
-
-	public override void LayoutSubviews()
-	{
-		base.LayoutSubviews();
-
-		Hosted?.Arrange(new(0, 0, ContentView.Bounds.Width, ContentView.Bounds.Height));
 	}
 }
 
