@@ -200,8 +200,15 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   snapshot lands synchronously so the drop settles against moved data. Programmatic-drag
   sim-verified; the finger drag next to `ItemContextMenu` (both live on a long-press) still
   wants a hand check).
-- ◆ **Edit mode & multi-select** — `AllowsMultipleSelectionDuringEditing`, checkmarks,
-  `SelectedItems` binding, Edit/Done toolbar pairing.
+- ~~◆ **Edit mode & multi-select**~~ — **done** (`IsEditing` two-way + `SelectedItems`: hand the
+  view an `ObservableCollection` and taps keep it in sync, mutations move the checkmarks; leaving
+  edit mode clears both sides, and a diff re-syncs checkmarks to the shuffled index paths.
+  `BareCell` is now a `UICollectionViewListCell`, which brings the native edit accessories:
+  multiselect circles when `SelectedItems` is set, the reorder drag handle when `ReorderCommand`
+  is. The selection highlight moved from `SelectedBackgroundView` (dead on a list cell) to a
+  `UIBackgroundConfiguration` in `UpdateConfiguration`. Edit/Done stays app-side: a toolbar item
+  toggling the bound `IsEditing`. Sim-verified in the list; the grid and carousel look after the
+  cell rebase want a hand check).
 - ◆ **Expandable sections** — list-config header disclosure + snapshot section collapse.
 - ◆ **Mixed sections** — per-section layout (a carousel row inside a list) — compositional
   layout does this natively; the `CollectionLayout` model would grow a per-section variant.

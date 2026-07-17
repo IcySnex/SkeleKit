@@ -79,6 +79,25 @@ public partial class LiveListDemoViewModel : ObservableObject
 	}
 
 	[ObservableProperty]
+	public partial bool IsEditing { get; set; }
+
+	public ObservableCollection<TodoItem> Selected { get; } = [];
+
+	[RelayCommand]
+	void ToggleEdit() =>
+		IsEditing = !IsEditing;
+
+	[RelayCommand]
+	void RemoveSelected()
+	{
+		foreach (TodoItem item in Selected.ToArray())
+			Items.Remove(item);
+
+		Selected.Clear();
+		IsEditing = false;
+	}
+
+	[ObservableProperty]
 	public partial bool IsRefreshing { get; set; }
 
 	[RelayCommand]

@@ -177,6 +177,63 @@ public partial class CollectionView<TItem, TSection>
 		FlushSnapshot();
 	}
 
+	partial void ApplyEditingCore()
+	{
+		if (!IsRealized)
+			return;
+
+		// the mode must be known before edit mode begins, or the circles never show
+		Ui.AllowsMultipleSelectionDuringEditing = MultiSelects;
+		Ui.Editing = isEditing;
+
+		if (isEditing)
+			ApplySelectionCore();
+		else
+			ClearSelection();
+	}
+
+	partial void ApplySelectionCore()
+	{
+		if (!IsRealized || data is null || suppressSelectionSync || !isEditing)
+			return;
+
+		HashSet<NSIndexPath> wanted = [];
+
+		foreach (TItem item in selectedItems ?? [])
+			if (keys.TryGetValue(item, out ItemKey? key) && data.GetIndexPath(key) is { } path)
+				wanted.Add(path);
+
+		foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
+			if (!wanted.Remove(path))
+				Ui.DeselectItem(path, false);
+
+		foreach (NSIndexPath path in wanted)
+			Ui.SelectItem(path, false, UICollectionViewScrollPosition.None);
+	}
+
+	void ClearSelection()
+	{
+		if (!IsRealized)
+			return;
+
+		foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
+			Ui.DeselectItem(path, false);
+
+		if (selectedItems is IList<TItem> { Count: > 0 } list)
+		{
+			suppressSelectionSync = true;
+
+			try
+			{
+				list.Clear();
+			}
+			finally
+			{
+				suppressSelectionSync = false;
+			}
+		}
+	}
+
 	/// <summary>
 	/// Scrolls the list until <paramref name="item"/> is visible, aligned to the given viewport edge.
 	/// </summary>
@@ -297,6 +354,7 @@ public partial class CollectionView<TItem, TSection>
 	{
 		HookSources();
 		ReloadItems();
+		ApplyEditingCore();
 	}
 
 	private protected override void OnUnrealized() =>
@@ -332,10 +390,10 @@ public partial class CollectionView<TItem, TSection>
 			empty.TintChanged();
 	}
 
-	// the row tapped on the way out un-highlights on the way back
+	// the row tapped on the way out un-highlights on the way back; edit-mode checkmarks stay
 	internal override void PageAppeared()
 	{
-		if (!IsRealized)
+		if (!IsRealized || isEditing)
 			return;
 
 		foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
@@ -428,6 +486,9 @@ public partial class CollectionView<TItem, TSection>
 			data.ApplySnapshot(snapshot, animated);
 		else
 			data.ApplySnapshot(snapshot, animated, completed);
+
+		// a diff can shuffle index paths under the checkmarks
+		ApplySelectionCore();
 	}
 
 	ItemKey KeyFor(
@@ -473,14 +534,11 @@ public partial class CollectionView<TItem, TSection>
 			ItemView<TItem> created = CreateItemView();
 			created.TintHost = this;
 
-			cell.Attach(created);
-
-			// a plain cell has no selection visual of its own
-			if (HighlightsSelection)
-				cell.SelectedBackgroundView = new UIView
-				{
-					BackgroundColor = HighlightColor?.ToUIColor() ?? UIColor.SystemGray4
-				};
+			cell.Attach(
+				created,
+				HighlightsSelection ? HighlightColor?.ToUIColor() ?? UIColor.SystemGray4 : null,
+				MultiSelects,
+				ReorderCommand is not null);
 		}
 
 		if (cell.Hosted is ItemView<TItem> view && identifier is ItemKey { Item: TItem item })
@@ -746,10 +804,24 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 		UICollectionView collectionView,
 		NSIndexPath indexPath)
 	{
+		if (element.EditingNow)
+		{
+			element.EditSelect(indexPath.Section, indexPath.Row, true);
+			return;
+		}
+
 		if (!element.HighlightsSelection)
 			collectionView.DeselectItem(indexPath, true);
 
 		element.Select(indexPath.Section, indexPath.Row);
+	}
+
+	public override void ItemDeselected(
+		UICollectionView collectionView,
+		NSIndexPath indexPath)
+	{
+		if (element.EditingNow)
+			element.EditSelect(indexPath.Section, indexPath.Row, false);
 	}
 
 	public override void WillDisplayCell(
@@ -832,16 +904,46 @@ internal sealed class CollectionSource : UICollectionViewDiffableDataSource<NSNu
 }
 
 internal sealed class BareCell(
-	NativeHandle handle) : UICollectionViewCell(handle)
+	NativeHandle handle) : UICollectionViewListCell(handle)
 {
 	public View? Hosted { get; private set; }
 
+	UIColor? highlight;
+
 	public void Attach(
-		View view)
+		View view,
+		UIColor? highlight,
+		bool multiselects,
+		bool reorders)
 	{
 		Hosted = view;
+		this.highlight = highlight;
 
 		ContentView.AddSubview(view.Realize());
+
+		// list-cell edit accessories: the circle and the drag handle only surface in edit mode
+		List<UICellAccessory> accessories = [];
+
+		if (multiselects)
+			accessories.Add(new UICellAccessoryMultiselect());
+
+		if (reorders)
+			accessories.Add(new UICellAccessoryReorder());
+
+		if (accessories.Count > 0)
+			Accessories = [.. accessories];
+	}
+
+	// a list cell paints from a background configuration; SelectedBackgroundView is dead here
+	public override void UpdateConfiguration(
+		UICellConfigurationState state)
+	{
+		UIBackgroundConfiguration background = UIBackgroundConfiguration.ClearConfiguration;
+
+		if (highlight is not null && (state.Selected || state.Highlighted))
+			background.BackgroundColor = highlight;
+
+		BackgroundConfiguration = background;
 	}
 
 	// self-sizing: the compositional layout asks, our engine answers

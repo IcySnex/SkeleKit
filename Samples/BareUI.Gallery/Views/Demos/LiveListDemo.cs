@@ -18,6 +18,7 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 
 		ToolbarItems.Add(new() { Icon = "plus", IsPrimary = true, Command = ViewModel.AddCommand });
 		ToolbarItems.Add(new() { Text = "Clear", Side = ToolbarSide.Leading, Command = ViewModel.ClearCommand });
+		ToolbarItems.Add(new() { Text = "Select", Command = ViewModel.ToggleEditCommand });
 		ToolbarItems.Add(new()
 		{
 			Icon = "ellipsis.circle",
@@ -57,6 +58,8 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 					ItemsSource = ViewModel.Items,
 					RefreshCommand = ViewModel.RefreshCommand,
 					ReorderCommand = ViewModel.ReorderCommand,
+					IsEditing = Bind(vm => vm.IsEditing, (vm, value) => vm.IsEditing = value),
+					SelectedItems = ViewModel.Selected,
 					IsRefreshing = Bind(vm => vm.IsRefreshing, (vm, value) => vm.IsRefreshing = value),
 
 					// the list scrolls under the tab bar; its content stays above it

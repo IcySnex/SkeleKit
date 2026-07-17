@@ -173,6 +173,93 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public ICommand? ReorderCommand { get; set; }
 
 	/// <summary>
+	/// Whether the collection is in edit mode, showing selection circles and reorder handles. Two-way.
+	/// </summary>
+	public Bindable<bool> IsEditing
+	{
+		get => isEditing;
+		set => isEditingBinding = Register(isEditingBinding, value, value => Set(ref isEditing, value, ApplyEditing, affectsMeasure: false));
+	}
+	bool isEditing;
+	Binding<bool>? isEditingBinding;
+
+	/// <summary>
+	/// The items checked while editing. Give it an <c>ObservableCollection</c>: taps keep it in sync, and mutating it moves the checkmarks.
+	/// </summary>
+	public BindableList<TItem> SelectedItems
+	{
+		get => new(selectedItems);
+		set => selectedItemsBinding = Register(selectedItemsBinding, value.Expression, value.Value, SetSelectedItems);
+	}
+	IReadOnlyList<TItem>? selectedItems;
+	Binding<IReadOnlyList<TItem>?>? selectedItemsBinding;
+
+	void ApplyEditing() =>
+		ApplyEditingCore();
+
+	partial void ApplyEditingCore();
+
+	void SetSelectedItems(
+		IReadOnlyList<TItem>? value)
+	{
+		if (ReferenceEquals(selectedItems, value))
+			return;
+
+		if (hooked && selectedItems is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnSelectedItemsChanged;
+
+		selectedItems = value;
+
+		if (hooked && selectedItems is INotifyCollectionChanged live)
+			live.CollectionChanged += OnSelectedItemsChanged;
+
+		ApplySelection();
+	}
+
+	void OnSelectedItemsChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs e) =>
+		ApplySelection();
+
+	void ApplySelection() =>
+		ApplySelectionCore();
+
+	partial void ApplySelectionCore();
+
+	internal bool EditingNow => isEditing;
+
+	internal bool MultiSelects => selectedItems is not null;
+
+	// a tap in edit mode toggles membership instead of firing SelectionCommand
+	internal bool suppressSelectionSync;
+
+	internal void EditSelect(
+		int section,
+		int index,
+		bool selected)
+	{
+		if (ItemAt(section, index) is not { } item || selectedItems is not IList<TItem> list)
+			return;
+
+		suppressSelectionSync = true;
+
+		try
+		{
+			if (selected)
+			{
+				if (!list.Contains(item))
+					list.Add(item);
+			}
+			else
+				list.Remove(item);
+		}
+		finally
+		{
+			suppressSelectionSync = false;
+		}
+	}
+
+	/// <summary>
 	/// Invoked as the collection scrolls, with the vertical offset in points.
 	/// </summary>
 	public Action<double>? Scrolled { get; set; }
@@ -240,6 +327,9 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		if (sections is INotifyCollectionChanged groups)
 			groups.CollectionChanged += OnSectionsChanged;
 
+		if (selectedItems is INotifyCollectionChanged selection)
+			selection.CollectionChanged += OnSelectedItemsChanged;
+
 		HookSectionItems();
 	}
 
@@ -253,6 +343,9 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 		if (sections is INotifyCollectionChanged groups)
 			groups.CollectionChanged -= OnSectionsChanged;
+
+		if (selectedItems is INotifyCollectionChanged selection)
+			selection.CollectionChanged -= OnSelectedItemsChanged;
 
 		UnhookSectionItems();
 
