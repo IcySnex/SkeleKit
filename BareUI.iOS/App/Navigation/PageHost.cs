@@ -294,14 +294,44 @@ internal sealed class PageHost : UIViewController
 		});
 	}
 
+	readonly List<ToolbarItem> observedItems = [];
+
+	void ObserveToolbar(
+		ContentView page)
+	{
+		foreach (ToolbarItem item in observedItems)
+			item.Changed -= OnToolbarItemChanged;
+
+		observedItems.Clear();
+
+		foreach (ToolbarItem item in page.ToolbarItems.Concat(page.BottomToolbarItems))
+		{
+			item.Changed += OnToolbarItemChanged;
+			observedItems.Add(item);
+		}
+	}
+
+	void OnToolbarItemChanged()
+	{
+		if (Page is { } page)
+			ApplyToolbar(page);
+	}
+
 	void ApplyToolbar(
 		ContentView page)
 	{
+		// a rebuild replaces every native item, so the old menus' actions can go too
+		menuActions.Clear();
+		ObserveToolbar(page);
+
 		List<UIBarButtonItem> leading = [];
 		List<UIBarButtonItem> trailing = [];
 
 		foreach (ToolbarItem item in page.ToolbarItems)
 		{
+			if (!item.IsVisible)
+				continue;
+
 			UIBarButtonItem native = Bar(item);
 
 			(item.Side is ToolbarSide.Leading ? leading : trailing).Add(native);
@@ -320,6 +350,9 @@ internal sealed class PageHost : UIViewController
 
 		foreach (ToolbarItem item in page.BottomToolbarItems)
 		{
+			if (!item.IsVisible)
+				continue;
+
 			// flexible spaces spread the actions across the bar
 			if (bottom.Count > 0)
 				bottom.Add(new(UIBarButtonSystemItem.FlexibleSpace));

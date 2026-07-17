@@ -16,10 +16,9 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 	{
 		Title = "Live list";
 
-		ToolbarItems.Add(new() { Icon = "plus", IsPrimary = true, Command = ViewModel.AddCommand });
-		ToolbarItems.Add(new() { Text = "Clear", Side = ToolbarSide.Leading, Command = ViewModel.ClearCommand });
-		ToolbarItems.Add(new() { Text = "Select", Command = ViewModel.ToggleEditCommand });
-		ToolbarItems.Add(new()
+		ToolbarItem select = new() { Text = "Select", Command = ViewModel.ToggleEditCommand };
+		ToolbarItem delete = new() { Text = "Delete", IsVisible = false, Command = ViewModel.RemoveSelectedCommand };
+		ToolbarItem menu = new()
 		{
 			Icon = "ellipsis.circle",
 			Menu =
@@ -28,7 +27,22 @@ public class LiveListDemo : ContentView<LiveListDemoViewModel>
 				new() { Text = "Shuffle", Icon = "shuffle", Command = ViewModel.ShuffleCommand },
 				new() { Text = "Clear", Icon = "trash", IsDestructive = true, Command = ViewModel.ClearCommand }
 			}
-		});
+		};
+
+		// live toolbar: Select flips to Done and Delete only exists in edit mode
+		ViewModel.PropertyChanged += (_, e) =>
+		{
+			if (e.PropertyName != nameof(ViewModel.IsEditing))
+				return;
+
+			select.Text = ViewModel.IsEditing ? "Done" : "Select";
+			delete.IsVisible = ViewModel.IsEditing;
+			menu.IsVisible = !ViewModel.IsEditing;
+		};
+
+		ToolbarItems.Add(select);
+		ToolbarItems.Add(delete);
+		ToolbarItems.Add(menu);
 
 		Content = new Grid
 		{

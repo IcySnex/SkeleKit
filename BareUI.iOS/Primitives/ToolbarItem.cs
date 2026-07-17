@@ -24,14 +24,45 @@ public enum ToolbarSide
 public sealed class ToolbarItem
 {
 	/// <summary>
-	/// The item's text, or null when it shows only an icon.
+	/// The item's text, or null when it shows only an icon. Live: setting it updates the bar.
 	/// </summary>
-	public string? Text { get; set; }
+	public string? Text
+	{
+		get;
+		set
+		{
+			field = value;
+			Changed?.Invoke();
+		}
+	}
 
 	/// <summary>
-	/// An SF Symbol name, or null for a text-only item.
+	/// An SF Symbol name, or null for a text-only item. Live: setting it updates the bar.
 	/// </summary>
-	public string? Icon { get; set; }
+	public string? Icon
+	{
+		get;
+		set
+		{
+			field = value;
+			Changed?.Invoke();
+		}
+	}
+
+	/// <summary>
+	/// Whether the item is in the bar at all. Live: contextual actions toggle it (a Delete that only exists in edit mode).
+	/// </summary>
+	public bool IsVisible
+	{
+		get;
+		set
+		{
+			field = value;
+			Changed?.Invoke();
+		}
+	} = true;
+
+	internal event Action? Changed;
 
 	/// <summary>
 	/// Which side of the bar the item sits on.
