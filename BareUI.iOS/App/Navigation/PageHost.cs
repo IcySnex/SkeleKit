@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using ObjCRuntime;
 
 namespace BareUI;
@@ -29,11 +30,11 @@ internal sealed class PageHost : UIViewController
 
 		UIAction action = UIAction.Create(
 			item.Text ?? "",
-			item.Icon is { } icon ? UIImage.GetSystemImage(icon) : null,
+			item.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
 			null,
 			_ =>
 			{
-				if (item.Command is { } command && command.CanExecute(item.CommandParameter))
+				if (item.Command is ICommand command && command.CanExecute(item.CommandParameter))
 					command.Execute(item.CommandParameter);
 			});
 
@@ -46,7 +47,7 @@ internal sealed class PageHost : UIViewController
 			native.Style = UIBarButtonItemStyle.Done;
 
 		// item-level tint: iOS 26 glass buttons do not always follow the bar's TintColor
-		if (Page?.BarAccent is { } accent)
+		if (Page?.BarAccent is Color accent)
 			native.TintColor = accent.ToUIColor();
 
 		return native;
@@ -66,11 +67,11 @@ internal sealed class PageHost : UIViewController
 
 			entries[index] = UIAction.Create(
 				entry.Text,
-				entry.Icon is { } entryIcon ? UIImage.GetSystemImage(entryIcon) : null,
+				entry.Icon is string entryIcon ? UIImage.GetSystemImage(entryIcon) : null,
 				null,
 				_ =>
 				{
-					if (entry.Command is { } entryCommand && entryCommand.CanExecute(null))
+					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(null))
 						entryCommand.Execute(null);
 				});
 
@@ -88,14 +89,14 @@ internal sealed class PageHost : UIViewController
 	{
 		UIMenu menu = BuildMenu(item);
 
-		UIBarButtonItem native = item.Icon is { } icon
+		UIBarButtonItem native = item.Icon is string icon
 			? new(UIImage.GetSystemImage(icon), menu)
 			: new(item.Text ?? "", menu);
 
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
-		if (Page?.BarAccent is { } accent)
+		if (Page?.BarAccent is Color accent)
 			native.TintColor = accent.ToUIColor();
 
 		return native;
@@ -108,7 +109,7 @@ internal sealed class PageHost : UIViewController
 			return view;
 
 		foreach (UIView child in view.Subviews)
-			if (FirstResponder(child) is { } found)
+			if (FirstResponder(child) is UIView found)
 				return found;
 
 		return null;
@@ -211,7 +212,7 @@ internal sealed class PageHost : UIViewController
 			: UINavigationItemLargeTitleDisplayMode.Never;
 
 		// the stack owns large titles; a page asking for one turns them on for the bar
-		if (page.TitleStyle is TitleStyle.Large && NavigationController is { } stack)
+		if (page.TitleStyle is TitleStyle.Large && NavigationController is UINavigationController stack)
 			stack.NavigationBar.PrefersLargeTitles = true;
 
 		if (page.TitleColor is not null || page.LargeTitleColor is not null)
@@ -241,14 +242,14 @@ internal sealed class PageHost : UIViewController
 		// no scroll-edge appearance means transparent-at-edge; the override must keep that
 		UINavigationBarAppearance edge = bar?.ScrollEdgeAppearance?.Copy() as UINavigationBarAppearance ?? Transparent();
 
-		if (page.TitleColor is { } title)
+		if (page.TitleColor is Color title)
 		{
 			UIStringAttributes attributes = new() { ForegroundColor = title.ToUIColor() };
 			standard.TitleTextAttributes = attributes;
 			edge.TitleTextAttributes = attributes;
 		}
 
-		if (page.LargeTitleColor is { } large)
+		if (page.LargeTitleColor is Color large)
 		{
 			UIStringAttributes attributes = new() { ForegroundColor = large.ToUIColor() };
 			standard.LargeTitleTextAttributes = attributes;
@@ -313,7 +314,7 @@ internal sealed class PageHost : UIViewController
 
 	void OnToolbarItemChanged()
 	{
-		if (Page is { } page)
+		if (Page is ContentView page)
 			ApplyToolbar(page);
 	}
 
@@ -366,7 +367,7 @@ internal sealed class PageHost : UIViewController
 	void ApplySearch(
 		ContentView page)
 	{
-		if (page.SearchPlaceholder is not { } placeholder)
+		if (page.SearchPlaceholder is not string placeholder)
 			return;
 
 		search = new((UIViewController?)null)
@@ -448,7 +449,7 @@ internal sealed class PageHost : UIViewController
 		NavigationController?.SetToolbarHidden(!hasToolbar, animated);
 
 		// hiding the tab bar does not hide its accessory: keep the two in sync
-		if (TabBarController is { } tabs
+		if (TabBarController is UITabBarController tabs
 			&& OperatingSystem.IsIOSVersionAtLeast(26)
 			&& BareApplication.Current is { Accessory: { } accessory } app)
 			tabs.SetBottomAccessory(app.AccessoryWanted && !HidesBottomBarWhenPushed ? accessory : null, animated);
@@ -467,7 +468,7 @@ internal sealed class PageHost : UIViewController
 	{
 		if (Page?.ConfirmLeave is not null
 			&& backAction is null
-			&& NavigationController is { } leavable
+			&& NavigationController is UINavigationController leavable
 			&& (leavable.ViewControllers?.Length > 1 || leavable.PresentingViewController is not null))
 		{
 			backAction = UIAction.Create("", null, null, _ => ConfirmBack());
@@ -487,7 +488,7 @@ internal sealed class PageHost : UIViewController
 
 		sheet.ModalInPresentation = Page?.ConfirmLeave is not null && !popover;
 
-		if (Page?.ConfirmLeave is not null && sheet.PresentationController is { } presentation)
+		if (Page?.ConfirmLeave is not null && sheet.PresentationController is UIPresentationController presentation)
 		{
 			dismissGuard ??= new(this);
 			presentation.Delegate = dismissGuard;
@@ -507,16 +508,16 @@ internal sealed class PageHost : UIViewController
 
 	void ApplyPopGestures()
 	{
-		if (NavigationController is not { } stack)
+		if (NavigationController is not UINavigationController stack)
 			return;
 
 		bool free = Page?.ConfirmLeave is null;
 
-		if (stack.InteractivePopGestureRecognizer is { } swipe)
+		if (stack.InteractivePopGestureRecognizer is UIGestureRecognizer swipe)
 			swipe.Enabled = free;
 
 		// iOS 26 pops from anywhere in the content, not just the edge
-		if (OperatingSystem.IsIOSVersionAtLeast(26) && stack.InteractiveContentPopGestureRecognizer is { } contentSwipe)
+		if (OperatingSystem.IsIOSVersionAtLeast(26) && stack.InteractiveContentPopGestureRecognizer is UIGestureRecognizer contentSwipe)
 			contentSwipe.Enabled = free;
 	}
 
@@ -563,7 +564,7 @@ internal sealed class PageHost : UIViewController
 
 		Page.Native.Frame = shrunk;
 
-		if (keyboardCover <= 0 || keyboardFocus is not { } focused)
+		if (keyboardCover <= 0 || keyboardFocus is not UIView focused)
 			return;
 
 		// shrinking reflows a layout that can adapt; a top-anchored field just gets clipped, so
@@ -602,7 +603,7 @@ internal sealed class PageHost : UIViewController
 
 		if (view is Panel panel)
 			foreach (View child in panel.Children)
-				if (FindScrolling(child) is { } match)
+				if (FindScrolling(child) is View match)
 					return match;
 
 		return null;
@@ -612,7 +613,7 @@ internal sealed class PageHost : UIViewController
 	// a cleared guard passes straight through — the synthesized back stays installed
 	async void ConfirmBack()
 	{
-		if (Page?.ConfirmLeave is { } confirm && !await confirm())
+		if (Page?.ConfirmLeave is Func<Task<bool>> confirm && !await confirm())
 			return;
 
 		if (NavigationController is { ViewControllers.Length: > 1 } stack)
@@ -623,7 +624,7 @@ internal sealed class PageHost : UIViewController
 
 	async void ConfirmDismiss()
 	{
-		if (Page?.ConfirmLeave is { } confirm && !await confirm())
+		if (Page?.ConfirmLeave is Func<Task<bool>> confirm && !await confirm())
 			return;
 
 		NavigationController?.DismissViewController(true, null);
