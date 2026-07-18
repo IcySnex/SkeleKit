@@ -1,3 +1,4 @@
+using ObjCRuntime;
 using WebKit;
 
 namespace BareUI;
@@ -149,24 +150,37 @@ public class WebView : Control
 	}
 
 
-	sealed class NavigationPeer(
-		WebView owner) : WKNavigationDelegate
+	sealed class NavigationPeer : WKNavigationDelegate
 	{
+		readonly WebView? owner;
+
+		public NavigationPeer(
+			WebView owner)
+		{
+			this.owner = owner;
+		}
+
+		// see LayoutHost
+		public NavigationPeer(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
 		public override void DidFinishNavigation(
 			WKWebView webView,
 			WKNavigation navigation) =>
-			owner.Navigated?.Invoke(webView.Url?.AbsoluteString ?? "");
+			owner?.Navigated?.Invoke(webView.Url?.AbsoluteString ?? "");
 
 		public override void DidFailNavigation(
 			WKWebView webView,
 			WKNavigation navigation,
 			NSError error) =>
-			owner.NavigationFailed?.Invoke(error.LocalizedDescription);
+			owner?.NavigationFailed?.Invoke(error.LocalizedDescription);
 
 		public override void DidFailProvisionalNavigation(
 			WKWebView webView,
 			WKNavigation navigation,
 			NSError error) =>
-			owner.NavigationFailed?.Invoke(error.LocalizedDescription);
+			owner?.NavigationFailed?.Invoke(error.LocalizedDescription);
 	}
 }

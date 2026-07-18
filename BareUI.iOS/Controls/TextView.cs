@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using ObjCRuntime;
 
 namespace BareUI;
 
@@ -371,19 +372,32 @@ public class TextView : Control
 	}
 
 
-	sealed class TextItemDelegate(
-		TextView owner) : UITextViewDelegate
+	sealed class TextItemDelegate : UITextViewDelegate
 	{
+		readonly TextView? owner;
+
+		public TextItemDelegate(
+			TextView owner)
+		{
+			this.owner = owner;
+		}
+
+		// see LayoutHost
+		public TextItemDelegate(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
 		public override UIAction? GetPrimaryAction(
 			UITextView textView,
 			UITextItem textItem,
 			UIAction defaultAction) =>
-			owner.PrimaryAction(textItem, defaultAction);
+			owner?.PrimaryAction(textItem, defaultAction);
 
 		public override UITextItemMenuConfiguration? GetMenuConfiguration(
 			UITextView textView,
 			UITextItem textItem,
 			UIMenu defaultMenu) =>
-			owner.MenuConfiguration(textItem);
+			owner?.MenuConfiguration(textItem);
 	}
 }
