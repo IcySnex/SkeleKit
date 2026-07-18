@@ -151,16 +151,15 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 						}
 					},
 
-					new Label { Style = Styles.Caption, Text = "AnchorPoint — the same 20° rotation, different pivot" },
-					new StackPanel
+					new Label { Style = Styles.Caption, Text = "AnchorPoint — same 45° rotation, overlaid: center vs corner pivot" },
+					new Overlay
 					{
-						Orientation = Orientation.Horizontal,
-						Spacing = 48,
-						Padding = new Thickness(24, 12),
+						Height = 180,
 						Children =
 						{
-							RotatedTile("Center", new Point(0.5, 0.5)),
-							RotatedTile("Top-left", new Point(0, 0))
+							RotatedTile("None", 0, new Point(0, 0), Colors.Gray),
+							RotatedTile("Corner", 45, new Point(0, 0), Colors.Pink),
+							RotatedTile("Center", 45, new Point(0.5, 0.5), Colors.Indigo)
 						}
 					}
 				}
@@ -183,15 +182,19 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 
 	static Border RotatedTile(
 		string text,
-		Point anchor) =>
+		double roatation,
+		Point anchor,
+		Color color) =>
 		new()
 		{
-			Rotation = 20,
+			Rotation = roatation,
 			AnchorPoint = anchor,
-			Width = 96,
-			Height = 64,
-			Background = Palette.Card,
-			CornerRadius = 12,
+			Width = 120,
+			Height = 76,
+			Opacity = 0.5,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Background = color,
 			Child = new Label { Text = text, TextAlignment = TextAlignment.Center }
 		};
 }

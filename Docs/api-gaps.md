@@ -281,17 +281,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   found on our stack; only the system platter is reliable there. Also: exporting the iOS 16
   `GetContextMenuConfiguration*Preview` selectors kills the interaction outright — never override
   those.
-- ★ (skip) **Section index** — A–Z fast-scroll strip (`IndexTitles`).
-
-### Not a bug — `ScrollTo` was always correct (closed 2026-07-15)
-
-The 2026-07-14 report ("Top lands ~3 rows below") was a misread of the demo: `ScrollTo(item,
-position)` brings *one item* into view aligned at a viewport edge (WPF `ScrollIntoView`), and the
-GridDemo target "Moon" sits in the 4th row — so "3 rows below the top" *is* the item at the top.
-Sim-verified with offset logs: all three positions land exact, even with `LoadMoreCommand` firing
-mid-jump. The interim self-sizing correction machinery was removed again; `ScrollTo` is one native
-`ScrollToItem` call. If real estimate drift ever shows on long unmeasured lists, the settle-loop
-approach lives in this file's history.
+- ★ **Section index** — A–Z fast-scroll strip (`IndexTitles`).
 
 ## App level
 
@@ -317,7 +307,7 @@ approach lives in this file's history.
 - ~~★ **Scene lifecycle**~~ — **done** (`UseLifecycle(background, foreground)`).
 - ◆ (skip) **System pickers via navigator** — photo (`PHPickerViewController`), document
   (`UIDocumentPickerViewController`); both are present-and-await wrappers, AOT-safe.
-- ★ (skip) **Haptic patterns** — `Haptics` covers impact/notify/selection; `CHHapticEngine` patterns
+- ★ **Haptic patterns** — `Haptics` covers impact/notify/selection; `CHHapticEngine` patterns
   only if Velura needs them (probably not).
 
 ## Honest capability note
