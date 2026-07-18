@@ -24,18 +24,24 @@ public partial class ScrollView : Panel
 	public Orientation Orientation { get; set; } = Orientation.Vertical;
 
 	/// <summary>
-	/// Whether the content is inset so the keyboard never covers the focused control. On by default.
+	/// Whether the content is inset so the keyboard never covers the focused control.
 	/// </summary>
 	public bool AvoidsKeyboard { get; set; } = true;
 
 	/// <summary>
-	/// Command invoked when the user pulls to refresh. Setting it enables the refresh control.
+	/// Command invoked when the user pulls to refresh.
 	/// </summary>
+	/// <remarks>
+	/// Setting it enables the refresh control.
+	/// </remarks>
 	public ICommand? RefreshCommand { get; set; }
 
 	/// <summary>
-	/// Whether the refresh spinner is showing. Two-way: the pull sets it true, the ViewModel sets it false when done.
+	/// Whether the refresh spinner is showing.
 	/// </summary>
+	/// <remarks>
+	/// Two-way: the pull sets it true, the ViewModel sets it false when done.
+	/// </remarks>
 	public Bindable<bool> IsRefreshing
 	{
 		get => isRefreshing;
@@ -49,7 +55,7 @@ public partial class ScrollView : Panel
 		Set(ref isRefreshing, true, affectsMeasure: false);
 		isRefreshingBinding?.PushToSource(true);
 
-		if (RefreshCommand is { } command && command.CanExecute(null))
+		if (RefreshCommand is ICommand command && command.CanExecute(null))
 			command.Execute(null);
 	}
 

@@ -27,8 +27,8 @@ public static class GridExtensions
 		/// <summary>
 		/// Places the view in grid row <paramref name="row"/> (zero-based).
 		/// </summary>
-		/// <param name="row">The row index allocation.</param>
-		/// <returns>The view instance for fluent layout chaining.</returns>
+		/// <param name="row">The zero-based row index.</param>
+		/// <returns>The same view, for chaining.</returns>
 		public T Row(
 			int row)
 		{
@@ -39,8 +39,8 @@ public static class GridExtensions
 		/// <summary>
 		/// Places the view in grid column <paramref name="column"/> (zero-based).
 		/// </summary>
-		/// <param name="column">The column index allocation.</param>
-		/// <returns>The view instance for fluent layout chaining.</returns>
+		/// <param name="column">The zero-based column index.</param>
+		/// <returns>The same view, for chaining.</returns>
 		public T Column(
 			int column)
 		{
@@ -51,8 +51,8 @@ public static class GridExtensions
 		/// <summary>
 		/// Makes the view span <paramref name="span"/> rows.
 		/// </summary>
-		/// <param name="span">The total number of rows to bridge across.</param>
-		/// <returns>The view instance for fluent layout chaining.</returns>
+		/// <param name="span">The number of rows to span.</param>
+		/// <returns>The same view, for chaining.</returns>
 		public T RowSpan(
 			int span)
 		{
@@ -63,8 +63,8 @@ public static class GridExtensions
 		/// <summary>
 		/// Makes the view span <paramref name="span"/> columns.
 		/// </summary>
-		/// <param name="span">The total number of columns to bridge across.</param>
-		/// <returns>The view instance for fluent layout chaining.</returns>
+		/// <param name="span">The number of columns to span.</param>
+		/// <returns>The same view, for chaining.</returns>
 		public T ColumnSpan(
 			int span)
 		{

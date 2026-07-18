@@ -20,7 +20,7 @@ public partial class Border
 
 	void ApplyStroke()
 	{
-		if (Stroke is { } stroke && StrokeThickness > 0)
+		if (Stroke is Color stroke && StrokeThickness > 0)
 		{
 			Native.Layer.BorderWidth = (nfloat)StrokeThickness;
 			Native.Layer.BorderColor = stroke.ToUIColor().CGColor;

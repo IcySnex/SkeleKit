@@ -11,13 +11,16 @@ public partial class Border : Panel
 	public Color? Stroke { get; set; }
 
 	/// <summary>
-	/// The stroke width in points. Also insets the child so the stroke never overlaps content.
+	/// The stroke width in points.
 	/// </summary>
+	/// <remarks>
+	/// Also insets the child so the stroke never overlaps content.
+	/// </remarks>
 	public double StrokeThickness { get; set; } = 0;
 
 
 	/// <summary>
-	/// The single wrapped child. Setting it replaces any previous child.
+	/// The single wrapped child.
 	/// </summary>
 	public View? Child
 	{
