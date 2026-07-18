@@ -42,10 +42,15 @@ public class WebViewDemo : ContentView<WebViewDemoViewModel>
 					await Sharer.ShareAsync(url);
 					break;
 				case "Image":
-					await Sharer.ShareAsync(ImageSource.Symbol("globe"));
+					await Sharer.ShareAsync(ImageSource.Url("https://picsum.photos/300/200"));
 					break;
 				case "Text + link + image":
-					await Sharer.ShareAsync("Check out this page", url, ImageSource.Symbol("globe"));
+					await Sharer.ShareAsync(new ShareContent
+					{
+						Text = "Check out this page",
+						Url = url,
+						Image = ImageSource.Url("https://picsum.photos/300/200")
+					});
 					break;
 			}
 		}

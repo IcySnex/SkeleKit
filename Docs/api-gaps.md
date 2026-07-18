@@ -69,11 +69,15 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   A delegate blocks UIKit's compact-width adaptation, so it stays a bubble on iPhone; that wins
   over `ConfirmLeave` on the same page — a popover has no dismiss swipe for the guard to catch.
 - ~~★ **Share sheet**~~ — **done**, but as its own service, not on the navigator: `ISharer.ShareAsync(
-  params ShareItem[])` over `UIActivityViewController` (injected like `INavigator`, also reachable from
-  page code via `ContentView.Sharer`). A `ShareItem` never appears at a call site — `string`, `Uri` and
-  `ImageSource` convert to it implicitly, so `ShareAsync("caption", url, image)` types each item exactly
-  while reading as native types; a remote `ImageSource` is fetched through the shared image loader first.
-  Split off the navigator on purpose, to grow later (excluded activities, a result, file/data items).
+  ShareContent)` over `UIActivityViewController` (injected like `INavigator`, also reachable from page
+  code via `ContentView.Sharer`). `ShareContent` is one coherent payload — `Text`, `Url`, `Image` — not
+  a bag of items, because the sheet has exactly one header preview and a bag makes them race for it; a
+  `string`/`Uri`/`ImageSource` converts to it implicitly so a one-part share stays terse. One
+  `LPLinkMetadata` is built for the whole share and only when an `Image` is present (a bare image has no
+  preview otherwise); text/link alone keep iOS's native previews (a link auto-fetches its card). A remote
+  image is fetched through the shared image loader first. Consumer note: the sheet's *Save Image* needs
+  `NSPhotoLibraryAddUsageDescription` in the app plist or it crashes on tap. Split off the navigator on
+  purpose, to grow later (excluded activities, a result, file/data items).
 - ~~★ **Open URL in-app**~~ — **done** (`INavigator.OpenUrlAsync(url)` presents an `SFSafariViewController`
   from the top controller; rejects a non-`http`/`https` address, completes once presented).
 - ~~◆ **Alert with text input**~~ — **done** (`INavigator.PromptAsync`, returns the typed string or

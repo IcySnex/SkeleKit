@@ -6,16 +6,33 @@ namespace BareUI;
 internal sealed class Sharer : ISharer
 {
 	public async Task ShareAsync(
-		params ShareItem[] items)
+		ShareContent content)
 	{
-		if (items is not { Length: > 0 })
+		if (content is null)
 			return;
+
+		UIImage? image = content.Image is { } source ? await ResolveImage(source) : null;
+		NSUrl? url = content.Url is { } address ? NSUrl.FromString(address.ToString()) : null;
 
 		List<NSObject> activityItems = [];
 
-		foreach (ShareItem item in items)
-			if (await Resolve(item) is { } value)
-				activityItems.Add(value);
+		if (content.Text is { } text)
+			activityItems.Add(new NSString(text));
+		if (url is not null)
+			activityItems.Add(url);
+
+		// only an image needs a hand-built preview; text and a link get iOS's own (a link auto-fetches its
+		// card). One metadata for the whole share, carried by the image item, so nothing races for the header.
+		if (image is not null)
+		{
+			LPLinkMetadata metadata = new() { ImageProvider = new NSItemProvider(image) };
+			if (content.Text is { } title)
+				metadata.Title = title;
+			if (url is not null)
+				metadata.Url = metadata.OriginalUrl = url;
+
+			activityItems.Add(new ShareItemSource(image, metadata));
+		}
 
 		if (activityItems.Count == 0 || Top() is not UIViewController top)
 			return;
@@ -42,18 +59,6 @@ internal sealed class Sharer : ISharer
 		GC.KeepAlive(activityItems);
 	}
 
-
-	static async Task<NSObject?> Resolve(
-		ShareItem item) =>
-		item.Kind switch
-		{
-			ShareItemKind.Text => new NSString(item.Text ?? ""),
-			ShareItemKind.Url => NSUrl.FromString(item.Url?.ToString() ?? ""),
-			ShareItemKind.Image => item.Image is { } source && await ResolveImage(source) is { } image
-				? new ImageActivityItem(image)
-				: null,
-			_ => null
-		};
 
 	// mirrors the Image control: symbol/bundle resolve locally, a URL rides the shared loader
 	static async Task<UIImage?> ResolveImage(
@@ -82,33 +87,36 @@ internal sealed class Sharer : ISharer
 	}
 }
 
-// a bare UIImage transfers but has no share-sheet header preview; the metadata supplies the thumbnail
-internal sealed class ImageActivityItem : UIActivityItemSource
+// shares its item like a plain object, but also carries the one metadata that previews the whole share
+internal sealed class ShareItemSource : UIActivityItemSource
 {
-	readonly UIImage? image;
+	readonly NSObject? item;
+	readonly LPLinkMetadata? metadata;
 
-	public ImageActivityItem(
-		UIImage image)
+	public ShareItemSource(
+		NSObject item,
+		LPLinkMetadata metadata)
 	{
-		this.image = image;
+		this.item = item;
+		this.metadata = metadata;
 	}
 
 	// see LayoutHost
-	public ImageActivityItem(
+	public ShareItemSource(
 		NativeHandle handle) : base(handle)
 	{ }
 
 
 	public override NSObject GetPlaceholderData(
 		UIActivityViewController activityViewController) =>
-		image!;
+		item!;
 
 	public override NSObject GetItemForActivity(
 		UIActivityViewController activityViewController,
 		NSString activityType) =>
-		image!;
+		item!;
 
 	public override LPLinkMetadata GetLinkMetadata(
 		UIActivityViewController activityViewController) =>
-		new() { ImageProvider = image is { } value ? new NSItemProvider(value) : null };
+		metadata!;
 }

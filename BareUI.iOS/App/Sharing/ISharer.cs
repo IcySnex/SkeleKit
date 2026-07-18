@@ -7,11 +7,11 @@ namespace BareUI;
 public interface ISharer
 {
 	/// <summary>
-	/// Presents the share sheet for the given items, each a <c>string</c>, <c>Uri</c> or
-	/// <see cref="ImageSource"/>. The first item is the primary one; remote images are fetched first.
+	/// Presents the share sheet for a coherent piece of content. A <c>string</c>, <c>Uri</c> or
+	/// <see cref="ImageSource"/> converts to <see cref="ShareContent"/> implicitly for the common case.
 	/// </summary>
-	/// <param name="items">The things to share.</param>
+	/// <param name="content">The text, link and/or image to share.</param>
 	/// <returns>A task that completes once the sheet is dismissed, whether shared or cancelled.</returns>
 	Task ShareAsync(
-		params ShareItem[] items);
+		ShareContent content);
 }
