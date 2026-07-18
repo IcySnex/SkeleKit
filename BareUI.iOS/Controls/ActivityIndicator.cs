@@ -64,7 +64,7 @@ public class ActivityIndicator : Control
 	void ApplyColor()
 	{
 		// UIActivityIndicatorView paints from its own color, never the view tint
-		if ((color ?? Tint) is { } value)
+		if ((color ?? Tint) is Color value)
 			Ui.Color = value.ToUIColor();
 	}
 }

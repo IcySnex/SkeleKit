@@ -12,11 +12,7 @@ public abstract class Control : View
 		return new(fit.Width, fit.Height);
 	}
 
-	/// <summary>
-	/// Clamps an open-ended constraint boundary size to finite maximum points acceptable by native measurement signatures.
-	/// </summary>
-	/// <param name="availableSize">The logical layout boundaries supplied by the nesting view group context.</param>
-	/// <returns>A concrete sizing platform structure containing fallback scalar values where infinity was present.</returns>
+	// native SizeThatFits rejects infinity, so open constraints cap at nfloat.MaxValue
 	private protected static CGSize ClampToFinite(
 		Size availableSize)
 	{

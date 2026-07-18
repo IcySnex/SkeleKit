@@ -71,7 +71,7 @@ public class ColorWell : Control
 
 	void OnSelectionChanged()
 	{
-		if (Ui.SelectedColor is not { } picked)
+		if (Ui.SelectedColor is not UIColor picked)
 			return;
 
 		Color value = picked.ToColor();

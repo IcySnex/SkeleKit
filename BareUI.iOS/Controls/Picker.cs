@@ -5,7 +5,7 @@ namespace BareUI;
 /// <summary>
 /// A menu-style selection button wrapping <c>UIButton</c> + <c>UIMenu</c>.
 /// </summary>
-/// <typeparam name="TItem">The reference type of individual selectable item objects populated within the menu structure.</typeparam>
+/// <typeparam name="TItem">The item type.</typeparam>
 public class Picker<TItem> : Control
 	where TItem : class
 {
@@ -82,7 +82,7 @@ public class Picker<TItem> : Control
 		}
 
 		Ui.Menu = UIMenu.Create(actions);
-		Ui.SetTitle(selected is { } current ? ItemTitle(current) : placeholder, UIControlState.Normal);
+		Ui.SetTitle(selected is TItem current ? ItemTitle(current) : placeholder, UIControlState.Normal);
 	}
 
 	void OnSelected(

@@ -101,8 +101,8 @@ public class DatePicker : Control
 
 	void ApplyRange()
 	{
-		Ui.MinimumDate = minimum is { } min ? ToNative(min) : null;
-		Ui.MaximumDate = maximum is { } max ? ToNative(max) : null;
+		Ui.MinimumDate = minimum is DateTime min ? ToNative(min) : null;
+		Ui.MaximumDate = maximum is DateTime max ? ToNative(max) : null;
 	}
 
 	void ApplyDate() =>

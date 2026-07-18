@@ -10,6 +10,7 @@ public class NativeView : Control
 	/// <summary>
 	/// Creates a wrapper for the given UIKit view.
 	/// </summary>
+	/// <param name="view">The UIKit view to embed.</param>
 	public NativeView(
 		UIView view)
 	{

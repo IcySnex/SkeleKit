@@ -71,10 +71,10 @@ public class Switch : Control
 	void ApplyColors()
 	{
 		// UISwitch paints its fill green whatever the view tint says
-		if ((onColor ?? Tint) is { } on)
+		if ((onColor ?? Tint) is Color on)
 			Ui.OnTintColor = on.ToUIColor();
 
-		if (thumbColor is { } thumb)
+		if (thumbColor is Color thumb)
 			Ui.ThumbTintColor = thumb.ToUIColor();
 	}
 

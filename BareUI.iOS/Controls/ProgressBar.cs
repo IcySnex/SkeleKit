@@ -54,10 +54,10 @@ public class ProgressBar : Control
 
 	void ApplyColors()
 	{
-		if (fillColor is { } fill)
+		if (fillColor is Color fill)
 			Ui.ProgressTintColor = fill.ToUIColor();
 
-		if (trackColor is { } track)
+		if (trackColor is Color track)
 			Ui.TrackTintColor = track.ToUIColor();
 	}
 }

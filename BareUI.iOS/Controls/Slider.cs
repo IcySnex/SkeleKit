@@ -141,17 +141,17 @@ public class Slider : Control
 
 	void ApplyStyle()
 	{
-		if (trackColor is { } track)
+		if (trackColor is Color track)
 			Ui.MinimumTrackTintColor = track.ToUIColor();
 
-		if (emptyTrackColor is { } empty)
+		if (emptyTrackColor is Color empty)
 			Ui.MaximumTrackTintColor = empty.ToUIColor();
 
-		if (thumbColor is { } thumb)
+		if (thumbColor is Color thumb)
 			Ui.ThumbTintColor = thumb.ToUIColor();
 
-		Ui.MinValueImage = minIcon is { } min ? UIImage.GetSystemImage(min) : null;
-		Ui.MaxValueImage = maxIcon is { } max ? UIImage.GetSystemImage(max) : null;
+		Ui.MinValueImage = minIcon is string min ? UIImage.GetSystemImage(min) : null;
+		Ui.MaxValueImage = maxIcon is string max ? UIImage.GetSystemImage(max) : null;
 
 		Ui.Continuous = continuous;
 	}
