@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// How the type of notification event for haptic feedback is.
+/// The type of notification event for haptic feedback.
 /// </summary>
 public enum HapticsNotification
 {

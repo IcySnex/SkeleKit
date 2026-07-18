@@ -1,8 +1,11 @@
 namespace BareUI;
 
 /// <summary>
-/// Marks a view for generated page registration. The generator emits the UsePages() extension.
+/// Marks a view for generated page registration.
 /// </summary>
+/// <remarks>
+/// The generator emits the UsePages() extension.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class PageAttribute : Attribute
 {

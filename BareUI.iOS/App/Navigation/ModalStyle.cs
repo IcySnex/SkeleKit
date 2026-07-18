@@ -11,13 +11,19 @@ public readonly struct ModalStyle
 	public ModalPresentation Presentation { get; }
 
 	/// <summary>
-	/// The heights a sheet may rest at. It opens at the first and can be dragged between them. Ignored for other presentations.
+	/// The heights a sheet may rest at.
 	/// </summary>
+	/// <remarks>
+	/// It opens at the first and can be dragged between them; ignored for other presentations.
+	/// </remarks>
 	public IReadOnlyList<Detent> Detents { get; }
 
 	/// <summary>
-	/// The view a popover points at, or null. Ignored for other presentations.
+	/// The view a popover points at, or null.
 	/// </summary>
+	/// <remarks>
+	/// Ignored for other presentations.
+	/// </remarks>
 	public View? Anchor { get; }
 
 	/// <summary>
@@ -81,8 +87,11 @@ public readonly struct ModalStyle
 		new(ModalPresentation.Popover, [Detent.Large], anchor, arrows);
 
 	/// <summary>
-	/// An interactive, swipe-to-dismiss sheet. Pass more than one height to let the user drag between them, opening at the first.
+	/// An interactive, swipe-to-dismiss sheet.
 	/// </summary>
+	/// <remarks>
+	/// Pass more than one height to let the user drag between them, opening at the first.
+	/// </remarks>
 	/// <param name="detents">The heights the sheet may rest at, the first being the one it opens at. Defaults to full height.</param>
 	/// <returns>The sheet presentation style.</returns>
 	public static ModalStyle Sheet(

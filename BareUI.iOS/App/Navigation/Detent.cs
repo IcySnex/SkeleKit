@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// How the height is restricted for a modal sheet.
+/// How a modal sheet's height is restricted.
 /// </summary>
 public enum Detent
 {

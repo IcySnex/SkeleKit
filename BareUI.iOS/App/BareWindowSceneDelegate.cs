@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// <inheritdoc/>
+/// The UIKit scene delegate BareUI registers; it builds the app's window and shell.
 /// </summary>
 [Register(nameof(BareWindowSceneDelegate))]
 public class BareWindowSceneDelegate : UIWindowSceneDelegate
@@ -21,7 +21,7 @@ public class BareWindowSceneDelegate : UIWindowSceneDelegate
 			RootViewController = app.BuildShell()
 		};
 
-		if (View.AppAccent is { } accent)
+		if (View.AppAccent is Color accent)
 			Window.TintColor = accent.ToUIColor();
 
 		Window.MakeKeyAndVisible();

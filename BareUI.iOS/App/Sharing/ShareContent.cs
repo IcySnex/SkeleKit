@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// What to hand the share sheet: an optional text, link and image that compose into one coherent.
+/// What to hand the share sheet: an optional text, link and image.
 /// </summary>
 public sealed class ShareContent
 {
