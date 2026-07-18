@@ -11,7 +11,7 @@ public partial class ScrollView
 			return view;
 
 		foreach (UIView child in view.Subviews)
-			if (FirstResponder(child) is { } found)
+			if (FirstResponder(child) is UIView found)
 				return found;
 
 		return null;
@@ -245,7 +245,7 @@ public partial class ScrollView
 
 		host.AutomaticallyAdjustsScrollIndicatorInsets = IndicatorInsets is null;
 
-		if (IndicatorInsets is { } insets)
+		if (IndicatorInsets is Thickness insets)
 		{
 			UIEdgeInsets native = new((nfloat)insets.Top, (nfloat)insets.Left, (nfloat)insets.Bottom, (nfloat)insets.Right);
 
