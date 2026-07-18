@@ -19,14 +19,16 @@ public class Divider : View
 	Binding<Color?>? colorBinding;
 
 
+	void ApplyColor() =>
+		Native.BackgroundColor = color?.ToUIColor() ?? UIColor.Separator;
+
+
 	private protected override UIView CreateNative() =>
 		new();
 
 	private protected override void ApplyProperties() =>
 		ApplyColor();
 
-	void ApplyColor() =>
-		Native.BackgroundColor = color?.ToUIColor() ?? UIColor.Separator;
 
 	protected override Size MeasureOverride(
 		Size availableSize) =>

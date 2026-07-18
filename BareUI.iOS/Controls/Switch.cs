@@ -5,6 +5,10 @@ namespace BareUI;
 /// </summary>
 public class Switch : Control
 {
+	UISwitch Ui =>
+		(UISwitch)Native;
+
+
 	/// <summary>
 	/// Whether the switch is on.
 	/// </summary>
@@ -42,35 +46,12 @@ public class Switch : Control
 	public Action<bool>? Toggled { get; set; }
 
 
-	private protected override UIView CreateNative()
-	{
-		UISwitch @switch = new();
-		@switch.ValueChanged += (_, _) => OnToggled();
-
-		return @switch;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplyIsOn();
-		ApplyColors();
-	}
-
-	UISwitch Ui =>
-		(UISwitch)Native;
-
 	void ApplyIsOn() =>
 		Ui.On = isOn;
 
-	internal override void TintChanged()
-	{
-		if (IsRealized)
-			ApplyColors();
-	}
-
 	void ApplyColors()
 	{
-		// UISwitch paints its fill green whatever the view tint says
+		// ignores the view tint, needs its own colors
 		if ((onColor ?? Tint) is Color on)
 			Ui.OnTintColor = on.ToUIColor();
 
@@ -85,5 +66,27 @@ public class Switch : Control
 		Set(ref isOn, value, affectsMeasure: false);
 		isOnBinding?.PushToSource(value);
 		Toggled?.Invoke(value);
+	}
+
+
+	private protected override UIView CreateNative()
+	{
+		UISwitch @switch = new();
+		@switch.ValueChanged += (_, _) => OnToggled();
+
+		return @switch;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyIsOn();
+		ApplyColors();
+	}
+
+
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			ApplyColors();
 	}
 }

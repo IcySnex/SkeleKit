@@ -5,6 +5,10 @@ namespace BareUI;
 /// </summary>
 public class Stepper : Control
 {
+	UIStepper Ui =>
+		(UIStepper)Native;
+
+
 	/// <summary>
 	/// The current value.
 	/// </summary>
@@ -52,23 +56,6 @@ public class Stepper : Control
 	public Action<double>? ValueChanged { get; set; }
 
 
-	private protected override UIView CreateNative()
-	{
-		UIStepper stepper = new();
-		stepper.ValueChanged += (_, _) => OnValueChanged();
-
-		return stepper;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplyRange();
-		ApplyValue();
-	}
-
-	UIStepper Ui =>
-		(UIStepper)Native;
-
 	void ApplyRange()
 	{
 		Ui.MinimumValue = minimum;
@@ -86,5 +73,20 @@ public class Stepper : Control
 		Set(ref current, value, affectsMeasure: false);
 		valueBinding?.PushToSource(value);
 		ValueChanged?.Invoke(value);
+	}
+
+
+	private protected override UIView CreateNative()
+	{
+		UIStepper stepper = new();
+		stepper.ValueChanged += (_, _) => OnValueChanged();
+
+		return stepper;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyRange();
+		ApplyValue();
 	}
 }

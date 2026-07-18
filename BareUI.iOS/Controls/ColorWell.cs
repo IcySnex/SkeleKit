@@ -5,6 +5,10 @@ namespace BareUI;
 /// </summary>
 public class ColorWell : Control
 {
+	UIColorWell Ui =>
+		(UIColorWell)Native;
+
+
 	/// <summary>
 	/// The picked color. Two-way: the picker writes it back as the user drags.
 	/// </summary>
@@ -42,24 +46,6 @@ public class ColorWell : Control
 	public Action<Color>? SelectionChanged { get; set; }
 
 
-	private protected override UIView CreateNative()
-	{
-		UIColorWell well = new();
-		well.ValueChanged += (_, _) => OnSelectionChanged();
-
-		return well;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplySelected();
-		ApplyTitle();
-		ApplyAlpha();
-	}
-
-	UIColorWell Ui =>
-		(UIColorWell)Native;
-
 	void ApplySelected() =>
 		Ui.SelectedColor = selected.ToUIColor();
 
@@ -79,5 +65,21 @@ public class ColorWell : Control
 		Set(ref selected, value, affectsMeasure: false);
 		selectedBinding?.PushToSource(value);
 		SelectionChanged?.Invoke(value);
+	}
+
+
+	private protected override UIView CreateNative()
+	{
+		UIColorWell well = new();
+		well.ValueChanged += (_, _) => OnSelectionChanged();
+
+		return well;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplySelected();
+		ApplyTitle();
+		ApplyAlpha();
 	}
 }

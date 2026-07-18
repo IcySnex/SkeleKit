@@ -5,6 +5,10 @@ namespace BareUI;
 /// </summary>
 public class PageControl : Control
 {
+	UIPageControl Ui =>
+		(UIPageControl)Native;
+
+
 	/// <summary>
 	/// How many dots are shown.
 	/// </summary>
@@ -73,36 +77,11 @@ public class PageControl : Control
 	public Action<int>? PageChanged { get; set; }
 
 
-	private protected override UIView CreateNative()
-	{
-		UIPageControl control = new();
-		control.ValueChanged += (_, _) => OnPageChanged();
-
-		return control;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplyCount();
-		ApplyCurrent();
-		ApplyColors();
-		ApplyBehavior();
-	}
-
-	UIPageControl Ui =>
-		(UIPageControl)Native;
-
 	void ApplyCount() =>
 		Ui.Pages = count;
 
 	void ApplyCurrent() =>
 		Ui.CurrentPage = current;
-
-	internal override void TintChanged()
-	{
-		if (IsRealized)
-			ApplyColors();
-	}
 
 	void ApplyColors()
 	{
@@ -126,5 +105,29 @@ public class PageControl : Control
 		Set(ref current, value, affectsMeasure: false);
 		currentBinding?.PushToSource(value);
 		PageChanged?.Invoke(value);
+	}
+
+
+	private protected override UIView CreateNative()
+	{
+		UIPageControl control = new();
+		control.ValueChanged += (_, _) => OnPageChanged();
+
+		return control;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyCount();
+		ApplyCurrent();
+		ApplyColors();
+		ApplyBehavior();
+	}
+
+
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			ApplyColors();
 	}
 }

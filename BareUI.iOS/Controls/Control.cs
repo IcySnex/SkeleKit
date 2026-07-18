@@ -5,13 +5,6 @@ namespace BareUI;
 /// </summary>
 public abstract class Control : View
 {
-	protected override Size MeasureOverride(
-		Size availableSize)
-	{
-		CGSize fit = Native.SizeThatFits(ClampToFinite(availableSize));
-		return new(fit.Width, fit.Height);
-	}
-
 	// native SizeThatFits rejects infinity, so open constraints cap at nfloat.MaxValue
 	private protected static CGSize ClampToFinite(
 		Size availableSize)
@@ -20,5 +13,13 @@ public abstract class Control : View
 		nfloat height = double.IsFinite(availableSize.Height) ? (nfloat)availableSize.Height : nfloat.MaxValue;
 
 		return new(width, height);
+	}
+
+
+	protected override Size MeasureOverride(
+		Size availableSize)
+	{
+		CGSize fit = Native.SizeThatFits(ClampToFinite(availableSize));
+		return new(fit.Width, fit.Height);
 	}
 }

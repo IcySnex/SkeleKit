@@ -5,6 +5,10 @@ namespace BareUI;
 /// </summary>
 public class Slider : Control
 {
+	UISlider Ui =>
+		(UISlider)Native;
+
+
 	/// <summary>
 	/// The current value.
 	/// </summary>
@@ -112,24 +116,6 @@ public class Slider : Control
 	public Action<double>? ValueChanged { get; set; }
 
 
-	private protected override UIView CreateNative()
-	{
-		UISlider slider = new();
-		slider.ValueChanged += (_, _) => OnValueChanged();
-
-		return slider;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplyRange();
-		ApplyValue();
-		ApplyStyle();
-	}
-
-	UISlider Ui =>
-		(UISlider)Native;
-
 	void ApplyRange()
 	{
 		Ui.MinValue = (float)minimum;
@@ -169,5 +155,21 @@ public class Slider : Control
 		Set(ref current, value, affectsMeasure: false);
 		valueBinding?.PushToSource(value);
 		ValueChanged?.Invoke(value);
+	}
+
+
+	private protected override UIView CreateNative()
+	{
+		UISlider slider = new();
+		slider.ValueChanged += (_, _) => OnValueChanged();
+
+		return slider;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyRange();
+		ApplyValue();
+		ApplyStyle();
 	}
 }

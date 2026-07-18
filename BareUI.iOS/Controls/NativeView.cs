@@ -17,10 +17,11 @@ public class NativeView : Control
 		this.view = view;
 	}
 
-	private protected override UIView CreateNative() =>
-		view;
 
 	// caller owns it, don't dispose
 	private protected override bool OwnsNative =>
 		false;
+
+	private protected override UIView CreateNative() =>
+		view;
 }

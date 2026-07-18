@@ -5,6 +5,9 @@ namespace BareUI;
 /// </summary>
 public class ProgressBar : Control
 {
+	UIProgressView Ui => (UIProgressView)Native;
+
+
 	/// <summary>
 	/// The progress value from 0 (empty) to 1 (full).
 	/// </summary>
@@ -38,17 +41,6 @@ public class ProgressBar : Control
 	Color? trackColor;
 
 
-	private protected override UIView CreateNative() =>
-		new UIProgressView(UIProgressViewStyle.Default);
-
-	private protected override void ApplyProperties()
-	{
-		ApplyProgress();
-		ApplyColors();
-	}
-
-	UIProgressView Ui => (UIProgressView)Native;
-
 	void ApplyProgress() =>
 		Ui.Progress = (float)progress;
 
@@ -59,5 +51,15 @@ public class ProgressBar : Control
 
 		if (trackColor is Color track)
 			Ui.TrackTintColor = track.ToUIColor();
+	}
+
+
+	private protected override UIView CreateNative() =>
+		new UIProgressView(UIProgressViewStyle.Default);
+
+	private protected override void ApplyProperties()
+	{
+		ApplyProgress();
+		ApplyColors();
 	}
 }

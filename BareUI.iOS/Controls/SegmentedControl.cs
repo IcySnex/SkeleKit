@@ -5,6 +5,10 @@ namespace BareUI;
 /// </summary>
 public class SegmentedControl : Control
 {
+	UISegmentedControl Ui =>
+		(UISegmentedControl)Native;
+
+
 	/// <summary>
 	/// The segment titles, in order.
 	/// </summary>
@@ -27,23 +31,6 @@ public class SegmentedControl : Control
 	public Action<int>? SelectionChanged { get; set; }
 
 
-	private protected override UIView CreateNative()
-	{
-		UISegmentedControl control = new();
-		control.ValueChanged += (_, _) => OnSelectionChanged();
-
-		return control;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplyItems();
-		ApplySelection();
-	}
-
-	UISegmentedControl Ui =>
-		(UISegmentedControl)Native;
-
 	void ApplyItems()
 	{
 		Ui.RemoveAllSegments();
@@ -65,5 +52,20 @@ public class SegmentedControl : Control
 		Set(ref selectedIndex, value, affectsMeasure: false);
 		selectedIndexBinding?.PushToSource(value);
 		SelectionChanged?.Invoke(value);
+	}
+
+
+	private protected override UIView CreateNative()
+	{
+		UISegmentedControl control = new();
+		control.ValueChanged += (_, _) => OnSelectionChanged();
+
+		return control;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyItems();
+		ApplySelection();
 	}
 }

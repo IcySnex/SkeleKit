@@ -9,6 +9,10 @@ namespace BareUI;
 public class Picker<TItem> : Control
 	where TItem : class
 {
+	UIButton Ui =>
+		(UIButton)Native;
+
+
 	/// <summary>
 	/// The selectable items.
 	/// </summary>
@@ -53,20 +57,6 @@ public class Picker<TItem> : Control
 	public Action<TItem>? SelectionChanged { get; set; }
 
 
-	private protected override UIView CreateNative() =>
-		new UIButton(UIButtonType.System)
-		{
-			Configuration = UIButtonConfiguration.GrayButtonConfiguration,
-			ShowsMenuAsPrimaryAction = true,
-			ChangesSelectionAsPrimaryAction = true
-		};
-
-	private protected override void ApplyProperties() =>
-		ApplyMenu();
-
-	UIButton Ui =>
-		(UIButton)Native;
-
 	void ApplyMenu()
 	{
 		UIAction[] actions = new UIAction[items.Count];
@@ -93,4 +83,16 @@ public class Picker<TItem> : Control
 		selectedBinding?.PushToSource(item);
 		SelectionChanged?.Invoke(item);
 	}
+
+
+	private protected override UIView CreateNative() =>
+		new UIButton(UIButtonType.System)
+		{
+			Configuration = UIButtonConfiguration.GrayButtonConfiguration,
+			ShowsMenuAsPrimaryAction = true,
+			ChangesSelectionAsPrimaryAction = true
+		};
+
+	private protected override void ApplyProperties() =>
+		ApplyMenu();
 }

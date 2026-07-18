@@ -7,6 +7,10 @@ namespace BareUI;
 /// </summary>
 public class DatePicker : Control
 {
+	UIDatePicker Ui =>
+		(UIDatePicker)Native;
+
+
 	/// <summary>
 	/// The picked date, in local time. Two-way by default.
 	/// </summary>
@@ -64,23 +68,10 @@ public class DatePicker : Control
 	public Action<DateTime>? DateChanged { get; set; }
 
 
-	private protected override UIView CreateNative()
-	{
-		UIDatePicker picker = new();
-		picker.ValueChanged += (_, _) => OnDateChanged();
-
-		return picker;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplyStyle();
-		ApplyRange();
-		ApplyDate();
-	}
-
-	UIDatePicker Ui =>
-		(UIDatePicker)Native;
+	// unspecified kind is taken as local
+	static NSDate ToNative(
+		DateTime value) =>
+		(NSDate)DateTime.SpecifyKind(value, value.Kind is DateTimeKind.Unspecified ? DateTimeKind.Local : value.Kind).ToUniversalTime();
 
 	void ApplyStyle()
 	{
@@ -117,8 +108,19 @@ public class DatePicker : Control
 		DateChanged?.Invoke(value);
 	}
 
-	// NSDate is a UTC instant: an unspecified kind is taken as local time
-	static NSDate ToNative(
-		DateTime value) =>
-		(NSDate)DateTime.SpecifyKind(value, value.Kind is DateTimeKind.Unspecified ? DateTimeKind.Local : value.Kind).ToUniversalTime();
+
+	private protected override UIView CreateNative()
+	{
+		UIDatePicker picker = new();
+		picker.ValueChanged += (_, _) => OnDateChanged();
+
+		return picker;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyStyle();
+		ApplyRange();
+		ApplyDate();
+	}
 }

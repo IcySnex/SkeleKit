@@ -5,6 +5,9 @@ namespace BareUI;
 /// </summary>
 public class ActivityIndicator : Control
 {
+	UIActivityIndicatorView Ui => (UIActivityIndicatorView)Native;
+
+
 	/// <summary>
 	/// Whether the spinner is animating.
 	/// </summary>
@@ -33,6 +36,22 @@ public class ActivityIndicator : Control
 	Binding<Color?>? colorBinding;
 
 
+	void ApplyIsAnimating()
+	{
+		if (isAnimating)
+			Ui.StartAnimating();
+		else
+			Ui.StopAnimating();
+	}
+
+	void ApplyColor()
+	{
+		// ignores the view tint, needs its own Color
+		if ((color ?? Tint) is Color value)
+			Ui.Color = value.ToUIColor();
+	}
+
+
 	private protected override UIView CreateNative() =>
 		new UIActivityIndicatorView(IsLarge ? UIActivityIndicatorViewStyle.Large : UIActivityIndicatorViewStyle.Medium)
 		{
@@ -45,26 +64,10 @@ public class ActivityIndicator : Control
 		ApplyIsAnimating();
 	}
 
-	UIActivityIndicatorView Ui => (UIActivityIndicatorView)Native;
-
-	void ApplyIsAnimating()
-	{
-		if (isAnimating)
-			Ui.StartAnimating();
-		else
-			Ui.StopAnimating();
-	}
 
 	internal override void TintChanged()
 	{
 		if (IsRealized)
 			ApplyColor();
-	}
-
-	void ApplyColor()
-	{
-		// UIActivityIndicatorView paints from its own color, never the view tint
-		if ((color ?? Tint) is Color value)
-			Ui.Color = value.ToUIColor();
 	}
 }
