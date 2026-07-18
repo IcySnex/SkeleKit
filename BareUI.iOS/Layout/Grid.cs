@@ -69,13 +69,19 @@ public class Grid : Panel
 
 
 	/// <summary>
-	/// The row definitions, top to bottom. Empty means a single star row.
+	/// The row definitions, top to bottom.
 	/// </summary>
+	/// <remarks>
+	/// Empty means a single star row.
+	/// </remarks>
 	public List<GridLength> Rows { get; } = [];
 
 	/// <summary>
-	/// The column definitions, leading to trailing. Empty means a single star column.
+	/// The column definitions, leading to trailing.
 	/// </summary>
+	/// <remarks>
+	/// Empty means a single star column.
+	/// </remarks>
 	public List<GridLength> Columns { get; } = [];
 
 	/// <summary>
