@@ -35,10 +35,10 @@ internal sealed class HttpImageLoader : IImageLoader
 		{
 			byte[] data = await Client.GetByteArrayAsync(url);
 
-			if (UIImage.LoadFromData(NSData.FromArray(data)) is not { } image)
+			if (UIImage.LoadFromData(NSData.FromArray(data)) is not UIImage image)
 				return null;
 
-			image = await image.PrepareForDisplayAsync() ?? image;
+			image = (UIImage?)await image.PrepareForDisplayAsync() ?? image;
 
 			nuint cost = (nuint)(image.Size.Width * image.Size.Height * image.CurrentScale * image.CurrentScale * 4);
 			Cache.SetCost(image, new NSString(url), cost);

@@ -128,7 +128,7 @@ public class WebView : Control
 			return null;
 
 		NSObject result = await Ui.EvaluateJavaScriptAsync(javaScript);
-		return result?.ToString();
+		return result.ToString();
 	}
 
 
@@ -138,7 +138,7 @@ public class WebView : Control
 			return;
 
 		if (html is { } markup)
-			Ui.LoadHtmlString(markup, null);
+			Ui.LoadHtmlString(markup, null!);
 		else if (url is { } address && NSUrl.FromString(address) is { } target)
 			Ui.LoadRequest(new NSUrlRequest(target));
 	}

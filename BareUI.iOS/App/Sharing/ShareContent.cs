@@ -1,9 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// What to hand the share sheet: an optional text, link and image that compose into one coherent share
-/// with a single, predictable preview. A <c>string</c>, <c>Uri</c> or <see cref="ImageSource"/> converts
-/// to it implicitly, so a one-part share reads as a native type — <c>ShareAsync("hi")</c>, <c>ShareAsync(url)</c>.
+/// What to hand the share sheet: an optional text, link and image that compose into one coherent.
 /// </summary>
 public sealed class ShareContent
 {
@@ -18,7 +16,7 @@ public sealed class ShareContent
 	public Uri? Url { get; set; }
 
 	/// <summary>
-	/// The image to share, shown as the sheet's preview thumbnail; a remote source is fetched first.
+	/// The image to share, shown as the sheet's preview thumbnail.
 	/// </summary>
 	public ImageSource? Image { get; set; }
 

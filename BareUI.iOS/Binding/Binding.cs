@@ -100,8 +100,10 @@ internal sealed class Binding<T>(
 		string name)
 	{
 		foreach (BindingSegment segment in expression.Segments)
+		{
 			if (segment.Name == name)
 				return true;
+		}
 
 		return false;
 	}

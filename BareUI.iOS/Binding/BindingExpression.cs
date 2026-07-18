@@ -238,9 +238,10 @@ public static class BindingFactory
 
 		string[] names = parts[1..];
 		foreach (string name in names)
+		{
 			if (!IsIdentifier(name))
-				throw new ArgumentException(
-					$"Binding path '{expression}' must be plain member access (no calls, indexers or casts).");
+				throw new ArgumentException($"Binding path '{expression}' must be plain member access (no calls, indexers or casts).");
+		}
 
 		return names;
 	}
@@ -248,12 +249,14 @@ public static class BindingFactory
 	static bool IsIdentifier(
 		string value)
 	{
-		if (value.Length == 0 || (!char.IsLetter(value[0]) && value[0] != '_'))
+		if (value.Length == 0 || !char.IsLetter(value[0]) && value[0] != '_')
 			return false;
 
 		foreach (char character in value)
+		{
 			if (!char.IsLetterOrDigit(character) && character != '_')
 				return false;
+		}
 
 		return true;
 	}

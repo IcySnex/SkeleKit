@@ -1,30 +1,9 @@
-using CoreGraphics;
 using ObjCRuntime;
 
 namespace BareUI;
 
-// bridges an element tree into the auto-laid-out accessory slot
 internal sealed class AccessoryHost : UIView
 {
-	readonly View? content;
-	readonly IUITraitChangeRegistration? themeChange;
-
-	public AccessoryHost(
-		View content)
-	{
-		this.content = content;
-
-		AddSubview(content.Realize());
-
-		themeChange = RegisterForTraitChanges([typeof(UITraitUserInterfaceStyle)], (_, _) => this.content?.ReapplyVisuals());
-	}
-
-	// see LayoutHost
-	public AccessoryHost(
-		NativeHandle handle) : base(handle)
-	{ }
-
-	// the keyboard sizes an accessory by its frame; intrinsic size is never consulted
 	internal static AccessoryHost ForKeyboard(
 		View content)
 	{
@@ -36,6 +15,23 @@ internal sealed class AccessoryHost : UIView
 
 		return host;
 	}
+
+
+	readonly View? content;
+
+	public AccessoryHost(
+		View content)
+	{
+		this.content = content;
+
+		AddSubview(content.Realize());
+
+		RegisterForTraitChanges([typeof(UITraitUserInterfaceStyle)], (_, _) => this.content?.ReapplyVisuals());
+	}
+
+	public AccessoryHost(
+		NativeHandle handle) : base(handle)
+	{ }
 
 
 	public override CGSize IntrinsicContentSize
@@ -52,6 +48,7 @@ internal sealed class AccessoryHost : UIView
 			return new(NoIntrinsicMetric, (nfloat)content.DesiredSize.Height);
 		}
 	}
+
 
 	public override void LayoutSubviews()
 	{

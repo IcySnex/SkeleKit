@@ -4,7 +4,6 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 
-		<!-- Xcode 26.6 is newer than the newest .NET for iOS release supports (26.5). Remove once Microsoft ships Xcode 26.6 support. -->
 		<ValidateXcodeVersion>false</ValidateXcodeVersion>
 	</PropertyGroup>
 </Project>

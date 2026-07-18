@@ -2,22 +2,73 @@ root = true
 
 [*]
 charset = utf-8
+end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.cs]
-indent_style = tab
-indent_size = 4
-
-csharp_style_namespace_declarations = file_scoped:warning
-csharp_style_var_for_built_in_types = false:suggestion
-csharp_style_var_when_type_is_apparent = false:suggestion
-csharp_style_var_elsewhere = false:suggestion
-
-[*.{csproj,props,targets,plist}]
+[*.{csproj,props,targets,xml,plist}]
 indent_style = space
 indent_size = 4
 
 [*.{json,yml,yaml}]
 indent_style = space
 indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{cs,csx}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = false:suggestion
+csharp_style_var_elsewhere = false:suggestion
+csharp_prefer_braces = when_multiline:suggestion
+
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_constructors = false:suggestion
+csharp_style_expression_bodied_operators = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+csharp_style_expression_bodied_indexers = when_on_single_line:suggestion
+csharp_style_expression_bodied_accessors = when_on_single_line:suggestion
+
+dotnet_style_prefer_collection_expression = when_types_loosely_match:suggestion
+csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
+csharp_style_prefer_primary_constructors = true:suggestion
+csharp_style_prefer_simple_using_statement = true:suggestion
+csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_prefer_pattern_matching = false:suggestion
+csharp_style_prefer_pattern_matching_over_as_with_null_check = false:suggestion
+csharp_style_prefer_pattern_matching_over_is_with_cast_check = false:suggestion
+csharp_style_prefer_not_pattern = true:suggestion
+csharp_style_prefer_readonly_struct = true:suggestion
+dotnet_style_readonly_field = true:suggestion
+
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_between_query_expression_clauses = true
+
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents = true
+csharp_indent_case_contents_when_block = true
+csharp_indent_labels = one_less_than_current
+csharp_indent_switch_labels = true
+
+[BareUI.{iOS,Generators}/**/*.cs]
+dotnet_diagnostic.IDE0130.severity = none
+resharper_check_namespace_highlighting = none
+

@@ -51,7 +51,7 @@ public sealed class Style<T> : IStyle
 		View view)
 	{
 		if (view is not T target)
-			throw new InvalidOperationException($"A Style<{typeof(T).Name}> cannot be applied to a {view.GetType()?.Name}.");
+			throw new InvalidOperationException($"A Style<{typeof(T).Name}> cannot be applied to a {view.GetType().Name}.");
 
 		basedOn?.Apply(view);
 		setters(target);

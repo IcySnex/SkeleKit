@@ -55,7 +55,7 @@ BareApplication.CreateBuilder()
 		.Tab<BindingView>("Bindings", "link")
 		.Search<SearchTabDemo>()
 		// .Bubble("List", "list.bullet", () => {})
-		.OnIPad(pad => pad
+		.OnPad(pad => pad
 			.Sidebar()
 			.PlaceTab<MenuView>(TabPlacement.Locked)
 			.Group("Collections", "square.grid.2x2", collections => collections

@@ -8,6 +8,22 @@ internal sealed class Navigator(
 	IServiceProvider services,
 	Func<UINavigationController?> currentStack) : INavigator
 {
+	sealed class PopoverStay : UIPopoverPresentationControllerDelegate
+	{
+		public PopoverStay()
+		{ }
+
+		public PopoverStay(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override UIModalPresentationStyle GetAdaptivePresentationStyle(
+			UIPresentationController forPresentationController) =>
+			UIModalPresentationStyle.None;
+	}
+
+
 	static UIViewController? Top()
 	{
 		UIViewController? controller = UIApplication.SharedApplication
@@ -133,7 +149,6 @@ internal sealed class Navigator(
 		return Task.CompletedTask;
 	}
 
-	// a page instance navigates once: a shown one is still owned by its controller
 	PageHost Host(
 		ContentView page)
 	{
@@ -220,7 +235,7 @@ internal sealed class Navigator(
 			popover.PermittedArrowDirections = Directions(style.Arrows);
 
 			// UIKit would adapt the bubble into a full sheet on iPhone
-			popover.Delegate = popoverStay;
+			popover.Delegate = Stay;
 		}
 
 		presenter.PresentViewController(wrapper, true, null);
@@ -240,24 +255,7 @@ internal sealed class Navigator(
 			? UISheetPresentationControllerDetentIdentifier.Medium
 			: UISheetPresentationControllerDetentIdentifier.Large;
 
-	// the popover controller holds its delegate weakly; static so it stays rooted
-	static readonly PopoverStay popoverStay = new();
-
-	sealed class PopoverStay : UIPopoverPresentationControllerDelegate
-	{
-		public PopoverStay()
-		{ }
-
-		// see LayoutHost
-		public PopoverStay(
-			NativeHandle handle) : base(handle)
-		{ }
-
-
-		public override UIModalPresentationStyle GetAdaptivePresentationStyle(
-			UIPresentationController forPresentationController) =>
-			UIModalPresentationStyle.None;
-	}
+	static readonly PopoverStay Stay = new();
 
 	static UIPopoverArrowDirection Directions(
 		PopoverArrow arrows)
@@ -281,11 +279,13 @@ internal sealed class Navigator(
 		TaskCompletionSource completion = new();
 
 		if (Top() is UIViewController top)
+		{
 			top.DismissViewController(true, () =>
 			{
 				Prune();
 				completion.SetResult();
 			});
+		}
 		else
 			completion.SetResult();
 
@@ -370,7 +370,7 @@ internal sealed class Navigator(
 		return completion.Task;
 	}
 
-	public Task<string?> ActionSheetAsync(
+	public Task<string?> SelectAsync(
 		string title,
 		string cancel = "Cancel",
 		params string[] options)

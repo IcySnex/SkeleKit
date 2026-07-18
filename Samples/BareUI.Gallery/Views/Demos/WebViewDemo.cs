@@ -33,7 +33,7 @@ public class WebViewDemo : ContentView<WebViewDemoViewModel>
 		{
 			Uri url = new(viewModel.Url);
 
-			switch (await Navigator.ActionSheetAsync("Share", "Cancel", "Text", "Link", "Image", "Text + link + image"))
+			switch (await Navigator.SelectAsync("Share", "Cancel", "Text", "Link", "Image", "Text + link + image"))
 			{
 				case "Text":
 					await Sharer.ShareAsync("Check out this page");

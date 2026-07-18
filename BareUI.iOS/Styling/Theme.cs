@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// The app's implicit styles: every view gets the styles registered for its type and its base types.
+/// The app's implicit styles.
 /// </summary>
 public sealed class Theme
 {

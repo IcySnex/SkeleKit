@@ -5,14 +5,44 @@ namespace BareUI;
 
 internal sealed class Sharer : ISharer
 {
+	internal sealed class ShareItemSource : UIActivityItemSource
+	{
+		readonly NSObject? item;
+		readonly LPLinkMetadata? metadata;
+
+		public ShareItemSource(
+			NSObject item,
+			LPLinkMetadata metadata)
+		{
+			this.item = item;
+			this.metadata = metadata;
+		}
+
+		public ShareItemSource(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override NSObject GetPlaceholderData(
+			UIActivityViewController activityViewController) =>
+			item!;
+
+		public override NSObject GetItemForActivity(
+			UIActivityViewController activityViewController,
+			NSString? activityType) =>
+			item!;
+
+		public override LPLinkMetadata GetLinkMetadata(
+			UIActivityViewController activityViewController) =>
+			metadata!;
+	}
+
+
 	public async Task ShareAsync(
 		ShareContent content)
 	{
-		if (content is null)
-			return;
-
-		UIImage? image = content.Image is { } source ? await ResolveImage(source) : null;
-		NSUrl? url = content.Url is { } address ? NSUrl.FromString(address.ToString()) : null;
+		UIImage? image = content.Image is ImageSource source ? await ResolveImage(source) : null;
+		NSUrl? url = content.Url is Uri address ? NSUrl.FromString(address.ToString()) : null;
 
 		List<NSObject> activityItems = [];
 
@@ -21,11 +51,9 @@ internal sealed class Sharer : ISharer
 		if (url is not null)
 			activityItems.Add(url);
 
-		// only an image needs a hand-built preview; text and a link get iOS's own (a link auto-fetches its
-		// card). One metadata for the whole share, carried by the image item, so nothing races for the header.
 		if (image is not null)
 		{
-			LPLinkMetadata metadata = new() { ImageProvider = new NSItemProvider(image) };
+			LPLinkMetadata metadata = new() { ImageProvider = new(image) };
 			if (content.Text is { } title)
 				metadata.Title = title;
 			if (url is not null)
@@ -39,8 +67,7 @@ internal sealed class Sharer : ISharer
 
 		UIActivityViewController controller = new([.. activityItems], null);
 
-		// iPad presents it as a popover, which crashes without an anchor; centre it on the page
-		if (controller.PopoverPresentationController is { } popover)
+		if (controller.PopoverPresentationController is UIPopoverPresentationController popover && top.View is not null)
 		{
 			popover.SourceView = top.View;
 			popover.SourceRect = new(top.View!.Bounds.GetMidX(), top.View.Bounds.GetMidY(), 0, 0);
@@ -54,20 +81,18 @@ internal sealed class Sharer : ISharer
 
 		await completion.Task;
 
-		// UIKit only retains the native peers; keep the managed side alive until the sheet is gone
 		GC.KeepAlive(controller);
 		GC.KeepAlive(activityItems);
 	}
 
 
-	// mirrors the Image control: symbol/bundle resolve locally, a URL rides the shared loader
 	static async Task<UIImage?> ResolveImage(
 		ImageSource source) =>
 		source.Kind switch
 		{
 			ImageSourceKind.Symbol => UIImage.GetSystemImage(source.Value),
 			ImageSourceKind.Bundle => UIImage.FromBundle(source.Value),
-			ImageSourceKind.Url => await Image.Loader.LoadAsync(source.Value, default),
+			ImageSourceKind.Url => await Image.Loader.LoadAsync(source.Value, CancellationToken.None),
 			_ => UIImage.FromBundle(source.Value) ?? UIImage.GetSystemImage(source.Value)
 		};
 
@@ -85,38 +110,4 @@ internal sealed class Sharer : ISharer
 
 		return controller;
 	}
-}
-
-// shares its item like a plain object, but also carries the one metadata that previews the whole share
-internal sealed class ShareItemSource : UIActivityItemSource
-{
-	readonly NSObject? item;
-	readonly LPLinkMetadata? metadata;
-
-	public ShareItemSource(
-		NSObject item,
-		LPLinkMetadata metadata)
-	{
-		this.item = item;
-		this.metadata = metadata;
-	}
-
-	// see LayoutHost
-	public ShareItemSource(
-		NativeHandle handle) : base(handle)
-	{ }
-
-
-	public override NSObject GetPlaceholderData(
-		UIActivityViewController activityViewController) =>
-		item!;
-
-	public override NSObject GetItemForActivity(
-		UIActivityViewController activityViewController,
-		NSString activityType) =>
-		item!;
-
-	public override LPLinkMetadata GetLinkMetadata(
-		UIActivityViewController activityViewController) =>
-		metadata!;
 }

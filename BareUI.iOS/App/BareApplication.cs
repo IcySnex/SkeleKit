@@ -15,6 +15,56 @@ public class BareApplication
 		Tabs
 	}
 
+	internal sealed class TabsDelegate : UITabBarControllerDelegate
+	{
+		readonly BareApplication? app;
+
+		public TabsDelegate(
+			BareApplication app)
+		{
+			this.app = app;
+		}
+
+		public TabsDelegate(
+			ObjCRuntime.NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override bool ShouldSelectTab(
+			UITabBarController tabBarController,
+			UITab tab)
+		{
+			if (app is { ActionTab.Identifier: { } action } && tab.Identifier == action)
+			{
+				CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => app.BubbleAction?.Invoke());
+				app.AttachBubbleInterceptor(tabBarController);
+
+				return false;
+			}
+
+			if (tabBarController.SelectedTab?.Identifier == tab.Identifier)
+				BareApplication.HandleReselect(tabBarController);
+
+			return true;
+		}
+	}
+
+	internal sealed class BareStack : UINavigationController
+	{
+		public BareStack(
+			UIViewController root) : base(root)
+		{ }
+
+		public BareStack(
+			ObjCRuntime.NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override UIViewController ChildViewControllerForStatusBarStyle() =>
+			TopViewController;
+	}
+
+
 
 	/// <summary>
 	/// The currently running application instance.
@@ -69,22 +119,16 @@ public class BareApplication
 	/// </summary>
 	public IServiceProvider Services { get; }
 
-	// roots the accessory: UIKit's retain alone would let the peers die
 	internal UITabAccessory? Accessory { get; private set; }
 	View? accessoryContent;
 	AccessoryHost? accessoryHost;
 
-	// the action bubble and its delegate, rooted here
 	internal UITab? ActionTab { get; private set; }
 	internal Action? BubbleAction { get; private set; }
 	TabsDelegate? tabsDelegate;
 	UILongPressGestureRecognizer? bubbleTap;
 
-	// intercepts the bubble's touch before UIKit starts the selection slide; the delegate veto
-	// stays as the fallback wherever the bar's private structure hides the view from us
-	// the platform convention on retapping the selected tab: pop to root, else scroll to top;
-	// a page's TabReselected replaces it
-	internal void HandleReselect(
+	internal static void HandleReselect(
 		UITabBarController controller)
 	{
 		if (controller.SelectedViewController is not UINavigationController stack)
@@ -114,7 +158,7 @@ public class BareApplication
 		if (ActionTab is null || BubbleAction is null)
 			return;
 
-		if (bubbleTap is { View: not null })
+		if (bubbleTap is not null)
 			return;
 
 		if (FindBubbleView(controller.View!) is not { } bubble)
@@ -134,8 +178,6 @@ public class BareApplication
 		bubble.AddGestureRecognizer(recognizer);
 	}
 
-	// the separated trailing slot of the floating bar; the bubble is its trailing-most item.
-	// private *structure*, public API only — the delegate veto covers any future rearrangement
 	static UIView? FindBubbleView(
 		UIView root)
 	{
@@ -145,8 +187,10 @@ public class BareApplication
 		UIView? bubble = null;
 
 		foreach (UIView subview in pinned.Subviews)
-			if (subview.Class?.Name == "_UIFloatingTabBarItemView" && (bubble is null || subview.Frame.X > bubble.Frame.X))
+		{
+			if (subview.Class.Name == "_UIFloatingTabBarItemView" && (bubble is null || subview.Frame.X > bubble.Frame.X))
 				bubble = subview;
+		}
 
 		return bubble ?? pinned;
 	}
@@ -155,23 +199,23 @@ public class BareApplication
 		UIView root,
 		string name)
 	{
-		if (root.Class?.Name == name)
+		if (root.Class.Name == name)
 			return root;
 
 		foreach (UIView subview in root.Subviews)
+		{
 			if (FindByClass(subview, name) is { } match)
 				return match;
+		}
 
 		return null;
 	}
 
-	// the sidebar footer, rooted here
+
 	View? footerContent;
 	AccessoryHost? footerHost;
 
-	// intent lives on the view itself; a page hiding the tab bar overrides it
-	internal bool AccessoryWanted =>
-		accessoryContent?.IsVisible.Value is true;
+	internal bool AccessoryWanted => accessoryContent?.IsVisible.Value is true;
 
 	void SyncAccessory()
 	{
@@ -193,6 +237,7 @@ public class BareApplication
 
 	internal void NotifyForeground() =>
 		Foregrounded?.Invoke();
+
 
 	internal BareApplication(
 		BareApplicationBuilder builder)
@@ -237,13 +282,12 @@ public class BareApplication
 				UITabBarController controller = new();
 
 				bool pad = UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad;
-				IPadTabsBuilder? iPad = pad ? tabsBuilder?.IPad : null;
+				PadTabsBuilder? iPad = pad ? tabsBuilder?.Pad : null;
 
-				// stacks build eagerly so a badge set during page construction lands on a never-opened tab.
-				// A group shares one navigation controller; its children provide bare pages into it
 				void Place(UITab tab, TabPlacement placement)
 				{
 					if (placement is not TabPlacement.Automatic)
+					{
 						tab.PreferredPlacement = placement switch
 						{
 							TabPlacement.Pinned => UITabPlacement.Pinned,
@@ -251,6 +295,7 @@ public class BareApplication
 							TabPlacement.Optional => UITabPlacement.Optional,
 							_ => UITabPlacement.Fixed
 						};
+					}
 
 					if (placement is TabPlacement.Locked)
 						tab.AllowsHiding = false;
@@ -330,9 +375,8 @@ public class BareApplication
 
 					tabs.Add(search);
 				}
-				else if (tabsBuilder?.BubbleViewModel is { } bubbleViewModel)
+				else if (tabsBuilder?.BubbleViewModel is { } bubbleViewModel && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
 				{
-					// a destination bubble: a real page with native selection, no veto
 					UINavigationController stack = Stack(bubbleViewModel, tabsBuilder.UseLargeTitles);
 
 					UISearchTab bubble = new(_ => stack)
@@ -345,12 +389,11 @@ public class BareApplication
 					((PageHost)stack.ViewControllers![0]).Tab = bubble;
 					tabs.Add(bubble);
 				}
-				else if (tabsBuilder?.BubbleFactory is { } action)
+				else if (tabsBuilder?.BubbleFactory is { } action && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
 				{
-					// the bubble repurposed: selection is vetoed by the delegate and runs this instead
 					BubbleAction = action(Services);
 
-					UISearchTab bubble = new(static _ => new UIViewController())
+					UISearchTab bubble = new(static _ => new())
 					{
 						Title = tabsBuilder.BubbleTitle!,
 						Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
@@ -360,13 +403,11 @@ public class BareApplication
 					ActionTab = bubble;
 					tabs.Add(bubble);
 
-					// the bar's views exist only after the first layout
 					CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => AttachBubbleInterceptor(controller));
 				}
 
 				controller.SetTabs([.. tabs], false);
 
-				// always: it also handles the reselect convention
 				tabsDelegate = new(this);
 				controller.Delegate = tabsDelegate;
 
@@ -374,9 +415,11 @@ public class BareApplication
 					controller.Mode = UITabBarControllerMode.TabSidebar;
 
 				if (tabsBuilder?.Minimize is { } minimize and not TabBarMinimize.Never && OperatingSystem.IsIOSVersionAtLeast(26))
+				{
 					controller.TabBarMinimizeBehavior = minimize is TabBarMinimize.OnScrollUp
 						? UITabBarMinimizeBehavior.OnScrollUp
 						: UITabBarMinimizeBehavior.OnScrollDown;
+				}
 
 				if (tabsBuilder?.AccessoryFactory is { } accessory && OperatingSystem.IsIOSVersionAtLeast(26))
 				{
@@ -420,59 +463,4 @@ public class BareApplication
 		Current = this;
 		UIApplication.Main(args, null, typeof(BareApplicationDelegate));
 	}
-}
-
-// vetoes selecting the action bubble and fires its action instead
-internal sealed class TabsDelegate : UITabBarControllerDelegate
-{
-	readonly BareApplication? app;
-
-	public TabsDelegate(
-		BareApplication app)
-	{
-		this.app = app;
-	}
-
-	// see LayoutHost
-	public TabsDelegate(
-		ObjCRuntime.NativeHandle handle) : base(handle)
-	{ }
-
-
-	public override bool ShouldSelectTab(
-		UITabBarController tabBarController,
-		UITab tab)
-	{
-		if (app is { ActionTab.Identifier: { } action } && tab.Identifier == action)
-		{
-			// next turn: running it inside the veto collides its animation with the capsule's return
-			CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => app.BubbleAction?.Invoke());
-
-			// landing here means the interceptor is missing (first run or a rebuilt bar): re-attach
-			app.AttachBubbleInterceptor(tabBarController);
-
-			return false;
-		}
-
-		if (tabBarController.SelectedTab?.Identifier == tab.Identifier)
-			app?.HandleReselect(tabBarController);
-
-		return true;
-	}
-}
-
-// a plain stack decides the status bar itself; this one asks the visible page
-internal sealed class BareStack : UINavigationController
-{
-	public BareStack(
-		UIViewController root) : base(root)
-	{ }
-
-	public BareStack(
-		ObjCRuntime.NativeHandle handle) : base(handle)
-	{ }
-
-
-	public override UIViewController? ChildViewControllerForStatusBarStyle() =>
-		TopViewController;
 }

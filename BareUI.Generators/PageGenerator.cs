@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -32,25 +31,30 @@ public sealed class PageGenerator : IIncrementalGenerator
 			static (production, pages) => production.AddSource("GeneratedPages.g.cs", Emit(pages!)));
 	}
 
+
 	static Page? Extract(
 		GeneratorAttributeSyntaxContext context)
 	{
 		if (context.TargetSymbol is not INamedTypeSymbol view)
 			return null;
 
-		// the ViewModel is the type argument of the ContentView<T> base
 		for (INamedTypeSymbol? baseType = view.BaseType; baseType is not null; baseType = baseType.BaseType)
-			if (baseType is { Name: "ContentView", IsGenericType: true, TypeArguments.Length: 1 }
-				&& baseType.ContainingNamespace.ToDisplayString() == "BareUI")
-			{
-				bool singleton = context.Attributes[0].NamedArguments
-					.Any(static argument => argument is { Key: "Singleton", Value.Value: true });
+		{
+			if (baseType is not INamedTypeSymbol ||
+				baseType.Name != "ContentView" ||
+				!baseType.IsGenericType ||
+				baseType.TypeArguments.Length != 1 ||
+				baseType.ContainingNamespace.ToDisplayString() != "BareUI")
+				continue;
 
-				return new(
-					view.ToDisplayString(),
-					baseType.TypeArguments[0].ToDisplayString(),
-					singleton);
-			}
+			bool singleton = context.Attributes[0].NamedArguments.Any(
+				static argument => argument.Key == "Singleton" && argument.Value.Value is true);
+
+			return new(
+				view.ToDisplayString(),
+				baseType.TypeArguments[0].ToDisplayString(),
+				singleton);
+		}
 
 		return null;
 	}

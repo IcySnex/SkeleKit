@@ -46,7 +46,7 @@ public sealed class TabsBuilder
 
 	internal Func<View>? AccessoryFactory { get; private set; }
 
-	internal IPadTabsBuilder? IPad { get; private set; }
+	internal PadTabsBuilder? Pad { get; private set; }
 
 	internal bool UseLargeTitles { get; private set; }
 
@@ -86,6 +86,24 @@ public sealed class TabsBuilder
 	public TabsBuilder Search<TView>() where TView : ContentView
 	{
 		SearchViewModel = registry.ViewModelOf<TView>();
+
+		return this;
+	}
+
+	/// <summary>
+	/// Puts a destination page in the separated bubble: selecting it shows the page with native selection.
+	/// </summary>
+	/// <typeparam name="TView">The type of the content view to host in the bubble.</typeparam>
+	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
+	/// <param name="icon">The SF Symbol shown in the bubble.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public TabsBuilder Bubble<TView>(
+		string title,
+		string icon) where TView : ContentView
+	{
+		BubbleTitle = title;
+		BubbleIcon = icon;
+		BubbleViewModel = registry.ViewModelOf<TView>();
 
 		return this;
 	}
@@ -140,24 +158,6 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Puts a destination page in the separated bubble: selecting it shows the page with native selection.
-	/// </summary>
-	/// <typeparam name="TView">The type of the content view to host in the bubble.</typeparam>
-	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
-	/// <param name="icon">The SF Symbol shown in the bubble.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder Bubble<TView>(
-		string title,
-		string icon) where TView : ContentView
-	{
-		BubbleTitle = title;
-		BubbleIcon = icon;
-		BubbleViewModel = registry.ViewModelOf<TView>();
-
-		return this;
-	}
-
-	/// <summary>
 	/// Lets the tab bar minimize as the content scrolls. iOS 26 and later.
 	/// </summary>
 	/// <param name="minimize">When the bar minimizes.</param>
@@ -188,165 +188,11 @@ public sealed class TabsBuilder
 	/// </summary>
 	/// <param name="configure">A delegate to configure.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder OnIPad(
-		Action<IPadTabsBuilder> configure)
+	public TabsBuilder OnPad(
+		Action<PadTabsBuilder> configure)
 	{
-		IPad = new(registry);
-		configure(IPad);
-
-		return this;
-	}
-}
-
-/// <summary>
-/// Declares the tabs inside a group.
-/// </summary>
-public sealed class GroupBuilder
-{
-	readonly ViewRegistry registry;
-
-	internal GroupBuilder(
-		ViewRegistry registry)
-	{
-		this.registry = registry;
-	}
-
-	internal List<TabsBuilder.Node> Nodes { get; } = [];
-
-
-	/// <summary>
-	/// Adds a tab page to the group.
-	/// </summary>
-	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
-	/// <param name="title">The text displayed on the tab bar item.</param>
-	/// <param name="icon">The name or path of the icon resource for the tab.</param>
-	/// <param name="placement">How the tab takes part in user customization.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public GroupBuilder Tab<TView>(
-		string title,
-		string icon,
-		TabPlacement placement = TabPlacement.Automatic) where TView : ContentView
-	{
-		Nodes.Add(new TabsBuilder.Leaf(registry.ViewModelOf<TView>(), title, icon, placement));
-
-		return this;
-	}
-
-	/// <summary>
-	/// Adds a nested group.
-	/// </summary>
-	/// <param name="title">The group's title.</param>
-	/// <param name="icon">The group's SF Symbol.</param>
-	/// <param name="children">Declares the tabs inside the group.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public GroupBuilder Group(
-		string title,
-		string icon,
-		Action<GroupBuilder> children)
-	{
-		GroupBuilder group = new(registry);
-		children(group);
-
-		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes));
-
-		return this;
-	}
-}
-
-/// <summary>
-/// Everything iPad: the sidebar, placements and iPad-only destinations.
-/// </summary>
-public sealed class IPadTabsBuilder
-{
-	readonly ViewRegistry registry;
-
-	internal IPadTabsBuilder(
-		ViewRegistry registry)
-	{
-		this.registry = registry;
-	}
-
-	internal bool UseSidebar { get; private set; }
-
-	internal Dictionary<Type, TabPlacement> Placements { get; } = [];
-
-	internal List<TabsBuilder.Node> Nodes { get; } = [];
-
-	internal Func<View>? FooterFactory { get; private set; }
-
-
-	/// <summary>
-	/// Shows the tabs as a sidebar.
-	/// </summary>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public IPadTabsBuilder Sidebar()
-	{
-		UseSidebar = true;
-
-		return this;
-	}
-
-	/// <summary>
-	/// Overrides how a declared tab takes part in user customization.
-	/// </summary>
-	/// <typeparam name="TView">The view type of the tab to place.</typeparam>
-	/// <param name="placement">The placement to apply.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public IPadTabsBuilder PlaceTab<TView>(
-		TabPlacement placement) where TView : ContentView
-	{
-		Placements[registry.ViewModelOf<TView>()] = placement;
-
-		return this;
-	}
-
-	/// <summary>
-	/// Adds an iPad-only tab. It does not exist on iPhone; reach the page there by navigation.
-	/// </summary>
-	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
-	/// <param name="title">The text displayed on the tab bar item.</param>
-	/// <param name="icon">The name or path of the icon resource for the tab.</param>
-	/// <param name="placement">How the tab takes part in user customization.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public IPadTabsBuilder Tab<TView>(
-		string title,
-		string icon,
-		TabPlacement placement = TabPlacement.SidebarOnly) where TView : ContentView
-	{
-		Nodes.Add(new TabsBuilder.Leaf(registry.ViewModelOf<TView>(), title, icon, placement));
-
-		return this;
-	}
-
-	/// <summary>
-	/// Adds a sidebar section: a group of tabs, always sidebar-only.
-	/// </summary>
-	/// <param name="title">The group's title.</param>
-	/// <param name="icon">The group's SF Symbol.</param>
-	/// <param name="children">Declares the tabs inside the group.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public IPadTabsBuilder Group(
-		string title,
-		string icon,
-		Action<GroupBuilder> children)
-	{
-		GroupBuilder group = new(registry);
-		children(group);
-
-		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes));
-
-		return this;
-	}
-
-	/// <summary>
-	/// Shows a view of the given type at the sidebar's bottom. iOS 26 and later.
-	/// </summary>
-	/// <typeparam name="TView">The view type to host.</typeparam>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public IPadTabsBuilder SidebarFooter<TView>()
-		where TView : View, new()
-	{
-		FooterFactory = () => new TView();
+		Pad = new(registry);
+		configure(Pad);
 
 		return this;
 	}

@@ -167,7 +167,7 @@ public interface INavigator
 	/// <param name="cancel">The text for the cancel button context.</param>
 	/// <param name="options">The array list of selectable string option values.</param>
 	/// <returns>A task containing the chosen string option, or null if the action sheet was canceled.</returns>
-	Task<string?> ActionSheetAsync(
+	Task<string?> SelectAsync(
 		string title,
 		string cancel = "Cancel",
 		params string[] options);

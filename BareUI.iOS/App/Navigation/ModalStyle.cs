@@ -68,6 +68,7 @@ public readonly struct ModalStyle
 	/// </summary>
 	public static ModalStyle OverCurrentContext => new(ModalPresentation.OverCurrentContext, [Detent.Large]);
 
+
 	/// <summary>
 	/// A contextual floating bubble anchored to a view on large displays.
 	/// </summary>

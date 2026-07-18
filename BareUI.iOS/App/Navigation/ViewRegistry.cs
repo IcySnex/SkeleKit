@@ -47,8 +47,8 @@ internal sealed class ViewRegistry
 	{
 		Type? type = viewModel.GetType();
 
-		if (type is null || !byViewModel.TryGetValue(type, out PageRegistration? registration))
-			throw new InvalidOperationException($"No page is registered for '{type?.Name}'. Add its view in UsePages(...).");
+		if (!byViewModel.TryGetValue(type, out PageRegistration? registration))
+			throw new InvalidOperationException($"No page is registered for '{type.Name}'. Add its view in UsePages(...).");
 
 		if (!registration.Singleton)
 			return registration.Create(viewModel);

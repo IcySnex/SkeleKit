@@ -18,5 +18,5 @@ public enum HapticsNotification
 	/// <summary>
 	/// Indicates a failed operation or critical error.
 	/// </summary>
-	Error,
+	Error
 }

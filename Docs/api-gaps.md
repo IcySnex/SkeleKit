@@ -1,4 +1,4 @@
-# API gaps — UIKit capability not yet surfaced
+ # API gaps — UIKit capability not yet surfaced
 
 An audit of the wrapped controls against what their native counterparts actually offer
 (2026-07-12). Not a to-do list: strike what you don't want, the rest becomes milestones.

@@ -1,13 +1,14 @@
 using CoreAnimation;
 using CoreFoundation;
-using Foundation;
 
 namespace BareUI;
 
 /// <summary>
 /// A running animation that can be paused, scrubbed by a gesture, reversed, or interrupted mid-flight.
 /// </summary>
-/// <remarks>Hold it in a field for as long as it runs: it owns a native peer, and a collected animator stops ticking.</remarks>
+/// <remarks>
+/// Hold it in a field for as long as it runs: it owns a native peer, and a collected animator stops ticking.
+/// </remarks>
 public sealed class Animator : IDisposable
 {
 	readonly Action changes;
@@ -33,17 +34,17 @@ public sealed class Animator : IDisposable
 	/// <summary>
 	/// Prepares an animation of the changes made in <paramref name="changes"/>. It does not run until <see cref="Start"/>.
 	/// </summary>
-	/// <remarks>Only what <paramref name="changes"/> touches is animated. Transforms, Opacity, CornerRadius, colors, gradients and layout lengths all interpolate; what has no in-between (a Material, a system color, an auto-sized Width) snaps when the animation settles.</remarks>
+	/// <remarks>
+	/// Only what <paramref name="changes"/> touches is animated. Transforms, Opacity, CornerRadius, colors, gradients and layout lengths all interpolate; what has no in-between (a Material, a system color, an auto-sized Width) snaps when the animation settles.
+	/// </remarks>
 	public static Animator Create(
 		Animation animation,
 		Action changes) =>
 		new(animation, changes);
 
+
 	void Materialize()
 	{
-		// runs the changes once: the model briefly holds the end values while both ends are snapshotted,
-		// then the same tick puts everything back at 0, so nothing ever renders
-
 		if (start is not null)
 			return;
 
@@ -60,12 +61,14 @@ public sealed class Animator : IDisposable
 		CATransaction.DisableActions = true;
 
 		foreach ((View view, ViewState from) in start!)
+		{
 			view.Apply(position switch
 			{
 				0 => from,
 				1 => end![view],
 				_ => ViewState.Lerp(from, end![view], position)
 			});
+		}
 
 		CATransaction.Commit();
 	}
@@ -143,6 +146,7 @@ public sealed class Animator : IDisposable
 		set => heading = value ? 0 : 1;
 	}
 
+
 	/// <summary>
 	/// Runs the animation, after <paramref name="delay"/> seconds if given.
 	/// </summary>
@@ -150,9 +154,11 @@ public sealed class Animator : IDisposable
 		double delay = 0)
 	{
 		if (delay > 0)
+		{
 			DispatchQueue.MainQueue.DispatchAfter(
-				new DispatchTime(DispatchTime.Now, TimeSpan.FromSeconds(delay)),
+				new(DispatchTime.Now, TimeSpan.FromSeconds(delay)),
 				() => Continue());
+		}
 		else
 			Continue();
 	}
@@ -165,12 +171,6 @@ public sealed class Animator : IDisposable
 		Materialize();
 		StopLink();
 	}
-
-	/// <summary>
-	/// Takes a running animation over: pauses it where it is, ready to be scrubbed. Same as <see cref="Pause"/>.
-	/// </summary>
-	public void Grab() =>
-		Pause();
 
 	/// <summary>
 	/// Runs the animation from wherever it is towards its current heading. For a spring, <paramref name="velocity"/> carries the gesture's speed in, as full travels per second, positive towards the end.
@@ -227,5 +227,4 @@ public sealed class Animator : IDisposable
 	/// <inheritdoc/>
 	public void Dispose() =>
 		StopLink();
-
 }
