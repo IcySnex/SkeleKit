@@ -12,22 +12,9 @@ public enum PointerEffect
 	None,
 
 	/// <summary>
-	/// The system picks the effect for the view's size and role.
+	/// The system effect for the view's size and role — a highlight for small controls, a lift for
+	/// larger tiles. The explicit variants are not exposed: Microsoft.iOS 26.0 binds only the automatic
+	/// effect factory, so distinguishing highlight/lift/hover is not possible yet.
 	/// </summary>
-	Automatic,
-
-	/// <summary>
-	/// The view highlights under the pointer, which also morphs onto it. Best for small controls.
-	/// </summary>
-	Highlight,
-
-	/// <summary>
-	/// The view lifts toward the pointer with a shadow. Best for larger tappable tiles.
-	/// </summary>
-	Lift,
-
-	/// <summary>
-	/// The pointer keeps its shape while the view scales, tints or shadows under it.
-	/// </summary>
-	Hover
+	Automatic
 }

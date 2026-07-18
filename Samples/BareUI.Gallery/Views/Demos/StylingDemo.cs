@@ -146,10 +146,8 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 						Spacing = 12,
 						Children =
 						{
-							PointerTile("Highlight", PointerEffect.Highlight),
-							PointerTile("Lift", PointerEffect.Lift),
-							PointerTile("Hover", PointerEffect.Hover),
-							PointerTile("Auto", PointerEffect.Automatic)
+							PointerTile("No effect", PointerEffect.None),
+							PointerTile("Automatic", PointerEffect.Automatic)
 						}
 					}
 				}

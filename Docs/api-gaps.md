@@ -105,12 +105,14 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   glow tracks touches on them too. `ButtonStyle.Glass`/`ProminentGlass`/`ClearGlass` wrap the
   button configurations. Not exposed: `UIGlassContainerEffect` droplet merging — add when a real
   screen needs it).
-- ~~◆ **Pointer/hover effects (iPad)**~~ — **done** (`View.PointerEffect`: None/Automatic/Highlight/Lift/Hover
-  over a `UIPointerInteraction` with a rooted delegate returning a `UIPointerStyle` off a `UITargetedPreview`
-  of the view). iPad-only (no pointer on iPhone). Caveat: the 26.0 ref pack exposes only the base
-  `UIPointerEffect.Create(preview)` factory (the subtype `Create`s are inherited statics), so the four
-  variants may all resolve to the automatic effect at runtime — wants a hardware check on whether
-  Highlight/Lift/Hover visibly differ; if they don't, collapse the enum to None/Automatic.
+- ~~◆ **Pointer/hover effects (iPad)**~~ — **done** (`View.PointerEffect`: None/Automatic over a
+  `UIPointerInteraction` with a rooted delegate returning a `UIPointerStyle` off a `UITargetedPreview` of
+  the view). iPad-only (no pointer on iPhone). Only **Automatic** is exposed: sim-confirmed on hardware
+  that Highlight/Lift/Hover all rendered identically, because Microsoft.iOS 26.0 binds only the base
+  `UIPointerEffect.Create(preview)` factory — the subtype effect initializers (`init(preview:)`) are not
+  bound (parameterless ctor + read-only `Preview`), so an explicit variant is unreachable AOT-safely.
+  Automatic already picks highlight-for-small / lift-for-large, so nothing useful is lost. Re-expose the
+  variants if a later binding adds the initializers.
 - ~~◆ **Context menu on any view**~~ — **done** (`View.ContextMenu`, same `MenuAction` model). The
   list's row menu is now `CollectionView.ItemContextMenu` — a `CollectionView` is a `View`, so the
   inherited name collided, and the row menu was always the more specific thing anyway.

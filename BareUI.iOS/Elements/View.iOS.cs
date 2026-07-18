@@ -276,17 +276,8 @@ public abstract partial class View
 		if (native is null || PointerEffect is BareUI.PointerEffect.None)
 			return null;
 
-		UITargetedPreview preview = new(native);
-
-		UIPointerEffect effect = PointerEffect switch
-		{
-			BareUI.PointerEffect.Highlight => UIPointerHighlightEffect.Create(preview),
-			BareUI.PointerEffect.Lift => UIPointerLiftEffect.Create(preview),
-			BareUI.PointerEffect.Hover => UIPointerHoverEffect.Create(preview),
-			_ => UIPointerEffect.Create(preview)
-		};
-
-		return UIPointerStyle.Create(effect, null);
+		// only the automatic effect is bound in Microsoft.iOS 26.0 (see PointerEffect)
+		return UIPointerStyle.Create(UIPointerEffect.Create(new UITargetedPreview(native)), null);
 	}
 
 	static void Run(
