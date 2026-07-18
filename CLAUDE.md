@@ -52,13 +52,23 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 ## Conventions
 
 - Tabs, file-scoped namespaces, each ctor/method parameter on its own line (matches Velura style).
-- Doc comments (**public API only**): always the full block form (`/// <summary>` on its own line,
-  never the compact `/// <summary>X</summary>` one-liner), summary text on **one** `///` line, plus
-  `<param>`/`<returns>`/`<typeparam>` tags on methods. **Internal/private members get no XML docs
-  at all** — an inline `//` where the code can't say it is enough.
+- Doc comments (**public and plain-`protected` API only**): always the full block form
+  (`/// <summary>` on its own line, never the compact `/// <summary>X</summary>` one-liner). Summary
+  is **one sentence on one `///` line** — never wrap for width; a second sentence or any side-note /
+  usage detail goes in a `<remarks>` block (each sentence its own line, `<br/>` for a deliberate
+  break). `<inheritdoc/>` stays bare, never wrapped in `<summary>`. Plus `<param>`/`<returns>`/
+  `<typeparam>` tags on methods. Write like a human for a UI framework: no em-dashes (rephrase), no
+  redundant parentheticals, American spelling (color / canceled / center / gray), and don't restate a
+  default the code already shows.
+- **Non-public members get no XML docs at all** — `internal`, `private`, `private protected`, and
+  implicitly-internal top-level types. Add a short `//` there only when the code genuinely can't say
+  it, never by default.
 - Inline `//` comments: short fragments, lowercase, only when the code can't say it itself. No
   full-sentence prose, no multi-line blocks, no explaining a bugfix inline — that goes in the
-  commit body.
+  commit body. Same American-spelling / no-em-dash rules as docs.
+- Type-check with an explicit type pattern (`is Type x` / `is not Type x`), **never `is { }`**; a
+  nullable scalar or enum takes `is double x` etc., only a nullable *tuple* falls back to
+  `.HasValue`/`.Value`. Prefer `is not null` over `!= null`. Explicit types everywhere (no `var`).
 - Omit redundant modifiers/types: no `private` where it's already the default; target-typed
   `new(...)` (no redundant type name); collection expressions `[]`. Matches Velura. Exception:
   top-level `internal` is written out explicitly.
@@ -66,7 +76,12 @@ Acceptance target: rewrite its screens with zero UIKit imports.
   (`get; set => Set(ref field, ...)`), and expression bodies joined onto one line when short
   (`internal override bool Scrolls => true;`). Two blank lines between member groups
   (fields / properties / methods).
-- **No `#if IOS`. Ever.** The library has zero preprocessor directives and stays that way. A
+- Member order is feature-colocation (see `Controls/Button.cs`): a property carries its backing
+  fields and any tightly-bound helper right beneath it; don't hoist statics or standalone fields to
+  the top. **Nested types go at the very top of the class body**, before consts. In a multi-type file
+  the primary (filename) type leads, its supporting enums follow. Split unrelated public types into
+  their own files; keep tight families together. Don't nest a *public* helper enum — it renames the API.
+- **No preprocessor directives. Ever** — no `#if IOS`, no `#pragma`, no `#region`. A
   wholly-iOS file goes in `Controls/` (or is named in the csproj's `net10.0` `Compile Remove`
   glob) and just uses UIKit directly. A file that mixes layout math with UIKit splits: neutral
   half in `Foo.cs`, native half in `Foo.iOS.cs` (`partial`, excluded from `net10.0` by glob).
