@@ -27,7 +27,7 @@ public sealed class Theme
 	internal static void ApplyTo(
 		View view)
 	{
-		if (Current is not { } theme)
+		if (Current is not Theme theme)
 			return;
 
 		foreach (IStyle style in theme.Chain(view.GetType()))
@@ -60,7 +60,7 @@ public sealed class Theme
 		Type type,
 		List<IStyle> collected)
 	{
-		if (type.BaseType is { } baseType && typeof(View).IsAssignableFrom(baseType))
+		if (type.BaseType is Type baseType && typeof(View).IsAssignableFrom(baseType))
 			Collect(baseType, collected);
 
 		if (registered.TryGetValue(type, out List<IStyle>? styles))
