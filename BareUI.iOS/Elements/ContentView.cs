@@ -19,12 +19,12 @@ public abstract partial class ContentView : Panel
 	Binding<string?>? titleBinding;
 
 	/// <summary>
-	/// Which edges the page keeps clear of the safe area. Defaults to all of them.
+	/// Which edges the page keeps clear of the safe area.
 	/// </summary>
 	public SafeAreaEdges SafeAreaEdges { get; set; } = SafeAreaEdges.All;
 
 	/// <summary>
-	/// Whether scrolling content passes under the navigation bar, so they blur over it. On by default.
+	/// Whether scrolling content passes under the navigation bar so the bar blurs over it.
 	/// </summary>
 	public bool ScrollsUnderBars { get; set; } = true;
 
@@ -79,8 +79,12 @@ public abstract partial class ContentView : Panel
 	public Color? LargeTitleColor { get; set; }
 
 	/// <summary>
-	/// Asked before the page is left — back button, sheet swipe or popover tap-out — so unsaved changes can veto. Return false to stay. Set null while nothing needs guarding: it also disables the pop swipe.
+	/// Asked before the page is left, so unsaved changes can veto leaving.
 	/// </summary>
+	/// <remarks>
+	/// Fires for the back button, a sheet swipe or a popover tap-out; return <c>false</c> to stay.<br/>
+	/// Leave it null while nothing needs guarding, which also disables the interactive pop-back swipe.
+	/// </remarks>
 	public Func<Task<bool>>? ConfirmLeave
 	{
 		get;
@@ -102,8 +106,11 @@ public abstract partial class ContentView : Panel
 	public Action? TabReselected { get; set; }
 
 	/// <summary>
-	/// The badge on this page's tab bar item, or null for none. Applies even while the tab was never opened.
+	/// The badge on this page's tab bar item, or null for none.
 	/// </summary>
+	/// <remarks>
+	/// Applies even while the tab was never opened.
+	/// </remarks>
 	public Bindable<string?> TabBadge
 	{
 		get => tabBadge;
@@ -136,13 +143,19 @@ public abstract partial class ContentView : Panel
 	public IList<ToolbarItem> ToolbarItems { get; } = [];
 
 	/// <summary>
-	/// Buttons in a persistent bar along the screen's bottom edge. Above a visible tab bar they float as its accessory; everywhere else they form the classic bottom toolbar.
+	/// Buttons in a persistent bar along the screen's bottom edge.
 	/// </summary>
+	/// <remarks>
+	/// Above a visible tab bar they float as its accessory; everywhere else they form the classic bottom toolbar.
+	/// </remarks>
 	public IList<ToolbarItem> BottomToolbarItems { get; } = [];
 
 	/// <summary>
-	/// Placeholder for the navigation bar's search field. Setting it shows the search bar.
+	/// Placeholder for the navigation bar's search field.
 	/// </summary>
+	/// <remarks>
+	/// Setting it shows the search bar.
+	/// </remarks>
 	public string? SearchPlaceholder { get; set; }
 
 	/// <summary>
@@ -260,7 +273,7 @@ public abstract partial class ContentView : Panel
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
-		if (Content is not { } content)
+		if (Content is not View content)
 			return Size.Zero;
 
 		content.Measure(availableSize);
@@ -280,7 +293,7 @@ public abstract partial class ContentView : Panel
 /// <summary>
 /// A page bound to a typed ViewModel: bind with <c>Bind(...)</c>.
 /// </summary>
-/// <typeparam name="TViewModel">The structural data type backing the container context.</typeparam>
+/// <typeparam name="TViewModel">The ViewModel type driving the page.</typeparam>
 public abstract class ContentView<TViewModel> : ContentView
 	where TViewModel : class
 {
@@ -304,10 +317,10 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds one way to a ViewModel property.
 	/// </summary>
-	/// <typeparam name="T">The underlying type of the bound target element.</typeparam>
-	/// <param name="getter">The property selection expression.</param>
-	/// <param name="path">The automatically captured string representation of the expression property.</param>
-	/// <returns>A one-way tracking data stream context configuration.</returns>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="getter">The ViewModel property to read.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	protected static BindingExpression<T?> Bind<T>(
 		Func<TViewModel, T> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
@@ -316,11 +329,11 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds two ways; <paramref name="setter"/> writes the control's value back.
 	/// </summary>
-	/// <typeparam name="T">The underlying type of the bound target element.</typeparam>
-	/// <param name="getter">The property selection expression.</param>
-	/// <param name="setter">The logic layer handler mutation expression.</param>
-	/// <param name="path">The automatically captured string representation of the expression property.</param>
-	/// <returns>A bi-directional tracking data stream context configuration.</returns>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="getter">The ViewModel property to read.</param>
+	/// <param name="setter">The action that writes the value back to the ViewModel.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	protected static BindingExpression<T?> Bind<T>(
 		Func<TViewModel, T> getter,
 		Action<TViewModel, T?> setter,
@@ -330,12 +343,12 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds one way through a converter.
 	/// </summary>
-	/// <typeparam name="TValue">The intermediate value node processed from the state tier.</typeparam>
-	/// <typeparam name="T">The targeted structural output presentation type.</typeparam>
-	/// <param name="getter">The property selection expression.</param>
-	/// <param name="format">The mapper rule converting source parameters to targets.</param>
-	/// <param name="path">The automatically captured string representation of the expression property.</param>
-	/// <returns>A converted one-way tracking data stream context configuration.</returns>
+	/// <typeparam name="TValue">The value type read from the ViewModel.</typeparam>
+	/// <typeparam name="T">The converted value type.</typeparam>
+	/// <param name="getter">The ViewModel property to read.</param>
+	/// <param name="format">Converts the ViewModel value for display.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	protected static BindingExpression<T?> Bind<TValue, T>(
 		Func<TViewModel, TValue> getter,
 		Func<TValue, T> format,
@@ -343,16 +356,16 @@ public abstract class ContentView<TViewModel> : ContentView
 		BindingFactory.Bind(getter, format, path);
 
 	/// <summary>
-	/// Binds two ways through converters: <paramref name="format"/> out, <paramref name="parse"/> back in. A numeric text field, for instance.
+	/// Binds two ways through converters: <paramref name="format"/> out, <paramref name="parse"/> back in, as for a numeric text field.
 	/// </summary>
-	/// <typeparam name="TValue">The intermediate value node processed from the state tier.</typeparam>
-	/// <typeparam name="T">The targeted structural output presentation type.</typeparam>
-	/// <param name="getter">The property selection expression.</param>
-	/// <param name="setter">The logic layer handler mutation expression.</param>
-	/// <param name="format">The mapping parser converting state metrics into screen views.</param>
-	/// <param name="parse">The reverse mapping translation parsing screen string types into model fields.</param>
-	/// <param name="path">The automatically captured string representation of the expression property.</param>
-	/// <returns>A converted bi-directional tracking data stream context configuration.</returns>
+	/// <typeparam name="TValue">The value type read from the ViewModel.</typeparam>
+	/// <typeparam name="T">The converted value type.</typeparam>
+	/// <param name="getter">The ViewModel property to read.</param>
+	/// <param name="setter">The action that writes the value back to the ViewModel.</param>
+	/// <param name="format">Converts the ViewModel value for display.</param>
+	/// <param name="parse">Converts the displayed value back to the ViewModel type.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	protected static BindingExpression<T?> Bind<TValue, T>(
 		Func<TViewModel, TValue> getter,
 		Action<TViewModel, TValue> setter,
@@ -364,11 +377,11 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Binds control to source only: the control writes, and never reads back.
 	/// </summary>
-	/// <typeparam name="T">The underlying type of the bound target element.</typeparam>
-	/// <param name="getter">The basic initialization fallback extractor rule.</param>
-	/// <param name="setter">The logic layer handler mutation expression.</param>
-	/// <param name="path">The automatically captured string representation of the expression property.</param>
-	/// <returns>An upward-streaming destination-only data configuration.</returns>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="getter">The ViewModel property to read the initial value from.</param>
+	/// <param name="setter">The action that writes the value back to the ViewModel.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	protected static BindingExpression<T?> BindToSource<T>(
 		Func<TViewModel, T> getter,
 		Action<TViewModel, T?> setter,
@@ -378,10 +391,10 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// <summary>
 	/// Reads the value once when the ViewModel attaches, then never again.
 	/// </summary>
-	/// <typeparam name="T">The underlying type of the bound target element.</typeparam>
-	/// <param name="getter">The instant-evaluation property state extraction expression.</param>
-	/// <param name="path">The automatically captured string representation of the expression property.</param>
-	/// <returns>A static-snapshot evaluation configuration.</returns>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="getter">The ViewModel property to read.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	protected static BindingExpression<T?> BindOnce<T>(
 		Func<TViewModel, T> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
