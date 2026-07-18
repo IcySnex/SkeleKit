@@ -258,6 +258,35 @@ public abstract partial class View
 			pinchRecognizer.Enabled = pinched is not null && IsEnabled;
 		if (rotationRecognizer is not null)
 			rotationRecognizer.Enabled = rotated is not null && IsEnabled;
+
+		// a hovered pointer picks up the effect through the delegate, which reads the live PointerEffect
+		if (PointerEffect is not BareUI.PointerEffect.None && pointerInteraction is null)
+		{
+			pointerDelegate = new(this);
+			pointerInteraction = new(pointerDelegate);
+			native.AddInteraction(pointerInteraction);
+		}
+	}
+
+	UIPointerInteraction? pointerInteraction;
+	PointerInteractionDelegate? pointerDelegate;
+
+	internal UIPointerStyle? PointerStyle()
+	{
+		if (native is null || PointerEffect is BareUI.PointerEffect.None)
+			return null;
+
+		UITargetedPreview preview = new(native);
+
+		UIPointerEffect effect = PointerEffect switch
+		{
+			BareUI.PointerEffect.Highlight => UIPointerHighlightEffect.Create(preview),
+			BareUI.PointerEffect.Lift => UIPointerLiftEffect.Create(preview),
+			BareUI.PointerEffect.Hover => UIPointerHoverEffect.Create(preview),
+			_ => UIPointerEffect.Create(preview)
+		};
+
+		return UIPointerStyle.Create(effect, null);
 	}
 
 	static void Run(
@@ -790,4 +819,25 @@ internal sealed class ContextMenuDelegate : NSObject, IUIContextMenuInteractionD
 		UIContextMenuInteraction interaction,
 		CGPoint location) =>
 		element?.MenuConfiguration();
+}
+
+internal sealed class PointerInteractionDelegate : UIPointerInteractionDelegate
+{
+	readonly View? element;
+
+	public PointerInteractionDelegate(
+		View element)
+	{
+		this.element = element;
+	}
+
+	// see LayoutHost
+	public PointerInteractionDelegate(
+		NativeHandle handle) : base(handle)
+	{ }
+
+	public override UIPointerStyle? GetStyleForRegion(
+		UIPointerInteraction interaction,
+		UIPointerRegion region) =>
+		element?.PointerStyle();
 }

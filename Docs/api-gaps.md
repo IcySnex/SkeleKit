@@ -105,7 +105,12 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   glow tracks touches on them too. `ButtonStyle.Glass`/`ProminentGlass`/`ClearGlass` wrap the
   button configurations. Not exposed: `UIGlassContainerEffect` droplet merging — add when a real
   screen needs it).
-- ◆ (skip) **Pointer/hover effects (iPad)** — `UIPointerInteraction` lift/highlight; one enum property.
+- ~~◆ **Pointer/hover effects (iPad)**~~ — **done** (`View.PointerEffect`: None/Automatic/Highlight/Lift/Hover
+  over a `UIPointerInteraction` with a rooted delegate returning a `UIPointerStyle` off a `UITargetedPreview`
+  of the view). iPad-only (no pointer on iPhone). Caveat: the 26.0 ref pack exposes only the base
+  `UIPointerEffect.Create(preview)` factory (the subtype `Create`s are inherited statics), so the four
+  variants may all resolve to the automatic effect at runtime — wants a hardware check on whether
+  Highlight/Lift/Hover visibly differ; if they don't, collapse the enum to None/Automatic.
 - ~~◆ **Context menu on any view**~~ — **done** (`View.ContextMenu`, same `MenuAction` model). The
   list's row menu is now `CollectionView.ItemContextMenu` — a `CollectionView` is a `View`, so the
   inherited name collided, and the row menu was always the more specific thing anyway.

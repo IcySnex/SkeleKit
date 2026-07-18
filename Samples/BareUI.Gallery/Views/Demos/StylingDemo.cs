@@ -137,9 +137,36 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 						Style = Styles.Card,
 						CornerRadius = 0,
 						Child = new Label { Style = Styles.Title, Text = "Styles.Card, square corners" }
+					},
+
+					new Label { Style = Styles.Caption, Text = "PointerEffect — hover with an iPad trackpad/mouse" },
+					new StackPanel
+					{
+						Orientation = Orientation.Horizontal,
+						Spacing = 12,
+						Children =
+						{
+							PointerTile("Highlight", PointerEffect.Highlight),
+							PointerTile("Lift", PointerEffect.Lift),
+							PointerTile("Hover", PointerEffect.Hover),
+							PointerTile("Auto", PointerEffect.Automatic)
+						}
 					}
 				}
 			}
 		};
 	}
+
+
+	static Border PointerTile(
+		string text,
+		PointerEffect effect) =>
+		new()
+		{
+			PointerEffect = effect,
+			Background = Palette.Card,
+			CornerRadius = 12,
+			Padding = new Thickness(16, 12),
+			Child = new Label { Text = text }
+		};
 }

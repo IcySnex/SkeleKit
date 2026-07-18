@@ -229,6 +229,15 @@ public abstract partial class View
 	} = true;
 
 	/// <summary>
+	/// The iPad pointer effect shown when a trackpad or mouse hovers this view, or None (the default).
+	/// </summary>
+	public PointerEffect PointerEffect
+	{
+		get;
+		set => Set(ref field, value, ApplyInteraction, affectsMeasure: false);
+	}
+
+	/// <summary>
 	/// Entries in the view's long-press context menu. Empty for none.
 	/// </summary>
 	public IList<MenuAction> ContextMenu { get; } = [];
