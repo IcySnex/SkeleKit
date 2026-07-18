@@ -70,8 +70,11 @@ public class TextEditor : Control
 	KeyboardToolbar keyboardToolbar;
 
 	/// <summary>
-	/// A custom view above the raised keyboard. Wins over <see cref="KeyboardToolbar"/>. One view per field.
+	/// A custom view above the raised keyboard.
 	/// </summary>
+	/// <remarks>
+	/// Wins over <see cref="KeyboardToolbar"/>; one view per field.
+	/// </remarks>
 	public View? KeyboardAccessory
 	{
 		get => keyboardAccessory;
@@ -84,7 +87,7 @@ public class TextEditor : Control
 	AccessoryHost? accessoryHost;
 
 	void ApplyToolbar() =>
-		Ui.InputAccessoryView = keyboardAccessory is { } custom
+		Ui.InputAccessoryView = keyboardAccessory is View custom
 			? (accessoryHost ??= AccessoryHost.ForKeyboard(custom))
 			: keyboardToolbar is KeyboardToolbar.None
 				? null
