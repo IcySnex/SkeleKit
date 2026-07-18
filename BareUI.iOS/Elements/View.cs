@@ -720,9 +720,7 @@ public abstract partial class View
 	partial void ApplyTransformCore();
 
 
-	/// <summary>
-	/// Per-child data written by a parent panel (e.g. a Grid stores row/column here).
-	/// </summary>
+	// per-child data written by a parent panel (a Grid stores row/column here)
 	internal object? LayoutParams { get; set; }
 
 

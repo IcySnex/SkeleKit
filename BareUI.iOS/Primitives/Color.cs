@@ -110,9 +110,7 @@ public readonly record struct Color(
 	}
 }
 
-/// <summary>
-/// The UIKit colors that adapt to appearance, contrast and vibrancy on their own.
-/// </summary>
+// the UIKit colors that adapt to appearance, contrast and vibrancy on their own
 enum SystemColor
 {
 	Red,
