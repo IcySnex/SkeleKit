@@ -63,10 +63,10 @@ internal sealed class Navigator(
 	public Task SelectTabAsync(
 		string title)
 	{
-		if (Tabs() is not { } tabs)
+		if (Tabs() is not UITabBarController tabs)
 			throw new InvalidOperationException("There is no tab shell to select in.");
 
-		if (Find(tabs.Tabs, title) is not { } tab)
+		if (Find(tabs.Tabs, title) is not UITab tab)
 			throw new InvalidOperationException($"No tab titled '{title}'.");
 
 		tabs.SelectedTab = tab;
@@ -83,7 +83,7 @@ internal sealed class Navigator(
 			if (tab.Title == title)
 				return tab;
 
-			if (tab is UITabGroup group && Find(group.Children, title) is { } match)
+			if (tab is UITabGroup group && Find(group.Children, title) is UITab match)
 				return match;
 		}
 
@@ -198,7 +198,7 @@ internal sealed class Navigator(
 		PageHost host,
 		ModalStyle style)
 	{
-		if (Top() is not { } presenter)
+		if (Top() is not UIViewController presenter)
 			return Task.CompletedTask;
 
 		UINavigationController wrapper = new(host);
@@ -228,7 +228,7 @@ internal sealed class Navigator(
 
 		if (style.Presentation is ModalPresentation.Popover
 			&& style.Anchor is { IsRealized: true } anchor
-			&& wrapper.PopoverPresentationController is { } popover)
+			&& wrapper.PopoverPresentationController is UIPopoverPresentationController popover)
 		{
 			popover.SourceView = anchor.Native;
 			popover.SourceRect = anchor.Native.Bounds;
