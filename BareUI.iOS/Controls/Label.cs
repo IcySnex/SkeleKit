@@ -17,9 +17,11 @@ public class Label : Control
 	Binding<string?>? textBinding;
 
 	/// <summary>
-	/// Styled runs composing the text, overriding <see cref="Text"/> when set. Each run styles itself
-	/// over the label's own font and color, and a run with a <see cref="Span.Command"/> is tappable.
+	/// Styled runs composing the text, overriding <see cref="Text"/> when set.
 	/// </summary>
+	/// <remarks>
+	/// Each run styles itself over the label's own font and color, and a run with a <see cref="Span.Command"/> is tappable.
+	/// </remarks>
 	public IReadOnlyList<Span>? Spans
 	{
 		get => spans;
@@ -38,8 +40,11 @@ public class Label : Control
 	TextStyle? textStyle;
 
 	/// <summary>
-	/// Explicit font size in points, overriding <see cref="TextStyle"/>. NaN falls back to the text style, or 17 points without one.
+	/// Explicit font size in points, overriding <see cref="TextStyle"/>.
 	/// </summary>
+	/// <remarks>
+	/// NaN falls back to the text style, or 17 points without one.
+	/// </remarks>
 	public Bindable<double> FontSize
 	{
 		get => fontSize;
@@ -284,7 +289,7 @@ public class Label : Control
 
 	void ApplyTextColor()
 	{
-		if (textColor is { } color)
+		if (textColor is Color color)
 			Ui.TextColor = color.ToUIColor();
 	}
 
