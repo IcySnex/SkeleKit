@@ -23,14 +23,10 @@ public abstract partial class View
 	public bool IsRealized =>
 		native is not null;
 
-	/// <summary>
-	/// Creates the native view. Panels return a LayoutHost; controls return their control.
-	/// </summary>
+	// panels return a LayoutHost, controls return their own control
 	private protected abstract UIView CreateNative();
 
-	/// <summary>
-	/// Whether Unrealize disposes the native view. False for wrappers around caller-owned views.
-	/// </summary>
+	// false for a wrapper around a caller-owned view, which Unrealize must not dispose
 	private protected virtual bool OwnsNative =>
 		true;
 
@@ -322,7 +318,7 @@ public abstract partial class View
 
 					contextMenuActions[index] = UIAction.Create(
 						entry.Text,
-						entry.Icon is { } icon ? UIImage.GetSystemImage(icon) : null,
+						entry.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
 						null,
 						_ => Run(entry.Command, null));
 
@@ -351,7 +347,7 @@ public abstract partial class View
 		defaultTraits ??= native.AccessibilityTraits;
 		native.AccessibilityTraits = defaultTraits.Value | Traits(accessibilityTraits);
 
-		if (isAccessibilityElement is { } element)
+		if (isAccessibilityElement is bool element)
 			native.IsAccessibilityElement = element;
 	}
 
@@ -449,7 +445,7 @@ public abstract partial class View
 	// interactive glass only glows for touches inside its own tree: a glass panel hosts its
 	// children in the effect's content view, everything else in the layout host
 	internal UIView ChildHost =>
-		materialView is { } material && Background is Material { Kind: MaterialKind.Glass }
+		materialView is UIVisualEffectView material && Background is Material { Kind: MaterialKind.Glass }
 			? material.ContentView
 			: Native;
 
@@ -687,7 +683,7 @@ public abstract partial class View
 			LayoutNow();
 		};
 
-		if (animation.SpringDamping is { } damping)
+		if (animation.SpringDamping is double damping)
 			UIView.AnimateNotify(
 				animation.Duration,
 				animation.Delay,
@@ -763,7 +759,7 @@ public abstract partial class View
 		if (native is null)
 			return;
 
-		if (Shadow is not { } shadow)
+		if (Shadow is not Shadow shadow)
 		{
 			native.Layer.ShadowOpacity = 0;
 			return;
@@ -813,7 +809,7 @@ internal sealed class ContextMenuDelegate : NSObject, IUIContextMenuInteractionD
 		this.element = element;
 	}
 
-	// see LayoutHost
+	// ReSharper disable once UnusedMember.Local
 	public ContextMenuDelegate(
 		NativeHandle handle) : base(handle)
 	{ }
@@ -834,7 +830,7 @@ internal sealed class PointerInteractionDelegate : UIPointerInteractionDelegate
 		this.element = element;
 	}
 
-	// see LayoutHost
+	// ReSharper disable once UnusedMember.Local
 	public PointerInteractionDelegate(
 		NativeHandle handle) : base(handle)
 	{ }
