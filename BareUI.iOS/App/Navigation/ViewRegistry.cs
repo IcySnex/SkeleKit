@@ -1,5 +1,3 @@
-#pragma warning disable CA1822
-
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BareUI;
@@ -56,7 +54,7 @@ internal sealed class ViewRegistry
 		return registration.Instance ??= registration.Create(viewModel);
 	}
 
-	public object CreateViewModel(
+	public static object CreateViewModel(
 		Type viewModel,
 		IServiceProvider services) =>
 		services.GetRequiredService(viewModel);
