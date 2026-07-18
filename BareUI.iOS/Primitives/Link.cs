@@ -3,11 +3,12 @@ using System.Windows.Input;
 namespace BareUI;
 
 /// <summary>
-/// A tappable run of text inside a <see cref="TextView"/>'s <see cref="TextView.Spans"/>. It renders
-/// like a <see cref="Span"/> but fires <see cref="Command"/> when tapped and shows
-/// <see cref="ContextMenu"/> as a native hold-to-peek menu. Inside a plain <see cref="Label"/> it is
-/// styled text only — the command and menu are ignored, since a <see cref="Label"/> is not interactive.
+/// A tappable run of text inside a <see cref="TextView"/>'s <see cref="TextView.Spans"/>.
 /// </summary>
+/// <remarks>
+/// It renders like a <see cref="Span"/> but fires <see cref="Command"/> when tapped and shows <see cref="ContextMenu"/> as a native hold-to-peek menu.<br/>
+/// Inside a plain <see cref="Label"/> it is styled text only: the command and menu are ignored, since a <see cref="Label"/> is not interactive.
+/// </remarks>
 public sealed class Link : Span
 {
 	/// <summary>

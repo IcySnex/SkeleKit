@@ -1,8 +1,11 @@
 namespace BareUI;
 
 /// <summary>
-/// How VoiceOver describes and treats a view. Combines with the control's own traits.
+/// How VoiceOver describes and treats a view.
 /// </summary>
+/// <remarks>
+/// Combines with the control's own traits.
+/// </remarks>
 [Flags]
 public enum AccessibilityTraits
 {
