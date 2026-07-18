@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using CoreFoundation;
 using ObjCRuntime;
 
@@ -147,7 +148,7 @@ public partial class CollectionView<TItem, TSection>
 		switch (recognizer.State)
 		{
 			case UIGestureRecognizerState.Began:
-				if (ui.IndexPathForItemAtPoint(recognizer.LocationInView(ui)) is { } path)
+				if (ui.IndexPathForItemAtPoint(recognizer.LocationInView(ui)) is NSIndexPath path)
 					reordering = ui.BeginInteractiveMovementForItem(path);
 				break;
 
@@ -204,7 +205,7 @@ public partial class CollectionView<TItem, TSection>
 		HashSet<NSIndexPath> wanted = [];
 
 		foreach (TItem item in selectedItems ?? [])
-			if (keys.TryGetValue(item, out ItemKey? key) && data.GetIndexPath(key) is { } path)
+			if (keys.TryGetValue(item, out ItemKey? key) && data.GetIndexPath(key) is NSIndexPath path)
 				wanted.Add(path);
 
 		foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
@@ -267,7 +268,7 @@ public partial class CollectionView<TItem, TSection>
 				: UICollectionViewScrollPosition.Top
 		};
 
-		if (data.GetIndexPath(key) is { } path)
+		if (data.GetIndexPath(key) is NSIndexPath path)
 			Ui.ScrollToItem(path, native, animated);
 	}
 
@@ -279,7 +280,7 @@ public partial class CollectionView<TItem, TSection>
 		NSIndexPath indexPath,
 		SwipeSide side)
 	{
-		if (ItemAt(indexPath.Section, indexPath.Row) is not { } item)
+		if (ItemAt(indexPath.Section, indexPath.Row) is not TItem item)
 			return null;
 
 		List<UIContextualAction> actions = [];
@@ -296,7 +297,7 @@ public partial class CollectionView<TItem, TSection>
 				action.Text,
 				(_, _, done) =>
 				{
-					if (action.Command is { } command && command.CanExecute(item))
+					if (action.Command is ICommand command && command.CanExecute(item))
 						command.Execute(item);
 
 					// the diff must land before done resets the swipe, or a removed row slides
@@ -305,10 +306,10 @@ public partial class CollectionView<TItem, TSection>
 					done(true);
 				});
 
-			if (action.Icon is { } icon)
+			if (action.Icon is string icon)
 				native.Image = UIImage.GetSystemImage(icon);
 
-			if (action.Background is { } background)
+			if (action.Background is Color background)
 				native.BackgroundColor = background.ToUIColor();
 
 			actions.Add(native);
@@ -329,12 +330,12 @@ public partial class CollectionView<TItem, TSection>
 		if (ItemContextMenu.Count == 0 && ItemPreview is null && PreviewShape is null)
 			return null;
 
-		if (ItemAt(indexPath.Section, indexPath.Row) is not { } item)
+		if (ItemAt(indexPath.Section, indexPath.Row) is not TItem item)
 			return null;
 
 		menuItem = item;
 
-		UIContextMenuContentPreviewProvider? preview = ItemPreview is { } factory
+		UIContextMenuContentPreviewProvider? preview = ItemPreview is Func<TItem, View> factory
 			? () => activePreview = new(factory(item), Ui.Bounds.Width)
 			: null;
 
@@ -352,11 +353,11 @@ public partial class CollectionView<TItem, TSection>
 
 					entries[index] = UIAction.Create(
 						entry.Text,
-						entry.Icon is { } icon ? UIImage.GetSystemImage(icon) : null,
+						entry.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
 						null,
 						_ =>
 						{
-							if (entry.Command is { } command && command.CanExecute(item))
+							if (entry.Command is ICommand command && command.CanExecute(item))
 								command.Execute(item);
 						});
 
@@ -370,7 +371,7 @@ public partial class CollectionView<TItem, TSection>
 
 	internal void CommitPreview()
 	{
-		if (PreviewCommand is not { } command || menuItem is not { } item)
+		if (PreviewCommand is not ICommand command || menuItem is not TItem item)
 			return;
 
 		if (command.CanExecute(item))
@@ -384,10 +385,10 @@ public partial class CollectionView<TItem, TSection>
 	internal UITargetedPreview? ShapedPreview(
 		UIContextMenuConfiguration configuration)
 	{
-		if (PreviewShape is not { } shape || !IsRealized || configuration.Identifier is not NSIndexPath indexPath)
+		if (PreviewShape is not PreviewShape shape || !IsRealized || configuration.Identifier is not NSIndexPath indexPath)
 			return null;
 
-		if (Ui.CellForItem(indexPath) is not { } cell)
+		if (Ui.CellForItem(indexPath) is not UICollectionViewCell cell)
 			return null;
 
 		nfloat padding = (nfloat)shape.Padding;
@@ -399,7 +400,7 @@ public partial class CollectionView<TItem, TSection>
 				(nfloat)shape.CornerRadius)
 		};
 
-		if (shape.Background is { } background)
+		if (shape.Background is Color background)
 			parameters.BackgroundColor = background.ToUIColor();
 
 		return new(cell.ContentView, parameters);
@@ -572,7 +573,7 @@ public partial class CollectionView<TItem, TSection>
 
 		for (int section = 0; section < SectionCount; section++)
 			for (int index = 0; index < CountIn(section); index++)
-				if (ItemAt(section, index) is { } item)
+				if (ItemAt(section, index) is TItem item)
 					current.Add(item);
 
 		foreach (object item in keys.Keys.ToArray())
@@ -618,7 +619,7 @@ public partial class CollectionView<TItem, TSection>
 			footer ? FooterId : HeaderId,
 			indexPath);
 
-		if (header.Hosted is null && (footer ? CreateFooterView() : CreateHeaderView()) is { } view)
+		if (header.Hosted is null && (footer ? CreateFooterView() : CreateHeaderView()) is ItemView<TSection> view)
 		{
 			view.TintHost = this;
 			header.Attach(view);
@@ -675,7 +676,7 @@ public partial class CollectionView<TItem, TSection>
 
 	void SyncEmptyState()
 	{
-		if (EmptyView is not { } empty || !IsRealized)
+		if (EmptyView is not View empty || !IsRealized)
 			return;
 
 		empty.TintHost = this;
@@ -702,7 +703,7 @@ public partial class CollectionView<TItem, TSection>
 		int section,
 		int index)
 	{
-		if (ItemAt(section, index) is not { } item || Selection is not { } command)
+		if (ItemAt(section, index) is not TItem item || Selection is not ICommand command)
 			return;
 
 		if (command.CanExecute(item))
@@ -743,7 +744,7 @@ public partial class CollectionView<TItem, TSection>
 				};
 
 				// a separator configuration overrides ShowsSeparators, so it has to carry the visibility too
-				if (SeparatorInsets is { } separator)
+				if (SeparatorInsets is Thickness separator)
 				{
 					NSDirectionalEdgeInsets insets = new(0, (nfloat)separator.Left, 0, (nfloat)separator.Right);
 
@@ -791,7 +792,7 @@ public partial class CollectionView<TItem, TSection>
 	{
 		sizingCell ??= CreateItemView();
 
-		if (ItemAt(0, 0) is { } item)
+		if (ItemAt(0, 0) is TItem item)
 		{
 			sizingCell.Item = item;
 			sizedWithItem = true;
@@ -959,7 +960,7 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 	{
 		foreach (NSIndexPath path in indexPaths)
 		{
-			if (element.PrefetchUrl(path.Section, path.Row) is not { } url || prefetches.ContainsKey(path))
+			if (element.PrefetchUrl(path.Section, path.Row) is not string url || prefetches.ContainsKey(path))
 				continue;
 
 			CancellationTokenSource cancellation = new();
@@ -1012,7 +1013,7 @@ internal sealed class CollectionHost : UICollectionView
 		this.element = element;
 	}
 
-	// see LayoutHost
+	// ReSharper disable once UnusedMember.Local
 	public CollectionHost(
 		NativeHandle handle) : base(handle)
 	{ }
@@ -1040,7 +1041,7 @@ internal sealed class PreviewHost : UIViewController
 		this.width = width;
 	}
 
-	// see LayoutHost
+	// ReSharper disable once UnusedMember.Local
 	public PreviewHost(
 		NativeHandle handle) : base(handle)
 	{ }
@@ -1083,7 +1084,7 @@ internal sealed class CollectionSource : UICollectionViewDiffableDataSource<NSNu
 		this.element = element;
 	}
 
-	// see LayoutHost
+	// ReSharper disable once UnusedMember.Local
 	public CollectionSource(
 		NativeHandle handle) : base(handle)
 	{ }
