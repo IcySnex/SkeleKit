@@ -1,7 +1,6 @@
 namespace BareUI;
 
-// how a label picks its font: a text style brings the native Dynamic Type curve with it, an explicit
-// size overrides it, and weight and design compose on top of whichever wins
+// a text style brings its Dynamic Type curve, an explicit size overrides it, weight and design compose on top
 internal static class FontSpec
 {
 	public const double DefaultSize = 17;

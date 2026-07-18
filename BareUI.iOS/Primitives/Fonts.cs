@@ -71,7 +71,7 @@ internal static class Fonts
 		UIFont font = UIFont.SystemFontOfSize((nfloat)size, Weight(weight));
 
 		if (design is not FontDesign.Default
-			&& font.FontDescriptor.CreateWithDesign(Design(design)) is { } descriptor)
+			&& font.FontDescriptor.CreateWithDesign(Design(design)) is UIFontDescriptor descriptor)
 			font = UIFont.FromDescriptor(descriptor, (nfloat)size);
 
 		return Scale(UIFontMetrics.DefaultMetrics, font, max);
@@ -95,7 +95,7 @@ internal static class Fonts
 		UIFont font = UIFont.SystemFontOfSize(descriptor.PointSize, Weight(weight));
 
 		if (design is not FontDesign.Default
-			&& font.FontDescriptor.CreateWithDesign(Design(design)) is { } designed)
+			&& font.FontDescriptor.CreateWithDesign(Design(design)) is UIFontDescriptor designed)
 			font = UIFont.FromDescriptor(designed, descriptor.PointSize);
 
 		return Scale(UIFontMetrics.GetMetrics(native.GetConstant()!), font, max);
