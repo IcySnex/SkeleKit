@@ -22,24 +22,27 @@ internal interface ICollectionHost
 }
 
 /// <summary>
-/// A data-driven list, grid, or carousel scroll layout container wrapping native platform components.
+/// A data-driven list, grid, or carousel.
 /// </summary>
-/// <typeparam name="TItem">The underlying object instance type managed by item container collections.</typeparam>
+/// <typeparam name="TItem">The item type.</typeparam>
 public class CollectionView<TItem> : CollectionView<TItem, ISection<TItem>>
 	where TItem : class;
 
 /// <summary>
-/// A data-driven list, grid, or carousel scroll layout container whose groups carry their own section model.
+/// A data-driven list, grid, or carousel whose groups carry their own section model.
 /// </summary>
-/// <typeparam name="TItem">The underlying object instance type managed by item container collections.</typeparam>
+/// <typeparam name="TItem">The item type.</typeparam>
 /// <typeparam name="TSection">The section model the header and footer templates bind to.</typeparam>
 public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	where TItem : class
 	where TSection : class, ISection<TItem>
 {
 	/// <summary>
-	/// The items to show. Changes animate into place when the list is an <c>ObservableCollection</c>.
+	/// The items to show.
 	/// </summary>
+	/// <remarks>
+	/// Changes animate into place when the list is an <c>ObservableCollection</c>.
+	/// </remarks>
 	public BindableList<TItem> ItemsSource
 	{
 		get => new(itemsSource);
@@ -93,13 +96,19 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		selectionCommand;
 
 	/// <summary>
-	/// Whether rows draw their separator lines. List layouts only.
+	/// Whether rows draw their separator lines.
 	/// </summary>
+	/// <remarks>
+	/// List layouts only.
+	/// </remarks>
 	public bool ShowsSeparators { get; set; } = true;
 
 	/// <summary>
-	/// Leading/trailing insets for the separator lines, or null for the system default. List layouts only.
+	/// Leading/trailing insets for the separator lines, or null for the system default.
 	/// </summary>
+	/// <remarks>
+	/// List layouts only.
+	/// </remarks>
 	public Thickness? SeparatorInsets { get; set; }
 
 	/// <summary>
@@ -113,8 +122,11 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public Color? HighlightColor { get; set; }
 
 	/// <summary>
-	/// Invoked when the user scrolls within <see cref="LoadMoreThreshold"/> items of the end. Fires once per item count.
+	/// Invoked when the user scrolls within <see cref="LoadMoreThreshold"/> items of the end.
 	/// </summary>
+	/// <remarks>
+	/// Fires once per item count.
+	/// </remarks>
 	public ICommand? LoadMoreCommand { get; set; }
 
 	/// <summary>
@@ -128,13 +140,19 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public View? EmptyView { get; set; }
 
 	/// <summary>
-	/// Command invoked when the user pulls to refresh. Setting it enables the refresh control.
+	/// Command invoked when the user pulls to refresh.
 	/// </summary>
+	/// <remarks>
+	/// Setting it enables the refresh control.
+	/// </remarks>
 	public ICommand? RefreshCommand { get; set; }
 
 	/// <summary>
-	/// Whether the refresh spinner is showing. Two-way: the pull sets it true, the ViewModel sets it false when done.
+	/// Whether the refresh spinner is showing.
 	/// </summary>
+	/// <remarks>
+	/// Two-way: the pull sets it true, the ViewModel sets it false when done.
+	/// </remarks>
 	public Bindable<bool> IsRefreshing
 	{
 		get => isRefreshing;
@@ -148,7 +166,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		Set(ref isRefreshing, true, affectsMeasure: false);
 		isRefreshingBinding?.PushToSource(true);
 
-		if (RefreshCommand is { } command && command.CanExecute(null))
+		if (RefreshCommand is ICommand command && command.CanExecute(null))
 			command.Execute(null);
 	}
 
@@ -158,23 +176,35 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	partial void ApplyRefreshingCore();
 
 	/// <summary>
-	/// Actions revealed by swiping a row. List layouts only.
+	/// Actions revealed by swiping a row.
 	/// </summary>
+	/// <remarks>
+	/// List layouts only.
+	/// </remarks>
 	public IList<SwipeAction> SwipeActions { get; } = [];
 
 	/// <summary>
-	/// Entries in a row's long-press context menu. Each command is invoked with the row's item.
+	/// Entries in a row's long-press context menu.
 	/// </summary>
+	/// <remarks>
+	/// Each command is invoked with the row's item.
+	/// </remarks>
 	public IList<MenuAction> ItemContextMenu { get; } = [];
 
 	/// <summary>
-	/// Builds the floating preview shown over a row's context menu, given the row's item. Without it the row itself is the preview.
+	/// Builds the floating preview shown over a row's context menu, given the row's item.
 	/// </summary>
+	/// <remarks>
+	/// Without it the row itself is the preview.
+	/// </remarks>
 	public Func<TItem, View>? ItemPreview { get; set; }
 
 	/// <summary>
-	/// Shapes the row itself as the lifted platter: padding around the content and a corner radius. Null keeps the system shape.
+	/// Shapes the row itself as the lifted platter: padding around the content and a corner radius.
 	/// </summary>
+	/// <remarks>
+	/// Null keeps the system shape.
+	/// </remarks>
 	public PreviewShape? PreviewShape { get; set; }
 
 	/// <summary>
@@ -183,20 +213,27 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public ICommand? PreviewCommand { get; set; }
 
 	/// <summary>
-	/// Maps an item to the image url to warm before its row scrolls on. Setting it enables prefetching through the app's image loader.
+	/// Maps an item to the image url to warm before its row scrolls on.
 	/// </summary>
+	/// <remarks>
+	/// Setting it enables prefetching through the app's image loader.
+	/// </remarks>
 	public Func<TItem, string?>? Prefetch { get; set; }
 
 	internal string? PrefetchUrl(
 		int section,
 		int index) =>
-		ItemAt(section, index) is { } item
+		ItemAt(section, index) is TItem item
 			? Prefetch?.Invoke(item)
 			: null;
 
 	/// <summary>
-	/// Invoked after a drag-to-reorder with an <see cref="ItemMove{TItem}"/>. Setting it enables a long-press drag, unless a context menu owns that gesture; the edit-mode handle always drags. The move is already applied to the source when it fires.
+	/// Invoked after a drag-to-reorder with an <see cref="ItemMove{TItem}"/>.
 	/// </summary>
+	/// <remarks>
+	/// Setting it enables a long-press drag, unless a context menu owns that gesture; the edit-mode handle always drags.<br/>
+	/// The move is already applied to the source when it fires.
+	/// </remarks>
 	public ICommand? ReorderCommand { get; set; }
 
 	/// <summary>
@@ -211,8 +248,11 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	Binding<bool>? isEditingBinding;
 
 	/// <summary>
-	/// The items checked while editing. Give it an <c>ObservableCollection</c>: taps keep it in sync, and mutating it moves the checkmarks.
+	/// The items checked while editing.
 	/// </summary>
+	/// <remarks>
+	/// Give it an <c>ObservableCollection</c>: taps keep it in sync, and mutating it moves the checkmarks.
+	/// </remarks>
 	public BindableList<TItem> SelectedItems
 	{
 		get => new(selectedItems);
@@ -265,7 +305,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		int index,
 		bool selected)
 	{
-		if (ItemAt(section, index) is not { } item || selectedItems is not IList<TItem> list)
+		if (ItemAt(section, index) is not TItem item || selectedItems is not IList<TItem> list)
 			return;
 
 		suppressSelectionSync = true;
@@ -433,7 +473,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 	internal int CountIn(
 		int section) =>
-		sections is { } groups
+		sections is IReadOnlyList<TSection> groups
 			? section >= 0 && section < groups.Count ? groups[section].Items.Count : 0
 			: itemsSource?.Count ?? 0;
 
@@ -441,7 +481,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		int section,
 		int index)
 	{
-		IReadOnlyList<TItem>? items = sections is { } groups
+		IReadOnlyList<TItem>? items = sections is IReadOnlyList<TSection> groups
 			? section >= 0 && section < groups.Count ? groups[section].Items : null
 			: itemsSource;
 
@@ -452,7 +492,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 	internal TSection? SectionAt(
 		int index) =>
-		sections is { } groups && index >= 0 && index < groups.Count
+		sections is IReadOnlyList<TSection> groups && index >= 0 && index < groups.Count
 			? groups[index]
 			: null;
 
@@ -473,7 +513,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	IList<TItem>? WritableIn(
 		int section)
 	{
-		IList<TItem>? list = sections is { } groups
+		IList<TItem>? list = sections is IReadOnlyList<TSection> groups
 			? section >= 0 && section < groups.Count ? groups[section].Items as IList<TItem> : null
 			: itemsSource as IList<TItem>;
 
@@ -491,7 +531,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		int toSection,
 		int toIndex)
 	{
-		if (WritableIn(fromSection) is not { } from || WritableIn(toSection) is not { } to)
+		if (WritableIn(fromSection) is not IList<TItem> from || WritableIn(toSection) is not IList<TItem> to)
 			return;
 
 		if (fromIndex < 0 || fromIndex >= from.Count)
@@ -527,7 +567,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 		MovedInSource();
 
-		if (ReorderCommand is { } command)
+		if (ReorderCommand is ICommand command)
 		{
 			ItemMove<TItem> move = new(item, fromSection, fromIndex, toSection, toIndex);
 
@@ -546,7 +586,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		int section,
 		int row)
 	{
-		if (LoadMoreCommand is not { } command)
+		if (LoadMoreCommand is not ICommand command)
 			return;
 
 		int total = 0;
