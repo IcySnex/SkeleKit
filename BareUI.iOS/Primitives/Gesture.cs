@@ -23,7 +23,7 @@ public enum GestureState
 	/// <summary>
 	/// The system took the gesture away.
 	/// </summary>
-	Cancelled
+	Canceled
 }
 
 /// <summary>

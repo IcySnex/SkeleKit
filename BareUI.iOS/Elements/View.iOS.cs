@@ -191,7 +191,7 @@ public abstract partial class View
 					pressed?.Invoke(false);
 			});
 
-			// zero duration turns it into a touch-down tracker; not cancelling keeps child controls live
+			// zero duration turns it into a touch-down tracker; not canceling keeps child controls live
 			recognizer.MinimumPressDuration = 0;
 			recognizer.CancelsTouchesInView = false;
 
@@ -427,7 +427,7 @@ public abstract partial class View
 		CGAffineTransform transform = CGAffineTransform.MakeScale((nfloat)Scale, (nfloat)Scale);
 		transform = CGAffineTransform.Multiply(transform, CGAffineTransform.MakeRotation((nfloat)(Rotation * Math.PI / 180)));
 
-		// UIKit applies the transform about the centre; to pivot at AnchorPoint instead, add the
+		// UIKit applies the transform about the center; to pivot at AnchorPoint instead, add the
 		// translation (I - L)·(P - C) that a change of pivot introduces, then the caller's own translation.
 		// Baked into the matrix rather than set on layer.AnchorPoint, which UIView's frame system resets.
 		nfloat px = (nfloat)((AnchorPoint.X - 0.5) * native.Bounds.Width);
@@ -734,7 +734,7 @@ public abstract partial class View
 			UIGestureRecognizerState.Began => GestureState.Began,
 			UIGestureRecognizerState.Changed => GestureState.Changed,
 			UIGestureRecognizerState.Ended => GestureState.Ended,
-			_ => GestureState.Cancelled
+			_ => GestureState.Canceled
 		};
 
 	/// <summary>
@@ -786,7 +786,7 @@ public abstract partial class View
 		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
 		bool resized = native.Bounds.Size != next.Size;
 
-		// always bounds+centre, never Frame: an animation can leave the native transform non-identity
+		// always bounds+center, never Frame: an animation can leave the native transform non-identity
 		// while the model reads as untransformed, and setting Frame under a transform is undefined.
 		// The origin stays — a scroll view keeps its content offset there
 		native.Bounds = new(native.Bounds.X, native.Bounds.Y, next.Width, next.Height);

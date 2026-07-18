@@ -43,7 +43,7 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 		{
 			if (pinch.State is GestureState.Changed)
 				badge.Scale = Math.Clamp(pinch.Scale, 0.5, 2.5);
-			else if (pinch.State is GestureState.Ended or GestureState.Cancelled)
+			else if (pinch.State is GestureState.Ended or GestureState.Canceled)
 				View.Animate(Animation.Spring(damping: 0.5), () => badge.Scale = 1);
 		};
 

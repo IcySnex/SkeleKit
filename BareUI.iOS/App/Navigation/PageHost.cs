@@ -376,7 +376,7 @@ internal sealed class PageHost : UIViewController
 
 		search.SearchBar.Placeholder = placeholder;
 		search.SearchBar.TextChanged += (_, e) => page.NotifySearch(e.SearchText);
-		search.SearchBar.CancelButtonClicked += (_, _) => page.NotifySearchCancelled();
+		search.SearchBar.CancelButtonClicked += (_, _) => page.NotifySearchCanceled();
 
 		if (page.SearchScopes.Count > 0)
 		{

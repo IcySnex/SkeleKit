@@ -15,7 +15,7 @@ public class SearchTabDemo : ContentView<SearchTabDemoViewModel>
 		Title = "Search";
 		SearchPlaceholder = "Search demos";
 		SearchChanged = text => ViewModel.Status = $"Searching: {text}";
-		SearchCancelled = () => ViewModel.Status = "Cancelled";
+		SearchCanceled = () => ViewModel.Status = "Cancelled";
 
 		Content = new StackPanel
 		{

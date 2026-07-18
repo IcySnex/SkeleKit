@@ -173,7 +173,7 @@ public abstract partial class ContentView : Panel
 	/// <summary>
 	/// Invoked when the user cancels out of the search field.
 	/// </summary>
-	public Action? SearchCancelled { get; set; }
+	public Action? SearchCanceled { get; set; }
 
 	/// <summary>
 	/// The page's element tree.
@@ -225,8 +225,8 @@ public abstract partial class ContentView : Panel
 		int index) =>
 		SearchScopeChanged?.Invoke(index);
 
-	internal void NotifySearchCancelled() =>
-		SearchCancelled?.Invoke();
+	internal void NotifySearchCanceled() =>
+		SearchCanceled?.Invoke();
 
 	internal void NotifyLoaded() =>
 		OnLoaded();

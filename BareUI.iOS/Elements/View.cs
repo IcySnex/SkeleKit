@@ -650,7 +650,7 @@ public abstract partial class View
 	}
 	Point anchorPoint = new(0.5, 0.5);
 
-	// the pivot lives in the transform matrix (baked around the centre), so a change re-derives it
+	// the pivot lives in the transform matrix (baked around the center), so a change re-derives it
 	void ApplyAnchor() =>
 		ApplyTransform();
 

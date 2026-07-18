@@ -42,7 +42,7 @@ public enum CarouselSnap
 	Item,
 
 	/// <summary>
-	/// Settles on an item, centred.
+	/// Settles on an item, centered.
 	/// </summary>
 	ItemCentered,
 
