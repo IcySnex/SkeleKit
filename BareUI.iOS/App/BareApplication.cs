@@ -34,7 +34,7 @@ public class BareApplication
 			UITabBarController tabBarController,
 			UITab tab)
 		{
-			if (app is { ActionTab.Identifier: { } action } && tab.Identifier == action)
+			if (app is { ActionTab.Identifier: string action } && tab.Identifier == action)
 			{
 				CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => app.BubbleAction?.Invoke());
 				app.AttachBubbleInterceptor(tabBarController);
@@ -95,7 +95,7 @@ public class BareApplication
 	{
 		UIViewController? top = Root();
 
-		while (top?.PresentedViewController is { } presented)
+		while (top?.PresentedViewController is UIViewController presented)
 			top = presented;
 
 		if (top is UITabBarController tabs)
@@ -136,7 +136,7 @@ public class BareApplication
 
 		PageHost? root = stack.ViewControllers?.FirstOrDefault() as PageHost;
 
-		if (root?.Page?.TabReselected is { } handler)
+		if (root?.Page?.TabReselected is Action handler)
 		{
 			handler();
 			return;
@@ -148,7 +148,7 @@ public class BareApplication
 			return;
 		}
 
-		if (root?.Page is { } page && PageHost.FindScrolling(page)?.Native is UIScrollView scroll)
+		if (root?.Page is ContentView page && PageHost.FindScrolling(page)?.Native is UIScrollView scroll)
 			scroll.SetContentOffset(new(scroll.ContentOffset.X, -scroll.AdjustedContentInset.Top), true);
 	}
 
@@ -161,7 +161,7 @@ public class BareApplication
 		if (bubbleTap is not null)
 			return;
 
-		if (FindBubbleView(controller.View!) is not { } bubble)
+		if (FindBubbleView(controller.View!) is not UIView bubble)
 			return;
 
 		UILongPressGestureRecognizer recognizer = null!;
@@ -181,7 +181,7 @@ public class BareApplication
 	static UIView? FindBubbleView(
 		UIView root)
 	{
-		if (FindByClass(root, "_UIFloatingTabBarPinnedItemsView") is not { } pinned)
+		if (FindByClass(root, "_UIFloatingTabBarPinnedItemsView") is not UIView pinned)
 			return null;
 
 		UIView? bubble = null;
@@ -204,7 +204,7 @@ public class BareApplication
 
 		foreach (UIView subview in root.Subviews)
 		{
-			if (FindByClass(subview, name) is { } match)
+			if (FindByClass(subview, name) is UIView match)
 				return match;
 		}
 
@@ -221,7 +221,7 @@ public class BareApplication
 	{
 		if (Accessory is null
 			|| !OperatingSystem.IsIOSVersionAtLeast(26)
-			|| CurrentTabs() is not { } tabs)
+			|| CurrentTabs() is not UITabBarController tabs)
 			return;
 
 		bool barHidden = (CurrentStack()?.TopViewController as PageHost)?.HidesBottomBarWhenPushed is true;
@@ -366,7 +366,7 @@ public class BareApplication
 				if (tabsBuilder is { SearchViewModel: not null } and ({ BubbleFactory: not null } or { BubbleViewModel: not null }))
 					throw new InvalidOperationException("The bubble is single: declare Search or Bubble, not both.");
 
-				if (tabsBuilder?.SearchViewModel is { } searchViewModel)
+				if (tabsBuilder?.SearchViewModel is Type searchViewModel)
 				{
 					UINavigationController stack = Stack(searchViewModel, tabsBuilder.UseLargeTitles);
 
@@ -375,7 +375,7 @@ public class BareApplication
 
 					tabs.Add(search);
 				}
-				else if (tabsBuilder?.BubbleViewModel is { } bubbleViewModel && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
+				else if (tabsBuilder?.BubbleViewModel is Type bubbleViewModel && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
 				{
 					UINavigationController stack = Stack(bubbleViewModel, tabsBuilder.UseLargeTitles);
 
@@ -389,7 +389,7 @@ public class BareApplication
 					((PageHost)stack.ViewControllers![0]).Tab = bubble;
 					tabs.Add(bubble);
 				}
-				else if (tabsBuilder?.BubbleFactory is { } action && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
+				else if (tabsBuilder?.BubbleFactory is Func<IServiceProvider, Action> action && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
 				{
 					BubbleAction = action(Services);
 
@@ -414,14 +414,14 @@ public class BareApplication
 				if (iPad?.UseSidebar is true)
 					controller.Mode = UITabBarControllerMode.TabSidebar;
 
-				if (tabsBuilder?.Minimize is { } minimize and not TabBarMinimize.Never && OperatingSystem.IsIOSVersionAtLeast(26))
+				if (tabsBuilder?.Minimize is TabBarMinimize minimize and not TabBarMinimize.Never && OperatingSystem.IsIOSVersionAtLeast(26))
 				{
 					controller.TabBarMinimizeBehavior = minimize is TabBarMinimize.OnScrollUp
 						? UITabBarMinimizeBehavior.OnScrollUp
 						: UITabBarMinimizeBehavior.OnScrollDown;
 				}
 
-				if (tabsBuilder?.AccessoryFactory is { } accessory && OperatingSystem.IsIOSVersionAtLeast(26))
+				if (tabsBuilder?.AccessoryFactory is Func<View> accessory && OperatingSystem.IsIOSVersionAtLeast(26))
 				{
 					accessoryContent = accessory();
 					accessoryContent.VisibilityChanged = SyncAccessory;
@@ -432,7 +432,7 @@ public class BareApplication
 						controller.BottomAccessory = Accessory;
 				}
 
-				if (iPad?.FooterFactory is { } footer && OperatingSystem.IsIOSVersionAtLeast(26))
+				if (iPad?.FooterFactory is Func<View> footer && OperatingSystem.IsIOSVersionAtLeast(26))
 				{
 					footerContent = footer();
 					footerHost = AccessoryHost.ForKeyboard(footerContent);
