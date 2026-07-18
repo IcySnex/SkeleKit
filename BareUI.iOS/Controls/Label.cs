@@ -5,6 +5,13 @@ namespace BareUI;
 /// </summary>
 public class Label : Control
 {
+	UILabel Ui =>
+		(UILabel)Native;
+
+	bool UsesAttributes =>
+		lineSpacing is not 0 || letterSpacing is not 0 || underline || strikethrough;
+
+
 	/// <summary>
 	/// The text to display.
 	/// </summary>
@@ -188,30 +195,6 @@ public class Label : Control
 	double maxFontSize = double.NaN;
 
 
-	private protected override UIView CreateNative() =>
-		new UILabel
-		{
-			BackgroundColor = UIColor.Clear,
-			AdjustsFontForContentSizeCategory = true
-		};
-
-	private protected override void ApplyProperties()
-	{
-		ApplyFont();
-		ApplyTextColor();
-		ApplyMaxLines();
-		ApplyTextAlignment();
-		ApplyTruncation();
-		ApplyAutoShrink();
-		ApplyText();
-	}
-
-	UILabel Ui =>
-		(UILabel)Native;
-
-	bool UsesAttributes =>
-		lineSpacing is not 0 || letterSpacing is not 0 || underline || strikethrough;
-
 	void ApplyText()
 	{
 		if (spans is { Count: > 0 })
@@ -241,7 +224,7 @@ public class Label : Control
 		Ui.AttributedText = new NSAttributedString(text, attributes);
 	}
 
-	// the paragraph style mirrors the label's own wrap and alignment, or it would override them
+	// mirror the label's own wrap and alignment
 	NSMutableParagraphStyle BuildParagraph() =>
 		new()
 		{
@@ -264,7 +247,6 @@ public class Label : Control
 			ApplySpans();
 	}
 
-	// both paths scale with the user's text-size setting; a weight of Regular leaves a text style's own
 	UIFont FontFor(
 		FontWeight fontWeight,
 		FontDesign fontDesign,
@@ -309,7 +291,6 @@ public class Label : Control
 			ApplyText();
 	}
 
-
 	void ApplySpans()
 	{
 		if (spans is not { Count: > 0 })
@@ -342,11 +323,29 @@ public class Label : Control
 		Ui.AttributedText = composed;
 	}
 
-	// a span's own size decides the text-style-vs-explicit path; NaN falls through to the label's size
 	UIFont FontFor(
 		Span span) =>
 		FontFor(
 			span.Bold ? BareUI.FontWeight.Bold : span.FontWeight ?? weight,
 			span.FontDesign ?? design,
 			double.IsNaN(span.FontSize) ? fontSize : span.FontSize);
+
+
+	private protected override UIView CreateNative() =>
+		new UILabel
+		{
+			BackgroundColor = UIColor.Clear,
+			AdjustsFontForContentSizeCategory = true
+		};
+
+	private protected override void ApplyProperties()
+	{
+		ApplyFont();
+		ApplyTextColor();
+		ApplyMaxLines();
+		ApplyTextAlignment();
+		ApplyTruncation();
+		ApplyAutoShrink();
+		ApplyText();
+	}
 }

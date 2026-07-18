@@ -8,6 +8,13 @@ namespace BareUI;
 /// </summary>
 public class TextEditor : Control
 {
+	(UIToolbar Bar, UIBarButtonItem[] Items)? accessoryBar;
+	AccessoryHost? accessoryHost;
+
+
+	UITextView Ui => (UITextView)Native;
+
+
 	/// <summary>
 	/// The current text. Two-way by default.
 	/// </summary>
@@ -82,17 +89,6 @@ public class TextEditor : Control
 	}
 	View? keyboardAccessory;
 
-	// roots the bar and its item peers for as long as the field lives
-	(UIToolbar Bar, UIBarButtonItem[] Items)? accessoryBar;
-	AccessoryHost? accessoryHost;
-
-	void ApplyToolbar() =>
-		Ui.InputAccessoryView = keyboardAccessory is View custom
-			? (accessoryHost ??= AccessoryHost.ForKeyboard(custom))
-			: keyboardToolbar is KeyboardToolbar.None
-				? null
-				: (accessoryBar ??= Keyboards.Toolbar(this, keyboardToolbar)).Bar;
-
 	/// <summary>
 	/// Font size in points.
 	/// </summary>
@@ -130,35 +126,18 @@ public class TextEditor : Control
 	public Action<string>? TextChanged { get; set; }
 
 
-	private protected override UIView CreateNative()
-	{
-		UITextView view = new()
-		{
-			Editable = true,
-			AdjustsFontForContentSizeCategory = true
-		};
-
-		view.Changed += (_, _) => OnChanged();
-		view.Ended += (_, _) => OnEditingEnded();
-
-		return view;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplyText();
-		ApplyFont();
-		ApplyTraits();
-		ApplyToolbar();
-	}
-
-	UITextView Ui => (UITextView)Native;
-
 	void ApplyText() =>
 		Ui.Text = text;
 
 	void ApplyFont() =>
 		Ui.Font = Fonts.Scaled(fontSize, fontWeight, fontDesign);
+
+	void ApplyToolbar() =>
+		Ui.InputAccessoryView = keyboardAccessory is View custom
+			? (accessoryHost ??= AccessoryHost.ForKeyboard(custom))
+			: keyboardToolbar is KeyboardToolbar.None
+				? null
+				: (accessoryBar ??= Keyboards.Toolbar(this, keyboardToolbar)).Bar;
 
 	void ApplyTraits()
 	{
@@ -193,7 +172,31 @@ public class TextEditor : Control
 			textBinding.PushToSource(Ui.Text);
 	}
 
-	// UITextView over-reports empty height; size from content, floor at one line
+
+	private protected override UIView CreateNative()
+	{
+		UITextView view = new()
+		{
+			Editable = true,
+			AdjustsFontForContentSizeCategory = true
+		};
+
+		view.Changed += (_, _) => OnChanged();
+		view.Ended += (_, _) => OnEditingEnded();
+
+		return view;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyText();
+		ApplyFont();
+		ApplyTraits();
+		ApplyToolbar();
+	}
+
+
+	// UITextView over-reports empty height; floor at one line
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{

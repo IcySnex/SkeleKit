@@ -7,6 +7,13 @@ namespace BareUI;
 /// </summary>
 public class TextField : Control
 {
+	(UIToolbar Bar, UIBarButtonItem[] Items)? accessoryBar;
+	AccessoryHost? accessoryHost;
+
+
+	UITextField Ui => (UITextField)Native;
+
+
 	/// <summary>
 	/// The current text. Two-way by default.
 	/// </summary>
@@ -132,17 +139,6 @@ public class TextField : Control
 	}
 	View? keyboardAccessory;
 
-	// roots the bar and its item peers for as long as the field lives
-	(UIToolbar Bar, UIBarButtonItem[] Items)? accessoryBar;
-	AccessoryHost? accessoryHost;
-
-	void ApplyToolbar() =>
-		Ui.InputAccessoryView = keyboardAccessory is View custom
-			? (accessoryHost ??= AccessoryHost.ForKeyboard(custom))
-			: keyboardToolbar is KeyboardToolbar.None
-				? null
-				: (accessoryBar ??= Keyboards.Toolbar(this, keyboardToolbar)).Bar;
-
 	/// <summary>
 	/// Font size in points.
 	/// </summary>
@@ -185,42 +181,6 @@ public class TextField : Control
 	public ICommand? SubmitCommand { get; set; }
 
 
-	private protected override UIView CreateNative()
-	{
-		UITextField field = new()
-		{
-			BorderStyle = UITextBorderStyle.RoundedRect,
-			AdjustsFontForContentSizeCategory = true
-		};
-
-		field.EditingChanged += (_, _) => OnEdited();
-		field.EditingDidEnd += (_, _) => OnEditingEnded();
-
-		field.ShouldReturn = textField =>
-		{
-			textField.ResignFirstResponder();
-			if (SubmitCommand is ICommand submit && submit.CanExecute(null))
-				submit.Execute(null);
-
-			return true;
-		};
-
-		return field;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplyText();
-		ApplyPlaceholder();
-		ApplyFont();
-		ApplyKeyboard();
-		ApplyReturnKey();
-		ApplyTraits();
-		ApplyToolbar();
-	}
-
-	UITextField Ui => (UITextField)Native;
-
 	void ApplyText() =>
 		Ui.Text = text;
 
@@ -229,6 +189,13 @@ public class TextField : Control
 
 	void ApplyFont() =>
 		Ui.Font = Fonts.Scaled(fontSize, fontWeight, fontDesign);
+
+	void ApplyToolbar() =>
+		Ui.InputAccessoryView = keyboardAccessory is View custom
+			? (accessoryHost ??= AccessoryHost.ForKeyboard(custom))
+			: keyboardToolbar is KeyboardToolbar.None
+				? null
+				: (accessoryBar ??= Keyboards.Toolbar(this, keyboardToolbar)).Bar;
 
 	void ApplyTraits()
 	{
@@ -252,33 +219,6 @@ public class TextField : Control
 		Ui.SpellCheckingType = autocorrection ? UITextSpellCheckingType.Yes : UITextSpellCheckingType.No;
 		Ui.EnablesReturnKeyAutomatically = requiresText;
 		Ui.KeyboardAppearance = Keyboards.Appearance(keyboardLook);
-	}
-
-	// the binding setter rejects null: None leaves the system default alone, and clearing a
-	// previously set kind writes the empty string — UIKit's spelling for "explicitly nothing"
-	internal static void ApplyContentType(
-		NSString? current,
-		ContentKind kind,
-		Action<NSString> assign)
-	{
-		NSString? type = kind switch
-		{
-			ContentKind.Username => UITextContentType.Username,
-			ContentKind.Password => UITextContentType.Password,
-			ContentKind.NewPassword => UITextContentType.NewPassword,
-			ContentKind.OneTimeCode => UITextContentType.OneTimeCode,
-			ContentKind.Email => UITextContentType.EmailAddress,
-			ContentKind.Name => UITextContentType.Name,
-			ContentKind.PhoneNumber => UITextContentType.TelephoneNumber,
-			ContentKind.StreetAddress => UITextContentType.FullStreetAddress,
-			ContentKind.Url => UITextContentType.Url,
-			_ => null
-		};
-
-		if (type is not null)
-			assign(type);
-		else if (current is not null)
-			assign(new(""));
 	}
 
 	void ApplyKeyboard() =>
@@ -318,5 +258,67 @@ public class TextField : Control
 	{
 		if (textBinding?.Trigger is UpdateTrigger.FocusLost)
 			textBinding.PushToSource(Ui.Text);
+	}
+
+
+	private protected override UIView CreateNative()
+	{
+		UITextField field = new()
+		{
+			BorderStyle = UITextBorderStyle.RoundedRect,
+			AdjustsFontForContentSizeCategory = true
+		};
+
+		field.EditingChanged += (_, _) => OnEdited();
+		field.EditingDidEnd += (_, _) => OnEditingEnded();
+
+		field.ShouldReturn = textField =>
+		{
+			textField.ResignFirstResponder();
+			if (SubmitCommand is ICommand submit && submit.CanExecute(null))
+				submit.Execute(null);
+
+			return true;
+		};
+
+		return field;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyText();
+		ApplyPlaceholder();
+		ApplyFont();
+		ApplyKeyboard();
+		ApplyReturnKey();
+		ApplyTraits();
+		ApplyToolbar();
+	}
+
+
+	// empty string clears a previously set content type
+	internal static void ApplyContentType(
+		NSString? current,
+		ContentKind kind,
+		Action<NSString> assign)
+	{
+		NSString? type = kind switch
+		{
+			ContentKind.Username => UITextContentType.Username,
+			ContentKind.Password => UITextContentType.Password,
+			ContentKind.NewPassword => UITextContentType.NewPassword,
+			ContentKind.OneTimeCode => UITextContentType.OneTimeCode,
+			ContentKind.Email => UITextContentType.EmailAddress,
+			ContentKind.Name => UITextContentType.Name,
+			ContentKind.PhoneNumber => UITextContentType.TelephoneNumber,
+			ContentKind.StreetAddress => UITextContentType.FullStreetAddress,
+			ContentKind.Url => UITextContentType.Url,
+			_ => null
+		};
+
+		if (type is not null)
+			assign(type);
+		else if (current is not null)
+			assign(new(""));
 	}
 }
