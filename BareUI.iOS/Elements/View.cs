@@ -650,9 +650,9 @@ public abstract partial class View
 	}
 	Point anchorPoint = new(0.5, 0.5);
 
-	// re-place the view with the new pivot; the frame is unchanged, only where a transform turns about it
+	// the pivot lives in the transform matrix (baked around the centre), so a change re-derives it
 	void ApplyAnchor() =>
-		ApplyFrame(ArrangedBounds);
+		ApplyTransform();
 
 	// a transformed view must be positioned by bounds+center: setting Frame under a transform is undefined
 	private protected bool HasTransform => translation != Point.Zero || Math.Abs(scale - 1) > 0.00001 || Math.Abs(rotation) > 0.00001;

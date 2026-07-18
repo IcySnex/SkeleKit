@@ -118,9 +118,11 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   inherited name collided, and the row menu was always the more specific thing anyway.
 - ▲ (skip) **Drag & drop** — `UIDrag/DropInteraction`, typed item providers.
 - ~~★ **Anchor point**~~ — **done** (`View.AnchorPoint`, unit coordinates, default centre `(0.5, 0.5)`).
-  Folded into `ApplyFrame`: it now sets `layer.AnchorPoint` and places `layer.Position` at the anchor
-  instead of `Center`, so a corner pivot lands correctly and `Rotation`/`Scale` turn about it; a change
-  re-runs `ApplyFrame(ArrangedBounds)`, keeping the frame put and only moving the pivot.
+  Baked into the transform matrix, **not** `layer.AnchorPoint` — UIView's frame system resets a directly
+  set anchor (both pivots rendered identically). `ApplyTransform` keeps the anchor at centre and adds the
+  translation `(I − L)·(P − C)` a pivot change introduces (`P` the anchor, `C` the centre, `L` the
+  scale·rotate), so `Rotation`/`Scale` turn about the anchor. The offset scales with size, so a resize
+  re-bakes it (`ApplyFrame` re-applies the transform on resize).
 - ◆ (skip) **Accessibility custom actions** — the known debt; `UIAccessibilityCustomAction` list.
 - ★ (skip) **Accessibility announce** — `UIAccessibility.PostNotification(announcement)` static helper.
 

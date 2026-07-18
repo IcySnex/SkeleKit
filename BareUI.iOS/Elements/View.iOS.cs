@@ -423,9 +423,18 @@ public abstract partial class View
 			return;
 		}
 
+		// linear part: scale then rotate (no translation yet)
 		CGAffineTransform transform = CGAffineTransform.MakeScale((nfloat)Scale, (nfloat)Scale);
 		transform = CGAffineTransform.Multiply(transform, CGAffineTransform.MakeRotation((nfloat)(Rotation * Math.PI / 180)));
-		transform = CGAffineTransform.Multiply(transform, CGAffineTransform.MakeTranslation((nfloat)Translation.X, (nfloat)Translation.Y));
+
+		// UIKit applies the transform about the centre; to pivot at AnchorPoint instead, add the
+		// translation (I - L)·(P - C) that a change of pivot introduces, then the caller's own translation.
+		// Baked into the matrix rather than set on layer.AnchorPoint, which UIView's frame system resets.
+		nfloat px = (nfloat)((AnchorPoint.X - 0.5) * native.Bounds.Width);
+		nfloat py = (nfloat)((AnchorPoint.Y - 0.5) * native.Bounds.Height);
+
+		transform.Tx = px - (transform.A * px + transform.C * py) + (nfloat)Translation.X;
+		transform.Ty = py - (transform.B * px + transform.D * py) + (nfloat)Translation.Y;
 
 		native.Transform = transform;
 	}
@@ -777,20 +786,19 @@ public abstract partial class View
 		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
 		bool resized = native.Bounds.Size != next.Size;
 
-		// always bounds+position, never Frame: an animation can leave the native transform non-identity
+		// always bounds+centre, never Frame: an animation can leave the native transform non-identity
 		// while the model reads as untransformed, and setting Frame under a transform is undefined.
-		// The origin stays — a scroll view keeps its content offset there. Position honours the anchor
-		// point (layer.position sits at the anchor), so a corner pivot places correctly and rotates there.
-		CGPoint anchor = new((nfloat)AnchorPoint.X, (nfloat)AnchorPoint.Y);
-
+		// The origin stays — a scroll view keeps its content offset there
 		native.Bounds = new(native.Bounds.X, native.Bounds.Y, next.Width, next.Height);
-		native.Layer.AnchorPoint = anchor;
-		native.Layer.Position = new(next.X + (anchor.X * next.Width), next.Y + (anchor.Y * next.Height));
+		native.Center = new(next.X + (next.Width / 2), next.Y + (next.Height / 2));
 
 		if (resized)
 		{
 			SyncGradientFrame();
 			native.SetNeedsLayout();
+
+			// the pivot offset scales with the bounds, so a resize re-bakes it into the transform
+			ApplyTransform();
 		}
 	}
 }
