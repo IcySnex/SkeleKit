@@ -24,8 +24,11 @@ public enum ToolbarSide
 public sealed class ToolbarItem
 {
 	/// <summary>
-	/// The item's text, or null when it shows only an icon. Live: setting it updates the bar.
+	/// The item's text, or null when it shows only an icon.
 	/// </summary>
+	/// <remarks>
+	/// Setting it updates the bar live.
+	/// </remarks>
 	public string? Text
 	{
 		get;
@@ -37,8 +40,11 @@ public sealed class ToolbarItem
 	}
 
 	/// <summary>
-	/// An SF Symbol name, or null for a text-only item. Live: setting it updates the bar.
+	/// An SF Symbol name, or null for a text-only item.
 	/// </summary>
+	/// <remarks>
+	/// Setting it updates the bar live.
+	/// </remarks>
 	public string? Icon
 	{
 		get;
@@ -50,8 +56,11 @@ public sealed class ToolbarItem
 	}
 
 	/// <summary>
-	/// Whether the item is in the bar at all. Live: contextual actions toggle it (a Delete that only exists in edit mode).
+	/// Whether the item is in the bar at all.
 	/// </summary>
+	/// <remarks>
+	/// Contextual actions toggle it live, like a Delete that only exists in edit mode.
+	/// </remarks>
 	public bool IsVisible
 	{
 		get;

@@ -48,7 +48,7 @@ internal static class Keyboards
 		int direction)
 	{
 		View root = owner;
-		while (root.Parent is { } parent)
+		while (root.Parent is View parent)
 			root = parent;
 
 		List<View> inputs = [];

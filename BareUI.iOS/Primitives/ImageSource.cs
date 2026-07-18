@@ -1,32 +1,6 @@
 namespace BareUI;
 
 /// <summary>
-/// Where an <c>Image</c> loads its content from.
-/// </summary>
-public enum ImageSourceKind
-{
-	/// <summary>
-	/// Resolve from a bundle asset first, then an SF Symbol.
-	/// </summary>
-	Auto,
-
-	/// <summary>
-	/// An SF Symbol name.
-	/// </summary>
-	Symbol,
-
-	/// <summary>
-	/// A bundle asset name.
-	/// </summary>
-	Bundle,
-
-	/// <summary>
-	/// A remote URL loaded asynchronously.
-	/// </summary>
-	Url
-}
-
-/// <summary>
 /// Describes where an image comes from, without touching UIKit.
 /// </summary>
 /// <param name="kind">How the value should be resolved.</param>
@@ -81,4 +55,30 @@ public readonly struct ImageSource(
 	public static implicit operator ImageSource(
 		string value) =>
 		new(value.Contains("://") ? ImageSourceKind.Url : ImageSourceKind.Auto, value);
+}
+
+/// <summary>
+/// Where an <c>Image</c> loads its content from.
+/// </summary>
+public enum ImageSourceKind
+{
+	/// <summary>
+	/// Resolve from a bundle asset first, then an SF Symbol.
+	/// </summary>
+	Auto,
+
+	/// <summary>
+	/// An SF Symbol name.
+	/// </summary>
+	Symbol,
+
+	/// <summary>
+	/// A bundle asset name.
+	/// </summary>
+	Bundle,
+
+	/// <summary>
+	/// A remote URL loaded asynchronously.
+	/// </summary>
+	Url
 }

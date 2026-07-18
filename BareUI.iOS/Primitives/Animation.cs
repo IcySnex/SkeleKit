@@ -27,8 +27,11 @@ public enum Easing
 }
 
 /// <summary>
-/// How to animate a change: a duration with an easing curve, or a spring. Describes the timing only, never what changes.
+/// How to animate a change: a duration with an easing curve, or a spring.
 /// </summary>
+/// <remarks>
+/// Describes the timing only, never what changes.
+/// </remarks>
 public readonly record struct Animation
 {
 	/// <summary>

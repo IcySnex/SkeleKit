@@ -1,58 +1,6 @@
 namespace BareUI;
 
 /// <summary>
-/// How a <c>CollectionView</c> arranges its items.
-/// </summary>
-public enum CollectionLayoutKind
-{
-	/// <summary>
-	/// A vertical list of full-width rows.
-	/// </summary>
-	List,
-
-	/// <summary>
-	/// A vertical grid of equal columns.
-	/// </summary>
-	Grid,
-
-	/// <summary>
-	/// A horizontally scrolling row.
-	/// </summary>
-	Carousel
-}
-
-/// <summary>
-/// How a carousel settles when the drag ends. Mirrors SwiftUI's scroll target behavior.
-/// </summary>
-public enum CarouselSnap
-{
-	/// <summary>
-	/// Free scrolling; stops wherever the drag ends.
-	/// </summary>
-	None,
-
-	/// <summary>
-	/// Free scrolling, but the resting offset lands on an item's leading edge.
-	/// </summary>
-	LeadingBoundary,
-
-	/// <summary>
-	/// Settles on an item, leading edge aligned.
-	/// </summary>
-	Item,
-
-	/// <summary>
-	/// Settles on an item, centered.
-	/// </summary>
-	ItemCentered,
-
-	/// <summary>
-	/// Settles a full page at a time.
-	/// </summary>
-	Page
-}
-
-/// <summary>
 /// The layout of a <c>CollectionView</c>: a list, a grid, or a carousel.
 /// </summary>
 public readonly struct CollectionLayout
@@ -131,22 +79,56 @@ public readonly struct CollectionLayout
 }
 
 /// <summary>
-/// Where a scrolled-to item lands in the viewport.
+/// How a <c>CollectionView</c> arranges its items.
 /// </summary>
-public enum ScrollPosition
+public enum CollectionLayoutKind
 {
 	/// <summary>
-	/// At the top (or leading edge of a carousel).
+	/// A vertical list of full-width rows.
 	/// </summary>
-	Top,
+	List,
 
 	/// <summary>
-	/// Centered.
+	/// A vertical grid of equal columns.
 	/// </summary>
-	Center,
+	Grid,
 
 	/// <summary>
-	/// At the bottom (or trailing edge of a carousel).
+	/// A horizontally scrolling row.
 	/// </summary>
-	Bottom
+	Carousel
+}
+
+/// <summary>
+/// How a carousel settles when the drag ends.
+/// </summary>
+/// <remarks>
+/// Mirrors SwiftUI's scroll target behavior.
+/// </remarks>
+public enum CarouselSnap
+{
+	/// <summary>
+	/// Free scrolling; stops wherever the drag ends.
+	/// </summary>
+	None,
+
+	/// <summary>
+	/// Free scrolling, but the resting offset lands on an item's leading edge.
+	/// </summary>
+	LeadingBoundary,
+
+	/// <summary>
+	/// Settles on an item, leading edge aligned.
+	/// </summary>
+	Item,
+
+	/// <summary>
+	/// Settles on an item, centered.
+	/// </summary>
+	ItemCentered,
+
+	/// <summary>
+	/// Settles a full page at a time.
+	/// </summary>
+	Page
 }

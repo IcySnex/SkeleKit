@@ -25,7 +25,7 @@ internal sealed class Motion(
 	public bool Step(
 		double dt)
 	{
-		if (animation.SpringDamping is { } damping)
+		if (animation.SpringDamping is double damping)
 			return StepSpring(dt, damping);
 
 		elapsed += dt;
@@ -49,7 +49,7 @@ internal sealed class Motion(
 		double stiffness = omega * omega;
 		double drag = 2 * damping * omega;
 
-		// semi-implicit Euler, sub-stepped so a dropped frame cannot destabilise it
+		// semi-implicit Euler, sub-stepped so a dropped frame cannot destabilize it
 		int steps = Math.Max(1, (int)Math.Ceiling(dt / 0.008));
 		double h = dt / steps;
 
