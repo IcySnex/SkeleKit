@@ -4,7 +4,7 @@ namespace BareUI;
 /// A styled run of text inside a <see cref="Label"/>'s <see cref="Label.Spans"/>. Every unset visual
 /// property follows the label; a set one overrides it for this run alone.
 /// </summary>
-public sealed class Span
+public class Span
 {
 	/// <summary>
 	/// Creates a span.
@@ -13,6 +13,15 @@ public sealed class Span
 	public Span(
 		string text) =>
 		Text = text;
+
+
+	/// <summary>
+	/// Wraps a plain string as an unstyled span, so string literals sit beside styled runs in a list.
+	/// </summary>
+	/// <param name="text">The run's text.</param>
+	public static implicit operator Span(
+		string text) =>
+		new(text);
 
 
 	/// <summary>

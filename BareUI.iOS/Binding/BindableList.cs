@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 
 namespace BareUI;
 
@@ -6,6 +7,7 @@ namespace BareUI;
 /// A list source: any list literal, or a <c>Bind(...)</c> expression. Changes animate when the list is an <c>ObservableCollection</c>.
 /// </summary>
 /// <typeparam name="TItem">The element type of the list.</typeparam>
+[CollectionBuilder(typeof(BindableList), nameof(BindableList.Create))]
 public readonly struct BindableList<TItem>
 {
 	internal IReadOnlyList<TItem>? Value { get; }
@@ -18,6 +20,12 @@ public readonly struct BindableList<TItem>
 		Value = value;
 		Expression = null;
 	}
+
+
+	// present so collection expressions can infer the element type; enumerates the current items only
+	// (none while the source is still an unresolved binding), not a way to read a live source
+	public IEnumerator<TItem> GetEnumerator() =>
+		(Value ?? []).GetEnumerator();
 
 	BindableList(
 		BindingExpression<IReadOnlyList<TItem>?> expression)
@@ -81,4 +89,20 @@ public readonly struct BindableList<TItem>
 	static BindingExpression<IReadOnlyList<TItem>?> Widen<TList>(
 		BindingExpression<TList?> expression) where TList : class, IReadOnlyList<TItem> =>
 		new(expression.Segments, source => expression.Getter(source), null, expression.Mode);
+}
+
+/// <summary>
+/// Builds <see cref="BindableList{TItem}"/> values from collection expressions (<c>[a, b, c]</c>).
+/// </summary>
+public static class BindableList
+{
+	/// <summary>
+	/// Wraps the elements of a collection expression as a list source.
+	/// </summary>
+	/// <typeparam name="TItem">The element type of the list.</typeparam>
+	/// <param name="items">The items to show.</param>
+	/// <returns>A list source over a copy of the items.</returns>
+	public static BindableList<TItem> Create<TItem>(
+		ReadOnlySpan<TItem> items) =>
+		new(items.ToArray());
 }

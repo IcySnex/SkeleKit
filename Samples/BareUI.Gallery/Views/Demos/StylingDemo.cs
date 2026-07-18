@@ -38,6 +38,50 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 					new Label { Text = "Struck through", Strikethrough = true },
 					new Label { Text = "This long line shrinks down instead of truncating away", AutoShrink = 0.5, MaxLines = 1 },
 
+					new Label { Style = Styles.Caption, Text = "Spans — styled runs in one Label (read-only)" },
+					new Label
+					{
+						MaxLines = 0,
+						Spans =
+						[
+							"A label composes ",
+							new Span("bold") { Bold = true },
+							", ",
+							new Span("colored") { TextColor = Colors.Pink },
+							", ",
+							new Span("serif") { FontDesign = FontDesign.Serif },
+							" and ",
+							new Span("struck") { Strikethrough = true },
+							" runs."
+						]
+					},
+
+					new Label { Style = Styles.Caption, Text = "TextView — selectable, with tappable links" },
+					new TextView
+					{
+						MaxLines = 0,
+						IsSelectable = true,
+						Spans =
+						[
+							"Long-press to select. Read the ",
+							new Link("terms")
+							{
+								Command = Command.From(() => _ = Navigator.AlertAsync("Terms", "You tapped the terms link."))
+							},
+							", or hold ",
+							new Link("this one")
+							{
+								Command = Command.From(() => _ = Navigator.AlertAsync("Tapped", "Hold instead for the menu.")),
+								ContextMenu =
+								{
+									new MenuAction { Text = "Copy", Icon = "doc.on.doc" },
+									new MenuAction { Text = "Share", Icon = "square.and.arrow.up" }
+								}
+							},
+							" for a peek menu."
+						]
+					},
+
 					new Label { Style = Styles.Caption, Text = "Style — one shared block of setters" },
 					new Border
 					{

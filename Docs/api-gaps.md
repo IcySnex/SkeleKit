@@ -122,11 +122,16 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `MaximumContentSizeCategory`: that caps scaling through the view's trait collection, and our fonts
   are built in managed code by `Fonts.Preferred`/`Scaled`, which never read it. The cap goes where the
   font is made — `UIFontMetrics.GetScaledFont(font, maximumPointSize)`.
-- ◆ **Selectable text / link detection** — readonly `UITextView` under the hood or iOS 17 text items.
-  This is where **interactive rich text** lands: tappable links with real per-run callbacks, native
-  tap-highlight, hold-to-peek menus and text selection — everything `Label.Spans` deliberately isn't.
-  Likely a separate control (`Span`s reused for the styled runs, a link run carrying a command +
-  optional peek menu), since a UITextView backing measures and behaves differently from a `UILabel`.
+- ~~◆ **Selectable text / link detection**~~ — **done** (`TextView`, a `UITextView`-backed read-only
+  control). `IsSelectable` turns on native selection; bindable `Spans` (a `BindableList<Span>`) reuses
+  the `Label` run model, and a `Link : Span` run carries `Command`/`CommandParameter` + a `ContextMenu`
+  (the same `MenuAction` list). Links become native `.link` text items (the `UITextItemTagAttributeName`
+  custom-tag key is unbound in the 26.0 ref pack, so a link's index rides in the item's URL and the
+  delegate dispatches by range); the `GetPrimaryAction` override fires the command and `GetMenuConfiguration`
+  builds the hold-to-peek menu, both suppressing UIKit's default URL open. Two ergonomics fell out and
+  went library-wide: an implicit `string`→`Span` and a `[CollectionBuilder]` on `BindableList<T>`, so
+  `[...]` literals now work for every list source (`CollectionView`, `Picker`), not just `new T[]{}`.
+  Automatic data-detector link *detection* (phone/date/address) is not wired — add if a screen needs it.
 
 ## Button
 
