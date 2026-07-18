@@ -149,6 +149,19 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 							PointerTile("No effect", PointerEffect.None),
 							PointerTile("Automatic", PointerEffect.Automatic)
 						}
+					},
+
+					new Label { Style = Styles.Caption, Text = "AnchorPoint — the same 20° rotation, different pivot" },
+					new StackPanel
+					{
+						Orientation = Orientation.Horizontal,
+						Spacing = 48,
+						Padding = new Thickness(24, 12),
+						Children =
+						{
+							RotatedTile("Center", new Point(0.5, 0.5)),
+							RotatedTile("Top-left", new Point(0, 0))
+						}
 					}
 				}
 			}
@@ -166,5 +179,19 @@ public class StylingDemo : ContentView<StylingDemoViewModel>
 			CornerRadius = 12,
 			Padding = new Thickness(16, 12),
 			Child = new Label { Text = text }
+		};
+
+	static Border RotatedTile(
+		string text,
+		Point anchor) =>
+		new()
+		{
+			Rotation = 20,
+			AnchorPoint = anchor,
+			Width = 96,
+			Height = 64,
+			Background = Palette.Card,
+			CornerRadius = 12,
+			Child = new Label { Text = text, TextAlignment = TextAlignment.Center }
 		};
 }

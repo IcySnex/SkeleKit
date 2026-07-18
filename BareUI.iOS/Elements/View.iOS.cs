@@ -777,11 +777,15 @@ public abstract partial class View
 		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
 		bool resized = native.Bounds.Size != next.Size;
 
-		// always bounds+centre, never Frame: an animation can leave the native transform non-identity
+		// always bounds+position, never Frame: an animation can leave the native transform non-identity
 		// while the model reads as untransformed, and setting Frame under a transform is undefined.
-		// The origin stays — a scroll view keeps its content offset there
+		// The origin stays — a scroll view keeps its content offset there. Position honours the anchor
+		// point (layer.position sits at the anchor), so a corner pivot places correctly and rotates there.
+		CGPoint anchor = new((nfloat)AnchorPoint.X, (nfloat)AnchorPoint.Y);
+
 		native.Bounds = new(native.Bounds.X, native.Bounds.Y, next.Width, next.Height);
-		native.Center = new(next.X + (next.Width / 2), next.Y + (next.Height / 2));
+		native.Layer.AnchorPoint = anchor;
+		native.Layer.Position = new(next.X + (anchor.X * next.Width), next.Y + (anchor.Y * next.Height));
 
 		if (resized)
 		{

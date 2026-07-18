@@ -630,7 +630,7 @@ public abstract partial class View
 	double scale = 1;
 
 	/// <summary>
-	/// Rotates the view about its center, in degrees. Does not affect layout.
+	/// Rotates the view about its <see cref="AnchorPoint"/>, in degrees. Does not affect layout.
 	/// </summary>
 	public double Rotation
 	{
@@ -638,6 +638,21 @@ public abstract partial class View
 		set => Set(ref rotation, value, ApplyTransform, affectsMeasure: false);
 	}
 	double rotation;
+
+	/// <summary>
+	/// The pivot for <see cref="Rotation"/> and <see cref="Scale"/>, in unit coordinates: (0.5, 0.5) is
+	/// the center (the default), (0, 0) the top-left corner, (1, 1) the bottom-right.
+	/// </summary>
+	public Point AnchorPoint
+	{
+		get => anchorPoint;
+		set => Set(ref anchorPoint, value, ApplyAnchor, affectsMeasure: false);
+	}
+	Point anchorPoint = new(0.5, 0.5);
+
+	// re-place the view with the new pivot; the frame is unchanged, only where a transform turns about it
+	void ApplyAnchor() =>
+		ApplyFrame(ArrangedBounds);
 
 	// a transformed view must be positioned by bounds+center: setting Frame under a transform is undefined
 	private protected bool HasTransform => translation != Point.Zero || Math.Abs(scale - 1) > 0.00001 || Math.Abs(rotation) > 0.00001;

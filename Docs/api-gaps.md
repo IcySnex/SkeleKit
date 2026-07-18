@@ -117,7 +117,10 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   list's row menu is now `CollectionView.ItemContextMenu` — a `CollectionView` is a `View`, so the
   inherited name collided, and the row menu was always the more specific thing anyway.
 - ▲ (skip) **Drag & drop** — `UIDrag/DropInteraction`, typed item providers.
-- ★ (skip) **Anchor point** — transforms currently pivot the centre; corner-pivot rotations need it.
+- ~~★ **Anchor point**~~ — **done** (`View.AnchorPoint`, unit coordinates, default centre `(0.5, 0.5)`).
+  Folded into `ApplyFrame`: it now sets `layer.AnchorPoint` and places `layer.Position` at the anchor
+  instead of `Center`, so a corner pivot lands correctly and `Rotation`/`Scale` turn about it; a change
+  re-runs `ApplyFrame(ArrangedBounds)`, keeping the frame put and only moving the pivot.
 - ◆ (skip) **Accessibility custom actions** — the known debt; `UIAccessibilityCustomAction` list.
 - ★ (skip) **Accessibility announce** — `UIAccessibility.PostNotification(announcement)` static helper.
 
