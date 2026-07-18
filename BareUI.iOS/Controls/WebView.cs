@@ -4,13 +4,49 @@ using WebKit;
 namespace BareUI;
 
 /// <summary>
-/// Embeds live web content in the tree, backed by a UIKit web view. Loads a <see cref="Url"/> or raw
-/// <see cref="Html"/>, reports navigation through <see cref="Navigated"/> and <see cref="NavigationFailed"/>,
-/// and runs JavaScript through <see cref="EvaluateAsync"/>. Give it a bounded slot (a fill row, an explicit
-/// height) — web content has no intrinsic size to measure against.
+/// Embeds live web content in the tree, backed by a UIKit web view.
 /// </summary>
+/// <remarks>
+/// Loads a <see cref="Url"/> or raw <see cref="Html"/>, reports navigation through <see cref="Navigated"/> and <see cref="NavigationFailed"/>, and runs JavaScript through <see cref="EvaluateAsync"/>.<br/>
+/// Give it a bounded slot (a fill row, an explicit height) — web content has no intrinsic size to measure against.
+/// </remarks>
 public class WebView : Control
 {
+	sealed class NavigationPeer : WKNavigationDelegate
+	{
+		readonly WebView? owner;
+
+		public NavigationPeer(
+			WebView owner)
+		{
+			this.owner = owner;
+		}
+
+		// ReSharper disable once UnusedMember.Local
+		public NavigationPeer(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override void DidFinishNavigation(
+			WKWebView webView,
+			WKNavigation navigation) =>
+			owner?.Navigated?.Invoke(webView.Url?.AbsoluteString ?? "");
+
+		public override void DidFailNavigation(
+			WKWebView webView,
+			WKNavigation navigation,
+			NSError error) =>
+			owner?.NavigationFailed?.Invoke(error.LocalizedDescription);
+
+		public override void DidFailProvisionalNavigation(
+			WKWebView webView,
+			WKNavigation navigation,
+			NSError error) =>
+			owner?.NavigationFailed?.Invoke(error.LocalizedDescription);
+	}
+
+
 	/// <summary>
 	/// The web address to load. Takes effect when <see cref="Html"/> is not set.
 	/// </summary>
@@ -137,9 +173,9 @@ public class WebView : Control
 		if (!IsRealized)
 			return;
 
-		if (html is { } markup)
-			Ui.LoadHtmlString(markup, null!);
-		else if (url is { } address && NSUrl.FromString(address) is { } target)
+		if (html is not null)
+			Ui.LoadHtmlString(html, null!);
+		else if (url is not null && NSUrl.FromString(url) is NSUrl target)
 			Ui.LoadRequest(new NSUrlRequest(target));
 	}
 
@@ -147,40 +183,5 @@ public class WebView : Control
 	{
 		if (IsRealized)
 			Ui.AllowsBackForwardNavigationGestures = allowsBackGestures;
-	}
-
-
-	sealed class NavigationPeer : WKNavigationDelegate
-	{
-		readonly WebView? owner;
-
-		public NavigationPeer(
-			WebView owner)
-		{
-			this.owner = owner;
-		}
-
-		// see LayoutHost
-		public NavigationPeer(
-			NativeHandle handle) : base(handle)
-		{ }
-
-
-		public override void DidFinishNavigation(
-			WKWebView webView,
-			WKNavigation navigation) =>
-			owner?.Navigated?.Invoke(webView.Url?.AbsoluteString ?? "");
-
-		public override void DidFailNavigation(
-			WKWebView webView,
-			WKNavigation navigation,
-			NSError error) =>
-			owner?.NavigationFailed?.Invoke(error.LocalizedDescription);
-
-		public override void DidFailProvisionalNavigation(
-			WKWebView webView,
-			WKNavigation navigation,
-			NSError error) =>
-			owner?.NavigationFailed?.Invoke(error.LocalizedDescription);
 	}
 }

@@ -38,15 +38,12 @@ public sealed class Style<T> : IStyle
 	}
 
 
-	/// <summary>
 	/// <inheritdoc/>
-	/// </summary>
 	public Type TargetType =>
 		typeof(T);
 
-	/// <summary>
+
 	/// <inheritdoc/>
-	/// </summary>
 	public void Apply(
 		View view)
 	{
