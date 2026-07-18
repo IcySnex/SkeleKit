@@ -14,7 +14,7 @@ public abstract class Brush
 			return a;
 
 		if (a is SolidBrush solidA && b is SolidBrush solidB)
-			return Color.Lerp(solidA.Color, solidB.Color, t) is { } color ? new SolidBrush(color) : null;
+			return Color.Lerp(solidA.Color, solidB.Color, t) is Color color ? new SolidBrush(color) : null;
 
 		if (a is not LinearGradient gradientA || b is not LinearGradient gradientB
 			|| gradientA.Stops.Count != gradientB.Stops.Count)
@@ -27,7 +27,7 @@ public abstract class Brush
 			GradientStop from = gradientA.Stops[index];
 			GradientStop to = gradientB.Stops[index];
 
-			if (Color.Lerp(from.Color, to.Color, t) is not { } color)
+			if (Color.Lerp(from.Color, to.Color, t) is not Color color)
 				return null;
 
 			stops.Add(new(color, from.Offset + ((to.Offset - from.Offset) * t)));
@@ -57,7 +57,6 @@ public abstract class Brush
 	public static implicit operator Brush(
 		Color color) =>
 		new SolidBrush(color);
-
 }
 
 

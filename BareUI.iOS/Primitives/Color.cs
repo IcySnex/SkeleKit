@@ -73,7 +73,7 @@ public readonly record struct Color(
 		{
 			System = null,
 			Alpha = alpha,
-			Dark = Dark is { } dark ? (dark.Red, dark.Green, dark.Blue, alpha) : null
+			Dark = Dark.HasValue ? (Dark.Value.Red, Dark.Value.Green, Dark.Value.Blue, alpha) : null
 		};
 
 	// straight-channel mix, both appearances of a dynamic pair; a system color resolves natively

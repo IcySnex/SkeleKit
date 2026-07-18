@@ -7,11 +7,13 @@ internal static class ColorInterop
 	public static UIColor ToUIColor(
 		this Color color)
 	{
-		if (color.System is { } system)
+		if (color.System is SystemColor system)
 			return Resolve(system);
 
-		if (color.Dark is { } dark)
+		if (color.Dark.HasValue)
 		{
+			(double Red, double Green, double Blue, double Alpha) dark = color.Dark.Value;
+
 			UIColor light = Rgba(color.Red, color.Green, color.Blue, color.Alpha);
 			UIColor darker = Rgba(dark.Red, dark.Green, dark.Blue, dark.Alpha);
 
