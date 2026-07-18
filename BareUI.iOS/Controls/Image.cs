@@ -7,14 +7,15 @@ namespace BareUI;
 /// </summary>
 public class Image : Control
 {
-	/// <summary>
-	/// The loader used for URL sources. Set it through <c>BareApplicationBuilder.UseImageLoader(...)</c>.
-	/// </summary>
+	// URL-source loader; set through BareApplicationBuilder.UseImageLoader(...)
 	internal static IImageLoader Loader { get; set; } = new HttpImageLoader();
 
 	/// <summary>
-	/// Where the image is loaded from. URL sources load asynchronously, so give them an explicit Width/Height.
+	/// Where the image is loaded from.
 	/// </summary>
+	/// <remarks>
+	/// URL sources load asynchronously, so give them an explicit Width/Height.
+	/// </remarks>
 	public Bindable<ImageSource?> Source
 	{
 		get => source;
@@ -196,7 +197,7 @@ public class Image : Control
 		if (!double.IsNaN(SymbolSize))
 			Add(UIImageSymbolConfiguration.Create((nfloat)SymbolSize));
 
-		if (SymbolWeight is { } weight)
+		if (SymbolWeight is FontWeight weight)
 			Add(UIImageSymbolConfiguration.Create(Weight(weight)));
 
 		if (SymbolScale is not SymbolScale.Default)
@@ -235,7 +236,7 @@ public class Image : Control
 	{
 		CancelLoad();
 
-		if (source is not { } current)
+		if (source is not ImageSource current)
 		{
 			Show(null, animated: false);
 			return;
@@ -247,7 +248,7 @@ public class Image : Control
 			return;
 		}
 
-		Show(Placeholder is { } waiting ? ResolveSync(waiting) : null, animated: false);
+		Show(Placeholder is ImageSource waiting ? ResolveSync(waiting) : null, animated: false);
 		loadCancellation = new();
 
 		LoadUrlAsync(current, loadCancellation.Token);
@@ -354,7 +355,7 @@ public class Image : Control
 			if (image is null)
 			{
 				// a load can fail without an exception; the placeholder stays unless a fallback exists
-				if (Fallback is { } failed)
+				if (Fallback is ImageSource failed)
 					Show(ResolveSync(failed), animated: true);
 
 				return;
