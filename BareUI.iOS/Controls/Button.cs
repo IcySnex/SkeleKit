@@ -258,7 +258,7 @@ public class Button : Control
 		if ((icon is not null || isLoading) && text is not null)
 			configuration.ImagePadding = (nfloat)iconSpacing;
 
-		if (padding is { } insets)
+		if (padding is Thickness insets)
 			configuration.ContentInsets = new NSDirectionalEdgeInsets(
 				(nfloat)insets.Top,
 				(nfloat)insets.Left,
@@ -278,7 +278,7 @@ public class Button : Control
 			}
 		}
 		// a configuration paints from its own colors, so an inherited tint has to be written into it
-		else if (Tint is { } accent)
+		else if (Tint is Color accent)
 		{
 			UIColor color = accent.ToUIColor();
 
@@ -314,11 +314,11 @@ public class Button : Control
 
 			menuActions[index] = UIAction.Create(
 				entry.Text,
-				entry.Icon is { } entryIcon ? UIImage.GetSystemImage(entryIcon) : null,
+				entry.Icon is string entryIcon ? UIImage.GetSystemImage(entryIcon) : null,
 				null,
 				_ =>
 				{
-					if (entry.Command is { } entryCommand && entryCommand.CanExecute(null))
+					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(null))
 						entryCommand.Execute(null);
 				});
 
@@ -339,7 +339,7 @@ public class Button : Control
 
 	void OnClicked()
 	{
-		if (command is { } current && current.CanExecute(commandParameter))
+		if (command is ICommand current && current.CanExecute(commandParameter))
 			current.Execute(commandParameter);
 	}
 
