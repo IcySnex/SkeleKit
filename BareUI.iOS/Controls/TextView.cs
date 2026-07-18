@@ -1,21 +1,55 @@
 using System.Collections.Specialized;
+using System.Windows.Input;
 using ObjCRuntime;
 
 namespace BareUI;
 
 /// <summary>
-/// Read-only rich text that can be selected, with tappable <see cref="Link"/> runs. Backed by a UIKit
-/// text view, so a link gets the native tap highlight and a hold-to-peek menu — the interaction a
-/// plain <see cref="Label"/> deliberately leaves out. Runs style themselves over the view's own font
-/// and color; an unset run property follows the view.
+/// Read-only rich text that can be selected, with tappable <see cref="Link"/> runs.
 /// </summary>
+/// <remarks>
+/// Backed by a UIKit text view, so a link gets the native tap highlight and a hold-to-peek menu that a plain <see cref="Label"/> deliberately leaves out.<br/>
+/// Runs style themselves over the view's own font and color; an unset run property follows the view.
+/// </remarks>
 public class TextView : Control
 {
+	sealed class TextItemDelegate : UITextViewDelegate
+	{
+		readonly TextView? owner;
+
+		public TextItemDelegate(
+			TextView owner)
+		{
+			this.owner = owner;
+		}
+
+		// ReSharper disable once UnusedMember.Local
+		public TextItemDelegate(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override UIAction? GetPrimaryAction(
+			UITextView textView,
+			UITextItem textItem,
+			UIAction defaultAction) =>
+			owner?.PrimaryAction(textItem, defaultAction);
+
+		public override UITextItemMenuConfiguration? GetMenuConfiguration(
+			UITextView textView,
+			UITextItem textItem,
+			UIMenu defaultMenu) =>
+			owner?.MenuConfiguration(textItem);
+	}
+
+
 	/// <summary>
-	/// The styled runs to display; a plain string becomes an unstyled run, a <see cref="Link"/> a
-	/// tappable one. Changes re-render, and animate nothing — they replace the text. Live when the
-	/// list is an <c>ObservableCollection</c>.
+	/// The styled runs to display; a plain string becomes an unstyled run, a <see cref="Link"/> a tappable one.
 	/// </summary>
+	/// <remarks>
+	/// Changes re-render and animate nothing, since they replace the text.<br/>
+	/// Live when the list is an <c>ObservableCollection</c>.
+	/// </remarks>
 	public BindableList<Span> Spans
 	{
 		get => new(spans);
@@ -25,9 +59,11 @@ public class TextView : Control
 	Binding<IReadOnlyList<Span>?>? spansBinding;
 
 	/// <summary>
-	/// Whether the text can be selected and copied. A <see cref="Link"/> run forces selection on, since
-	/// UIKit only makes text items tappable while the view is selectable.
+	/// Whether the text can be selected and copied.
 	/// </summary>
+	/// <remarks>
+	/// A <see cref="Link"/> run forces selection on, since UIKit only makes text items tappable while the view is selectable.
+	/// </remarks>
 	public Bindable<bool> IsSelectable
 	{
 		get => isSelectable;
@@ -47,8 +83,11 @@ public class TextView : Control
 	TextStyle? textStyle;
 
 	/// <summary>
-	/// Explicit font size in points, overriding <see cref="TextStyle"/>. NaN falls back to the text style, or 17 points without one.
+	/// Explicit font size in points, overriding <see cref="TextStyle"/>.
 	/// </summary>
+	/// <remarks>
+	/// NaN falls back to the text style, or 17 points without one.
+	/// </remarks>
 	public double FontSize
 	{
 		get => fontSize;
@@ -330,7 +369,7 @@ public class TextView : Control
 		UITextItem item,
 		UIAction fallback)
 	{
-		if (LinkFor(item) is not { Command: { } command } link)
+		if (LinkFor(item) is not { Command: ICommand command } link)
 			return fallback;
 
 		heldPrimary = UIAction.Create(_ =>
@@ -356,11 +395,11 @@ public class TextView : Control
 
 			heldMenu[index] = UIAction.Create(
 				entry.Text,
-				entry.Icon is { } icon ? UIImage.GetSystemImage(icon) : null,
+				entry.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
 				null,
 				_ =>
 				{
-					if (entry.Command is { } command && command.CanExecute(null))
+					if (entry.Command is ICommand command && command.CanExecute(null))
 						command.Execute(null);
 				});
 
@@ -372,32 +411,4 @@ public class TextView : Control
 	}
 
 
-	sealed class TextItemDelegate : UITextViewDelegate
-	{
-		readonly TextView? owner;
-
-		public TextItemDelegate(
-			TextView owner)
-		{
-			this.owner = owner;
-		}
-
-		// see LayoutHost
-		public TextItemDelegate(
-			NativeHandle handle) : base(handle)
-		{ }
-
-
-		public override UIAction? GetPrimaryAction(
-			UITextView textView,
-			UITextItem textItem,
-			UIAction defaultAction) =>
-			owner?.PrimaryAction(textItem, defaultAction);
-
-		public override UITextItemMenuConfiguration? GetMenuConfiguration(
-			UITextView textView,
-			UITextItem textItem,
-			UIMenu defaultMenu) =>
-			owner?.MenuConfiguration(textItem);
-	}
 }
