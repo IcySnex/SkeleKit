@@ -106,8 +106,15 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 ## Label
 
-- ▲ **Attributed spans** — ranges of bold/color/links with tap callbacks; the big one, maybe a
-  `Span`-based `FormattedText` model. (Or markdown-lite via `NSAttributedString(markdown:)` — cheap!)
+- ~~▲ **Attributed spans**~~ — **done, styling only** (`Label.Spans` = a `Span` list; each run overrides
+  the label's weight/design/size/color and adds underline/strikethrough, composed into one
+  `NSAttributedString`; a `Span`'s unset props follow the label). **Read-only by decision:** tap
+  callbacks, links and selection are *not* on `Label`. UILabel can't do native tap-highlight / hold-to-peek /
+  selection — a manual `NSLayoutManager` hit-test was built and removed (fragile, no native feel), so
+  interactive/selectable rich text belongs to the UITextView-backed control below (*Selectable text /
+  link detection*). Markdown-lite (`NSAttributedString(markdown:)`) declined: URL-only links, no per-run
+  color/weight, and a per-assign reparse in recycled cells. `Span` is not bindable (WPF-`Inlines`
+  static structure); reassign the list to change it.
 - ~~★ **Letter spacing & line spacing**~~ — **done** (`LetterSpacing`, `LineSpacing`).
 - ~~★ **Underline / strikethrough**~~ — **done**.
 - ~~★ **Auto-shrink**~~ — **done** (`Label.AutoShrink`).
@@ -116,6 +123,10 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   are built in managed code by `Fonts.Preferred`/`Scaled`, which never read it. The cap goes where the
   font is made — `UIFontMetrics.GetScaledFont(font, maximumPointSize)`.
 - ◆ **Selectable text / link detection** — readonly `UITextView` under the hood or iOS 17 text items.
+  This is where **interactive rich text** lands: tappable links with real per-run callbacks, native
+  tap-highlight, hold-to-peek menus and text selection — everything `Label.Spans` deliberately isn't.
+  Likely a separate control (`Span`s reused for the styled runs, a link run carrying a command +
+  optional peek menu), since a UITextView backing measures and behaves differently from a `UILabel`.
 
 ## Button
 

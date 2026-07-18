@@ -17,6 +17,17 @@ public class Label : Control
 	Binding<string?>? textBinding;
 
 	/// <summary>
+	/// Styled runs composing the text, overriding <see cref="Text"/> when set. Each run styles itself
+	/// over the label's own font and color, and a run with a <see cref="Span.Command"/> is tappable.
+	/// </summary>
+	public IReadOnlyList<Span>? Spans
+	{
+		get => spans;
+		set => Set(ref spans, value, ApplyText);
+	}
+	IReadOnlyList<Span>? spans;
+
+	/// <summary>
 	/// The step of the native type hierarchy the text follows, or null to size it by <see cref="FontSize"/>.
 	/// </summary>
 	public TextStyle? TextStyle
@@ -198,23 +209,21 @@ public class Label : Control
 
 	void ApplyText()
 	{
+		if (spans is { Count: > 0 })
+		{
+			ApplySpans();
+			return;
+		}
+
 		if (!UsesAttributes || text is null)
 		{
 			Ui.Text = text;
 			return;
 		}
 
-		// the paragraph style mirrors the label's own wrap and alignment, or it would override them
-		NSMutableParagraphStyle paragraph = new()
-		{
-			LineSpacing = (nfloat)lineSpacing,
-			LineBreakMode = Ui.LineBreakMode,
-			Alignment = Ui.TextAlignment
-		};
-
 		UIStringAttributes attributes = new()
 		{
-			ParagraphStyle = paragraph
+			ParagraphStyle = BuildParagraph()
 		};
 
 		if (letterSpacing is not 0)
@@ -227,17 +236,37 @@ public class Label : Control
 		Ui.AttributedText = new NSAttributedString(text, attributes);
 	}
 
+	// the paragraph style mirrors the label's own wrap and alignment, or it would override them
+	NSMutableParagraphStyle BuildParagraph() =>
+		new()
+		{
+			LineSpacing = (nfloat)lineSpacing,
+			LineBreakMode = Ui.LineBreakMode,
+			Alignment = Ui.TextAlignment
+		};
+
 	void ApplyAutoShrink()
 	{
 		Ui.AdjustsFontSizeToFitWidth = autoShrink > 0;
 		Ui.MinimumScaleFactor = (nfloat)autoShrink;
 	}
 
+	void ApplyFont()
+	{
+		Ui.Font = FontFor(weight, design, fontSize);
+
+		if (spans is { Count: > 0 })
+			ApplySpans();
+	}
+
 	// both paths scale with the user's text-size setting; a weight of Regular leaves a text style's own
-	void ApplyFont() =>
-		Ui.Font = FontSpec.UsesTextStyle(textStyle, fontSize)
-			? Fonts.Preferred(textStyle!.Value, weight, design, maxFontSize)
-			: Fonts.Scaled(FontSpec.SizeOf(fontSize), weight, design, maxFontSize);
+	UIFont FontFor(
+		FontWeight fontWeight,
+		FontDesign fontDesign,
+		double size) =>
+		FontSpec.UsesTextStyle(textStyle, size)
+			? Fonts.Preferred(textStyle!.Value, fontWeight, fontDesign, maxFontSize)
+			: Fonts.Scaled(FontSpec.SizeOf(size), fontWeight, fontDesign, maxFontSize);
 
 	void ApplyTruncation()
 	{
@@ -271,7 +300,48 @@ public class Label : Control
 			_ => UITextAlignment.Left
 		};
 
-		if (UsesAttributes)
+		if (UsesAttributes || spans is { Count: > 0 })
 			ApplyText();
 	}
+
+
+	void ApplySpans()
+	{
+		if (spans is not { Count: > 0 })
+			return;
+
+		NSMutableParagraphStyle paragraph = BuildParagraph();
+		UIColor baseColor = textColor?.ToUIColor() ?? UIColor.Label;
+
+		NSMutableAttributedString composed = new();
+
+		foreach (Span span in spans)
+		{
+			UIStringAttributes attributes = new()
+			{
+				ParagraphStyle = paragraph,
+				Font = FontFor(span),
+				ForegroundColor = span.TextColor?.ToUIColor() ?? baseColor
+			};
+
+			if (letterSpacing is not 0)
+				attributes.KerningAdjustment = (float)letterSpacing;
+			if (underline || span.Underline)
+				attributes.UnderlineStyle = NSUnderlineStyle.Single;
+			if (strikethrough || span.Strikethrough)
+				attributes.StrikethroughStyle = NSUnderlineStyle.Single;
+
+			composed.Append(new NSAttributedString(span.Text, attributes));
+		}
+
+		Ui.AttributedText = composed;
+	}
+
+	// a span's own size decides the text-style-vs-explicit path; NaN falls through to the label's size
+	UIFont FontFor(
+		Span span) =>
+		FontFor(
+			span.Bold ? BareUI.FontWeight.Bold : span.FontWeight ?? weight,
+			span.FontDesign ?? design,
+			double.IsNaN(span.FontSize) ? fontSize : span.FontSize);
 }
