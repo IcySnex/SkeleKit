@@ -32,9 +32,10 @@ public sealed class Animator : IDisposable
 	}
 
 	/// <summary>
-	/// Prepares an animation of the changes made in <paramref name="changes"/>. It does not run until <see cref="Start"/>.
+	/// Prepares an animation of the changes made in <paramref name="changes"/>.
 	/// </summary>
 	/// <remarks>
+	/// It does not run until <see cref="Start"/>.<br/>
 	/// Only what <paramref name="changes"/> touches is animated. Transforms, Opacity, CornerRadius, colors, gradients and layout lengths all interpolate; what has no in-between (a Material, a system color, an auto-sized Width) snaps when the animation settles.
 	/// </remarks>
 	public static Animator Create(
@@ -116,8 +117,11 @@ public sealed class Animator : IDisposable
 
 
 	/// <summary>
-	/// How far the animation has run, from 0 to 1. Assign it to scrub, e.g. from a drag.
+	/// How far the animation has run, from 0 to 1.
 	/// </summary>
+	/// <remarks>
+	/// Assign it to scrub, e.g. from a drag.
+	/// </remarks>
 	public double Fraction
 	{
 		get => motion.Position;
@@ -138,8 +142,11 @@ public sealed class Animator : IDisposable
 	public bool IsRunning => link is not null;
 
 	/// <summary>
-	/// Whether the animation is headed backwards, towards where it started. Takes effect on the next <see cref="Continue"/>.
+	/// Whether the animation is headed backwards, towards where it started.
 	/// </summary>
+	/// <remarks>
+	/// Takes effect on the next <see cref="Continue"/>.
+	/// </remarks>
 	public bool IsReversed
 	{
 		get => heading is 0;
@@ -173,8 +180,11 @@ public sealed class Animator : IDisposable
 	}
 
 	/// <summary>
-	/// Runs the animation from wherever it is towards its current heading. For a spring, <paramref name="velocity"/> carries the gesture's speed in, as full travels per second, positive towards the end.
+	/// Runs the animation from wherever it is towards its current heading.
 	/// </summary>
+	/// <remarks>
+	/// For a spring, <paramref name="velocity"/> carries the gesture's speed in, as full travels per second, positive towards the end.
+	/// </remarks>
 	public void Continue(
 		double velocity = 0)
 	{
@@ -199,8 +209,11 @@ public sealed class Animator : IDisposable
 	}
 
 	/// <summary>
-	/// Ends the animation. It settles where it is, unless <paramref name="finish"/> jumps it to the end.
+	/// Ends the animation.
 	/// </summary>
+	/// <remarks>
+	/// It settles where it is, unless <paramref name="finish"/> jumps it to the end.
+	/// </remarks>
 	public void Stop(
 		bool finish = false)
 	{
