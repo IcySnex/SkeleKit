@@ -1,27 +1,6 @@
 namespace BareUI;
 
 /// <summary>
-/// How a <see cref="GridLength"/> is interpreted by the grid layout.
-/// </summary>
-public enum GridUnitType
-{
-	/// <summary>
-	/// Size to the content of the row/column (the largest child's desired size).
-	/// </summary>
-	Auto,
-
-	/// <summary>
-	/// A fixed size in points.
-	/// </summary>
-	Pixel,
-
-	/// <summary>
-	/// A weighted share of the remaining space after Auto and Pixel tracks are placed.
-	/// </summary>
-	Star
-}
-
-/// <summary>
 /// The size of a grid row or column: absolute (points), auto-sized, or a weighted star share.
 /// </summary>
 public readonly record struct GridLength
@@ -99,4 +78,25 @@ public readonly record struct GridLength
 	public static implicit operator GridLength(
 		double points) =>
 		Pixels(points);
+}
+
+/// <summary>
+/// How a <see cref="GridLength"/> is interpreted by the grid layout.
+/// </summary>
+public enum GridUnitType
+{
+	/// <summary>
+	/// Size to the content of the row or column (the largest child's desired size).
+	/// </summary>
+	Auto,
+
+	/// <summary>
+	/// A fixed size in points.
+	/// </summary>
+	Pixel,
+
+	/// <summary>
+	/// A weighted share of the remaining space after Auto and Pixel tracks are placed.
+	/// </summary>
+	Star
 }

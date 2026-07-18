@@ -1,9 +1,11 @@
 namespace BareUI;
 
 /// <summary>
-/// A styled run of text inside a <see cref="Label"/>'s <see cref="Label.Spans"/>. Every unset visual
-/// property follows the label; a set one overrides it for this run alone.
+/// A styled run of text inside a <see cref="Label"/>'s <see cref="Label.Spans"/>.
 /// </summary>
+/// <remarks>
+/// Every unset visual property follows the label; a set one overrides it for this run alone.
+/// </remarks>
 public class Span
 {
 	/// <summary>

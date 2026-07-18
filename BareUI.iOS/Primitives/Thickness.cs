@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// Describes the thickness of a frame around a rectangle: margins and paddings.
+/// The thickness of a frame around a rectangle, as used for margins and padding.
 /// </summary>
 /// <param name="Left">The thickness on the left side.</param>
 /// <param name="Top">The thickness on the top side.</param>

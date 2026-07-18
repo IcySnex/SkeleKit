@@ -1,8 +1,12 @@
 namespace BareUI;
 
 /// <summary>
-/// An axis-aligned rectangle (location plus size), produced by the arrangement pass.
+/// An axis-aligned rectangle of a location and a size, produced by the arrangement pass.
 /// </summary>
+/// <param name="X">The left edge.</param>
+/// <param name="Y">The top edge.</param>
+/// <param name="Width">The horizontal extent.</param>
+/// <param name="Height">The vertical extent.</param>
 public readonly record struct Rect(
 	double X,
 	double Y,

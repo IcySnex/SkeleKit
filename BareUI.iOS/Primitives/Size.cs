@@ -1,7 +1,7 @@
 namespace BareUI;
 
 /// <summary>
-/// A width/height pair used  tothe measure/arrange layout.
+/// A width and height pair used by the measure/arrange layout.
 /// </summary>
 /// <param name="Width">The horizontal extent.</param>
 /// <param name="Height">The vertical extent.</param>
