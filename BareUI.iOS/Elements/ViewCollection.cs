@@ -21,25 +21,25 @@ public sealed class ViewCollection : IEnumerable<View>
 
 
 	/// <summary>
-	/// Gets the total number of element nodes contained inside this tier layout collection.
+	/// The number of children.
 	/// </summary>
 	public int Count =>
 		items.Count;
 
 	/// <summary>
-	/// Accesses a managed subview node at the targeted indexed location context.
+	/// The child at <paramref name="index"/>.
 	/// </summary>
-	/// <param name="index">The zero-based position index to reference.</param>
-	/// <returns>The allocated layout view element.</returns>
+	/// <param name="index">The zero-based index.</param>
+	/// <returns>The child at that index.</returns>
 	public View this[
 		int index] =>
 		items[index];
 
 
 	/// <summary>
-	/// Appends an element container tracking node onto this hierarchy chain layout.
+	/// Adds a child to the panel.
 	/// </summary>
-	/// <param name="view">The active view container asset reference to bind.</param>
+	/// <param name="view">The child to add.</param>
 	public void Add(
 		View view)
 	{
@@ -52,10 +52,10 @@ public sealed class ViewCollection : IEnumerable<View>
 	}
 
 	/// <summary>
-	/// Detaches a managed framework element block clean out of the immediate visual hierarchy sequence.
+	/// Removes a child from the panel.
 	/// </summary>
-	/// <param name="view">The target active tree layout node component to locate and remove.</param>
-	/// <returns><c>true</c> if the element was found and detached successfully; otherwise, <c>false</c>.</returns>
+	/// <param name="view">The child to remove.</param>
+	/// <returns><c>true</c> if the child was present and removed.</returns>
 	public bool Remove(
 		View view)
 	{
@@ -69,7 +69,7 @@ public sealed class ViewCollection : IEnumerable<View>
 	}
 
 	/// <summary>
-	/// Disconnects and resets every structural branch view currently tracked by this container layout context.
+	/// Removes all children.
 	/// </summary>
 	public void Clear()
 	{
@@ -85,9 +85,9 @@ public sealed class ViewCollection : IEnumerable<View>
 
 
 	/// <summary>
-	/// Returns an iterator loop tracker structured to sweep across the layout views context collection safely.
+	/// Returns an enumerator over the children.
 	/// </summary>
-	/// <returns>An enumerator for processing child view nodes sequentially.</returns>
+	/// <returns>An enumerator over the children.</returns>
 	public IEnumerator<View> GetEnumerator() =>
 		items.GetEnumerator();
 

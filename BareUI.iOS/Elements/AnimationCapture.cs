@@ -71,7 +71,7 @@ internal static class AnimationCapture
 	public static void Record(
 		View view)
 	{
-		if (active is { } states && !states.ContainsKey(view))
-			states[view] = view.Capture();
+		if (active is not null && !active.ContainsKey(view))
+			active[view] = view.Capture();
 	}
 }

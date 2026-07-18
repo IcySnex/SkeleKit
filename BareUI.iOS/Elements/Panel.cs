@@ -20,7 +20,7 @@ public abstract partial class Panel : View
 	} = Thickness.Zero;
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="Panel"/> class.
+	/// Creates the panel and its <see cref="Children"/> collection.
 	/// </summary>
 	protected Panel()
 	{
