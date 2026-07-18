@@ -1,3 +1,6 @@
+using LinkPresentation;
+using ObjCRuntime;
+
 namespace BareUI;
 
 internal sealed class Sharer : ISharer
@@ -33,6 +36,10 @@ internal sealed class Sharer : ISharer
 		top.PresentViewController(controller, true, null);
 
 		await completion.Task;
+
+		// UIKit only retains the native peers; keep the managed side alive until the sheet is gone
+		GC.KeepAlive(controller);
+		GC.KeepAlive(activityItems);
 	}
 
 
@@ -42,7 +49,9 @@ internal sealed class Sharer : ISharer
 		{
 			ShareItemKind.Text => new NSString(item.Text ?? ""),
 			ShareItemKind.Url => NSUrl.FromString(item.Url?.ToString() ?? ""),
-			ShareItemKind.Image => item.Image is { } source ? await ResolveImage(source) : null,
+			ShareItemKind.Image => item.Image is { } source && await ResolveImage(source) is { } image
+				? new ImageActivityItem(image)
+				: null,
 			_ => null
 		};
 
@@ -71,4 +80,35 @@ internal sealed class Sharer : ISharer
 
 		return controller;
 	}
+}
+
+// a bare UIImage transfers but has no share-sheet header preview; the metadata supplies the thumbnail
+internal sealed class ImageActivityItem : UIActivityItemSource
+{
+	readonly UIImage? image;
+
+	public ImageActivityItem(
+		UIImage image)
+	{
+		this.image = image;
+	}
+
+	// see LayoutHost
+	public ImageActivityItem(
+		NativeHandle handle) : base(handle)
+	{ }
+
+
+	public override NSObject GetPlaceholderData(
+		UIActivityViewController activityViewController) =>
+		image!;
+
+	public override NSObject GetItemForActivity(
+		UIActivityViewController activityViewController,
+		NSString activityType) =>
+		image!;
+
+	public override LPLinkMetadata GetLinkMetadata(
+		UIActivityViewController activityViewController) =>
+		new() { ImageProvider = image is { } value ? new NSItemProvider(value) : null };
 }
