@@ -43,6 +43,19 @@ public class TextView : Control
 	}
 
 
+	// links matched by range in the delegate
+	readonly List<(NSRange range, Link link)> linkRanges = [];
+	TextItemDelegate? peer;
+	UIAction? heldPrimary;
+	UIAction[]? heldMenu;
+
+	bool hooked;
+
+
+	UITextView Ui =>
+		(UITextView)Native;
+
+
 	/// <summary>
 	/// The styled runs to display; a plain string becomes an unstyled run, a <see cref="Link"/> a tappable one.
 	/// </summary>
@@ -177,49 +190,6 @@ public class TextView : Control
 	double letterSpacing;
 
 
-	// tag → link, matched by range in the delegate; rooted here so the peers survive
-	readonly List<(NSRange range, Link link)> linkRanges = [];
-	TextItemDelegate? peer;
-	UIAction? heldPrimary;
-	UIAction[]? heldMenu;
-
-	bool hooked;
-
-
-	private protected override UIView CreateNative()
-	{
-		UITextView view = new()
-		{
-			BackgroundColor = UIColor.Clear,
-			Editable = false,
-			ScrollEnabled = false,
-			Selectable = false,
-			TextContainerInset = UIEdgeInsets.Zero,
-			AdjustsFontForContentSizeCategory = true
-		};
-
-		view.TextContainer.LineFragmentPadding = 0;
-
-		peer = new(this);
-		view.Delegate = peer;
-
-		return view;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		HookSpans();
-		ApplyMaxLines();
-		ApplyText();
-	}
-
-	private protected override void OnUnrealized() =>
-		UnhookSpans();
-
-	UITextView Ui =>
-		(UITextView)Native;
-
-
 	void SetSpans(
 		IReadOnlyList<Span>? value)
 	{
@@ -265,7 +235,6 @@ public class TextView : Control
 		NotifyCollectionChangedEventArgs args) =>
 		ApplyText();
 
-
 	void ApplyText()
 	{
 		if (!IsRealized)
@@ -283,7 +252,7 @@ public class TextView : Control
 		UIColor baseColor = textColor?.ToUIColor() ?? UIColor.Label;
 		UIColor link = linkColor?.ToUIColor() ?? Tint?.ToUIColor() ?? UIColor.Link;
 
-		// links render through the view's own link style; per-run colors below only touch plain runs
+		// links use the view's own link style; per-run colors touch plain runs only
 		Ui.WeakLinkTextAttributes = new UIStringAttributes
 		{
 			ForegroundColor = link,
@@ -310,7 +279,7 @@ public class TextView : Control
 			if (span.Strikethrough)
 				attributes.StrikethroughStyle = NSUnderlineStyle.Single;
 
-			// a Link run becomes a native .link text item; the URL only carries our index, never opens
+			// the URL just carries our link index, never opens
 			if (span is Link tappable)
 			{
 				attributes.Link = new NSUrl($"bareui://link/{linkRanges.Count}");
@@ -341,7 +310,6 @@ public class TextView : Control
 			_ => UITextAlignment.Left
 		};
 
-	// a run's own size decides the text-style-vs-explicit path; NaN falls through to the view's size
 	UIFont FontFor(
 		Span span)
 	{
@@ -354,7 +322,6 @@ public class TextView : Control
 			: Fonts.Scaled(FontSpec.SizeOf(size), w, d);
 	}
 
-
 	Link? LinkFor(
 		UITextItem item)
 	{
@@ -364,6 +331,38 @@ public class TextView : Control
 
 		return null;
 	}
+
+
+	private protected override UIView CreateNative()
+	{
+		UITextView view = new()
+		{
+			BackgroundColor = UIColor.Clear,
+			Editable = false,
+			ScrollEnabled = false,
+			Selectable = false,
+			TextContainerInset = UIEdgeInsets.Zero,
+			AdjustsFontForContentSizeCategory = true
+		};
+
+		view.TextContainer.LineFragmentPadding = 0;
+
+		peer = new(this);
+		view.Delegate = peer;
+
+		return view;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		HookSpans();
+		ApplyMaxLines();
+		ApplyText();
+	}
+
+	private protected override void OnUnrealized() =>
+		UnhookSpans();
+
 
 	internal UIAction? PrimaryAction(
 		UITextItem item,
@@ -409,6 +408,4 @@ public class TextView : Control
 
 		return UITextItemMenuConfiguration.Create(UIMenu.Create(heldMenu));
 	}
-
-
 }

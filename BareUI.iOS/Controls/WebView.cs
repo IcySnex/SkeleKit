@@ -8,7 +8,7 @@ namespace BareUI;
 /// </summary>
 /// <remarks>
 /// Loads a <see cref="Url"/> or raw <see cref="Html"/>, reports navigation through <see cref="Navigated"/> and <see cref="NavigationFailed"/>, and runs JavaScript through <see cref="EvaluateAsync"/>.<br/>
-/// Give it a bounded slot (a fill row, an explicit height) — web content has no intrinsic size to measure against.
+/// Give it a bounded slot (a fill row, an explicit height), since web content has no intrinsic size to measure against.
 /// </remarks>
 public class WebView : Control
 {
@@ -45,6 +45,13 @@ public class WebView : Control
 			NSError error) =>
 			owner?.NavigationFailed?.Invoke(error.LocalizedDescription);
 	}
+
+
+	NavigationPeer? peer;
+
+
+	WKWebView Ui =>
+		(WKWebView)Native;
 
 
 	/// <summary>
@@ -90,7 +97,26 @@ public class WebView : Control
 	public Action<string>? NavigationFailed { get; set; }
 
 
-	NavigationPeer? peer;
+	static double Fill(
+		double value) =>
+		double.IsFinite(value) ? value : 0;
+
+	void ApplyContent()
+	{
+		if (!IsRealized)
+			return;
+
+		if (html is not null)
+			Ui.LoadHtmlString(html, null!);
+		else if (url is not null && NSUrl.FromString(url) is NSUrl target)
+			Ui.LoadRequest(new NSUrlRequest(target));
+	}
+
+	void ApplyBackGestures()
+	{
+		if (IsRealized)
+			Ui.AllowsBackForwardNavigationGestures = allowsBackGestures;
+	}
 
 
 	private protected override UIView CreateNative()
@@ -113,16 +139,10 @@ public class WebView : Control
 		ApplyContent();
 	}
 
+
 	protected override Size MeasureOverride(
 		Size availableSize) =>
 		new(Fill(availableSize.Width), Fill(availableSize.Height));
-
-	static double Fill(
-		double value) =>
-		double.IsFinite(value) ? value : 0;
-
-	WKWebView Ui =>
-		(WKWebView)Native;
 
 
 	/// <summary>
@@ -165,23 +185,5 @@ public class WebView : Control
 
 		NSObject result = await Ui.EvaluateJavaScriptAsync(javaScript);
 		return result.ToString();
-	}
-
-
-	void ApplyContent()
-	{
-		if (!IsRealized)
-			return;
-
-		if (html is not null)
-			Ui.LoadHtmlString(html, null!);
-		else if (url is not null && NSUrl.FromString(url) is NSUrl target)
-			Ui.LoadRequest(new NSUrlRequest(target));
-	}
-
-	void ApplyBackGestures()
-	{
-		if (IsRealized)
-			Ui.AllowsBackForwardNavigationGestures = allowsBackGestures;
 	}
 }
