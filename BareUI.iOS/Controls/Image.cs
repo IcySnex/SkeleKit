@@ -10,6 +10,14 @@ public class Image : Control
 	// URL-source loader; set through BareApplicationBuilder.UseImageLoader(...)
 	internal static IImageLoader Loader { get; set; } = new HttpImageLoader();
 
+	CancellationTokenSource? loadCancellation;
+	UIImage? displayed;
+
+
+	UIImageView Ui =>
+		(UIImageView)Native;
+
+
 	/// <summary>
 	/// Where the image is loaded from.
 	/// </summary>
@@ -62,7 +70,7 @@ public class Image : Control
 	}
 	Stretch stretch = Stretch.Uniform;
 
-	// Symbol styling: all of it only affects SF Symbol sources
+	// symbol styling, SF Symbol sources only
 
 	/// <summary>
 	/// The symbol's point size, or NaN for its natural size.
@@ -125,50 +133,6 @@ public class Image : Control
 		set => Set(ref field, value, ApplySymbolEffect, affectsMeasure: false);
 	}
 
-	CancellationTokenSource? loadCancellation;
-	UIImage? displayed;
-
-
-	/// <summary>
-	/// Plays a symbol effect once, on top of any ambient <see cref="SymbolEffect"/>. No-op until realized.
-	/// </summary>
-	/// <param name="effect">The effect to perform.</param>
-	public void PlaySymbolEffect(
-		SymbolEffect effect)
-	{
-		if (!IsRealized || effect is SymbolEffect.None)
-			return;
-
-		Ui.AddSymbolEffect(
-			Effect(effect),
-			NSSymbolEffectOptions.Create(NSSymbolEffectOptionsRepeatBehavior.CreatePeriodic(1)),
-			animated: true);
-	}
-
-
-	private protected override UIView CreateNative() =>
-		new UIImageView();
-
-	private protected override void ApplyProperties()
-	{
-		ApplyStretch();
-		ApplySymbolConfiguration();
-		ApplySource();
-		ApplySymbolEffect();
-	}
-
-	// only an explicit Tint renders a raster as a template — an inherited one would flatten a photo
-	internal override void TintChanged()
-	{
-		if (IsRealized)
-			Show(displayed, animated: false);
-	}
-
-	private protected override void OnUnrealized() =>
-		CancelLoad();
-
-	UIImageView Ui =>
-		(UIImageView)Native;
 
 	void ApplyStretch()
 	{
@@ -180,7 +144,7 @@ public class Image : Control
 			_ => UIViewContentMode.ScaleAspectFit
 		};
 
-		// aspect-fill spills outside the frame unless clipped
+		// aspect-fill spills outside the frame
 		if (stretch is Stretch.UniformToFill)
 			Ui.ClipsToBounds = true;
 	}
@@ -254,7 +218,6 @@ public class Image : Control
 		LoadUrlAsync(current, loadCancellation.Token);
 	}
 
-	// a template render leaves layered symbol colors alone only when no tint asks for it
 	void Show(
 		UIImage? image,
 		bool animated)
@@ -278,7 +241,7 @@ public class Image : Control
 		loadCancellation = null;
 	}
 
-	// Auto: bundle asset beats symbol of same name
+	// Auto: bundle beats symbol
 	UIImage? ResolveSync(
 		ImageSource source) =>
 		source.Kind switch
@@ -354,7 +317,7 @@ public class Image : Control
 
 			if (image is null)
 			{
-				// a load can fail without an exception; the placeholder stays unless a fallback exists
+				// a load can fail without throwing
 				if (Fallback is ImageSource failed)
 					Show(ResolveSync(failed), animated: true);
 
@@ -364,5 +327,45 @@ public class Image : Control
 			Show(image, animated: true);
 			InvalidateMeasure();
 		});
+	}
+
+
+	private protected override UIView CreateNative() =>
+		new UIImageView();
+
+	private protected override void ApplyProperties()
+	{
+		ApplyStretch();
+		ApplySymbolConfiguration();
+		ApplySource();
+		ApplySymbolEffect();
+	}
+
+	private protected override void OnUnrealized() =>
+		CancelLoad();
+
+
+	// explicit Tint only; inherited would flatten a photo
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			Show(displayed, animated: false);
+	}
+
+
+	/// <summary>
+	/// Plays a symbol effect once, on top of any ambient <see cref="SymbolEffect"/>. No-op until realized.
+	/// </summary>
+	/// <param name="effect">The effect to perform.</param>
+	public void PlaySymbolEffect(
+		SymbolEffect effect)
+	{
+		if (!IsRealized || effect is SymbolEffect.None)
+			return;
+
+		Ui.AddSymbolEffect(
+			Effect(effect),
+			NSSymbolEffectOptions.Create(NSSymbolEffectOptionsRepeatBehavior.CreatePeriodic(1)),
+			animated: true);
 	}
 }
