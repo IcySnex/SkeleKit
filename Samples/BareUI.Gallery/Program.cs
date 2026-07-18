@@ -33,6 +33,7 @@ BareApplication.CreateBuilder()
 		services.AddTransient<DividerDemoViewModel>();
 		services.AddTransient<PickerDemoViewModel>();
 		services.AddTransient<ImageDemoViewModel>();
+		services.AddTransient<WebViewDemoViewModel>();
 		services.AddTransient<NativeViewDemoViewModel>();
 		services.AddTransient<KeyboardDemoViewModel>();
 		services.AddTransient<GridDemoViewModel>();

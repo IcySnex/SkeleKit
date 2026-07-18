@@ -1,4 +1,5 @@
 using ObjCRuntime;
+using SafariServices;
 
 namespace BareUI;
 
@@ -285,6 +286,23 @@ internal sealed class Navigator(
 				Prune();
 				completion.SetResult();
 			});
+		else
+			completion.SetResult();
+
+		return completion.Task;
+	}
+
+
+	public Task OpenUrlAsync(
+		string url)
+	{
+		if (NSUrl.FromString(url) is not { Scheme: "http" or "https" } address)
+			throw new ArgumentException($"'{url}' is not an http or https address.", nameof(url));
+
+		TaskCompletionSource completion = new();
+
+		if (Top() is UIViewController top)
+			top.PresentViewController(new SFSafariViewController(address), true, completion.SetResult);
 		else
 			completion.SetResult();
 

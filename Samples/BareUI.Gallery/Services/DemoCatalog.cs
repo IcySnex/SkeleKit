@@ -27,6 +27,7 @@ public sealed class DemoCatalog : IDemoCatalog
 		new("Divider", typeof(DividerDemoViewModel)),
 		new("Picker", typeof(PickerDemoViewModel)),
 		new("Image", typeof(ImageDemoViewModel)),
+		new("WebView & Safari", typeof(WebViewDemoViewModel)),
 		new("NativeView", typeof(NativeViewDemoViewModel)),
 		new("Keyboard (no scroll)", typeof(KeyboardDemoViewModel)),
 		new("CollectionView grid", typeof(GridDemoViewModel)),

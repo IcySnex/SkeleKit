@@ -106,6 +106,15 @@ public interface INavigator
 
 
 	/// <summary>
+	/// Opens a web address in an in-app Safari browser, with the system reader, share and done chrome.
+	/// </summary>
+	/// <param name="url">The <c>http</c> or <c>https</c> address to open.</param>
+	/// <returns>A task that completes once the browser is presented.</returns>
+	Task OpenUrlAsync(
+		string url);
+
+
+	/// <summary>
 	/// Displays an alert dialog with a single button to dismiss it.
 	/// </summary>
 	/// <param name="title">The title text of the alert.</param>

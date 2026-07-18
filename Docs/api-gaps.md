@@ -69,7 +69,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   A delegate blocks UIKit's compact-width adaptation, so it stays a bubble on iPhone; that wins
   over `ConfirmLeave` on the same page — a popover has no dismiss swipe for the guard to catch.
 - ★ (skip) **Share sheet** — `INavigator.ShareAsync(items)` over `UIActivityViewController`.
-- ★ (skip) **Open URL in-app** — `SFSafariViewController` wrapper on the navigator.
+- ~~★ **Open URL in-app**~~ — **done** (`INavigator.OpenUrlAsync(url)` presents an `SFSafariViewController`
+  from the top controller; rejects a non-`http`/`https` address, completes once presented).
 - ~~◆ **Alert with text input**~~ — **done** (`INavigator.PromptAsync`, returns the typed string or
   null when cancelled).
 
@@ -180,7 +181,10 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **PageControl**~~ — **done** (`Count`, two-way `Current`, dot colors, `AllowsScrubbing`). The
   unfilled dots keep UIKit's own default, which is near-invisible on a plain light background — set
   `DotColor` when the control doesn't sit over a photo.
-- ▲ **WebView** — `WKWebView`: url/html, navigation events, JS eval. Big but standard.
+- ~~▲ **WebView**~~ — **done** (`WebView` over `WKWebView`: bindable `Url`/`Html`, `Navigated`/
+  `NavigationFailed` streams, `AllowsBackGestures`, `GoBack`/`GoForward`/`Reload`, `EvaluateAsync` for
+  JS. Fill-measured — it takes the offered slot, since web content has no intrinsic size — so give it a
+  star row or an explicit height. Rooted `WKNavigationDelegate` peer).
 - ▲ **MapView** — `MKMapView`; probably out of scope, listed for completeness.
 - ~~★ **MenuPicker**~~ — covered by `Button.SelectsFromMenu`; no separate control.
 
