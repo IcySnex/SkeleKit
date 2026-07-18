@@ -7,9 +7,12 @@ internal sealed record BindingSegment(
 	Func<object, object?>? Step);
 
 /// <summary>
-/// A binding described by <c>Bind(...)</c>, not yet attached to a source. Assign it to a <see cref="Bindable{T}"/> property.
+/// A binding described by <c>Bind(...)</c>, not yet attached to a source.
 /// </summary>
-/// <typeparam name="T">The data type produced by the binding expression.</typeparam>
+/// <remarks>
+/// Assign it to a <see cref="Bindable{T}"/> property.
+/// </remarks>
+/// <typeparam name="T">The value type the binding produces.</typeparam>
 public sealed class BindingExpression<T>
 {
 	internal BindingSegment[] Segments { get; }
@@ -33,8 +36,8 @@ public sealed class BindingExpression<T>
 	/// <summary>
 	/// Chooses when a two-way binding writes back to the source.
 	/// </summary>
-	/// <param name="trigger">The event condition that forces a source update.</param>
-	/// <returns>The updated binding expression instance.</returns>
+	/// <param name="trigger">When to write the control's value back.</param>
+	/// <returns>The same binding expression.</returns>
 	public BindingExpression<T> On(
 		UpdateTrigger trigger)
 	{
@@ -44,18 +47,21 @@ public sealed class BindingExpression<T>
 }
 
 /// <summary>
-/// Builds <see cref="BindingExpression{T}"/> values. Prefer the <c>Bind(...)</c> helper on <c>ContentView&lt;TViewModel&gt;</c>.
+/// Builds <see cref="BindingExpression{T}"/> values.
 /// </summary>
+/// <remarks>
+/// Prefer the <c>Bind(...)</c> helper on <c>ContentView&lt;TViewModel&gt;</c>.
+/// </remarks>
 public static class BindingFactory
 {
 	/// <summary>
-	/// A one-way binding reading <paramref name="getter"/> from the source.
+	/// A one-way binding that reads <paramref name="getter"/> from the source.
 	/// </summary>
-	/// <typeparam name="TSource">The data type of the source object.</typeparam>
-	/// <typeparam name="T">The data type of the bound property.</typeparam>
-	/// <param name="getter">The reader function to evaluate.</param>
-	/// <param name="path">The automatically captured string expression of the lambda path.</param>
-	/// <returns>A configured binding expression setup for one-way streaming.</returns>
+	/// <typeparam name="TSource">The source object type.</typeparam>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="getter">The function that reads the value from the source.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	public static BindingExpression<T?> Bind<TSource, T>(
 		Func<TSource, T> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) where TSource : class =>
@@ -64,12 +70,12 @@ public static class BindingFactory
 	/// <summary>
 	/// A two-way binding: <paramref name="setter"/> writes the control's value back to the source.
 	/// </summary>
-	/// <typeparam name="TSource">The data type of the source object.</typeparam>
-	/// <typeparam name="T">The data type of the bound property.</typeparam>
-	/// <param name="getter">The reader function to evaluate.</param>
-	/// <param name="setter">The writer action to execute when updating the source.</param>
-	/// <param name="path">The automatically captured string expression of the lambda path.</param>
-	/// <returns>A configured binding expression setup for bi-directional streaming.</returns>
+	/// <typeparam name="TSource">The source object type.</typeparam>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="getter">The function that reads the value from the source.</param>
+	/// <param name="setter">The action that writes the value back to the source.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	public static BindingExpression<T?> Bind<TSource, T>(
 		Func<TSource, T> getter,
 		Action<TSource, T?> setter,
@@ -79,13 +85,13 @@ public static class BindingFactory
 	/// <summary>
 	/// A one-way binding that converts the source value with <paramref name="format"/>.
 	/// </summary>
-	/// <typeparam name="TSource">The data type of the source object.</typeparam>
-	/// <typeparam name="TValue">The intermediate value type resolved from the source.</typeparam>
-	/// <typeparam name="T">The final output target data type.</typeparam>
-	/// <param name="getter">The reader function to evaluate.</param>
-	/// <param name="format">The mapping rule to transform the data.</param>
-	/// <param name="path">The automatically captured string expression of the lambda path.</param>
-	/// <returns>A configured binding expression featuring read-only formatting transformations.</returns>
+	/// <typeparam name="TSource">The source object type.</typeparam>
+	/// <typeparam name="TValue">The value type read from the source.</typeparam>
+	/// <typeparam name="T">The converted value type.</typeparam>
+	/// <param name="getter">The function that reads the value from the source.</param>
+	/// <param name="format">Converts the source value for display.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	public static BindingExpression<T?> Bind<TSource, TValue, T>(
 		Func<TSource, TValue> getter,
 		Func<TValue, T> format,
@@ -95,15 +101,15 @@ public static class BindingFactory
 	/// <summary>
 	/// A two-way binding that converts both ways: <paramref name="format"/> out, <paramref name="parse"/> back in.
 	/// </summary>
-	/// <typeparam name="TSource">The data type of the source object.</typeparam>
-	/// <typeparam name="TValue">The intermediate value type resolved from the source.</typeparam>
-	/// <typeparam name="T">The final output target data type.</typeparam>
-	/// <param name="getter">The reader function to evaluate.</param>
-	/// <param name="setter">The writer action to execute when updating the source.</param>
-	/// <param name="format">The mapping rule to transform the data for presentation.</param>
-	/// <param name="parse">The mapping rule to decode the presentation back into source values.</param>
-	/// <param name="path">The automatically captured string expression of the lambda path.</param>
-	/// <returns>A configured binding expression featuring bi-directional transformations.</returns>
+	/// <typeparam name="TSource">The source object type.</typeparam>
+	/// <typeparam name="TValue">The value type read from the source.</typeparam>
+	/// <typeparam name="T">The converted value type.</typeparam>
+	/// <param name="getter">The function that reads the value from the source.</param>
+	/// <param name="setter">The action that writes the value back to the source.</param>
+	/// <param name="format">Converts the source value for display.</param>
+	/// <param name="parse">Converts the displayed value back to the source type.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	public static BindingExpression<T?> Bind<TSource, TValue, T>(
 		Func<TSource, TValue> getter,
 		Action<TSource, TValue> setter,
@@ -115,12 +121,12 @@ public static class BindingFactory
 	/// <summary>
 	/// A control-to-source binding: the control writes to the source and never reads from it.
 	/// </summary>
-	/// <typeparam name="TSource">The data type of the source object.</typeparam>
-	/// <typeparam name="T">The data type of the bound property.</typeparam>
-	/// <param name="getter">The reader function to evaluate initial states.</param>
-	/// <param name="setter">The writer action to execute when updating the source.</param>
-	/// <param name="path">The automatically captured string expression of the lambda path.</param>
-	/// <returns>A configured binding expression setup for source-only streaming updates.</returns>
+	/// <typeparam name="TSource">The source object type.</typeparam>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="getter">The function that reads the initial value from the source.</param>
+	/// <param name="setter">The action that writes the value back to the source.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	public static BindingExpression<T?> BindToSource<TSource, T>(
 		Func<TSource, T> getter,
 		Action<TSource, T?> setter,
@@ -130,27 +136,30 @@ public static class BindingFactory
 	/// <summary>
 	/// A one-time binding: read once when the context attaches, then never again.
 	/// </summary>
-	/// <typeparam name="TSource">The data type of the source object.</typeparam>
-	/// <typeparam name="T">The data type of the bound property.</typeparam>
-	/// <param name="getter">The reader function to evaluate.</param>
-	/// <param name="path">The automatically captured string expression of the lambda path.</param>
-	/// <returns>A configured binding expression locked to a single assessment phase.</returns>
+	/// <typeparam name="TSource">The source object type.</typeparam>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="getter">The function that reads the value from the source.</param>
+	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
+	/// <returns>The binding expression.</returns>
 	public static BindingExpression<T?> BindOnce<TSource, T>(
 		Func<TSource, T> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) where TSource : class =>
 		new(ParsePath(path), source => getter((TSource)source), null, BindingMode.OneTime);
 
 	/// <summary>
-	/// A nested one-way binding. Each segment is subscribed on its own, so replacing an intermediate re-resolves the rest.
+	/// A nested one-way binding.
 	/// </summary>
-	/// <typeparam name="TSource">The data type of the base source object.</typeparam>
-	/// <typeparam name="TMiddle">The data type of the bridge intermediate node.</typeparam>
-	/// <typeparam name="T">The data type of the final bound property.</typeparam>
-	/// <param name="first">The structural jump to the intermediate container.</param>
-	/// <param name="second">The evaluation step within the intermediate target context.</param>
-	/// <param name="firstPath">The automatically captured string expression of the first branch layer.</param>
-	/// <param name="secondPath">The automatically captured string expression of the second branch layer.</param>
-	/// <returns>A multi-tiered hierarchical tracking structure for one-way tracking.</returns>
+	/// <remarks>
+	/// Each segment is subscribed on its own, so replacing an intermediate re-resolves the rest.
+	/// </remarks>
+	/// <typeparam name="TSource">The source object type.</typeparam>
+	/// <typeparam name="TMiddle">The intermediate object type.</typeparam>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="first">The function that reads the intermediate object from the source.</param>
+	/// <param name="second">The function that reads the value from the intermediate object.</param>
+	/// <param name="firstPath">The first lambda, captured automatically to derive its property name.</param>
+	/// <param name="secondPath">The second lambda, captured automatically to derive its property name.</param>
+	/// <returns>The binding expression.</returns>
 	public static BindingExpression<T?> BindPath<TSource, TMiddle, T>(
 		Func<TSource, TMiddle?> first,
 		Func<TMiddle, T> second,
@@ -161,22 +170,22 @@ public static class BindingFactory
 				new(LeafName(firstPath), source => first((TSource)source)),
 				new(LeafName(secondPath), null)
 			],
-			source => first((TSource)source) is { } middle ? second(middle) : default,
+			source => first((TSource)source) is TMiddle middle ? second(middle) : default,
 			null,
 			BindingMode.OneWay);
 
 	/// <summary>
 	/// A nested two-way binding; <paramref name="setter"/> runs against the resolved intermediate.
 	/// </summary>
-	/// <typeparam name="TSource">The data type of the base source object.</typeparam>
-	/// <typeparam name="TMiddle">The data type of the bridge intermediate node.</typeparam>
-	/// <typeparam name="T">The data type of the final bound property.</typeparam>
-	/// <param name="first">The structural jump to the intermediate container.</param>
-	/// <param name="second">The evaluation step within the intermediate target context.</param>
-	/// <param name="setter">The writeback mechanism operating on the targeted child node properties.</param>
-	/// <param name="firstPath">The automatically captured string expression of the first branch layer.</param>
-	/// <param name="secondPath">The automatically captured string expression of the second branch layer.</param>
-	/// <returns>A multi-tiered hierarchical tracking structure for bi-directional tracking.</returns>
+	/// <typeparam name="TSource">The source object type.</typeparam>
+	/// <typeparam name="TMiddle">The intermediate object type.</typeparam>
+	/// <typeparam name="T">The bound value type.</typeparam>
+	/// <param name="first">The function that reads the intermediate object from the source.</param>
+	/// <param name="second">The function that reads the value from the intermediate object.</param>
+	/// <param name="setter">The action that writes the value back onto the intermediate object.</param>
+	/// <param name="firstPath">The first lambda, captured automatically to derive its property name.</param>
+	/// <param name="secondPath">The second lambda, captured automatically to derive its property name.</param>
+	/// <returns>The binding expression.</returns>
 	public static BindingExpression<T?> BindPath<TSource, TMiddle, T>(
 		Func<TSource, TMiddle?> first,
 		Func<TMiddle, T> second,
@@ -190,10 +199,10 @@ public static class BindingFactory
 				new(LeafName(firstPath), source => first((TSource)source)),
 				new(LeafName(secondPath), null)
 			],
-			source => first((TSource)source) is { } middle ? second(middle) : default,
+			source => first((TSource)source) is TMiddle middle ? second(middle) : default,
 			(source, value) =>
 			{
-				if (first((TSource)source) is { } middle)
+				if (first((TSource)source) is TMiddle middle)
 					setter(middle, value);
 			},
 			BindingMode.TwoWay);
