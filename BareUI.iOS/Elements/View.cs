@@ -15,8 +15,11 @@ public abstract partial class View
 
 
 	/// <summary>
-	/// A style applied the moment it is assigned: put it first in an object initializer, later assignments override it.
+	/// A style applied the moment it is assigned.
 	/// </summary>
+	/// <remarks>
+	/// Put it first in an object initializer; later assignments override it.
+	/// </remarks>
 	public IStyle? Style
 	{
 		get;
@@ -122,7 +125,7 @@ public abstract partial class View
 			view.measureValid = false;
 			view.previousValid = false;
 
-			if (view.Parent is not { } parent)
+			if (view.Parent is not View parent)
 				break;
 
 			// an already-stale parent has stale ancestors too
@@ -141,15 +144,18 @@ public abstract partial class View
 	View Root()
 	{
 		View root = this;
-		while (root.Parent is { } parent)
+		while (root.Parent is View parent)
 			root = parent;
 
 		return root;
 	}
 
 	/// <summary>
-	/// Drops every cached measurement in this subtree. For changes that hit leaves directly, like a dynamic-type resize.
+	/// Drops every cached measurement in this subtree.
 	/// </summary>
+	/// <remarks>
+	/// For changes that hit leaves directly, like a dynamic-type resize.
+	/// </remarks>
 	public void InvalidateSubtree()
 	{
 		measureValid = false;
@@ -283,8 +289,11 @@ public abstract partial class View
 	public double LongPressDuration { get; set; } = 0.5;
 
 	/// <summary>
-	/// Invoked with true on touch-down anywhere in the view, false on release or cancel. Child controls still receive their touches.
+	/// Invoked with true on touch-down anywhere in the view, false on release or cancel.
 	/// </summary>
+	/// <remarks>
+	/// Child controls still receive their touches.
+	/// </remarks>
 	public Action<bool>? Pressed
 	{
 		get => pressed;
@@ -293,8 +302,11 @@ public abstract partial class View
 	Action<bool>? pressed;
 
 	/// <summary>
-	/// Invoked as the view is dragged. Drive an <see cref="Animator"/> from it to make an animation interactive.
+	/// Invoked as the view is dragged.
 	/// </summary>
+	/// <remarks>
+	/// Drive an <see cref="Animator"/> from it to make an animation interactive.
+	/// </remarks>
 	public Action<PanGesture>? Panned
 	{
 		get => panned;
@@ -303,8 +315,11 @@ public abstract partial class View
 	Action<PanGesture>? panned;
 
 	/// <summary>
-	/// Invoked as the view is pinched. Feed the scale into <see cref="Scale"/> to zoom it.
+	/// Invoked as the view is pinched.
 	/// </summary>
+	/// <remarks>
+	/// Feed the scale into <see cref="Scale"/> to zoom it.
+	/// </remarks>
 	public Action<PinchGesture>? Pinched
 	{
 		get => pinched;
@@ -313,8 +328,11 @@ public abstract partial class View
 	Action<PinchGesture>? pinched;
 
 	/// <summary>
-	/// Invoked as the view is rotated with two fingers. Feed the degrees into <see cref="Rotation"/> to turn it.
+	/// Invoked as the view is rotated with two fingers.
 	/// </summary>
+	/// <remarks>
+	/// Feed the degrees into <see cref="Rotation"/> to turn it.
+	/// </remarks>
 	public Action<RotateGesture>? Rotated
 	{
 		get => rotated;
@@ -412,8 +430,11 @@ public abstract partial class View
 	// Layout properties
 
 	/// <summary>
-	/// Edges this view is allowed to extend past the safe area. A scrolling view still keeps its content inside it, so only the scroll passes under the bar.
+	/// Edges this view is allowed to extend past the safe area.
 	/// </summary>
+	/// <remarks>
+	/// A scrolling view still keeps its content inside it, so only the scroll passes under the bar.
+	/// </remarks>
 	public SafeAreaEdges IgnoresSafeArea
 	{
 		get;
@@ -540,8 +561,11 @@ public abstract partial class View
 	Brush? background;
 
 	/// <summary>
-	/// The accent color for this view and everything under it. Inherited from the parent unless set here, falling back to the app accent.
+	/// The accent color for this view and everything under it.
 	/// </summary>
+	/// <remarks>
+	/// Inherited from the parent unless set here, falling back to the app accent.
+	/// </remarks>
 	public Color? Tint
 	{
 		get => tint ?? (Parent ?? TintHost)?.Tint ?? AppAccent;
@@ -589,8 +613,11 @@ public abstract partial class View
 	double cornerRadius;
 
 	/// <summary>
-	/// A drop shadow behind the view, or null for none. A shadow needs unclipped bounds: it stops a corner radius from clipping the content, and an explicit <see cref="ClipsToBounds"/> hides it.
+	/// A drop shadow behind the view, or null for none.
 	/// </summary>
+	/// <remarks>
+	/// A shadow needs unclipped bounds: it stops a corner radius from clipping the content, and an explicit <see cref="ClipsToBounds"/> hides it.
+	/// </remarks>
 	public Shadow? Shadow
 	{
 		get;
@@ -640,9 +667,11 @@ public abstract partial class View
 	double rotation;
 
 	/// <summary>
-	/// The pivot for <see cref="Rotation"/> and <see cref="Scale"/>, in unit coordinates: (0.5, 0.5) is
-	/// the center (the default), (0, 0) the top-left corner, (1, 1) the bottom-right.
+	/// The pivot for <see cref="Rotation"/> and <see cref="Scale"/>, in unit coordinates.
 	/// </summary>
+	/// <remarks>
+	/// (0.5, 0.5) is the center (the default), (0, 0) the top-left corner, (1, 1) the bottom-right.
+	/// </remarks>
 	public Point AnchorPoint
 	{
 		get => anchorPoint;
