@@ -22,7 +22,7 @@ public sealed class BareApplicationBuilder
 	/// <summary>
 	/// Registers core dependencies and application services into the container.
 	/// </summary>
-	/// <param name="configure">A delegate to configure.</param>
+	/// <param name="configure">Adds services to the container.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder UseServices(
 		Action<IServiceCollection> configure)
@@ -32,8 +32,11 @@ public sealed class BareApplicationBuilder
 	}
 
 	/// <summary>
-	/// Sets how <c>Image</c> loads remote URLs. Plug in a caching loader here.
+	/// Sets how <c>Image</c> loads remote URLs.
 	/// </summary>
+	/// <remarks>
+	/// Plug in a caching loader here.
+	/// </remarks>
 	/// <param name="loader">The loader to use.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder UseImageLoader(
@@ -76,7 +79,7 @@ public sealed class BareApplicationBuilder
 	/// <summary>
 	/// Registers implicit styles applied to every view of a type as it is built.
 	/// </summary>
-	/// <param name="configure">A delegate to configure.</param>
+	/// <param name="configure">Registers the implicit styles.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder UseTheme(
 		Action<Theme> configure)
@@ -86,9 +89,12 @@ public sealed class BareApplicationBuilder
 	}
 
 	/// <summary>
-	/// Registers pages by hand. Prefer the [Page] attribute, whose generated UsePages() calls this.
+	/// Registers pages by hand.
 	/// </summary>
-	/// <param name="configure">A delegate to configure.</param>
+	/// <remarks>
+	/// Prefer the [Page] attribute, whose generated UsePages() calls this.
+	/// </remarks>
+	/// <param name="configure">Registers the pages.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public BareApplicationBuilder UsePages(
@@ -133,7 +139,7 @@ public sealed class BareApplicationBuilder
 	/// <summary>
 	/// Configures the app to use bottom navigation tabs with each tab having its own navigation stack.
 	/// </summary>
-	/// <param name="configure">The delegate to configure.</param>
+	/// <param name="configure">Declares the tabs.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public BareApplicationBuilder Tabs(
 		Action<TabsBuilder> configure)

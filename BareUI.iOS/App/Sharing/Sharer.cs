@@ -46,7 +46,7 @@ internal sealed class Sharer : ISharer
 
 		List<NSObject> activityItems = [];
 
-		if (content.Text is { } text)
+		if (content.Text is string text)
 			activityItems.Add(new NSString(text));
 		if (url is not null)
 			activityItems.Add(url);
@@ -54,7 +54,7 @@ internal sealed class Sharer : ISharer
 		if (image is not null)
 		{
 			LPLinkMetadata metadata = new() { ImageProvider = new(image) };
-			if (content.Text is { } title)
+			if (content.Text is string title)
 				metadata.Title = title;
 			if (url is not null)
 				metadata.Url = metadata.OriginalUrl = url;

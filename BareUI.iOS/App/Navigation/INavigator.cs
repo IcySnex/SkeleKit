@@ -37,8 +37,11 @@ public interface INavigator
 		object viewModel);
 
 	/// <summary>
-	/// Pushes a page instance directly, without a ViewModel or registration. Create a new instance per navigation.
+	/// Pushes a page instance directly, without a ViewModel or registration.
 	/// </summary>
+	/// <remarks>
+	/// Create a new instance per navigation.
+	/// </remarks>
 	/// <param name="page">The page to push.</param>
 	/// <returns>A task representing the async operation.</returns>
 	Task PushAsync(
@@ -88,8 +91,11 @@ public interface INavigator
 		ModalStyle style);
 
 	/// <summary>
-	/// Presents a page instance directly, without a ViewModel or registration. Create a new instance per navigation.
+	/// Presents a page instance directly, without a ViewModel or registration.
 	/// </summary>
+	/// <remarks>
+	/// Create a new instance per navigation.
+	/// </remarks>
 	/// <param name="page">The page to present.</param>
 	/// <param name="style">The modal style and presentation configuration.</param>
 	/// <returns>A task representing the async operation.</returns>
@@ -118,7 +124,7 @@ public interface INavigator
 	/// Displays an alert dialog with a single button to dismiss it.
 	/// </summary>
 	/// <param name="title">The title text of the alert.</param>
-	/// <param name="message">The main message content body.</param>
+	/// <param name="message">The message body.</param>
 	/// <param name="dismiss">The text for the dismiss button.</param>
 	/// <returns>A task representing the async operation.</returns>
 	Task AlertAsync(
@@ -130,7 +136,7 @@ public interface INavigator
 	/// Displays a confirmation dialog with accept and cancel actions.
 	/// </summary>
 	/// <param name="title">The title text of the confirmation box.</param>
-	/// <param name="message">The main message content body.</param>
+	/// <param name="message">The message body.</param>
 	/// <param name="accept">The text for the confirming button.</param>
 	/// <param name="cancel">The text for the canceling button.</param>
 	/// <param name="destructive">Whether the confirming button is styled red, for actions that discard something.</param>
@@ -146,7 +152,7 @@ public interface INavigator
 	/// Displays an alert with a single text field, for a name or another short answer.
 	/// </summary>
 	/// <param name="title">The title text of the alert.</param>
-	/// <param name="message">The main message content body.</param>
+	/// <param name="message">The message body.</param>
 	/// <param name="placeholder">The text field's placeholder.</param>
 	/// <param name="text">The text the field starts with.</param>
 	/// <param name="accept">The text for the confirming button.</param>
@@ -163,9 +169,9 @@ public interface INavigator
 	/// <summary>
 	/// Displays an action sheet layout with multiple choices.
 	/// </summary>
-	/// <param name="title">The title text of the confirmation box.</param>
-	/// <param name="cancel">The text for the cancel button context.</param>
-	/// <param name="options">The array list of selectable string option values.</param>
+	/// <param name="title">The action sheet's title.</param>
+	/// <param name="cancel">The cancel button's text.</param>
+	/// <param name="options">The options to choose from.</param>
 	/// <returns>A task containing the chosen string option, or null if the action sheet was canceled.</returns>
 	Task<string?> SelectAsync(
 		string title,

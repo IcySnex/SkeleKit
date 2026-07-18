@@ -109,8 +109,11 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Puts an action button in the separated bubble instead of search. The bubble is single: Search and Bubble exclude each other.
+	/// Puts an action button in the separated bubble instead of search.
 	/// </summary>
+	/// <remarks>
+	/// The bubble is single: Search and Bubble exclude each other.
+	/// </remarks>
 	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
 	/// <param name="icon">The SF Symbol shown in the bubble.</param>
 	/// <param name="tapped">Runs on tap.</param>
@@ -158,8 +161,11 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Lets the tab bar minimize as the content scrolls. iOS 26 and later.
+	/// Lets the tab bar minimize as the content scrolls.
 	/// </summary>
+	/// <remarks>
+	/// iOS 26 and later.
+	/// </remarks>
 	/// <param name="minimize">When the bar minimizes.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Minimizes(
@@ -171,8 +177,11 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Shows a view of the given type in the tab bar's accessory slot. The view's IsVisible controls the slot. iOS 26 and later.
+	/// Shows a view of the given type in the tab bar's accessory slot.
 	/// </summary>
+	/// <remarks>
+	/// The view's IsVisible controls the slot. iOS 26 and later.
+	/// </remarks>
 	/// <typeparam name="TView">The view type to host.</typeparam>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Accessory<TView>()
@@ -184,9 +193,12 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Configures everything iPad: the sidebar, tab placements and iPad-only destinations. Ignored on iPhone.
+	/// Configures everything iPad: the sidebar, tab placements and iPad-only destinations.
 	/// </summary>
-	/// <param name="configure">A delegate to configure.</param>
+	/// <remarks>
+	/// Ignored on iPhone.
+	/// </remarks>
+	/// <param name="configure">Configures the iPad layout.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder OnPad(
 		Action<PadTabsBuilder> configure)
