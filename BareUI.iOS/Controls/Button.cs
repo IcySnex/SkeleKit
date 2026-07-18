@@ -7,6 +7,14 @@ namespace BareUI;
 /// </summary>
 public class Button : Control
 {
+	// rooted so the menu peers survive
+	UIAction[]? menuActions;
+
+
+	UIButton Ui =>
+		(UIButton)Native;
+
+
 	/// <summary>
 	/// The button's title text.
 	/// </summary>
@@ -145,6 +153,17 @@ public class Button : Control
 	}
 	ICommand? command;
 
+	/// <summary>
+	/// The parameter passed to <see cref="Command"/>.
+	/// </summary>
+	public object? CommandParameter
+	{
+		get => commandParameter;
+		set => Set(ref commandParameter, value, ApplyIsEnabled, affectsMeasure: false);
+	}
+	object? commandParameter;
+
+
 	void SetCommand(
 		ICommand? value)
 	{
@@ -161,40 +180,6 @@ public class Button : Control
 
 		ApplyIsEnabled();
 	}
-
-	/// <summary>
-	/// The parameter passed to <see cref="Command"/>.
-	/// </summary>
-	public object? CommandParameter
-	{
-		get => commandParameter;
-		set => Set(ref commandParameter, value, ApplyIsEnabled, affectsMeasure: false);
-	}
-	object? commandParameter;
-
-	private protected override UIView CreateNative()
-	{
-		UIButton button = new();
-		button.TouchUpInside += (_, _) => OnClicked();
-
-		return button;
-	}
-
-	private protected override void ApplyProperties()
-	{
-		ApplyConfiguration();
-		ApplyMenu();
-		ApplyIsEnabled();
-	}
-
-	private protected override void OnUnrealized()
-	{
-		if (command is not null)
-			command.CanExecuteChanged -= OnCanExecuteChanged;
-	}
-
-	UIButton Ui =>
-		(UIButton)Native;
 
 	void ApplyConfiguration()
 	{
@@ -228,7 +213,6 @@ public class Button : Control
 		{
 			configuration.Image = UIImage.GetSystemImage(icon);
 
-			// sized to sit beside the title, not at the symbol's free-standing size
 			double points = double.IsNaN(iconSize)
 				? size switch
 				{
@@ -252,7 +236,6 @@ public class Button : Control
 			};
 		}
 
-		// the spinner takes the image slot, so it needs the same breathing room
 		configuration.ShowsActivityIndicator = isLoading;
 
 		if ((icon is not null || isLoading) && text is not null)
@@ -277,7 +260,7 @@ public class Button : Control
 				configuration.BaseForegroundColor = UIColor.White;
 			}
 		}
-		// a configuration paints from its own colors, so an inherited tint has to be written into it
+		// a configuration paints from its own colors, not the view tint
 		else if (Tint is Color accent)
 		{
 			UIColor color = accent.ToUIColor();
@@ -291,15 +274,6 @@ public class Button : Control
 
 		Ui.Configuration = configuration;
 	}
-
-	internal override void TintChanged()
-	{
-		if (IsRealized)
-			ApplyConfiguration();
-	}
-
-	// the actions stay rooted here: UIKit's retain alone would let their managed peers die
-	UIAction[]? menuActions;
 
 	void ApplyMenu()
 	{
@@ -348,4 +322,33 @@ public class Button : Control
 		object? sender,
 		EventArgs e) =>
 		MainThread.Post(ApplyIsEnabled);
+
+
+	private protected override UIView CreateNative()
+	{
+		UIButton button = new();
+		button.TouchUpInside += (_, _) => OnClicked();
+
+		return button;
+	}
+
+	private protected override void ApplyProperties()
+	{
+		ApplyConfiguration();
+		ApplyMenu();
+		ApplyIsEnabled();
+	}
+
+	private protected override void OnUnrealized()
+	{
+		if (command is not null)
+			command.CanExecuteChanged -= OnCanExecuteChanged;
+	}
+
+
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			ApplyConfiguration();
+	}
 }

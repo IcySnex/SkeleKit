@@ -63,9 +63,11 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 - **Non-public members get no XML docs at all** — `internal`, `private`, `private protected`, and
   implicitly-internal top-level types. Add a short `//` there only when the code genuinely can't say
   it, never by default.
-- Inline `//` comments: short fragments, lowercase, only when the code can't say it itself. No
-  full-sentence prose, no multi-line blocks, no explaining a bugfix inline — that goes in the
-  commit body. Same American-spelling / no-em-dash rules as docs.
+- Inline `//` comments: cull aggressively — keep one **only** when the code genuinely can't say it
+  and a competent iOS dev couldn't infer it (a routine UIKit rooting/retain note doesn't qualify).
+  When kept: a short lowercase fragment, a few words. No full-sentence prose, no multi-line blocks,
+  no explaining a bugfix inline — that goes in the commit body. Same American-spelling / no-em-dash
+  rules as docs.
 - Type-check with an explicit type pattern (`is Type x` / `is not Type x`), **never `is { }`**; a
   nullable scalar or enum takes `is double x` etc., only a nullable *tuple* falls back to
   `.HasValue`/`.Value`. Prefer `is not null` over `!= null`. Explicit types everywhere (no `var`).
@@ -76,11 +78,15 @@ Acceptance target: rewrite its screens with zero UIKit imports.
   (`get; set => Set(ref field, ...)`), and expression bodies joined onto one line when short
   (`internal override bool Scrolls => true;`). Two blank lines between member groups
   (fields / properties / methods).
-- Member order is feature-colocation (see `Controls/Button.cs`): a property carries its backing
-  fields and any tightly-bound helper right beneath it; don't hoist statics or standalone fields to
-  the top. **Nested types go at the very top of the class body**, before consts. In a multi-type file
-  the primary (filename) type leads, its supporting enums follow. Split unrelated public types into
-  their own files; keep tight families together. Don't nest a *public* helper enum — it renames the API.
+- **Member order** (see `Controls/Button.cs`): kinds top-to-bottom are **nested types → constants →
+  static fields/properties/methods → instance fields → constructors → properties → methods**, and
+  **within each kind, ascending visibility: private → private protected → internal → public**. Two
+  blank lines between kinds *and* between visibility subgroups; one blank within a subgroup. A
+  property keeps its backing fields glued directly beneath it (those don't move to the fields group);
+  standalone private state (e.g. a rooted `UIAction[]`) and private helper properties (e.g. `Ui`) go
+  in their kind's group at the top, before the public members. In a multi-type file the primary
+  (filename) type leads, its supporting enums follow. Split unrelated public types into their own
+  files; keep tight families together. Don't nest a *public* helper enum — it renames the API.
 - **No preprocessor directives. Ever** — no `#if IOS`, no `#pragma`, no `#region`. A
   wholly-iOS file goes in `Controls/` (or is named in the csproj's `net10.0` `Compile Remove`
   glob) and just uses UIKit directly. A file that mixes layout math with UIKit splits: neutral
