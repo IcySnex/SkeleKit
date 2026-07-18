@@ -58,8 +58,8 @@ public static class Bindable
 	/// Wraps a literal, for property types C# will not implicitly convert (interfaces).
 	/// </summary>
 	/// <typeparam name="T">The type of value being encapsulated.</typeparam>
-	/// <param name="value">The raw value to protect from layout restrictions.</param>
-	/// <returns>A new wrapped literal configuration.</returns>
+	/// <param name="value">The raw value to wrap.</param>
+	/// <returns>The wrapped literal.</returns>
 	public static Bindable<T> From<T>(
 		T? value) =>
 		new(value);

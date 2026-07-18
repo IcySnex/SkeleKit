@@ -1,7 +1,6 @@
 namespace BareUI;
 
 /// <summary>
-	///
 /// Which way values flow between the binding source and the control.
 /// </summary>
 public enum BindingMode

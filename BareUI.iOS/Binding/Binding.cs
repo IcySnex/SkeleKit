@@ -53,8 +53,8 @@ internal sealed class Binding<T>(
 		if (expression.Mode is not (BindingMode.TwoWay or BindingMode.OneWayToSource))
 			return;
 
-		if (expression.Setter is { } setter && source is { } current)
-			setter(current, value);
+		if (expression.Setter is not null && source is not null)
+			expression.Setter(source, value);
 	}
 
 	void Subscribe(
@@ -84,7 +84,7 @@ internal sealed class Binding<T>(
 		if (source is null)
 			return;
 
-		if (e.PropertyName is { Length: > 0 } name && !Watches(name))
+		if (e.PropertyName is string name && name.Length > 0 && !Watches(name))
 			return;
 
 		MainThread.Post(Refresh);
@@ -92,8 +92,8 @@ internal sealed class Binding<T>(
 
 	void Refresh()
 	{
-		if (source is { } current)
-			Attach(current);
+		if (source is not null)
+			Attach(source);
 	}
 
 	bool Watches(

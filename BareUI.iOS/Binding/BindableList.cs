@@ -4,8 +4,11 @@ using System.Runtime.CompilerServices;
 namespace BareUI;
 
 /// <summary>
-/// A list source: any list literal, or a <c>Bind(...)</c> expression. Changes animate when the list is an <c>ObservableCollection</c>.
+/// A list source: any list literal, or a <c>Bind(...)</c> expression.
 /// </summary>
+/// <remarks>
+/// Changes animate when the list is an <c>ObservableCollection</c>.
+/// </remarks>
 /// <typeparam name="TItem">The element type of the list.</typeparam>
 [CollectionBuilder(typeof(BindableList), nameof(BindableList.Create))]
 public readonly struct BindableList<TItem>
@@ -21,18 +24,17 @@ public readonly struct BindableList<TItem>
 		Expression = null;
 	}
 
-
-	// present so collection expressions can infer the element type; enumerates the current items only
-	// (none while the source is still an unresolved binding), not a way to read a live source
-	public IEnumerator<TItem> GetEnumerator() =>
-		(Value ?? []).GetEnumerator();
-
 	BindableList(
 		BindingExpression<IReadOnlyList<TItem>?> expression)
 	{
 		Value = null;
 		Expression = expression;
 	}
+
+
+	// lets collection expressions infer the element type; enumerates the current items only, never a live source
+	public IEnumerator<TItem> GetEnumerator() =>
+		(Value ?? []).GetEnumerator();
 
 
 	// C# forbids conversions from interface types, so the common concrete lists convert instead
