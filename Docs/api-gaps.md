@@ -68,7 +68,12 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   no spelling. The style carries the anchor through the ViewModel's `PresentAsync` untouched).
   A delegate blocks UIKit's compact-width adaptation, so it stays a bubble on iPhone; that wins
   over `ConfirmLeave` on the same page — a popover has no dismiss swipe for the guard to catch.
-- ★ (skip) **Share sheet** — `INavigator.ShareAsync(items)` over `UIActivityViewController`.
+- ~~★ **Share sheet**~~ — **done**, but as its own service, not on the navigator: `ISharer.ShareAsync(
+  params ShareItem[])` over `UIActivityViewController` (injected like `INavigator`, also reachable from
+  page code via `ContentView.Sharer`). A `ShareItem` never appears at a call site — `string`, `Uri` and
+  `ImageSource` convert to it implicitly, so `ShareAsync("caption", url, image)` types each item exactly
+  while reading as native types; a remote `ImageSource` is fetched through the shared image loader first.
+  Split off the navigator on purpose, to grow later (excluded activities, a result, file/data items).
 - ~~★ **Open URL in-app**~~ — **done** (`INavigator.OpenUrlAsync(url)` presents an `SFSafariViewController`
   from the top controller; rejects a non-`http`/`https` address, completes once presented).
 - ~~◆ **Alert with text input**~~ — **done** (`INavigator.PromptAsync`, returns the typed string or

@@ -22,9 +22,10 @@ public class WebViewDemo : ContentView<WebViewDemoViewModel>
 
 		Content = web;
 
-		ToolbarItems.Add(new() { Icon = "chevron.backward", Command = Command.From(web.GoBack) });
 		ToolbarItems.Add(new() { Icon = "chevron.forward", Command = Command.From(web.GoForward) });
+		ToolbarItems.Add(new() { Icon = "chevron.backward", Command = Command.From(web.GoBack) });
 		ToolbarItems.Add(new() { Icon = "arrow.clockwise", Command = Command.From(web.Reload) });
 		ToolbarItems.Add(new() { Icon = "safari", Command = Command.From(() => _ = Navigator.OpenUrlAsync(viewModel.Url)) });
+		ToolbarItems.Add(new() { Icon = "square.and.arrow.up", Command = Command.From(() => _ = Sharer.ShareAsync("Check this page", new Uri(viewModel.Url), ImageSource.Symbol("globe"))) });
 	}
 }

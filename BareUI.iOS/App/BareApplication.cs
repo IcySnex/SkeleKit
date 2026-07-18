@@ -207,6 +207,7 @@ public class BareApplication
 		Foregrounded = builder.LifecycleForeground;
 
 		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, CurrentStack));
+		builder.Services.AddSingleton<ISharer>(_ => new Sharer());
 		Services = builder.Services.BuildServiceProvider();
 	}
 

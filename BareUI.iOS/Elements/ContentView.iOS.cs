@@ -15,6 +15,13 @@ public abstract partial class ContentView
 		BareApplication.Current?.Services.GetRequiredService<INavigator>()
 		?? throw new InvalidOperationException("There is no running application.");
 
+	/// <summary>
+	/// The application's share sheet, for sharing from page code. ViewModels take ISharer by constructor instead.
+	/// </summary>
+	protected ISharer Sharer =>
+		BareApplication.Current?.Services.GetRequiredService<ISharer>()
+		?? throw new InvalidOperationException("There is no running application.");
+
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public UIViewController? Controller =>
 		Host;
