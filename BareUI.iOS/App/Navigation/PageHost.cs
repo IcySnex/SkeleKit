@@ -5,6 +5,59 @@ namespace BareUI;
 
 internal sealed class PageHost : UIViewController
 {
+	// delegate held weakly; dismissGuard roots this
+	sealed class SheetGuard : UIAdaptivePresentationControllerDelegate
+	{
+		readonly PageHost? host;
+
+		public SheetGuard(
+			PageHost host)
+		{
+			this.host = host;
+		}
+
+		public SheetGuard(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override void DidAttemptToDismiss(
+			UIPresentationController presentationController) =>
+			host?.ConfirmDismiss();
+
+		// the popover attempt arrives here; hold it, ask, dismiss manually
+		public override bool ShouldDismiss(
+			UIPresentationController presentationController)
+		{
+			if (presentationController is not UIPopoverPresentationController)
+				return true;
+
+			host?.ConfirmDismiss();
+			return false;
+		}
+
+		// a guarded popover must stay a bubble; a sheet is already adapted
+		public override UIModalPresentationStyle GetAdaptivePresentationStyle(
+			UIPresentationController forPresentationController) =>
+			UIModalPresentationStyle.None;
+	}
+
+
+	// the page's scrolling view, found through our own tree not UIKit guessing
+	internal static View? FindScrolling(
+		View view)
+	{
+		if (view.Scrolls)
+			return view;
+
+		if (view is Panel panel)
+			foreach (View child in panel.Children)
+				if (FindScrolling(child) is View match)
+					return match;
+
+		return null;
+	}
+
 	static CGRect Inset(
 		CGRect bounds,
 		UIEdgeInsets insets,
@@ -594,21 +647,6 @@ internal sealed class PageHost : UIViewController
 	}
 
 
-	// the page's scrolling view, found through our own tree rather than UIKit guessing
-	internal static View? FindScrolling(
-		View view)
-	{
-		if (view.Scrolls)
-			return view;
-
-		if (view is Panel panel)
-			foreach (View child in panel.Children)
-				if (FindScrolling(child) is View match)
-					return match;
-
-		return null;
-	}
-
 	// on a modal root there is nothing to pop: the synthesized back button leaves by dismissing.
 	// a cleared guard passes straight through — the synthesized back stays installed
 	async void ConfirmBack()
@@ -628,43 +666,6 @@ internal sealed class PageHost : UIViewController
 			return;
 
 		NavigationController?.DismissViewController(true, null);
-	}
-
-	// the presentation controller holds its delegate weakly; the dismissGuard field roots this
-	sealed class SheetGuard : UIAdaptivePresentationControllerDelegate
-	{
-		readonly PageHost? host;
-
-		public SheetGuard(
-			PageHost host)
-		{
-			this.host = host;
-		}
-
-		public SheetGuard(
-			NativeHandle handle) : base(handle)
-		{ }
-
-
-		public override void DidAttemptToDismiss(
-			UIPresentationController presentationController) =>
-			host?.ConfirmDismiss();
-
-		// the popover path: it is not pinned, so the attempt arrives here — hold it, ask, dismiss manually
-		public override bool ShouldDismiss(
-			UIPresentationController presentationController)
-		{
-			if (presentationController is not UIPopoverPresentationController)
-				return true;
-
-			host?.ConfirmDismiss();
-			return false;
-		}
-
-		// a guarded popover must stay a bubble too; a sheet is already its adapted form
-		public override UIModalPresentationStyle GetAdaptivePresentationStyle(
-			UIPresentationController forPresentationController) =>
-			UIModalPresentationStyle.None;
 	}
 
 }

@@ -6,22 +6,6 @@ namespace BareUI;
 public sealed class ShareContent
 {
 	/// <summary>
-	/// The text to share, which also titles the share sheet.
-	/// </summary>
-	public string? Text { get; set; }
-
-	/// <summary>
-	/// The link to share, so the sheet offers its link-specific actions.
-	/// </summary>
-	public Uri? Url { get; set; }
-
-	/// <summary>
-	/// The image to share, shown as the sheet's preview thumbnail.
-	/// </summary>
-	public ImageSource? Image { get; set; }
-
-
-	/// <summary>
 	/// Shares a string as plain text.
 	/// </summary>
 	/// <param name="text">The text to share.</param>
@@ -44,4 +28,20 @@ public sealed class ShareContent
 	public static implicit operator ShareContent(
 		ImageSource image) =>
 		new() { Image = image };
+
+
+	/// <summary>
+	/// The text to share, which also titles the share sheet.
+	/// </summary>
+	public string? Text { get; set; }
+
+	/// <summary>
+	/// The link to share, so the sheet offers its link-specific actions.
+	/// </summary>
+	public Uri? Url { get; set; }
+
+	/// <summary>
+	/// The image to share, shown as the sheet's preview thumbnail.
+	/// </summary>
+	public ImageSource? Image { get; set; }
 }

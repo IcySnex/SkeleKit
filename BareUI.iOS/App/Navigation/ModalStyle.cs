@@ -6,45 +6,6 @@ namespace BareUI;
 public readonly struct ModalStyle
 {
 	/// <summary>
-	/// How the modal is presented.
-	/// </summary>
-	public ModalPresentation Presentation { get; }
-
-	/// <summary>
-	/// The heights a sheet may rest at.
-	/// </summary>
-	/// <remarks>
-	/// It opens at the first and can be dragged between them; ignored for other presentations.
-	/// </remarks>
-	public IReadOnlyList<Detent> Detents { get; }
-
-	/// <summary>
-	/// The view a popover points at, or null.
-	/// </summary>
-	/// <remarks>
-	/// Ignored for other presentations.
-	/// </remarks>
-	public View? Anchor { get; }
-
-	/// <summary>
-	/// The directions a popover's arrow may point.
-	/// </summary>
-	public PopoverArrow Arrows { get; }
-
-	ModalStyle(
-		ModalPresentation presentation,
-		IReadOnlyList<Detent> detents,
-		View? anchor = null,
-		PopoverArrow arrows = PopoverArrow.Any)
-	{
-		Presentation = presentation;
-		Detents = detents;
-		Anchor = anchor;
-		Arrows = arrows;
-	}
-
-
-	/// <summary>
 	/// Let the system choose the best presentation style dynamically.
 	/// </summary>
 	public static ModalStyle Automatic => new(ModalPresentation.Automatic, [Detent.Large]);
@@ -74,7 +35,6 @@ public readonly struct ModalStyle
 	/// </summary>
 	public static ModalStyle OverCurrentContext => new(ModalPresentation.OverCurrentContext, [Detent.Large]);
 
-
 	/// <summary>
 	/// A contextual floating bubble anchored to a view on large displays.
 	/// </summary>
@@ -97,4 +57,44 @@ public readonly struct ModalStyle
 	public static ModalStyle Sheet(
 		params Detent[] detents) =>
 		new(ModalPresentation.PageSheet, detents.Length > 0 ? detents : [Detent.Large]);
+
+
+	ModalStyle(
+		ModalPresentation presentation,
+		IReadOnlyList<Detent> detents,
+		View? anchor = null,
+		PopoverArrow arrows = PopoverArrow.Any)
+	{
+		Presentation = presentation;
+		Detents = detents;
+		Anchor = anchor;
+		Arrows = arrows;
+	}
+
+
+	/// <summary>
+	/// How the modal is presented.
+	/// </summary>
+	public ModalPresentation Presentation { get; }
+
+	/// <summary>
+	/// The heights a sheet may rest at.
+	/// </summary>
+	/// <remarks>
+	/// It opens at the first and can be dragged between them; ignored for other presentations.
+	/// </remarks>
+	public IReadOnlyList<Detent> Detents { get; }
+
+	/// <summary>
+	/// The view a popover points at, or null.
+	/// </summary>
+	/// <remarks>
+	/// Ignored for other presentations.
+	/// </remarks>
+	public View? Anchor { get; }
+
+	/// <summary>
+	/// The directions a popover's arrow may point.
+	/// </summary>
+	public PopoverArrow Arrows { get; }
 }
