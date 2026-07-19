@@ -1,42 +1,33 @@
-# BareUI.iOS — API Sketch (Velura before/after)
+# BareUI.iOS — API Sketch
 
-What *app* code looks like; no UIKit type appears anywhere. Every section is the shipped API.
+What app code looks like; no UIKit type appears anywhere. Every section is the shipped API.
 
 ## 1. App bootstrap
 
-Replaces `Main.cs`, `AppDelegate.cs`, and the window/tab wiring in
-`MainViewController.cs`:
+Replaces `Main`, `AppDelegate`, and the window/tab wiring:
 
 ```csharp
-// Program.cs — the entire iOS head entry point
 BareApplication.CreateBuilder()
     .UseServices(services =>
     {
         services.AddSingleton<Config>();
         services.AddSingleton<IMovieService, MovieService>();
         services.AddTransient<HomeViewModel>();
-        // ... existing Velura service registrations unchanged
     })
-    // a factory lambda per page: reflection-free construction, and the ViewModel is injected
-    .UsePages(pages => pages
-        .AddSingleton((HomeViewModel vm) => new HomeView(vm))          // keeps its state across navigations
+    .UsePages(pages => pages                                       // a factory lambda per page: reflection-free
+        .AddSingleton((HomeViewModel vm) => new HomeView(vm))      // keeps state across navigations
         .AddSingleton((SearchViewModel vm) => new SearchView(vm))
-        .AddSingleton((SettingsViewModel vm) => new SettingsView(vm))
         .AddTransient((MovieInfoViewModel vm) => new MovieInfoView(vm)))  // fresh instance per push
     .Tabs(tabs => tabs
         .LargeTitles()
         .Tab<HomeView>("home_title", icon: "house")
         .Tab<SearchView>("search_title", icon: "magnifyingglass")
-        .Tab<SettingsView>("settings_title", icon: "gear")
         .SidebarOnIPad())
     .Build()
     .Run(args);
 ```
 
 ## 2. A settings-style page
-
-What `SettingsGroupViewController` + `SettingsGroupItemViewCell` +
-`SettingsGroupHeaderView` (~460 lines of UIKit) collapse into:
 
 ```csharp
 public class SettingsGroupView : ContentView<SettingsGroupViewModel>
@@ -50,12 +41,9 @@ public class SettingsGroupView : ContentView<SettingsGroupViewModel>
         {
             Layout = CollectionLayout.List(grouped: true),
             GroupedItemsSource = Bind<IReadOnlyList<SettingsSection>?>(vm => vm.Sections),
-
-            // a command is never bound: it comes straight off the injected ViewModel
-            SelectionCommand = ViewModel.OpenGroupCommand,
+            SelectionCommand = ViewModel.OpenGroupCommand,        // command off the injected ViewModel
             ItemTemplate = () => new SettingsRow(),
-            HeaderTemplate = () => new SectionHeader(),
-            FooterTemplate = () => new SectionFooter()
+            HeaderTemplate = () => new SectionHeader()
         };
     }
 }
@@ -63,7 +51,6 @@ public class SettingsGroupView : ContentView<SettingsGroupViewModel>
 // the section model is the app's own; the library only asks for Items
 record SettingsSection(
     string Title,
-    string Footer,
     IReadOnlyList<SettingsEntry> Items) : ISection<SettingsEntry>;
 
 class SettingsRow : ItemView<SettingsEntry>
@@ -78,129 +65,89 @@ class SettingsRow : ItemView<SettingsEntry>
             new Image
             {
                 Source = Bind<string, ImageSource?>(i => i.IconName, n => ImageSource.Symbol(n)),
-                Background = Bind(i => i.IconBackground),
-                CornerRadius = 6,
-                Width = 29, Height = 29,
+                Width = 29, Height = 29, CornerRadius = 6,
             },
             new Label { Text = Bind(i => i.Name) }.Column(1),
-            new Switch
-            {
-                IsOn = Bind(i => i.IsEnabled, (i, v) => i.IsEnabled = v),
-                IsVisible = Bind(i => i.IsToggle),
-            }.Column(2),
+            new Switch { IsOn = Bind(i => i.IsEnabled, (i, v) => i.IsEnabled = v) }.Column(2),
         }
     };
 }
 ```
 
-## 3. Layout-heavy content (MovieInfo top section)
+## 3. Layout-heavy content
 
-The declarative part of `MovieInfoViewController` (constraint list lines 287–357 of the
-original), composed in the page's constructor:
+Composed in the page's constructor — `ScrollView` → `Overlay` (backdrop + poster) → `Border`
+(shadow) → `Image`/`Label`/`Button`:
 
 ```csharp
 Content = new ScrollView
 {
     IgnoresSafeArea = SafeAreaEdges.All,      // full-bleed backdrop
-    Content = new StackPanel
+    Content = new Overlay
     {
         Children =
         {
-            new Overlay                       // backdrop + poster stack
+            new Image
             {
+                Source = Bind<string, ImageSource?>(vm => vm.BackdropUrl, u => ImageSource.Url(u)),
+                Stretch = Stretch.UniformToFill,
+            },
+            new StackPanel
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                Padding = new Thickness(24, 0),
                 Children =
                 {
-                    new Image
+                    // round and cast a shadow: shadow on the outer view, radius on the inner one
+                    new Border
                     {
-                        Source = Bind<string, ImageSource?>(vm => vm.BackdropUrl, u => ImageSource.Url(u)),
-                        Stretch = Stretch.UniformToFill,
-                    },
-                    new StackPanel
-                    {
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Padding = new Thickness(24, 0),
-                        Spacing = 2,
-                        Children =
+                        Shadow = new(opacity: 0.5, radius: 12, offsetY: 6),
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Child = new Image
                         {
-                            // clipping and casting a shadow are mutually exclusive on one layer:
-                            // the shadow goes on the outer view, the rounding on the inner one
-                            new Border
-                            {
-                                Shadow = new(opacity: 0.5, radius: 12, offsetY: 6),
-                                Margin = new Thickness(0, 0, 0, 32),
-                                HorizontalAlignment = HorizontalAlignment.Center,
-                                Child = new Image
-                                {
-                                    Source = Bind<string, ImageSource?>(vm => vm.PosterUrl, u => ImageSource.Url(u)),
-                                    Width = 140, Height = 210,
-                                    CornerRadius = 8,
-                                },
-                            },
-                            new Label
-                            {
-                                Text = Bind(vm => vm.Title),
-                                FontSize = 24, FontWeight = FontWeight.Bold,
-                                TextColor = Colors.White,
-                                MaxLines = 1, TextAlignment = TextAlignment.Center,
-                            },
-                            new Label
-                            {
-                                Text = Bind(vm => vm.SubtitleLine),   // genres • year • duration (VM concern now)
-                                FontSize = 14,
-                                TextColor = Colors.White.WithAlpha(0.375),
-                                MaxLines = 2, TextAlignment = TextAlignment.Center,
-                            },
-                            new Button
-                            {
-                                Text = "media_play".L10N(),
-                                Icon = "play.fill",
-                                Kind = ButtonStyle.FilledCapsule,
-                                Command = ViewModel.PlayCommand,
-                                Margin = new Thickness(0, 32, 0, 0),
-                                HorizontalAlignment = HorizontalAlignment.Center,
-                            },
-                        }
+                            Source = Bind<string, ImageSource?>(vm => vm.PosterUrl, u => ImageSource.Url(u)),
+                            Width = 140, Height = 210, CornerRadius = 8,
+                        },
+                    },
+                    new Label
+                    {
+                        Text = Bind(vm => vm.Title),
+                        FontSize = 24, FontWeight = FontWeight.Bold, TextColor = Colors.White,
+                        MaxLines = 1, TextAlignment = TextAlignment.Center,
+                    },
+                    new Button
+                    {
+                        Text = "media_play".L10N(), Icon = "play.fill",
+                        Kind = ButtonStyle.FilledCapsule,
+                        Command = ViewModel.PlayCommand,
+                        HorizontalAlignment = HorizontalAlignment.Center,
                     },
                 }
             },
-            // bottom detail section...
         }
     }
 };
 ```
 
-The scroll-linked parallax/blur/alpha effects stay as one custom control
-(`BackdropEffectView : Control`) using the documented custom-control API — BareUI removes
-the ~200 lines of constraint and lifecycle noise around it, not the creative part.
+Scroll-linked parallax/blur effects stay as one custom control (`: Control`) using the
+custom-control API.
 
-## 4. Two-way + converters + commands (bindings summary)
+## 4. Bindings summary
 
 ```csharp
-// OneWay (default)
-Text = Bind(vm => vm.Title);
-
-// TwoWay — explicit setter keeps it AOT-safe and compile-checked
-IsOn = Bind(vm => vm.Config.Appearance.AnimateTabBar,
+Text = Bind(vm => vm.Title);                                     // OneWay (default)
+IsOn = Bind(vm => vm.Config.Appearance.AnimateTabBar,            // TwoWay (explicit setter)
             (vm, v) => vm.Config.Appearance.AnimateTabBar = v);
-
-// Converter / formatter
-Text = Bind<TimeSpan, string?>(vm => vm.Duration, d => d.L10N());
-
-// Numeric text field (replaces UINumberField)
-Text = Bind(vm => vm.Port, (vm, v) => vm.Port = v,
+Text = Bind<TimeSpan, string?>(vm => vm.Duration, d => d.L10N()); // converter
+Text = Bind(vm => vm.Port, (vm, v) => vm.Port = v,               // numeric field (format/parse)
             format: p => p.ToString(), parse: int.Parse);
-
-// Update trigger
 Text = Bind(vm => vm.Query, (vm, v) => vm.Query = v).On(UpdateTrigger.FocusLost);
 
-// Commands are never bindable (ADR-012): an intent is a plain ICommand? assigned
-// straight from the ctor-injected ViewModel
-Command = ViewModel.CloseCommand;
-TapCommand = ViewModel.OpenMovieCommand;                   // any view is tappable
-Command = Command.From(Close);                             // ... or a view-local handler
+Command     = ViewModel.CloseCommand;                            // commands never bindable (ADR-012)
+TapCommand  = ViewModel.OpenMovieCommand;                        // any view is tappable
+Command     = Command.From(Close);                              // ... or a view-local handler
 
-// Literals for interface-typed properties (no implicit conversion from interfaces)
-SelectionCommand = Bindable.From<ICommand?>(someCommand);
+SelectionCommand = Bindable.From<ICommand?>(someCommand);        // literal for an interface-typed prop
 ```
 
 ## 5. Navigation from a ViewModel
@@ -222,32 +169,24 @@ public partial class HomeViewModel(INavigator navigator) : ObservableObject
 }
 ```
 
-ViewModels stay CommunityToolkit.Mvvm — BareUI requires only `INotifyPropertyChanged` /
-`ICommand`, nothing library-specific.
+ViewModels stay CommunityToolkit.Mvvm — BareUI requires only `INotifyPropertyChanged` / `ICommand`.
 
 ## 6. Styling & theming
 
-See ADR-008. Styles are typed actions; resources are plain statics.
+Styles are typed actions; resources are plain statics (ADR-008).
 
 ```csharp
-// Styles.cs — the app's "resource dictionary" is a static class
-static class Palette
-{
-    public static readonly Color Accent = Colors.Indigo;
-    public static readonly Color Card = Colors.SecondaryGroupedBackground;
-}
-
 static class Styles
 {
     public static readonly Style<Label> Caption = new(l =>
     {
-        l.TextStyle = TextStyle.Caption1;      // native Dynamic Type curve
+        l.TextStyle = TextStyle.Caption1;
         l.TextColor = Colors.SecondaryLabel;
     });
 
     public static readonly Style<Border> Card = new(b =>
     {
-        b.Background = Palette.Card;
+        b.Background = Colors.SecondaryGroupedBackground;
         b.CornerRadius = 12;
         b.Padding = new Thickness(16);
     });
@@ -257,17 +196,15 @@ static class Styles
         b.Shadow = new(opacity: 0.2, radius: 8, offsetY: 4));
 }
 
-// Explicit use — Style goes FIRST in the initializer; later lines override it
-new Label { Style = Styles.Caption, Text = "Runtime" }
-new Border { Style = Styles.ProminentCard, Child = content }
+// explicit — Style goes FIRST in the initializer; later lines override it
+new Label { Style = Styles.Caption, Text = "Runtime" };
 
-// Implicit use — app-wide defaults, applied to every instance of the type
+// implicit — app-wide defaults for every instance of the type
 BareApplication.CreateBuilder()
     .UseTheme(theme => theme
         .Style(new Style<Label>(l => l.TextColor = Colors.Label))
-        .Style(new Style<Button>(b => b.Kind = ButtonStyle.Tinted)))
-    ...
+        .Style(new Style<Button>(b => b.Kind = ButtonStyle.Tinted)));
 ```
 
-Precedence (each later source wins): control defaults → theme styles (base type first) →
-explicit `Style` → local values after it.
+Precedence (each later source wins): control defaults → theme (base type first) → explicit `Style`
+→ local values.

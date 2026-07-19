@@ -1,393 +1,132 @@
 # BareUI.iOS — Decision Records
 
+Terse ADRs: the decision and the core reason. Deeper mechanics live in `architecture.md` and the
+code; UIKit gotchas live in `CLAUDE.md`.
+
 ## ADR-001: Name & package structure
 
-**Decision:** Library named **BareUI.iOS** (note casing: `.iOS`, matching `Xamarin.iOS` /
-.NET convention, not `.IOS`). Single project/package in v1.
-
-**Context:** "Bare" reads as *bare-metal/minimal* — slightly at odds with a library whose
-point is hiding bareness, but it also reads as "bare essentials syntax", is short, unique
-on NuGet, and the owner likes it. Accepted.
-
-**Cross-platform door:** kept open, not exercised. Discipline for v1: everything in
-layers 4–5 (bindings, navigation abstractions, app model contracts) avoids UIKit types in
-public signatures, so a later split into `BareUI` (core) + `BareUI.iOS` (backend) is a
-mechanical refactor, not a redesign. No second head is built or tested in v1.
+**Decision:** library **BareUI.iOS** (`.iOS` casing, .NET convention), single package in v1.
+**Why:** short, unique on NuGet, owner's pick. A later `BareUI` (core) + `BareUI.iOS` (backend) split
+stays mechanical because layers 4–5 avoid UIKit types in public signatures; not exercised in v1.
 
 ## ADR-002: Layout — custom measure/arrange, not Auto Layout translation
 
-**Decision:** BareUI implements its own two-pass measure/arrange layout engine (WPF
-semantics) that sets `UIView.Frame` directly. Panels host children in a `LayoutHost : UIView`
-overriding `LayoutSubviews`/`SizeThatFits`.
-
-**Requirement driving it:** 1:1 native look & feel. Note this is about *controls*, not
-layout — a `UILabel` looks native regardless of who computes its frame. Auto Layout is
-itself just a frame calculator; bypassing it loses nothing visual.
-
-**Why not translate to NSLayoutConstraints:**
-- WPF `Grid` star-sizing + spans map onto constraints only via generated spacer views and
-  priority tricks — fragile and unreadable when it breaks.
-- Constraint conflicts ("Unable to simultaneously satisfy…") would leak through the
-  abstraction to users who never wrote a constraint.
-- A solver is slower and less deterministic than direct computation for tree-shaped layouts.
-
-**Why not UIStackView-based:** covers stacks only; Grid still needs custom work; two
-layout systems to reason about instead of one.
-
-**Native sizing preserved:** leaf measurement delegates to the control's own
-`SizeThatFits` — text wrapping, dynamic type, intrinsic sizes behave exactly native.
-Prior art: Xamarin.Forms and Flutter both computed frames themselves on iOS.
-
-**Cost accepted:** we own correctness for safe areas, keyboard avoidance, RTL (deferred),
-and re-layout triggers. Mitigated by the engine being pure math → unit-testable without
-a simulator.
+**Decision:** own two-pass measure/arrange (WPF semantics) setting `UIView.Frame` directly, panels
+hosting children in a `LayoutHost : UIView` (`LayoutSubviews`/`SizeThatFits`).
+**Why:** Grid star-sizing + spans map poorly onto constraints; conflicts would leak to users; direct
+computation is faster and deterministic. Native sizing preserved (leaf measurement → the control's
+`SizeThatFits`). Cost: we own safe-area / keyboard / RTL, mitigated by the engine being unit-testable
+pure math.
 
 ## ADR-003: Bindings — typed delegates + CallerArgumentExpression, no reflection
 
-**Decision:** `Bind(vm => vm.X)` captures a compiled `Func<TVm,T>` getter; the property
-path string for INPC matching comes from `[CallerArgumentExpression]` parsed once at
-binding creation. TwoWay requires an explicit setter delegate. No `Expression<>`, no
-reflection, no source generator in v1.
+**Decision:** `Bind(vm => vm.X)` captures a compiled `Func<TVm,T>`; the INPC path comes from
+`[CallerArgumentExpression]`, parsed once. TwoWay needs an explicit setter. No `Expression<>`,
+reflection, or generator in v1.
+**Why:** Mono full AOT + trim forbids reflection and interprets expression trees. Zero-reflection
+reads, compile-time typing. Nested paths use chained segment getters. (Velura's binding semantics
+carried over, mechanism swapped to delegates.)
 
-**Context:** iOS device builds are Mono full AOT with trimming (the platform forbids JIT), so the
-same constraints apply as under NativeAOT. Expression trees fall back to
-an interpreter and are trim-hostile; reflection-based path walking (the existing
-`BindingSet` + `PropertyBindingMapper` design) is trim-fragile and stringly-typed.
+## ADR-004: Source generator — deferred
 
-**Consequences:**
-- Zero-reflection hot path: value reads are direct delegate calls.
-- Compile-time typing: renames refactor cleanly; converter type mismatches are build errors.
-- TwoWay is more verbose (`(vm, v) => vm.X = v`) — accepted; it is also explicit and
-  AOT-provable.
-- `[CallerArgumentExpression]` parsing assumes simple member-access lambdas
-  (`vm => vm.A.B.C`). Anything else (method calls, indexers, ternaries) is rejected at
-  binding creation with a clear exception; an explicit-path overload
-  (`Bind(getter, path: "A.B.C")`) exists as fallback.
-- **Nested-path re-subscription:** to re-subscribe INPC on intermediate objects when they
-  are replaced, the binding needs intermediate *getters*, and a leaf getter alone can't
-  provide them. v1 scheme: multi-segment `Bind` overloads take chained segment getters —
-  `Bind(vm => vm.Config, c => c.Appearance, a => a.AnimateTabBar)` — each segment
-  subscribed independently; the common 1-segment case stays `Bind(vm => vm.X)`. Sugar for
-  deep paths can come later via source generator (ADR-004) without breaking this API.
-- Change *sources* must implement `INotifyPropertyChanged` (CommunityToolkit.Mvvm already
-  guarantees this in Velura).
-
-**Rejected alternatives:** expression trees (AOT), string paths + mapper registry
-(status quo pain), source generator (highest ceiling but weeks of build-tooling work —
-deferred, see ADR-004).
-
-### Heritage: relationship to Velura's existing binding system
-
-Velura already contains a hand-rolled WPF-style binding layer
-(`Velura.iOS/Binding/*`: `BindingSet<TVm>`, `PropertyBinding`, `EventBinding`,
-`PropertyBindingMapper` registry). Its *semantics* are correct and are carried over
-wholesale — BareUI bindings are that design with the mechanism swapped:
-
-| Velura (reflection-based) | BareUI (delegate-based) | Why changed |
-|---|---|---|
-| String paths + `PropertyInfo.GetValue/SetValue` | Compiled getter/setter delegates | AOT/trim safety (Velura already needs `PleaseLinkerPleaseDont.xml` to keep reflection alive), compile-time typing, no boxing |
-| `BindingSet<TVm>` owns bindings, VM-level INPC dispatch by string match | `ContentView<TVm>` owns bindings, same INPC dispatch by parsed path segment | Same idea; set is now implicit in the view lifetime, disposal automatic on unrealize |
-| `PropertyBindingMapper` registry (global, per target type+property) for target→source | Each control wrapper wires its own native change event | Registry was necessary when binding to raw `UIView`s; BareUI has a wrapper layer anyway, so mappers collapse into it |
-| `CreateSubSet<TSubVm>` for nested VMs | Chained segment getters (`Bind(vm => vm.Sub, s => s.Leaf)`) + item binding contexts in `CollectionView` | `Type.GetProperty("A.B")` never actually walked paths; sub-set disposal wasn't tied to parent |
-| `EventBinding` via `EventInfo.AddEventHandler` (string event name) | `Command`/`TapCommand` properties on wrappers | Reflection-free, typed, supports `CommandParameter` (old path always executed with `null`) |
-| Finalizer-backed `Dispose` | Deterministic teardown on unrealize, no finalizers | GC pressure, nondeterministic cleanup |
-
-Kept unchanged: `BindingMode` set (OneTime/OneWay/TwoWay/OneWayToSource),
-`UpdateSourceTrigger` concept (property-changed / focus-lost / explicit), converter
-support, binding ownership scoping.
-
-## ADR-004: Source generator — deferred, planned as v2 sugar
-
-A Roslyn generator could later provide: deep-path bindings from a single lambda,
-auto-generated TwoWay setters, compile-time diagnostics for invalid paths. The delegate
-API of ADR-003 is designed so generated code can *target it* (generator emits the chained
-segment getters), meaning v2 sugar adds no new runtime and breaks nothing.
+**Decision:** no Roslyn generator in v1; the delegate API is designed so a v2 generator can target it
+(deep-path sugar, auto TwoWay setters, path diagnostics) with no new runtime.
 
 ## ADR-005: Retained-mode MVVM, not MVU
 
-**Decision:** element trees are long-lived objects updated by bindings (WPF model), not
-rebuilt per state change (SwiftUI/MVU model).
+**Decision:** long-lived element trees updated by bindings (WPF), not rebuilt per state change.
+**Why:** owner asked for WPF-without-XAML; MVU needs a diffing engine and fights UIKit's stateful
+controls.
 
-**Why:** the owner asked for WPF-without-XAML explicitly; ViewModels already exist
-(CommunityToolkit.Mvvm); MVU would demand a diffing engine (large scope) and fights
-UIKit's stateful controls; retained mode maps 1:1 onto the wrapper design.
+## ADR-006: One CollectionView over UICollectionView, no UITableView wrapper
 
-## ADR-006: Lists — one CollectionView over UICollectionView, no UITableView wrapper
-
-**Decision:** a single `CollectionView` control backed by `UICollectionView` with
-compositional layout + diffable data source. List (incl. inset-grouped via
-`UICollectionLayoutListConfiguration`), grid, and carousel are layout *modes*, not
-separate controls.
-
-**Why:** iOS 14+ list configuration renders visually identical to `UITableView`
-(inset-grouped Settings look included) while sharing one virtualization/recycling/diffing
-implementation. iOS 18 minimum makes this safe. Cell recycling contract: template tree
-built once per recycled cell, only the item binding context swaps on reuse.
+**Decision:** single `CollectionView` (compositional layout + diffable data source); list (incl.
+inset-grouped), grid, carousel are layout modes, not separate controls.
+**Why:** iOS list configuration renders identical to `UITableView` while sharing one
+virtualization/diffing path. Template tree built once per recycled cell; only the item context swaps
+on reuse.
 
 ## ADR-007: Explicit registration everywhere, no discovery
 
-View↔ViewModel mapping (`UsePages(pages => pages.AddTransient<TView>())` — a view reports
-its own ViewModel type, so registration takes one type parameter), tabs, services — all
-explicit calls at startup. No assembly scanning, no attribute discovery. Trim/AOT-safe by
-construction and keeps startup deterministic. Slightly more boilerplate per screen (one
-line) — accepted.
+**Decision:** view↔ViewModel mapping (`UsePages(pages => pages.AddTransient(...))`, a view reports its
+own VM type), tabs, and services are all explicit startup calls — no scanning, no attribute discovery.
+**Why:** trim/AOT-safe and deterministic startup, for one extra line per screen.
 
 ## ADR-008: Styling — typed `Style<T>` actions, no setter/resource system
 
-**Decision:** a style is `Style<T> : IStyle` wrapping an `Action<T>` (plus optional
-`BasedOn`). Applied three ways: explicitly via a new `View.Style` property (applies
-immediately in the setter), implicitly via an app-global `Theme` registered with
-`UseTheme(...)` (applied in the `View` base constructor, inheritance chain
-base-most first), or manually (`style.Apply(view)`). Shared values ("resources") are plain
-C# statics — **no `ResourceDictionary`**.
-
-**Context:** WPF's styling stack is reflection-shaped end to end: `Setter` targets a
-`DependencyProperty` with an `object` value (boxing + runtime type checks),
-`ResourceDictionary` is a string-keyed runtime lookup, `BasedOn` resolution and implicit
-style application walk type metadata. None of it survives the no-reflection rule, and none
-of it is needed when the "markup" is already C#: a typed closure over the control *is* a
-setter collection, with IntelliSense, compile-time checking and refactoring for free.
-
-**Precedence without a property system:** WPF tracks value sources per dependency property.
-BareUI gets the same observable order purely from execution order:
-
-1. control defaults — C# field initializers, which run *before* base ctor bodies;
-2. implicit theme styles — applied in the `View` base ctor (`GetType()` is already the
-   final type there);
-3. explicit `View.Style` — runs at its position in the object initializer (convention:
-   first line);
-4. local values — initializer assignments after it.
-
-The cost: no "unset back to default", and a style assigned *after* local values overwrites
-them. Accepted — statement order is visible in the source, unlike WPF's invisible
-value-source table.
-
-**Consequences:**
-- `Button.Style` (the `ButtonStyle` enum) renames to `Button.Kind` to free the `Style`
-  name on `View`. Pre-1.0 breaking change, single-line fix per call site.
-- Controls must configure themselves via field initializers, never ctor-body property
-  sets, or they would silently beat theme styles. Review rule.
-- The theme registry is a static internal frozen before `Run` — same write-once-at-startup
-  lifecycle as `UsePages`; mutation after freeze throws.
-- Bindings inside styles are safe to share: applying a style registers a fresh
-  `Binding<T>` per view.
-- Styles are neutral code — precedence, chain order and BasedOn are unit-tested without
-  a simulator.
-
-**Rejected alternatives:** setter objects keyed by property (reflection or a hand-rolled
-dependency-property system — the thing this library exists to avoid); string-keyed resource
-dictionaries (stringly, trim-hostile for no gain over statics); per-subtree cascading
-themes (complexity without a driving screen); source-generated styles (ADR-004 territory,
-v2 sugar at most).
+**Decision:** a style is `Style<T> : IStyle` wrapping an `Action<T>` (+ optional `BasedOn`), applied
+explicitly (`View.Style`, in its setter), implicitly (`Theme` via `UseTheme`, in the `View` base
+ctor), or manually. Shared values are plain C# statics — no `ResourceDictionary`.
+**Why:** WPF's styling stack is reflection-shaped (boxed setters, string-keyed dictionaries) — none
+survives the no-reflection rule, none is needed when the "markup" is C#. Precedence is execution
+order (defaults → theme → `Style` → local); cost is no "unset to default" and a style after locals
+overwrites them. (`Button.Style` renamed to `Button.Kind` to free the name.)
 
 ## ADR-009: Visual fills — one `Brush` property, not one control per effect
 
-**Decision:** `View.Background` is a `Brush?`. `SolidBrush` (implicitly converted from `Color`, so
-every existing call site is unchanged), `LinearGradient`, and `Material` (a blur) are the three
-fills. No `BlurView` / `GradientView` controls.
+**Decision:** `View.Background` is `Brush?` — `SolidBrush` (implicit from `Color`), `LinearGradient`,
+`Material`. No `BlurView`/`GradientView`.
+**Why:** a control per effect forces nesting for a non-layout concern; a brush composes with styling
+for free. A gradient/material needs a `Panel` (both sit under subviews but over a leaf control's own
+drawing, which they'd cover); `SwipeAction.Background` stays a `Color`.
 
-**Context:** modern iOS is materials and gradients — blurred bars, glass cards, poster scrims. The
-alternative was a control per effect, which every user then has to *nest*: a card wanting a blurred
-background gains a wrapper view, and the layout tree grows a level for something that is not a
-layout concern. A brush keeps the fill where the fill belongs, and it composes with styling for
-free: `new Style<Border>(b => b.Background = new Material(MaterialKind.Thin))` needs no new
-machinery.
+## ADR-010: Animation — `Animator` owns a display-link loop (not `UIViewPropertyAnimator`)
 
-**Consequences:**
-- `Color` → `Brush` stays implicit, so `Background = Colors.Red` and every `Style<T>` that sets a
-  background keep compiling. Conversions still do not chain, so a raw literal remains illegal —
-  unchanged from today.
-- A gradient is a `CAGradientLayer`, which does not autoresize: its frame is synced from
-  `View.ApplyFrame`. Its CGColors are snapshots, so they re-resolve through the existing
-  `ReapplyVisuals` walk on a dark-mode change — the same rule the border stroke and shadow follow.
-- A material is a `UIVisualEffectView` inserted as subview 0, which *does* autoresize. `Panel`'s
-  subview diff skips it and offsets the children by one slot, or the next `Children` change would
-  tear the material out.
-- **A gradient or a material needs a `Panel`** (`Border`, `Overlay`, `StackPanel`, …) and throws on a
-  leaf control. Both fills sit under the view's *subviews* but above the layer's own drawing, and a
-  `UILabel` renders its text into that layer — the fill would cover the text. A solid brush works
-  anywhere; wrap the control in a `Border` to fill behind it.
-- `SwipeAction.Background` stays a `Color`: `UIContextualAction.BackgroundColor` takes a color, and
-  a gradient behind a swipe action is not a thing UIKit offers.
-
-**Rejected:** `BlurView`/`GradientView` panels (nesting, and they cannot be styled onto an existing
-control); a `Background` union of `Color?` + `Brush?` (two ways to say one thing).
-
-## ADR-010: Animation — `UIViewPropertyAnimator`, still not an animation framework
-
-**Decision:** `Animation` (a neutral struct: duration, delay, easing, optional spring damping) plus
-`Animator`, a wrapper over `UIViewPropertyAnimator` exposing `Fraction`, `Pause`, `Continue`,
-`Reverse` and `Stop`. `View.Animate(seconds, changes)` survives as sugar.
-
-**Context:** the old `View.Animate` was `UIView.Animate` — fire and forget. It cannot spring, cannot
-report completion, and above all cannot be *interrupted*: a gesture-driven card that the user grabs
-mid-flight has to jump. Interruptible, scrubbable animation is the specific thing UIKit does better
-than SwiftUI, and it is one class away.
-
-This does **not** reverse the "no animation framework" non-goal (PLAN §Non-Goals). There is no
-timeline, no declarative transition system, no implicit layout animation — only a first-class handle
-on the animation UIKit already runs.
-
-**Consequences:**
-- An `Animator` owns a native peer, so it must be held in a field for as long as it runs (the
-  rooting rule). A fire-and-forget animator is a crash, not a leak.
-- **A layout property does not animate on its own.** Setting `Width` invalidates measure and the
-  frame only moves on the *next* layout pass — after the animation block has closed. So
-  `View.Animate` forces that pass (`View.LayoutNow`) from inside the block. Without it, half of what
-  a user would think to animate simply snaps.
-- **`Animator.Create` must *not* force that pass**, and this is the sharp edge of the design. A
-  forced layout inside a scrubbed animator's block makes the animator capture the view's bounds and
-  centre as animatable properties, so the drag then interpolates the card's *height* and *position*
-  alongside its transform: it visibly shrinks, jumps, and springs from a stale origin instead of
-  from the finger. An `Animator` therefore animates only what its block touches; a caller who really
-  wants an interactively scrubbed layout property opts in with `View.LayoutNow()` and accepts that
-  the bounds ride along. This is why `Translation`/`Scale`/`Rotation` exist: an interactive gesture
-  should move a transform, not the layout.
-- **Transform properties exist because layout cannot do this.** `Translation`, `Scale` and `Rotation`
-  are draw-only: they never invalidate measure, so a drag moves a card without re-running the layout
-  engine sixty times a second. A transformed view is positioned by bounds+centre — setting `Frame`
-  under a transform is undefined — which `View.ApplyFrame` now handles.
-- `View.OnPan` wraps `UIPanGestureRecognizer` in a typed `PanGesture`, so an app can scrub an
-  animator without importing UIKit. That is the whole point of the interactive story: the gesture
-  drives `Animator.Fraction`, and the release hands the rest back with `Continue()`.
-- **`Animator` does not use `UIViewPropertyAnimator` at all.** Three generations of wrappers over it
-  each produced a distinct glitch class: a scrubbed fraction does not survive `continueAnimation`
-  through a spring's non-monotonic curve; new timing parameters silently reset `isReversed`;
-  `durationFactor` squeezes a spring into the proportional remainder; a running spring's
-  `fractionComplete` measures time, not position; and replacing animators walls the scrub at the
-  segment edge. The replacement owns the loop outright: `AnimationCapture` snapshots the model state
-  of every view the changes block touches (both ends become plain values), `Motion` — a neutral,
-  unit-testable integrator — advances a position with a damped unit-mass spring (semi-implicit
-  Euler, sub-stepped) or an eased curve, and a `CADisplayLink` writes `ViewState.Lerp(start, end,
-  position)` into the *model* each frame via `View.Apply` (which bypasses `Set`'s equality check),
-  inside a `CATransaction` with actions disabled. There is no presentation/model split anywhere:
-  the screen *is* the shadow model, every frame, so the model can never end up a value ahead (the
-  old reversed-animation bug is unrepresentable). Scrubbing assigns the position; `Continue` seeds
-  the integrator with the gesture velocity; `Reverse` retargets and momentum carries through. Only
-  draw-only properties interpolate — brushes and layout snap on completion. Corollary: `ApplyFrame`
-  always positions by bounds+centre (origin preserved — it is a scroll offset), since setting
-  `Frame` under a transform is undefined.
+**Decision:** `Animation` (neutral struct: duration, delay, easing, optional spring) + `Animator`
+(`Fraction`, `Pause`, `Continue`, `Reverse`, `Stop`, `OnCompleted`) — interruptible and scrubbable.
+`View.Animate` stays fire-and-forget sugar.
+**Why:** `UIViewPropertyAnimator` cannot host an interactive animation (a scrubbed fraction doesn't
+survive `continueAnimation` through a spring's non-monotonic curve, timing params reset `isReversed`,
+`fractionComplete` is time not position). So `Animator` owns the loop: `AnimationCapture` snapshots
+both ends, `Motion` (neutral, unit-tested) integrates a damped spring/curve, and a `CADisplayLink`
+writes the lerped `ViewState` into the *model* each frame (`View.Apply`) — the screen *is* the model,
+so the reversed-animation bug is unrepresentable. Only draw-only props interpolate; brushes and
+layout snap on completion. This is a handle on the animation UIKit already runs, not an animation
+framework (still a non-goal). Corollary: `Translation`/`Scale`/`Rotation` are draw-only so a gesture
+moves a transform, not the layout engine 60×/s.
 
 ## ADR-011: Cells adopt UIKit's *state*, never its content configuration
 
-**Decision:** `BareCell` derives from `UICollectionViewListCell` and overrides
-`UpdateConfiguration(UICellConfigurationState)` to push `IsSelected` / `IsHighlighted` into the
-hosted `ItemView`. Accessories map to `UICellAccessory`. The cell's **content** stays a BareUI tree;
-we never build a `UIContentConfiguration`.
-
-**Context:** `UIContentConfiguration` is UIKit's declarative "describe the cell, hand it over"
-model — and its content is `UIListContentConfiguration`, a fixed text/secondaryText/image layout.
-Adopting it would mean handing rendering of the cell's *contents* back to UIKit, which is exactly
-the composition BareUI exists to own; anything past a stock row would fall off it. But cell
-**state** (selected, highlighted, disabled) and **accessories** (disclosure, checkmark, reorder) are
-not content — they are the cell chrome, they are what makes a row feel native, and hand-rolling them
-is how the Gallery ended up drawing a `"›"` in a `Label`.
-
-So: state and accessories come from UIKit, content stays ours. `UICollectionViewListCell` works in
-grid and carousel sections too (it is a `UICollectionViewCell`), where the background configuration
-is simply cleared.
-
-**Consequences:** a cell can restyle itself on selection through ordinary bindings, because
-`IsSelected` is just another bindable property on `ItemView`. List sections get the native grey tap
-highlight for free.
+**Decision:** `BareCell : UICollectionViewListCell` overrides `UpdateConfiguration` to push
+`IsSelected`/`IsHighlighted` into the hosted `ItemView`; accessories map to `UICellAccessory`. The
+cell's content stays a BareUI tree — no `UIContentConfiguration`.
+**Why:** adopting content configuration hands cell rendering back to UIKit (the composition BareUI
+owns), but state and accessories are chrome that make a row feel native. `IsSelected` is a bindable
+prop, so cells restyle on selection through ordinary bindings; list sections get the native tap
+highlight free.
 
 ## ADR-012: Commands for intents, Actions for streams, ViewModels by constructor
 
-**Decision:** every discrete user intent (tap, long-press, double-tap, submit, selection, toolbar,
-swipe, menu) is a plain `ICommand?` property. Every continuous signal (pan, pinch, rotate, scroll,
-text-as-you-type, value-during-drag) is an `Action<T>` property named in the past tense with no
-`On` prefix (`On` belongs to lifecycle overrides alone). Commands are **not** bindable: a page's
-ViewModel arrives through its constructor (`ContentView<TVm>` stores it, `UsePages` registers a
-factory lambda `pages.AddTransient((FooViewModel vm) => new FooView(vm))`), so command properties
-are assigned directly — `Command = ViewModel.SaveCommand`. View-local handlers wrap with
-`Command.From(action)`.
-
-**Context:** four callback shapes had accreted (bindable commands, plain commands, Action
-properties, gesture registration *methods* that broke the object-initializer aesthetic), and
-`Bindable<ICommand?>` existed only because the ViewModel used to attach after construction — it
-also dragged in the `Bind<ICommand?>` explicit-type-argument wart, since `Bindable<T>` is not
-covariant and `[RelayCommand]` generates `IRelayCommand`.
-
-**Consequences:**
-- Command properties never change after construction; there is nothing to observe, so no binding
-  machinery runs for them at all.
-- Streams stay Actions deliberately: `ICommand.Execute(object?)` boxes every `double` tick at
-  60–120 Hz, `CanExecute` is meaningless mid-gesture, and the consumers are view-local state
-  machines (the Animator scrub). ViewModels receive settled values through two-way bindings.
-- In lists, commands live on the page's ViewModel and the *item* flows as the command parameter —
-  a recycled cell rebinds data, never commands.
-- Page factories keep construction reflection-free (no `ActivatorUtilities`), preserving the
-  AOT/trim story; the `new()` constraint and the probe instance are gone.
-- A singleton page now keeps the ViewModel it was built with: the pair is cached together.
-- Pull-to-refresh is `RefreshCommand` + a two-way `IsRefreshing` (the `RefreshView` pattern):
-  the pull sets the flag true and fires the command; the ViewModel clears the flag when the work
-  completes, which collapses the spinner. Both halves are bindable-friendly, so no code-behind is
-  ever needed — the earlier `Func<Task>` exception is gone.
+**Decision:** discrete intents (tap, long-press, submit, selection, toolbar, swipe, menu) are plain
+`ICommand?` properties, never bindable; continuous signals (pan, pinch, scroll, text-as-you-type,
+value-during-drag) are past-tense `Action<T>` (no `On` prefix — `On…` is lifecycle only). A page's
+ViewModel arrives by constructor (`ContentView<TVm>` stores it, `UsePages` registers factory lambdas),
+so commands are assigned directly (`Command = ViewModel.SaveCommand`); view-local handlers use
+`Command.From`.
+**Why:** commands never change after construction (nothing to bind), and `ICommand.Execute` boxes
+every tick at 60–120 Hz (streams stay Actions). Factory lambdas keep page construction
+reflection-free. Pull-to-refresh is `RefreshCommand` + a two-way `IsRefreshing`.
 
 ## ADR-013: Slim pages — instance navigation beside VM-first
 
-**Decision:** a page is either an *MVVM page* or a *slim page*, mixed freely within one app, on
-one `INavigator`. An MVVM page is what exists today: `ContentView<TVm>`, `[Page]` registration,
-navigated by ViewModel — `PushAsync<TVm>()` / `PushAsync(vmInstance)` — unchanged. A slim page is
-a plain `ContentView` subclass with **no ViewModel, no attribute, no registration, no DI**: it is
-navigated as a living instance — `Navigator.PushAsync(new MovieView(movie))` — with the payload as
-ordinary constructor arguments. `INavigator` gains the instance overloads (`PushAsync(ContentView)`,
-`PresentAsync(ContentView, ModalStyle)`); pop, dismiss and dialogs are already page-agnostic.
-Views reach the navigator through a protected `ContentView.Navigator` property (the app-level
-navigator; no DI visible). Slim pages update their UI by direct manipulation — `label.Text = ...` —
-with no `BindingContext`, no INPC; bindings simply stay inert unless the page opts in by setting a
-context itself.
-
-**Context:** the ViewModel type is the navigation key, so even a stateless page needed a marker
-ViewModel plus a service registration — for a settings page in a three-page app that is an entire
-MVVM architecture as an entry fee. String routes (UWP) were rejected: the payload degrades to
-`object` + cast at the destination and a class rename breaks navigation silently. View-*type* keys
-were rejected as the primary model: they put view types into ViewModels for every app, taxing the
-MVVM core to pay for the slim edge. Pushing instances keeps both sides whole — the compiler owns
-the payload, nothing needs a key, and a page that navigates from view code is already view-layer
-code, so no boundary is crossed.
-
-**Consequences:**
-- The entry fee for a non-MVVM app drops to `CreateBuilder().Stack<MainView>()...` and plain
-  classes; marker ViewModels become unnecessary and the idiom is retired.
-- One builder remains the single entry point; the container still exists internally but a slim
-  app never touches it.
-- An instance is pushed at most once: pages are created per navigation (`new` at the call site),
-  matching UIKit controller semantics; pushing an already-presented page throws.
-- ViewModels keep navigating VM-first only — a ViewModel never sees a view type. Slim navigation
-  is initiated from views, where knowing view types is the job.
-- `Navigator` on `ContentView` is protected and app-scoped; MVVM pages ignore it (their
-  ViewModels take `INavigator` by constructor as before).
-- The generator's `[Page]` stays exclusively an MVVM concern.
+**Decision:** a page is either MVVM (`ContentView<TVm>`, `[Page]`, navigated by ViewModel) or slim (a
+plain `ContentView` with no ViewModel/attribute/registration/DI, navigated as a living instance
+`Navigator.PushAsync(new MovieView(movie))`), mixed on one `INavigator` (which gains the instance
+overloads). Slim pages reach the navigator via protected `ContentView.Navigator` and update UI
+directly (`label.Text = …`).
+**Why:** the VM type is the navigation key, so a stateless page would otherwise need a marker VM +
+registration. Pushing instances keeps the compiler owning the payload (string routes / view-type keys
+rejected). An instance is pushed at most once (per-navigation `new`); ViewModels still navigate
+VM-first only.
 
 ## ADR-014: Shell vocabulary — universal tabs, one iPad scope, one bubble
 
-**Decision:** the tab shell splits into a universal vocabulary and a single iPad scope.
-Universal: `Tab<TView>(title, icon)`, `Group(title, icon, children)` (a `UITabGroup`: collapsible
-sidebar section on iPad, drill-in tab on iPhone), `Search<TView>()`, `Accessory<TView>()`,
-`Minimizes()`. iPad-only, in one deletable block: `OnIPad(pad => ...)` with `Sidebar()`,
-`PlaceTab<TView>(TabPlacement)` overriding a universal tab's customization behaviour, `Tab`/`Group`
-declaring iPad-only destinations (default `SidebarOnly`; never constructed on iPhone), and
-`SidebarFooter<TView>()` hosting a view in the sidebar's bottom bar. The trailing bubble beside the
-tab pill is single and dual-mode: `Search<TView>()` or `Action(icon, ...)` — a FAB implemented by
-repurposing `UISearchTab` (custom icon/title, `AutomaticallyActivatesSearch` off, selection vetoed
-through `ShouldSelectTab` and routed into the action). Declaring both throws at build. `Action` has
-two overloads per the slim-page rule: `Action(icon, Action)` for code-behind apps (fetch the
-navigator yourself if needed) and `Action<TViewModel>(icon, Func<TViewModel, ICommand>)` resolving
-from DI.
-
-**Context:** placement flags on the universal `Tab(...)` polluted iPhone-only code with iPad
-concepts; extra iPad destinations (`Optional`/`SidebarOnly`) declared universally would be
-unreachable on iPhone, which has no Edit UI; and Apple ships no API for a second bubble or custom
-views in the tab bar — `UISearchTab` is the only separated slot, so it is the FAB or the search,
-never both. Placement customization works on the iPad top bar without a sidebar, so the scope is
-named for the device, not the sidebar. iPadOS persists user customization keyed by tab identifier
-(our ViewModel type name): renaming a ViewModel resets the user's arrangement.
-
-**Consequences:**
-- An iPhone-only app's `Tabs` block contains zero iPad vocabulary; deleting `OnIPad(...)` changes
-  nothing else.
-- A page can be a sidebar destination on iPad and an ordinary pushed page on iPhone — tabs and the
-  page registry are independent.
-- Group children keep their own navigation stacks (`ManagingNavigationController` deferred).
-- Group identifiers derive from their titles: retitling a group resets its user arrangement.
+**Decision:** universal `Tab<TView>(title, icon)`, `Group(...)`, `Search<TView>()`,
+`Accessory<TView>()`, `Minimizes()`; iPad-only concerns in one deletable `OnIPad(pad => …)` block
+(`Sidebar()`, `PlaceTab<TView>`, iPad-only destinations, `SidebarFooter<TView>()`). The trailing
+bubble is single and dual-mode: `Search<TView>()` **or** `Action(icon, …)` (a FAB via a repurposed
+`UISearchTab`) — declaring both throws.
+**Why:** placement flags on the universal `Tab` polluted iPhone code with iPad concepts, and Apple
+ships only one separated tab slot (`UISearchTab`), so it's the FAB or search, never both. iPadOS
+persists customization keyed by tab identifier (the ViewModel-type name) — renaming a ViewModel or a
+group resets the user's arrangement.
