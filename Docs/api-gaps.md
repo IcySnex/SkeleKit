@@ -255,7 +255,12 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `UIBackgroundConfiguration` in `UpdateConfiguration`. Edit/Done stays app-side: a toolbar item
   toggling the bound `IsEditing`. Sim-verified in the list; the grid and carousel look after the
   cell rebase want a hand check).
-- ◆ **Expandable sections** — list-config header disclosure + snapshot section collapse.
+- ~~◆ **Expandable sections**~~ — **done** (`IExpandableSection<TItem>`: a section implementing it (two-way
+  `IsExpanded`, INPC for programmatic collapse) becomes collapsible). Flat-snapshot approach, not the native
+  outline: a collapsed section emits only its header, so the existing diff animates rows in/out and the
+  reorder/edit/selection/prefetch pipeline is untouched (works across list/grid/carousel too). Built-in
+  chevron on the header (rotates 90 on expand); tapping the header toggles. Needs a `HeaderTemplate` (the
+  chevron lives there); a collapsed section still shows its footer.
 - ◆ **Mixed sections** — per-section layout (a carousel row inside a list) — compositional
   layout does this natively; the `CollectionLayout` model would grow a per-section variant.
 - ~~★ **Section footers**~~ — **done** (`FooterTemplate`, same plumbing as headers). Sections are

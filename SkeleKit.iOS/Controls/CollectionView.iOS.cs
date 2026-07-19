@@ -26,12 +26,9 @@ public partial class CollectionView<TItem, TSection>
 		{
 			BackgroundColor = UIColor.Clear,
 
-			// only bounce along the axis that actually scrolls: a carousel must not drag vertically,
-			// and a list must not drag sideways
 			AlwaysBounceVertical = !carousel,
 			AlwaysBounceHorizontal = carousel,
 
-			// we own the insets; UIKit's guessing is what made a vertical list drift sideways
 			ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never
 		};
 
@@ -199,7 +196,7 @@ public partial class CollectionView<TItem, TSection>
 
 	partial void ApplySelectionCore()
 	{
-		if (!IsRealized || data is null || suppressSelectionSync || !isEditing)
+		if (!IsRealized || data is null || SuppressSelectionSync || !isEditing)
 			return;
 
 		HashSet<NSIndexPath> wanted = [];
@@ -226,7 +223,7 @@ public partial class CollectionView<TItem, TSection>
 
 		if (selectedItems is IList<TItem> { Count: > 0 } list)
 		{
-			suppressSelectionSync = true;
+			SuppressSelectionSync = true;
 
 			try
 			{
@@ -234,7 +231,7 @@ public partial class CollectionView<TItem, TSection>
 			}
 			finally
 			{
-				suppressSelectionSync = false;
+				SuppressSelectionSync = false;
 			}
 		}
 	}
@@ -522,7 +519,7 @@ public partial class CollectionView<TItem, TSection>
 			NSNumber sectionKey = sectionKeys[section];
 			snapshot.AppendSections([sectionKey]);
 
-			int count = CountIn(section);
+			int count = Expanded(section) ? CountIn(section) : 0;
 			if (count == 0)
 				continue;
 
@@ -549,6 +546,22 @@ public partial class CollectionView<TItem, TSection>
 
 		// a diff can shuffle index paths under the checkmarks
 		ApplySelectionCore();
+
+		SyncHeaderChevrons();
+	}
+
+	// a collapse toggled off-header (programmatically, or by another header's tap shifting sections)
+	// won't re-bind a visible header, so nudge each one's chevron to match its section
+	void SyncHeaderChevrons()
+	{
+		if (!IsGrouped)
+			return;
+
+		NSString kind = new(UICollectionElementKindSectionKey.Header.ToString());
+
+		foreach (NSIndexPath path in Ui.GetIndexPathsForVisibleSupplementaryElements(kind))
+			if (Ui.GetSupplementaryView(kind, path) is SkeleHeader header)
+				header.SetExpanded(Expanded(path.Section), animated: true);
 	}
 
 	ItemKey KeyFor(
@@ -627,6 +640,12 @@ public partial class CollectionView<TItem, TSection>
 
 		if (header.Hosted is ItemView<TSection> hosted)
 			hosted.Item = SectionAt(indexPath.Section);
+
+		if (!footer)
+		{
+			int section = indexPath.Section;
+			header.SetExpandable(IsExpandable(section), Expanded(section), () => ToggleSection(section));
+		}
 
 		return header;
 	}
@@ -1192,6 +1211,18 @@ internal sealed class SkeleCell(
 internal sealed class SkeleHeader(
 	NativeHandle handle) : UICollectionReusableView(handle)
 {
+	const int ChevronEdge = 16;
+	const int ChevronGap = 8;
+
+	static readonly UIImageSymbolConfiguration ChevronConfiguration = UIImageSymbolConfiguration.Create((nfloat)13, UIImageSymbolWeight.Semibold);
+
+
+	UIImageView? chevron;
+	UITapGestureRecognizer? tap;
+	Action? toggle;
+	bool expanded;
+
+
 	public View? Hosted { get; private set; }
 
 
@@ -1201,6 +1232,66 @@ internal sealed class SkeleHeader(
 		Hosted = view;
 
 		AddSubview(view.Realize());
+	}
+
+	public void SetExpandable(
+		bool expandable,
+		bool isExpanded,
+		Action onToggle)
+	{
+		toggle = onToggle;
+
+		if (!expandable)
+		{
+			if (chevron is not null)
+				chevron.Hidden = true;
+
+			if (tap is not null)
+				tap.Enabled = false;
+
+			return;
+		}
+
+		if (chevron is null)
+		{
+			chevron = new(UIImage.GetSystemImage("chevron.right", ChevronConfiguration))
+			{
+				TintColor = UIColor.TertiaryLabel
+			};
+			chevron.SizeToFit();
+			AddSubview(chevron);
+		}
+
+		if (tap is null)
+		{
+			tap = new(OnHeaderTapped);
+			AddGestureRecognizer(tap);
+		}
+
+		chevron.Hidden = false;
+		tap.Enabled = true;
+
+		SetExpanded(isExpanded, animated: false);
+		SetNeedsLayout();
+	}
+
+	public void SetExpanded(
+		bool isExpanded,
+		bool animated)
+	{
+		expanded = isExpanded;
+
+		if (chevron is null)
+			return;
+
+		CGAffineTransform transform = isExpanded
+			? CGAffineTransform.MakeRotation((nfloat)(Math.PI / 2))
+			: CGAffineTransform.MakeIdentity();
+
+		if (animated)
+			UIView.Animate(0.25, () => chevron.Transform = transform);
+		else
+			chevron.Transform = transform;
 	}
 
 	public override UICollectionViewLayoutAttributes PreferredLayoutAttributesFittingAttributes(
@@ -1222,6 +1313,21 @@ internal sealed class SkeleHeader(
 	{
 		base.LayoutSubviews();
 
-		Hosted?.Arrange(new(0, 0, Bounds.Width, Bounds.Height));
+		nfloat rightInset = 0;
+
+		if (chevron is { Hidden: false })
+		{
+			CGSize size = chevron.Bounds.Size;
+			chevron.Center = new(Bounds.Width - ChevronEdge - size.Width / 2, Bounds.Height / 2);
+			rightInset = size.Width + ChevronEdge + ChevronGap;
+		}
+
+		Hosted?.Arrange(new(0, 0, Bounds.Width - rightInset, Bounds.Height));
+	}
+
+	void OnHeaderTapped()
+	{
+		SetExpanded(!expanded, animated: true);
+		toggle?.Invoke();
 	}
 }

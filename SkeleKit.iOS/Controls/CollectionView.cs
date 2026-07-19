@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Windows.Input;
 
 namespace SkeleKit;
@@ -25,18 +26,18 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 	readonly List<INotifyCollectionChanged> sectionItemHooks = [];
 
+	readonly List<INotifyPropertyChanged> sectionStateHooks = [];
+
 	int loadMoreFiredAt = -1;
 
-	// edit-mode tap toggles membership, not SelectionCommand
-	internal bool suppressSelectionSync;
+	internal bool SuppressSelectionSync;
 
 
 	private protected override bool ClipsByDefault => true;
 
 	internal override bool Scrolls => true;
 
-	internal ICommand? Selection =>
-		selectionCommand;
+	internal ICommand? Selection => selectionCommand;
 
 	internal bool IsGrouped => sections is not null;
 
@@ -51,12 +52,15 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		get
 		{
 			for (int section = 0; section < SectionCount; section++)
+			{
 				if (CountIn(section) > 0)
 					return false;
+			}
 
 			return true;
 		}
 	}
+
 
 	/// <summary>
 	/// The items to show.
@@ -363,11 +367,19 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 			return;
 
 		foreach (TSection section in sections ?? [])
+		{
 			if (section.Items is INotifyCollectionChanged live)
 			{
 				live.CollectionChanged += OnSectionItemsChanged;
 				sectionItemHooks.Add(live);
 			}
+
+			if (section is INotifyPropertyChanged notifier)
+			{
+				notifier.PropertyChanged += OnSectionPropertyChanged;
+				sectionStateHooks.Add(notifier);
+			}
+		}
 	}
 
 	void UnhookSectionItems()
@@ -376,6 +388,11 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 			hook.CollectionChanged -= OnSectionItemsChanged;
 
 		sectionItemHooks.Clear();
+
+		foreach (INotifyPropertyChanged hook in sectionStateHooks)
+			hook.PropertyChanged -= OnSectionPropertyChanged;
+
+		sectionStateHooks.Clear();
 	}
 
 	void OnItemsChanged(
@@ -395,6 +412,14 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		object? sender,
 		NotifyCollectionChangedEventArgs e) =>
 		ApplyChange();
+
+	void OnSectionPropertyChanged(
+		object? sender,
+		PropertyChangedEventArgs e)
+	{
+		if (e.PropertyName is nameof(IExpandableSection<TItem>.IsExpanded))
+			ApplyChange();
+	}
 
 	void OnSelectedItemsChanged(
 		object? sender,
@@ -474,6 +499,24 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 			? groups[index]
 			: null;
 
+	internal bool IsExpandable(
+		int section) =>
+		SectionAt(section) is IExpandableSection<TItem>;
+
+	internal bool Expanded(
+		int section) =>
+		SectionAt(section) is not IExpandableSection<TItem> expandable || expandable.IsExpanded;
+
+	internal void ToggleSection(
+		int section)
+	{
+		if (SectionAt(section) is not IExpandableSection<TItem> expandable)
+			return;
+
+		expandable.IsExpanded = !expandable.IsExpanded;
+		ApplyChange();
+	}
+
 	internal string? PrefetchUrl(
 		int section,
 		int index) =>
@@ -489,7 +532,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		if (ItemAt(section, index) is not TItem item || selectedItems is not IList<TItem> list)
 			return;
 
-		suppressSelectionSync = true;
+		SuppressSelectionSync = true;
 
 		try
 		{
@@ -503,7 +546,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		}
 		finally
 		{
-			suppressSelectionSync = false;
+			SuppressSelectionSync = false;
 		}
 	}
 
