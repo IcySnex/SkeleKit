@@ -291,7 +291,12 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   found on our stack; only the system platter is reliable there. Also: exporting the iOS 16
   `GetContextMenuConfiguration*Preview` selectors kills the interaction outright — never override
   those.
-- ★ **Section index** — A–Z fast-scroll strip (`IndexTitles`).
+- ~~★ **Section index**~~ — **done** (`SectionIndexTitle` maps each section to its letter, enabling the
+  strip; optional `IndexTitles` gives an explicit full alphabet, a tapped gap-letter jumping to the
+  nearest section at or after it). Grouped only. Overrides `GetIndexTitles`/`GetIndexPath` on the
+  diffable source; titles are suppressed until the collection has live cells (UIKit validates each title
+  against a cell during `reloadData`, which runs before the first async snapshot lands). Use a plain list
+  so the letter headers pin under the bar, or an index jump tucks the header behind it.
 
 ## App level
 

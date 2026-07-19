@@ -38,6 +38,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<KeyboardDemoViewModel>();
 		services.AddTransient<GridDemoViewModel>();
 		services.AddTransient<ListDemoViewModel>();
+		services.AddTransient<ContactsDemoViewModel>();
 		services.AddTransient<CarouselDemoViewModel>();
 		services.AddTransient<LiveListDemoViewModel>();
 		services.AddSingleton<PlayerBarViewModel>();

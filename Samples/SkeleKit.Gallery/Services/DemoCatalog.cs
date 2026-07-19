@@ -32,6 +32,7 @@ public sealed class DemoCatalog : IDemoCatalog
 		new("Keyboard (no scroll)", typeof(KeyboardDemoViewModel)),
 		new("CollectionView grid", typeof(GridDemoViewModel)),
 		new("CollectionView list", typeof(ListDemoViewModel)),
+		new("CollectionView contacts", typeof(ContactsDemoViewModel)),
 		new("CollectionView carousel", typeof(CarouselDemoViewModel)),
 		new("CollectionView live + empty", typeof(LiveListDemoViewModel))
 	];

@@ -668,6 +668,44 @@ public partial class CollectionView<TItem, TSection>
 		int toIndex) =>
 		Move(fromSection, fromIndex, toSection, toIndex);
 
+	string[]? ICollectionHost.IndexTitles()
+	{
+		if (SectionIndexTitle is not Func<TSection, string> letterOf || !IsGrouped)
+			return null;
+
+		if (IndexTitles is IReadOnlyList<string> explicitTitles)
+			return [.. explicitTitles];
+
+		string[] titles = new string[SectionCount];
+		for (int section = 0; section < SectionCount; section++)
+			titles[section] = SectionAt(section) is TSection model ? letterOf(model) : "";
+
+		return titles;
+	}
+
+	// jump to the first landable section at or after the tapped letter, so a gap letter lands ahead
+	// like Contacts; every returned section has a live cell, which UIKit demands
+	int ICollectionHost.IndexSection(
+		string title)
+	{
+		if (SectionIndexTitle is not Func<TSection, string> letterOf)
+			return 0;
+
+		int last = -1;
+		for (int section = 0; section < SectionCount; section++)
+		{
+			if (!Expanded(section) || CountIn(section) == 0 || SectionAt(section) is not TSection model)
+				continue;
+
+			last = section;
+
+			if (string.CompareOrdinal(letterOf(model), title) >= 0)
+				return section;
+		}
+
+		return last < 0 ? 0 : last;
+	}
+
 	void SyncInsets()
 	{
 		if (!IsRealized)
@@ -1125,6 +1163,26 @@ internal sealed class CollectionSource : UICollectionViewDiffableDataSource<NSNu
 		NSIndexPath sourceIndexPath,
 		NSIndexPath destinationIndexPath) =>
 		element?.Move(sourceIndexPath.Section, sourceIndexPath.Row, destinationIndexPath.Section, destinationIndexPath.Row);
+
+	// the index bar validates every title against a live cell during reloadData, which runs before the
+	// first async snapshot lands: advertise titles only once the collection actually has rows
+	public override string[]? GetIndexTitles(
+		UICollectionView collectionView)
+	{
+		nint sections = collectionView.NumberOfSections();
+
+		for (nint section = 0; section < sections; section++)
+			if (collectionView.NumberOfItemsInSection(section) > 0)
+				return element?.IndexTitles();
+
+		return null;
+	}
+
+	public override NSIndexPath GetIndexPath(
+		UICollectionView collectionView,
+		string title,
+		nint atIndex) =>
+		NSIndexPath.FromRowSection(0, element?.IndexSection(title) ?? 0);
 }
 
 internal sealed class SkeleCell(

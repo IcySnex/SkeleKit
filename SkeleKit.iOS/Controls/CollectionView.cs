@@ -144,6 +144,23 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public Color? HighlightColor { get; set; }
 
 	/// <summary>
+	/// Maps a section to its letter in the fast-scroll index, or null for no index.
+	/// </summary>
+	/// <remarks>
+	/// Grouped list layouts only. Tapping a letter jumps to that section.
+	/// </remarks>
+	public Func<TSection, string>? SectionIndexTitle { get; set; }
+
+	/// <summary>
+	/// Explicit labels for the fast-scroll index, or null to show one per section.
+	/// </summary>
+	/// <remarks>
+	/// A tapped letter with no section jumps to the nearest one at or after it.<br/>
+	/// Has no effect without <see cref="SectionIndexTitle"/>, which still supplies each section's letter.
+	/// </remarks>
+	public IReadOnlyList<string>? IndexTitles { get; set; }
+
+	/// <summary>
 	/// Invoked when the user scrolls within <see cref="LoadMoreThreshold"/> items of the end.
 	/// </summary>
 	/// <remarks>
@@ -468,7 +485,6 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	partial void MovedInSource();
 
 
-	// scrolls itself, so it takes the space offered rather than sizing to its content
 	protected override Size MeasureOverride(
 		Size availableSize) =>
 		new(double.IsFinite(availableSize.Width) ? availableSize.Width : 0, double.IsFinite(availableSize.Height) ? availableSize.Height : 0);
@@ -650,4 +666,9 @@ internal interface ICollectionHost
 		int fromIndex,
 		int toSection,
 		int toIndex);
+
+	string[]? IndexTitles();
+
+	int IndexSection(
+		string title);
 }
