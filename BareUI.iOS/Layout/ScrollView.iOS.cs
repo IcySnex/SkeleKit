@@ -11,8 +11,10 @@ public partial class ScrollView
 			return view;
 
 		foreach (UIView child in view.Subviews)
+		{
 			if (FirstResponder(child) is UIView found)
 				return found;
+		}
 
 		return null;
 	}
@@ -20,6 +22,7 @@ public partial class ScrollView
 
 	nfloat keyboardCover;
 	UIRefreshControl? refresh;
+	bool endsAfterDrag;
 
 
 	void ApplyRefresh(
@@ -32,42 +35,6 @@ public partial class ScrollView
 		refresh.ValueChanged += (_, _) => OnRefreshTriggered();
 
 		host.RefreshControl = refresh;
-	}
-
-	partial void ApplyRefreshingCore()
-	{
-		if (refresh is null)
-			return;
-
-		UIScrollView host = (UIScrollView)Native;
-
-		if (IsRefreshing.Value)
-		{
-			if (!refresh.Refreshing)
-				refresh.BeginRefreshing();
-
-			return;
-		}
-
-		// finishing under a held finger yanks the inset mid-drag: wait for the release
-		if (host.Dragging)
-		{
-			endsAfterDrag = true;
-			return;
-		}
-
-		EndNativeRefresh();
-	}
-
-	bool endsAfterDrag;
-
-	internal void OnDragEnded()
-	{
-		if (!endsAfterDrag)
-			return;
-
-		endsAfterDrag = false;
-		EndNativeRefresh();
 	}
 
 	void EndNativeRefresh()
@@ -110,6 +77,30 @@ public partial class ScrollView
 			host.ContentOffset = new(host.ContentOffset.X, -insets.Top);
 	}
 
+	partial void ApplyRefreshingCore()
+	{
+		if (refresh is null)
+			return;
+
+		UIScrollView host = (UIScrollView)Native;
+
+		if (IsRefreshing.Value)
+		{
+			if (!refresh.Refreshing)
+				refresh.BeginRefreshing();
+
+			return;
+		}
+
+		// finishing under a held finger yanks the inset mid-drag: wait for the release
+		if (host.Dragging)
+		{
+			endsAfterDrag = true;
+			return;
+		}
+
+		EndNativeRefresh();
+	}
 
 	partial void ApplyKeyboardDismissCore() =>
 		((UIScrollView)Native).KeyboardDismissMode = keyboardDismiss switch
@@ -119,9 +110,53 @@ public partial class ScrollView
 			_ => UIScrollViewKeyboardDismissMode.None
 		};
 
+	partial void ApplyBehaviorCore()
+	{
+		UIScrollView host = (UIScrollView)Native;
+		bool vertical = Orientation == Orientation.Vertical;
+
+		host.PagingEnabled = Paging;
+		host.ShowsVerticalScrollIndicator = ShowsIndicator && vertical;
+		host.ShowsHorizontalScrollIndicator = ShowsIndicator && !vertical;
+
+		host.IndicatorStyle = IndicatorStyle switch
+		{
+			IndicatorStyle.Dark => UIScrollViewIndicatorStyle.Black,
+			IndicatorStyle.Light => UIScrollViewIndicatorStyle.White,
+			_ => UIScrollViewIndicatorStyle.Default
+		};
+
+		host.AutomaticallyAdjustsScrollIndicatorInsets = IndicatorInsets is null;
+
+		if (IndicatorInsets is Thickness insets)
+		{
+			UIEdgeInsets native = new((nfloat)insets.Top, (nfloat)insets.Left, (nfloat)insets.Bottom, (nfloat)insets.Right);
+
+			host.VerticalScrollIndicatorInsets = native;
+			host.HorizontalScrollIndicatorInsets = native;
+		}
+	}
+
 	partial void ArrangeContent(
 		Size viewport) =>
 		LayoutContent(viewport);
+
+	partial void ScrollToCore(
+		double offset,
+		bool animated)
+	{
+		if (!IsRealized)
+			return;
+
+		UIScrollView host = (UIScrollView)Native;
+
+		host.SetContentOffset(
+			Orientation == Orientation.Vertical
+				? new(host.ContentOffset.X, (nfloat)offset)
+				: new((nfloat)offset, host.ContentOffset.Y),
+			animated);
+	}
+
 
 	internal void LayoutContent(
 		Size viewport)
@@ -204,6 +239,15 @@ public partial class ScrollView
 		host.ScrollRectToVisible(target.Inset(0, -8), true);
 	}
 
+	internal void OnDragEnded()
+	{
+		if (!endsAfterDrag)
+			return;
+
+		endsAfterDrag = false;
+		EndNativeRefresh();
+	}
+
 	internal void OnScrolled(
 		double offset) =>
 		Scrolled?.Invoke(offset);
@@ -226,49 +270,6 @@ public partial class ScrollView
 		ApplyBehavior();
 		ApplyRefresh(host);
 	}
-
-	partial void ApplyBehaviorCore()
-	{
-		UIScrollView host = (UIScrollView)Native;
-		bool vertical = Orientation == Orientation.Vertical;
-
-		host.PagingEnabled = Paging;
-		host.ShowsVerticalScrollIndicator = ShowsIndicator && vertical;
-		host.ShowsHorizontalScrollIndicator = ShowsIndicator && !vertical;
-
-		host.IndicatorStyle = IndicatorStyle switch
-		{
-			IndicatorStyle.Dark => UIScrollViewIndicatorStyle.Black,
-			IndicatorStyle.Light => UIScrollViewIndicatorStyle.White,
-			_ => UIScrollViewIndicatorStyle.Default
-		};
-
-		host.AutomaticallyAdjustsScrollIndicatorInsets = IndicatorInsets is null;
-
-		if (IndicatorInsets is Thickness insets)
-		{
-			UIEdgeInsets native = new((nfloat)insets.Top, (nfloat)insets.Left, (nfloat)insets.Bottom, (nfloat)insets.Right);
-
-			host.VerticalScrollIndicatorInsets = native;
-			host.HorizontalScrollIndicatorInsets = native;
-		}
-	}
-
-	partial void ScrollToCore(
-		double offset,
-		bool animated)
-	{
-		if (!IsRealized)
-			return;
-
-		UIScrollView host = (UIScrollView)Native;
-
-		host.SetContentOffset(
-			Orientation == Orientation.Vertical
-				? new(host.ContentOffset.X, (nfloat)offset)
-				: new((nfloat)offset, host.ContentOffset.Y),
-			animated);
-	}
 }
 
 internal sealed class ScrollHost : UIScrollView
@@ -289,11 +290,13 @@ internal sealed class ScrollHost : UIScrollView
 	{ }
 
 
+	// ReSharper disable once UnusedMember.Local
 	[Export("keyboardFrameChanged:")]
 	void KeyboardFrameChanged(
 		NSNotification notification) =>
 		element?.OnKeyboardChanged(notification, hiding: false);
 
+	// ReSharper disable once UnusedMember.Local
 	[Export("keyboardHidden:")]
 	void KeyboardHidden(
 		NSNotification notification) =>

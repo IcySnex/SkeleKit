@@ -6,32 +6,146 @@ namespace BareUI;
 
 public abstract partial class View
 {
+	static void Run(
+		ICommand? command,
+		object? parameter)
+	{
+		if (command is not null && command.CanExecute(parameter))
+			command.Execute(parameter);
+	}
+
+	static UIAccessibilityTrait Traits(
+		AccessibilityTraits traits)
+	{
+		UIAccessibilityTrait native = UIAccessibilityTrait.None;
+
+		if (traits.HasFlag(AccessibilityTraits.Button))
+			native |= UIAccessibilityTrait.Button;
+		if (traits.HasFlag(AccessibilityTraits.Link))
+			native |= UIAccessibilityTrait.Link;
+		if (traits.HasFlag(AccessibilityTraits.Header))
+			native |= UIAccessibilityTrait.Header;
+		if (traits.HasFlag(AccessibilityTraits.Image))
+			native |= UIAccessibilityTrait.Image;
+		if (traits.HasFlag(AccessibilityTraits.Selected))
+			native |= UIAccessibilityTrait.Selected;
+		if (traits.HasFlag(AccessibilityTraits.StaticText))
+			native |= UIAccessibilityTrait.StaticText;
+		if (traits.HasFlag(AccessibilityTraits.Adjustable))
+			native |= UIAccessibilityTrait.Adjustable;
+		if (traits.HasFlag(AccessibilityTraits.UpdatesFrequently))
+			native |= UIAccessibilityTrait.UpdatesFrequently;
+		if (traits.HasFlag(AccessibilityTraits.NotEnabled))
+			native |= UIAccessibilityTrait.NotEnabled;
+		if (traits.HasFlag(AccessibilityTraits.PlaysSound))
+			native |= UIAccessibilityTrait.PlaysSound;
+		if (traits.HasFlag(AccessibilityTraits.StartsMediaSession))
+			native |= UIAccessibilityTrait.StartsMediaSession;
+
+		return native;
+	}
+
+	static UIViewAnimationOptions Options(
+		Easing easing) =>
+		UIViewAnimationOptions.AllowUserInteraction | easing switch
+		{
+			Easing.Linear => UIViewAnimationOptions.CurveLinear,
+			Easing.EaseIn => UIViewAnimationOptions.CurveEaseIn,
+			Easing.EaseOut => UIViewAnimationOptions.CurveEaseOut,
+			_ => UIViewAnimationOptions.CurveEaseInOut
+		};
+
+	static GestureState StateOf(
+		UIGestureRecognizer recognizer) =>
+		recognizer.State switch
+		{
+			UIGestureRecognizerState.Began => GestureState.Began,
+			UIGestureRecognizerState.Changed => GestureState.Changed,
+			UIGestureRecognizerState.Ended => GestureState.Ended,
+			_ => GestureState.Canceled
+		};
+
+
+	readonly List<UIGestureRecognizer> gestures = [];
+
 	UIView? native;
+
+	UITapGestureRecognizer? tapRecognizer;
+	UITapGestureRecognizer? doubleTapRecognizer;
+	UILongPressGestureRecognizer? longPressRecognizer;
+	UILongPressGestureRecognizer? pressRecognizer;
+	UIPanGestureRecognizer? panRecognizer;
+	UIPinchGestureRecognizer? pinchRecognizer;
+	UIRotationGestureRecognizer? rotationRecognizer;
+
+	UIPointerInteraction? pointerInteraction;
+	PointerInteractionDelegate? pointerDelegate;
+
+	ContextMenuDelegate? contextMenuDelegate;
+	UIContextMenuInteraction? contextMenuInteraction;
+	UIAction[]? contextMenuActions;
+
+	UIAccessibilityTrait? defaultTraits;
+	CAGradientLayer? gradientLayer;
+	UIVisualEffectView? materialView;
+
+	Thickness PageSafeArea
+	{
+		get
+		{
+			for (View? view = this; view is not null; view = view.Parent)
+			{
+				if (view is ContentView page)
+					return page.PageSafeArea;
+			}
+
+			return Thickness.Zero;
+		}
+	}
+
+
+	private protected virtual bool OwnsNative => true;
+
+	internal Thickness BledInsets
+	{
+		get
+		{
+			if (IgnoresSafeArea is SafeAreaEdges.None)
+				return Thickness.Zero;
+
+			Thickness insets = PageSafeArea;
+
+			return new(
+				IgnoresSafeArea.HasFlag(SafeAreaEdges.Leading) ? insets.Left : 0,
+				IgnoresSafeArea.HasFlag(SafeAreaEdges.Top) ? insets.Top : 0,
+				IgnoresSafeArea.HasFlag(SafeAreaEdges.Trailing) ? insets.Right : 0,
+				IgnoresSafeArea.HasFlag(SafeAreaEdges.Bottom) ? insets.Bottom : 0);
+		}
+	}
+
+	internal UIView? BackgroundView => materialView;
+
+	internal UIView ChildHost => materialView is UIVisualEffectView material && Background is Material { Kind: MaterialKind.Glass }
+		? material.ContentView
+		: Native;
+
 
 	/// <summary>
 	/// The underlying UIKit view, created on first access. Primary escape hatch to UIKit.
 	/// </summary>
-	public UIView Native =>
-		native ??= RealizeCore();
+	public UIView Native => native ??= RealizeCore();
 
 	/// <summary>
 	/// Whether the native view has been created yet.
 	/// </summary>
-	public bool IsRealized =>
-		native is not null;
-
-	// panels return a LayoutHost, controls return their own control
-	private protected abstract UIView CreateNative();
-
-	// false for a wrapper around a caller-owned view, which Unrealize must not dispose
-	private protected virtual bool OwnsNative =>
-		true;
+	public bool IsRealized => native is not null;
 
 	/// <summary>
-	/// Builds the native view (if needed) and realizes children and bindings.
+	/// Whether this view currently holds keyboard focus.
 	/// </summary>
-	public UIView Realize() =>
-		Native;
+	public bool IsFocused => native?.IsFirstResponder is true;
+
+
 
 	UIView RealizeCore()
 	{
@@ -48,33 +162,18 @@ public abstract partial class View
 		return native;
 	}
 
-	// controls push their whole property set here; CreateNative only constructs
-	private protected virtual void ApplyProperties()
-	{ }
-
-	/// <summary>
-	/// Tears down the native view and children deterministically (no finalizers).
-	/// </summary>
-	public void Unrealize()
+	Rect Bleed(
+		Rect frame)
 	{
-		if (native is null)
-			return;
+		Thickness bled = BledInsets;
 
-		OnUnrealized();
-		DetachBindings();
-
-		DropGradient();
-		DropMaterial();
-		DropInteractions();
-
-		native.RemoveFromSuperview();
-		if (OwnsNative)
-			native.Dispose();
-		native = null;
-		defaultTraits = null;
+		return new(
+			frame.X - bled.Left,
+			frame.Y - bled.Top,
+			frame.Width + bled.Left + bled.Right,
+			frame.Height + bled.Top + bled.Bottom);
 	}
 
-	// kept ones would stick to the old native view and duplicate on re-realize
 	void DropInteractions()
 	{
 		DropRecognizer(ref tapRecognizer);
@@ -108,11 +207,43 @@ public abstract partial class View
 		recognizer = null;
 	}
 
-	private protected virtual void OnRealized()
-	{ }
+	void RequirePanel(
+		string fill)
+	{
+		if (this is not Panel)
+		{
+			throw new InvalidOperationException(
+				$"{fill} background needs a panel (Border, Overlay, StackPanel, ...); {GetType().Name} draws its own content, which the fill would cover.");
+		}
+	}
 
-	private protected virtual void OnUnrealized()
-	{ }
+	void SyncGradientFrame()
+	{
+		if (gradientLayer is null || native is null)
+			return;
+
+		CATransaction.Begin();
+		CATransaction.DisableActions = true;
+
+		gradientLayer.Frame = native.Bounds;
+		gradientLayer.CornerRadius = (nfloat)CornerRadius;
+
+		CATransaction.Commit();
+	}
+
+	void DropGradient()
+	{
+		gradientLayer?.RemoveFromSuperLayer();
+		gradientLayer?.Dispose();
+		gradientLayer = null;
+	}
+
+	void DropMaterial()
+	{
+		materialView?.RemoveFromSuperview();
+		materialView?.Dispose();
+		materialView = null;
+	}
 
 	partial void ApplyIfRealized(
 		Action apply)
@@ -124,13 +255,177 @@ public abstract partial class View
 	partial void RequestLayout() =>
 		native?.SetNeedsLayout();
 
-	UITapGestureRecognizer? tapRecognizer;
-	UITapGestureRecognizer? doubleTapRecognizer;
-	UILongPressGestureRecognizer? longPressRecognizer;
-	UILongPressGestureRecognizer? pressRecognizer;
-	UIPanGestureRecognizer? panRecognizer;
-	UIPinchGestureRecognizer? pinchRecognizer;
-	UIRotationGestureRecognizer? rotationRecognizer;
+	void ApplyContextMenu()
+	{
+		if (native is null || ContextMenu.Count == 0 || contextMenuInteraction is not null)
+			return;
+
+		contextMenuDelegate = new(this);
+		contextMenuInteraction = new(contextMenuDelegate);
+
+		native.AddInteraction(contextMenuInteraction);
+	}
+
+	void ApplyGestures()
+	{
+		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+		foreach (UIGestureRecognizer gesture in gestures.Where(gesture => gesture.View is null))
+			native?.AddGestureRecognizer(gesture);
+	}
+
+	void ApplyBackground()
+	{
+		if (native is null)
+			return;
+
+		switch (Background)
+		{
+			case SolidBrush solid:
+				DropGradient();
+				DropMaterial();
+
+				native.BackgroundColor = solid.Color.ToUIColor();
+				break;
+
+			case LinearGradient gradient:
+				DropMaterial();
+				RequirePanel("A gradient");
+
+				native.BackgroundColor = UIColor.Clear;
+				ApplyGradient(gradient);
+				break;
+
+			case Material material:
+				DropGradient();
+				RequirePanel("A material");
+
+				native.BackgroundColor = UIColor.Clear;
+				ApplyMaterial(material);
+				break;
+
+			// no brush leaves the native background alone: a control paints its own
+			default:
+				DropGradient();
+				DropMaterial();
+				break;
+		}
+
+		ChildHostChanged();
+	}
+
+	void ApplyShadow()
+	{
+		if (native is null)
+			return;
+
+		if (Shadow is not Shadow shadow)
+		{
+			native.Layer.ShadowOpacity = 0;
+			return;
+		}
+
+		native.Layer.ShadowOpacity = (float)shadow.Opacity;
+		native.Layer.ShadowRadius = (nfloat)shadow.Radius;
+		native.Layer.ShadowOffset = new(shadow.OffsetX, shadow.OffsetY);
+		native.Layer.ShadowColor = (shadow.Color ?? Colors.Black).ToUIColor().CGColor;
+	}
+
+	void ApplyGradient(
+		LinearGradient gradient)
+	{
+		// negative z keeps the fill under the children even if the sublayer order shifts
+		gradientLayer ??= new() { ZPosition = -1 };
+
+		if (gradientLayer.SuperLayer is null)
+			native!.Layer.InsertSublayer(gradientLayer, 0);
+
+		CGColor[] colors = new CGColor[gradient.Stops.Count];
+		NSNumber[] locations = new NSNumber[gradient.Stops.Count];
+
+		for (int index = 0; index < gradient.Stops.Count; index++)
+		{
+			GradientStop stop = gradient.Stops[index];
+
+			colors[index] = stop.Color.ToUIColor().CGColor;
+			locations[index] = NSNumber.FromDouble(stop.Offset);
+		}
+
+		gradientLayer.Colors = colors;
+		gradientLayer.Locations = locations;
+		gradientLayer.StartPoint = new(gradient.Start.X, gradient.Start.Y);
+		gradientLayer.EndPoint = new(gradient.End.X, gradient.End.Y);
+
+		SyncGradientFrame();
+	}
+
+	void ApplyMaterial(
+		Material material)
+	{
+		UIVisualEffect effect = material.Kind is MaterialKind.Glass && OperatingSystem.IsIOSVersionAtLeast(26)
+			? new UIGlassEffect { Interactive = true }
+			: UIBlurEffect.FromStyle(material.Kind switch
+			{
+				MaterialKind.UltraThin => UIBlurEffectStyle.SystemUltraThinMaterial,
+				MaterialKind.Thin => UIBlurEffectStyle.SystemThinMaterial,
+				MaterialKind.Thick => UIBlurEffectStyle.SystemThickMaterial,
+				MaterialKind.Chrome or MaterialKind.Glass => UIBlurEffectStyle.SystemChromeMaterial,
+				_ => UIBlurEffectStyle.SystemMaterial
+			});
+
+		if (materialView is null)
+		{
+			materialView = new(effect)
+			{
+				Frame = native!.Bounds,
+				AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
+
+				// interactive glass lights up under the finger, so it has to receive touches
+				UserInteractionEnabled = material.Kind is MaterialKind.Glass
+			};
+
+			native.InsertSubview(materialView, 0);
+		}
+		else
+			materialView.Effect = effect;
+
+		if (material.Kind is MaterialKind.Glass && OperatingSystem.IsIOSVersionAtLeast(26))
+		{
+			// the glass renderer draws its rim against this shape; a layer clip would flatten it
+			materialView.CornerConfiguration = UICornerConfiguration.CreateUniformCorners(UICornerRadius.CreateFixed((nfloat)CornerRadius));
+			materialView.ClipsToBounds = false;
+			return;
+		}
+
+		materialView.Layer.CornerRadius = (nfloat)CornerRadius;
+		materialView.ClipsToBounds = CornerRadius > 0;
+	}
+
+	partial void ApplyFrame(
+		Rect frame)
+	{
+		if (native is null)
+			return;
+
+		frame = Bleed(frame);
+
+		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
+		bool resized = native.Bounds.Size != next.Size;
+
+		// always bounds+center, never Frame: an animation can leave the native transform non-identity
+		// while the model reads as untransformed, and setting Frame under a transform is undefined.
+		// The origin stays — a scroll view keeps its content offset there
+		native.Bounds = new(native.Bounds.X, native.Bounds.Y, next.Width, next.Height);
+		native.Center = new(next.X + next.Width / 2, next.Y + next.Height / 2);
+
+		if (resized)
+		{
+			SyncGradientFrame();
+			native.SetNeedsLayout();
+
+			// the pivot offset scales with the bounds, so a resize re-bakes it into the transform
+			ApplyTransform();
+		}
+	}
 
 	partial void ApplyInteractionCore()
 	{
@@ -258,74 +553,6 @@ public abstract partial class View
 		}
 	}
 
-	UIPointerInteraction? pointerInteraction;
-	PointerInteractionDelegate? pointerDelegate;
-
-	internal UIPointerStyle? PointerStyle()
-	{
-		if (native is null || PointerEffect is PointerEffect.None)
-			return null;
-
-		// only the automatic effect is bound in Microsoft.iOS 26.0 (see PointerEffect)
-		return UIPointerStyle.Create(UIPointerEffect.Create(new(native)), null);
-	}
-
-	static void Run(
-		ICommand? command,
-		object? parameter)
-	{
-		if (command is not null && command.CanExecute(parameter))
-			command.Execute(parameter);
-	}
-
-	ContextMenuDelegate? contextMenuDelegate;
-	UIContextMenuInteraction? contextMenuInteraction;
-	UIAction[]? contextMenuActions;
-
-	void ApplyContextMenu()
-	{
-		if (native is null || ContextMenu.Count == 0 || contextMenuInteraction is not null)
-			return;
-
-		contextMenuDelegate = new(this);
-		contextMenuInteraction = new(contextMenuDelegate);
-
-		native.AddInteraction(contextMenuInteraction);
-	}
-
-	internal UIContextMenuConfiguration? MenuConfiguration()
-	{
-		if (ContextMenu.Count == 0)
-			return null;
-
-		return UIContextMenuConfiguration.Create(
-			null,
-			null,
-			_ =>
-			{
-				contextMenuActions = new UIAction[ContextMenu.Count];
-
-				for (int index = 0; index < ContextMenu.Count; index++)
-				{
-					MenuAction entry = ContextMenu[index];
-
-					contextMenuActions[index] = UIAction.Create(
-						entry.Text,
-						entry.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
-						null,
-						_ => Run(entry.Command, null));
-
-					if (entry.IsDestructive)
-						contextMenuActions[index].Attributes = UIMenuElementAttributes.Destructive;
-				}
-
-				return UIMenu.Create(contextMenuActions);
-			});
-	}
-
-	// the control's own traits, captured before we layer ours on top
-	UIAccessibilityTrait? defaultTraits;
-
 	partial void ApplyAccessibilityCore()
 	{
 		if (native is null)
@@ -342,37 +569,6 @@ public abstract partial class View
 
 		if (isAccessibilityElement is bool element)
 			native.IsAccessibilityElement = element;
-	}
-
-	static UIAccessibilityTrait Traits(
-		AccessibilityTraits traits)
-	{
-		UIAccessibilityTrait native = UIAccessibilityTrait.None;
-
-		if (traits.HasFlag(AccessibilityTraits.Button))
-			native |= UIAccessibilityTrait.Button;
-		if (traits.HasFlag(AccessibilityTraits.Link))
-			native |= UIAccessibilityTrait.Link;
-		if (traits.HasFlag(AccessibilityTraits.Header))
-			native |= UIAccessibilityTrait.Header;
-		if (traits.HasFlag(AccessibilityTraits.Image))
-			native |= UIAccessibilityTrait.Image;
-		if (traits.HasFlag(AccessibilityTraits.Selected))
-			native |= UIAccessibilityTrait.Selected;
-		if (traits.HasFlag(AccessibilityTraits.StaticText))
-			native |= UIAccessibilityTrait.StaticText;
-		if (traits.HasFlag(AccessibilityTraits.Adjustable))
-			native |= UIAccessibilityTrait.Adjustable;
-		if (traits.HasFlag(AccessibilityTraits.UpdatesFrequently))
-			native |= UIAccessibilityTrait.UpdatesFrequently;
-		if (traits.HasFlag(AccessibilityTraits.NotEnabled))
-			native |= UIAccessibilityTrait.NotEnabled;
-		if (traits.HasFlag(AccessibilityTraits.PlaysSound))
-			native |= UIAccessibilityTrait.PlaysSound;
-		if (traits.HasFlag(AccessibilityTraits.StartsMediaSession))
-			native |= UIAccessibilityTrait.StartsMediaSession;
-
-		return native;
 	}
 
 	partial void ApplyVisualStateCore()
@@ -428,232 +624,118 @@ public abstract partial class View
 		native.Transform = transform;
 	}
 
-	CAGradientLayer? gradientLayer;
-	UIVisualEffectView? materialView;
-
-	// a material is a real subview, so the panel's child diff has to know to leave it alone
-	internal UIView? BackgroundView =>
-		materialView;
-
-	// interactive glass only glows for touches inside its own tree: a glass panel hosts its
-	// children in the effect's content view, everything else in the layout host
-	internal UIView ChildHost =>
-		materialView is UIVisualEffectView material && Background is Material { Kind: MaterialKind.Glass }
-			? material.ContentView
-			: Native;
-
-	// a background swap can change the child host: the panel re-parents its children
-	private protected virtual void ChildHostChanged()
-	{ }
-
-	void ApplyBackground()
-	{
-		if (native is null)
-			return;
-
-		switch (Background)
-		{
-			case SolidBrush solid:
-				DropGradient();
-				DropMaterial();
-
-				native.BackgroundColor = solid.Color.ToUIColor();
-				break;
-
-			case LinearGradient gradient:
-				DropMaterial();
-				RequirePanel("A gradient");
-
-				native.BackgroundColor = UIColor.Clear;
-				ApplyGradient(gradient);
-				break;
-
-			case Material material:
-				DropGradient();
-				RequirePanel("A material");
-
-				native.BackgroundColor = UIColor.Clear;
-				ApplyMaterial(material);
-				break;
-
-			// no brush leaves the native background alone: a control paints its own
-			default:
-				DropGradient();
-				DropMaterial();
-				break;
-		}
-
-		ChildHostChanged();
-	}
-
-	// both fills sit under the view's *subviews*, but over a control's own drawing — a UILabel renders
-	// its text into the layer, so a gradient behind it would cover the text
-	void RequirePanel(
-		string fill)
-	{
-		if (this is not Panel)
-		{
-			throw new InvalidOperationException(
-				$"{fill} background needs a panel (Border, Overlay, StackPanel, ...); {GetType().Name} draws its own content, which the fill would cover.");
-		}
-	}
-
-	void ApplyGradient(
-		LinearGradient gradient)
-	{
-		// negative z keeps the fill under the children even if the sublayer order shifts
-		gradientLayer ??= new() { ZPosition = -1 };
-
-		if (gradientLayer.SuperLayer is null)
-			native!.Layer.InsertSublayer(gradientLayer, 0);
-
-		CGColor[] colors = new CGColor[gradient.Stops.Count];
-		NSNumber[] locations = new NSNumber[gradient.Stops.Count];
-
-		for (int index = 0; index < gradient.Stops.Count; index++)
-		{
-			GradientStop stop = gradient.Stops[index];
-
-			colors[index] = stop.Color.ToUIColor().CGColor;
-			locations[index] = NSNumber.FromDouble(stop.Offset);
-		}
-
-		gradientLayer.Colors = colors;
-		gradientLayer.Locations = locations;
-		gradientLayer.StartPoint = new(gradient.Start.X, gradient.Start.Y);
-		gradientLayer.EndPoint = new(gradient.End.X, gradient.End.Y);
-
-		SyncGradientFrame();
-	}
-
-	// a CALayer does not autoresize, and its implicit animation would lag a frame behind a scroll
-	void SyncGradientFrame()
-	{
-		if (gradientLayer is null || native is null)
-			return;
-
-		CATransaction.Begin();
-		CATransaction.DisableActions = true;
-
-		gradientLayer.Frame = native.Bounds;
-		gradientLayer.CornerRadius = (nfloat)CornerRadius;
-
-		CATransaction.Commit();
-	}
-
-	void ApplyMaterial(
-		Material material)
-	{
-		UIVisualEffect effect = material.Kind is MaterialKind.Glass && OperatingSystem.IsIOSVersionAtLeast(26)
-			? new UIGlassEffect { Interactive = true }
-			: UIBlurEffect.FromStyle(material.Kind switch
-			{
-				MaterialKind.UltraThin => UIBlurEffectStyle.SystemUltraThinMaterial,
-				MaterialKind.Thin => UIBlurEffectStyle.SystemThinMaterial,
-				MaterialKind.Thick => UIBlurEffectStyle.SystemThickMaterial,
-				MaterialKind.Chrome or MaterialKind.Glass => UIBlurEffectStyle.SystemChromeMaterial,
-				_ => UIBlurEffectStyle.SystemMaterial
-			});
-
-		if (materialView is null)
-		{
-			materialView = new(effect)
-			{
-				Frame = native!.Bounds,
-				AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
-
-				// interactive glass lights up under the finger, so it has to receive touches
-				UserInteractionEnabled = material.Kind is MaterialKind.Glass
-			};
-
-			native.InsertSubview(materialView, 0);
-		}
-		else
-			materialView.Effect = effect;
-
-		if (material.Kind is MaterialKind.Glass && OperatingSystem.IsIOSVersionAtLeast(26))
-		{
-			// the glass renderer draws its rim against this shape; a layer clip would flatten it
-			materialView.CornerConfiguration = UICornerConfiguration.CreateUniformCorners(UICornerRadius.CreateFixed((nfloat)CornerRadius));
-			materialView.ClipsToBounds = false;
-			return;
-		}
-
-		materialView.Layer.CornerRadius = (nfloat)CornerRadius;
-		materialView.ClipsToBounds = CornerRadius > 0;
-	}
-
-	void DropGradient()
-	{
-		gradientLayer?.RemoveFromSuperLayer();
-		gradientLayer?.Dispose();
-		gradientLayer = null;
-	}
-
-	void DropMaterial()
-	{
-		materialView?.RemoveFromSuperview();
-		materialView?.Dispose();
-		materialView = null;
-	}
-
-	// the page's insets, walked up the tree
-	Thickness PageSafeArea
-	{
-		get
-		{
-			for (View? view = this; view is not null; view = view.Parent)
-			{
-				if (view is ContentView page)
-					return page.PageSafeArea;
-			}
-
-			return Thickness.Zero;
-		}
-	}
-
-	// how far this view has grown past the safe area. A scrolling view insets its own content by
-	// exactly this, so the scroll passes under the bar but the content never does
-	internal Thickness BledInsets
-	{
-		get
-		{
-			if (IgnoresSafeArea is SafeAreaEdges.None)
-				return Thickness.Zero;
-
-			Thickness insets = PageSafeArea;
-
-			return new(
-				IgnoresSafeArea.HasFlag(SafeAreaEdges.Leading) ? insets.Left : 0,
-				IgnoresSafeArea.HasFlag(SafeAreaEdges.Top) ? insets.Top : 0,
-				IgnoresSafeArea.HasFlag(SafeAreaEdges.Trailing) ? insets.Right : 0,
-				IgnoresSafeArea.HasFlag(SafeAreaEdges.Bottom) ? insets.Bottom : 0);
-		}
-	}
-
-	Rect Bleed(
-		Rect frame)
-	{
-		Thickness bled = BledInsets;
-
-		return new(
-			frame.X - bled.Left,
-			frame.Y - bled.Top,
-			frame.Width + bled.Left + bled.Right,
-			frame.Height + bled.Top + bled.Bottom);
-	}
-
-	/// <summary>
-	/// Whether this view currently holds keyboard focus.
-	/// </summary>
-	public bool IsFocused =>
-		native?.IsFirstResponder is true;
-
 	partial void FocusCore() =>
 		native?.BecomeFirstResponder();
 
 	partial void UnfocusCore() =>
 		native?.ResignFirstResponder();
+
+
+	private protected abstract UIView CreateNative();
+
+	private protected virtual void ApplyProperties()
+	{ }
+
+	private protected virtual void OnRealized()
+	{ }
+
+	private protected virtual void OnUnrealized()
+	{ }
+
+	private protected virtual void ChildHostChanged()
+	{ }
+
+
+	internal UIPointerStyle? PointerStyle()
+	{
+		if (native is null || PointerEffect is PointerEffect.None)
+			return null;
+
+		// only the automatic effect is bound in Microsoft.iOS 26.0 (see PointerEffect)
+		return UIPointerStyle.Create(UIPointerEffect.Create(new(native)), null);
+	}
+
+	internal UIContextMenuConfiguration? MenuConfiguration()
+	{
+		if (ContextMenu.Count == 0)
+			return null;
+
+		return UIContextMenuConfiguration.Create(
+			null,
+			null,
+			_ =>
+			{
+				contextMenuActions = new UIAction[ContextMenu.Count];
+
+				for (int index = 0; index < ContextMenu.Count; index++)
+				{
+					MenuAction entry = ContextMenu[index];
+
+					contextMenuActions[index] = UIAction.Create(
+						entry.Text,
+						entry.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
+						null,
+						_ => Run(entry.Command, null));
+
+					if (entry.IsDestructive)
+						contextMenuActions[index].Attributes = UIMenuElementAttributes.Destructive;
+				}
+
+				return UIMenu.Create(contextMenuActions);
+			});
+	}
+
+
+	/// <summary>
+	/// Builds the native view (if needed) and realizes children and bindings.
+	/// </summary>
+	public UIView Realize() =>
+		Native;
+
+	/// <summary>
+	/// Tears down the native view and children deterministically (no finalizers).
+	/// </summary>
+	public void Unrealize()
+	{
+		if (native is null)
+			return;
+
+		OnUnrealized();
+		DetachBindings();
+
+		DropGradient();
+		DropMaterial();
+		DropInteractions();
+
+		native.RemoveFromSuperview();
+		if (OwnsNative)
+			native.Dispose();
+		native = null;
+		defaultTraits = null;
+	}
+
+	/// <summary>
+	/// Runs any pending layout right now. Call it inside an <see cref="Animator"/>'s changes to animate a layout property.
+	/// </summary>
+	/// <remarks>A layout property (Width, Margin, ...) only reaches the native frame on the next layout pass, which lands after an animation block has closed — so it would snap instead of animating. <see cref="Animate(Animation, Action, Action{bool})"/> does this for you.</remarks>
+	public static void LayoutNow() =>
+		UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows)
+			.FirstOrDefault(window => window.IsKeyWindow)?
+			.LayoutIfNeeded();
+
+	/// <summary>
+	/// Adds a native gesture recognizer. An escape hatch for gestures the library does not wrap.
+	/// </summary>
+	public void AddGesture(
+		UIGestureRecognizer gesture)
+	{
+		gestures.Add(gesture);
+
+		native?.AddGestureRecognizer(gesture);
+	}
 
 	/// <summary>
 	/// Animates the property changes made inside <paramref name="changes"/>.
@@ -702,104 +784,6 @@ public abstract partial class View
 		}
 	}
 
-	/// <summary>
-	/// Runs any pending layout right now. Call it inside an <see cref="Animator"/>'s changes to animate a layout property.
-	/// </summary>
-	/// <remarks>A layout property (Width, Margin, ...) only reaches the native frame on the next layout pass, which lands after an animation block has closed — so it would snap instead of animating. <see cref="Animate(Animation, Action, Action{bool})"/> does this for you.</remarks>
-	public static void LayoutNow() =>
-		UIApplication.SharedApplication
-			.ConnectedScenes
-			.OfType<UIWindowScene>()
-			.SelectMany(scene => scene.Windows)
-			.FirstOrDefault(window => window.IsKeyWindow)?
-			.LayoutIfNeeded();
-
-	static UIViewAnimationOptions Options(
-		Easing easing) =>
-		UIViewAnimationOptions.AllowUserInteraction | easing switch
-		{
-			Easing.Linear => UIViewAnimationOptions.CurveLinear,
-			Easing.EaseIn => UIViewAnimationOptions.CurveEaseIn,
-			Easing.EaseOut => UIViewAnimationOptions.CurveEaseOut,
-			_ => UIViewAnimationOptions.CurveEaseInOut
-		};
-
-	static GestureState StateOf(
-		UIGestureRecognizer recognizer) =>
-		recognizer.State switch
-		{
-			UIGestureRecognizerState.Began => GestureState.Began,
-			UIGestureRecognizerState.Changed => GestureState.Changed,
-			UIGestureRecognizerState.Ended => GestureState.Ended,
-			_ => GestureState.Canceled
-		};
-
-	/// <summary>
-	/// Adds a native gesture recognizer. An escape hatch for gestures the library does not wrap.
-	/// </summary>
-	public void AddGesture(
-		UIGestureRecognizer gesture)
-	{
-		gestures.Add(gesture);
-
-		native?.AddGestureRecognizer(gesture);
-	}
-
-	// kept managed-side too: UIKit retains the recognizer, but the peer needs a root
-	readonly List<UIGestureRecognizer> gestures = [];
-
-	void ApplyGestures()
-	{
-		foreach (UIGestureRecognizer gesture in gestures)
-		{
-			if (gesture.View is null)
-				native?.AddGestureRecognizer(gesture);
-		}
-	}
-
-	void ApplyShadow()
-	{
-		if (native is null)
-			return;
-
-		if (Shadow is not Shadow shadow)
-		{
-			native.Layer.ShadowOpacity = 0;
-			return;
-		}
-
-		native.Layer.ShadowOpacity = (float)shadow.Opacity;
-		native.Layer.ShadowRadius = (nfloat)shadow.Radius;
-		native.Layer.ShadowOffset = new(shadow.OffsetX, shadow.OffsetY);
-		native.Layer.ShadowColor = (shadow.Color ?? Colors.Black).ToUIColor().CGColor;
-	}
-
-	partial void ApplyFrame(
-		Rect frame)
-	{
-		if (native is null)
-			return;
-
-		frame = Bleed(frame);
-
-		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
-		bool resized = native.Bounds.Size != next.Size;
-
-		// always bounds+center, never Frame: an animation can leave the native transform non-identity
-		// while the model reads as untransformed, and setting Frame under a transform is undefined.
-		// The origin stays — a scroll view keeps its content offset there
-		native.Bounds = new(native.Bounds.X, native.Bounds.Y, next.Width, next.Height);
-		native.Center = new(next.X + next.Width / 2, next.Y + next.Height / 2);
-
-		if (resized)
-		{
-			SyncGradientFrame();
-			native.SetNeedsLayout();
-
-			// the pivot offset scales with the bounds, so a resize re-bakes it into the transform
-			ApplyTransform();
-		}
-	}
 }
 
 internal sealed class ContextMenuDelegate : NSObject, IUIContextMenuInteractionDelegate
@@ -812,10 +796,10 @@ internal sealed class ContextMenuDelegate : NSObject, IUIContextMenuInteractionD
 		this.element = element;
 	}
 
-	// ReSharper disable once UnusedMember.Local
 	public ContextMenuDelegate(
 		NativeHandle handle) : base(handle)
 	{ }
+
 
 	public UIContextMenuConfiguration? GetConfigurationForMenu(
 		UIContextMenuInteraction interaction,
@@ -833,10 +817,10 @@ internal sealed class PointerInteractionDelegate : UIPointerInteractionDelegate
 		this.element = element;
 	}
 
-	// ReSharper disable once UnusedMember.Local
 	public PointerInteractionDelegate(
 		NativeHandle handle) : base(handle)
 	{ }
+
 
 	public override UIPointerStyle? GetStyleForRegion(
 		UIPointerInteraction interaction,

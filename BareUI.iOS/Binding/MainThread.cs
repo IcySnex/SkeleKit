@@ -2,6 +2,11 @@ namespace BareUI;
 
 internal static partial class MainThread
 {
+	static partial void PostCore(
+		Action action,
+		ref bool posted);
+
+	
 	public static void Post(
 		Action action)
 	{
@@ -11,8 +16,4 @@ internal static partial class MainThread
 		if (!posted)
 			action();
 	}
-
-	static partial void PostCore(
-		Action action,
-		ref bool posted);
 }

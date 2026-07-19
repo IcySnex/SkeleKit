@@ -5,11 +5,25 @@ namespace BareUI;
 /// </summary>
 public class Grid : Panel
 {
+	static readonly GridLength[] SingleStar = [GridLength.Star];
+
+
 	static IReadOnlyList<GridLength> EffectiveTracks(
 		List<GridLength> declared) =>
 		declared.Count > 0 ? declared : SingleStar;
 
-	static readonly GridLength[] SingleStar = [GridLength.Star];
+	static (int Start, int Span) AxisPlacement(
+		View child,
+		bool horizontal,
+		int trackCount)
+	{
+		GridChild placement = child.LayoutParams as GridChild ?? GridChild.Default;
+
+		int start = horizontal ? placement.Column : placement.Row;
+		int span = horizontal ? placement.ColumnSpan : placement.RowSpan;
+
+		return (Math.Clamp(start, 0, Math.Max(0, trackCount - 1)), Math.Max(1, span));
+	}
 
 	static GridChild PlacementOf(
 		View child,
@@ -68,6 +82,11 @@ public class Grid : Panel
 	}
 
 
+	// resolved tracks, shared measure -> arrange
+	double[] columnWidths = [];
+	double[] rowHeights = [];
+
+
 	/// <summary>
 	/// The row definitions, top to bottom.
 	/// </summary>
@@ -93,11 +112,6 @@ public class Grid : Panel
 	/// The gap in points inserted between columns.
 	/// </summary>
 	public double ColumnSpacing { get; set; } = 0;
-
-
-	// resolved tracks, shared measure -> arrange
-	double[] columnWidths = [];
-	double[] rowHeights = [];
 
 
 	protected override Size MeasureOverride(
@@ -156,12 +170,13 @@ public class Grid : Panel
 	}
 
 
-	// one axis: absolute = value, auto = fit children, star = split rest
 	double[] ResolveTracks(
 		IReadOnlyList<GridLength> tracks,
 		double available,
 		bool horizontal)
 	{
+		// one axis: absolute = value, auto = fit children, star = split rest
+		
 		double[] sizes = new double[tracks.Count];
 		double used = 0;
 		double totalStars = 0;
@@ -220,25 +235,10 @@ public class Grid : Panel
 		return sizes;
 	}
 
-
-	// width of the column span a child sits in
 	double CellWidth(
 		View child)
 	{
 		(int start, int span) = AxisPlacement(child, horizontal: true, columnWidths.Length);
 		return SpanSize(columnWidths, start, span, ColumnSpacing);
-	}
-
-	static (int Start, int Span) AxisPlacement(
-		View child,
-		bool horizontal,
-		int trackCount)
-	{
-		GridChild placement = child.LayoutParams as GridChild ?? GridChild.Default;
-
-		int start = horizontal ? placement.Column : placement.Row;
-		int span = horizontal ? placement.ColumnSpan : placement.RowSpan;
-
-		return (Math.Clamp(start, 0, Math.Max(0, trackCount - 1)), Math.Max(1, span));
 	}
 }

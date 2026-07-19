@@ -8,25 +8,6 @@ internal sealed class HttpImageLoader : IImageLoader
 	static readonly NSCache Cache = new() { TotalCostLimit = 64 * 1024 * 1024 };
 	static readonly ConcurrentDictionary<string, Task<UIImage?>> Inflight = new();
 
-	public async Task<UIImage?> LoadAsync(
-		string url,
-		CancellationToken cancellationToken)
-	{
-		using NSString key = new(url);
-		if (Cache.ObjectForKey(key) is UIImage cached)
-			return cached;
-
-		Task<UIImage?> fetch = Inflight.GetOrAdd(url, Fetch);
-
-		try
-		{
-			return await fetch.WaitAsync(cancellationToken);
-		}
-		catch (Exception e) when (e is not OperationCanceledException)
-		{
-			return null;
-		}
-	}
 
 	static async Task<UIImage?> Fetch(
 		string url)
@@ -52,6 +33,27 @@ internal sealed class HttpImageLoader : IImageLoader
 		finally
 		{
 			Inflight.TryRemove(url, out _);
+		}
+	}
+
+	
+	public async Task<UIImage?> LoadAsync(
+		string url,
+		CancellationToken cancellationToken)
+	{
+		using NSString key = new(url);
+		if (Cache.ObjectForKey(key) is UIImage cached)
+			return cached;
+
+		Task<UIImage?> fetch = Inflight.GetOrAdd(url, Fetch);
+
+		try
+		{
+			return await fetch.WaitAsync(cancellationToken);
+		}
+		catch (Exception e) when (e is not OperationCanceledException)
+		{
+			return null;
 		}
 	}
 }

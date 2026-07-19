@@ -2,45 +2,6 @@ namespace BareUI;
 
 internal static class Keyboards
 {
-	public static UIKeyboardAppearance Appearance(
-		KeyboardLook look) =>
-		look switch
-		{
-			KeyboardLook.Light => UIKeyboardAppearance.Light,
-			KeyboardLook.Dark => UIKeyboardAppearance.Dark,
-			_ => UIKeyboardAppearance.Default
-		};
-
-	// the control roots both returns: UIKit's retain alone would let the item peers die
-	public static (UIToolbar Bar, UIBarButtonItem[] Items) Toolbar(
-		Control owner,
-		KeyboardToolbar kind)
-	{
-		UIBarButtonItem done = new(UIBarButtonSystemItem.Done, (_, _) => owner.Unfocus());
-
-		UIBarButtonItem[] items = kind is KeyboardToolbar.Navigation
-			?
-			[
-				new(UIImage.GetSystemImage("chevron.up")!, UIBarButtonItemStyle.Plain, (_, _) => MoveFocus(owner, -1)),
-				new(UIImage.GetSystemImage("chevron.down")!, UIBarButtonItemStyle.Plain, (_, _) => MoveFocus(owner, +1)),
-				new(UIBarButtonSystemItem.FlexibleSpace),
-				done
-			]
-			:
-			[
-				new(UIBarButtonSystemItem.FlexibleSpace),
-				done
-			];
-
-		UIToolbar bar = new() { Items = items };
-		bar.SizeToFit();
-
-		// the press effect scales the glass outside the fitted bounds, which the container clips
-		bar.Frame = new(0, 0, bar.Frame.Width, bar.Frame.Height + 10);
-
-		return (bar, items);
-	}
-
 	static void MoveFocus(
 		Control owner,
 		int direction)
@@ -74,5 +35,44 @@ internal static class Keyboards
 					break;
 				}
 		}
+	}
+
+
+	public static UIKeyboardAppearance Appearance(
+		KeyboardLook look) =>
+		look switch
+		{
+			KeyboardLook.Light => UIKeyboardAppearance.Light,
+			KeyboardLook.Dark => UIKeyboardAppearance.Dark,
+			_ => UIKeyboardAppearance.Default
+		};
+
+	public static (UIToolbar Bar, UIBarButtonItem[] Items) Toolbar(
+		Control owner,
+		KeyboardToolbar kind)
+	{
+		UIBarButtonItem done = new(UIBarButtonSystemItem.Done, (_, _) => owner.Unfocus());
+
+		UIBarButtonItem[] items = kind is KeyboardToolbar.Navigation
+			?
+			[
+				new(UIImage.GetSystemImage("chevron.up")!, UIBarButtonItemStyle.Plain, (_, _) => MoveFocus(owner, -1)),
+				new(UIImage.GetSystemImage("chevron.down")!, UIBarButtonItemStyle.Plain, (_, _) => MoveFocus(owner, +1)),
+				new(UIBarButtonSystemItem.FlexibleSpace),
+				done
+			]
+			:
+			[
+				new(UIBarButtonSystemItem.FlexibleSpace),
+				done
+			];
+
+		UIToolbar bar = new() { Items = items };
+		bar.SizeToFit();
+
+		// the press effect scales the glass outside the fitted bounds, which the container clips
+		bar.Frame = new(0, 0, bar.Frame.Width, bar.Frame.Height + 10);
+
+		return (bar, items);
 	}
 }

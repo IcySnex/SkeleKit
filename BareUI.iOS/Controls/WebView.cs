@@ -47,6 +47,11 @@ public class WebView : Control
 	}
 
 
+	static double Fill(
+		double value) =>
+		double.IsFinite(value) ? value : 0;
+
+
 	NavigationPeer? peer;
 
 
@@ -95,10 +100,6 @@ public class WebView : Control
 	/// </summary>
 	public Action<string>? NavigationFailed { get; set; }
 
-
-	static double Fill(
-		double value) =>
-		double.IsFinite(value) ? value : 0;
 
 	void ApplyContent()
 	{

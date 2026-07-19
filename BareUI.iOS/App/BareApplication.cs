@@ -91,93 +91,6 @@ public class BareApplication
 	static UITabBarController? CurrentTabs() =>
 		Root() as UITabBarController;
 
-	internal static ContentView? TopPage()
-	{
-		UIViewController? top = Root();
-
-		while (top?.PresentedViewController is UIViewController presented)
-			top = presented;
-
-		if (top is UITabBarController tabs)
-			top = tabs.SelectedViewController;
-
-		if (top is UINavigationController stack)
-			top = stack.TopViewController;
-
-		return (top as PageHost)?.Page;
-	}
-
-
-	readonly ViewRegistry registry;
-	readonly ShellKind shell;
-	readonly bool preferLargeTitles;
-	readonly TabsBuilder? tabsBuilder;
-	readonly Type? rootViewModel;
-
-	/// <summary>
-	/// The built-in service provider for resolving dependencies.
-	/// </summary>
-	public IServiceProvider Services { get; }
-
-	internal UITabAccessory? Accessory { get; private set; }
-	View? accessoryContent;
-	AccessoryHost? accessoryHost;
-
-	internal UITab? ActionTab { get; private set; }
-	internal Action? BubbleAction { get; private set; }
-	TabsDelegate? tabsDelegate;
-	UILongPressGestureRecognizer? bubbleTap;
-
-	internal static void HandleReselect(
-		UITabBarController controller)
-	{
-		if (controller.SelectedViewController is not UINavigationController stack)
-			return;
-
-		PageHost? root = stack.ViewControllers?.FirstOrDefault() as PageHost;
-
-		if (root?.Page?.TabReselected is Action handler)
-		{
-			handler();
-			return;
-		}
-
-		if (stack.ViewControllers?.Length > 1)
-		{
-			stack.PopToRootViewController(true);
-			return;
-		}
-
-		if (root?.Page is ContentView page && PageHost.FindScrolling(page)?.Native is UIScrollView scroll)
-			scroll.SetContentOffset(new(scroll.ContentOffset.X, -scroll.AdjustedContentInset.Top), true);
-	}
-
-	internal void AttachBubbleInterceptor(
-		UITabBarController controller)
-	{
-		if (ActionTab is null || BubbleAction is null)
-			return;
-
-		if (bubbleTap is not null)
-			return;
-
-		if (FindBubbleView(controller.View!) is not UIView bubble)
-			return;
-
-		UILongPressGestureRecognizer recognizer = null!;
-		recognizer = new(() =>
-		{
-			if (recognizer.State is UIGestureRecognizerState.Began)
-				BubbleAction?.Invoke();
-		});
-
-		recognizer.MinimumPressDuration = 0;
-		recognizer.CancelsTouchesInView = true;
-
-		bubbleTap = recognizer;
-		bubble.AddGestureRecognizer(recognizer);
-	}
-
 	static UIView? FindBubbleView(
 		UIView root)
 	{
@@ -212,32 +125,59 @@ public class BareApplication
 	}
 
 
-	View? footerContent;
-	AccessoryHost? footerHost;
-
-	internal bool AccessoryWanted => accessoryContent?.IsVisible.Value is true;
-
-	void SyncAccessory()
+	internal static ContentView? TopPage()
 	{
-		if (Accessory is null
-			|| !OperatingSystem.IsIOSVersionAtLeast(26)
-			|| CurrentTabs() is not UITabBarController tabs)
-			return;
+		UIViewController? top = Root();
 
-		bool barHidden = (CurrentStack()?.TopViewController as PageHost)?.HidesBottomBarWhenPushed is true;
+		while (top?.PresentedViewController is UIViewController presented)
+			top = presented;
 
-		tabs.SetBottomAccessory(AccessoryWanted && !barHidden ? Accessory : null, animated: true);
+		if (top is UITabBarController tabs)
+			top = tabs.SelectedViewController;
+
+		if (top is UINavigationController stack)
+			top = stack.TopViewController;
+
+		return (top as PageHost)?.Page;
 	}
 
-	internal Action? Backgrounded { get; set; }
-	internal Action? Foregrounded { get; set; }
+	internal static void HandleReselect(
+		UITabBarController controller)
+	{
+		if (controller.SelectedViewController is not UINavigationController stack)
+			return;
 
-	internal void NotifyBackground() =>
-		Backgrounded?.Invoke();
+		PageHost? root = stack.ViewControllers?.FirstOrDefault() as PageHost;
 
-	internal void NotifyForeground() =>
-		Foregrounded?.Invoke();
+		if (root?.Page?.TabReselected is Action handler)
+		{
+			handler();
+			return;
+		}
 
+		if (stack.ViewControllers?.Length > 1)
+		{
+			stack.PopToRootViewController(true);
+			return;
+		}
+
+		if (root?.Page is ContentView page && PageHost.FindScrolling(page)?.Native is UIScrollView scroll)
+			scroll.SetContentOffset(new(scroll.ContentOffset.X, -scroll.AdjustedContentInset.Top), true);
+	}
+
+
+	/// <summary>
+	/// Creates a new builder to configure services and the layout shell.
+	/// </summary>
+	public static BareApplicationBuilder CreateBuilder() =>
+		new();
+
+
+	readonly ViewRegistry registry;
+	readonly ShellKind shell;
+	readonly bool preferLargeTitles;
+	readonly TabsBuilder? tabsBuilder;
+	readonly Type? rootViewModel;
 
 	internal BareApplication(
 		BareApplicationBuilder builder)
@@ -256,6 +196,75 @@ public class BareApplication
 		Services = builder.Services.BuildServiceProvider();
 	}
 
+
+	internal UITabAccessory? Accessory { get; private set; }
+	View? accessoryContent;
+	AccessoryHost? accessoryHost;
+
+	internal UITab? ActionTab { get; private set; }
+	internal Action? BubbleAction { get; private set; }
+	TabsDelegate? tabsDelegate;
+	UILongPressGestureRecognizer? bubbleTap;
+
+	View? footerContent;
+	AccessoryHost? footerHost;
+
+	internal bool AccessoryWanted => accessoryContent?.IsVisible.Value is true;
+
+	internal Action? Backgrounded { get; set; }
+	internal Action? Foregrounded { get; set; }
+
+
+	/// <summary>
+	/// The built-in service provider for resolving dependencies.
+	/// </summary>
+	public IServiceProvider Services { get; }
+
+
+	void SyncAccessory()
+	{
+		if (Accessory is null
+			|| !OperatingSystem.IsIOSVersionAtLeast(26)
+			|| CurrentTabs() is not UITabBarController tabs)
+			return;
+
+		bool barHidden = (CurrentStack()?.TopViewController as PageHost)?.HidesBottomBarWhenPushed is true;
+
+		tabs.SetBottomAccessory(AccessoryWanted && !barHidden ? Accessory : null, animated: true);
+	}
+
+
+	internal void NotifyBackground() =>
+		Backgrounded?.Invoke();
+
+	internal void NotifyForeground() =>
+		Foregrounded?.Invoke();
+
+	internal void AttachBubbleInterceptor(
+		UITabBarController controller)
+	{
+		if (ActionTab is null || BubbleAction is null)
+			return;
+
+		if (bubbleTap is not null)
+			return;
+
+		if (FindBubbleView(controller.View!) is not UIView bubble)
+			return;
+
+		UILongPressGestureRecognizer recognizer = null!;
+		recognizer = new(() =>
+		{
+			if (recognizer.State is UIGestureRecognizerState.Began)
+				BubbleAction?.Invoke();
+		});
+
+		recognizer.MinimumPressDuration = 0;
+		recognizer.CancelsTouchesInView = true;
+
+		bubbleTap = recognizer;
+		bubble.AddGestureRecognizer(recognizer);
+	}
 
 	internal UIViewController BuildShell()
 	{
@@ -447,12 +456,6 @@ public class BareApplication
 		}
 	}
 
-
-	/// <summary>
-	/// Creates a new builder to configure services and the layout shell.
-	/// </summary>
-	public static BareApplicationBuilder CreateBuilder() =>
-		new();
 
 	/// <summary>
 	/// Starts the native iOS main loop.

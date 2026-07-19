@@ -42,12 +42,13 @@ public readonly struct Bindable<T>
 	}
 
 
+	internal BindingExpression<T>? Expression { get; }
+
+
 	/// <summary>
 	/// The literal value, or the last value a binding produced.
 	/// </summary>
 	public T? Value { get; }
-
-	internal BindingExpression<T>? Expression { get; }
 }
 
 /// <summary>

@@ -43,8 +43,7 @@ internal static class Fonts
 			FontDesign.Monospaced => UIFontDescriptorSystemDesign.Monospaced,
 			_ => UIFontDescriptorSystemDesign.Default
 		};
-
-
+	
 	// NaN = no cap; anything else is the point size Dynamic Type may not scale past
 	static UIFont Scale(
 		UIFontMetrics metrics,

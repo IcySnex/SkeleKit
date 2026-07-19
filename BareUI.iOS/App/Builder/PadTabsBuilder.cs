@@ -13,12 +13,10 @@ public sealed class PadTabsBuilder
 		this.registry = registry;
 	}
 
+	
 	internal bool UseSidebar { get; private set; }
-
 	internal Dictionary<Type, TabPlacement> Placements { get; } = [];
-
 	internal List<TabsBuilder.Node> Nodes { get; } = [];
-
 	internal Func<View>? FooterFactory { get; private set; }
 
 

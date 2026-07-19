@@ -33,6 +33,7 @@ public sealed class BindingExpression<T>
 		Mode = mode;
 	}
 
+
 	/// <summary>
 	/// Chooses when a two-way binding writes back to the source.
 	/// </summary>
@@ -54,6 +55,70 @@ public sealed class BindingExpression<T>
 /// </remarks>
 public static class BindingFactory
 {
+	// last property name of a single-segment lambda
+	static string LeafName(
+		string? expression)
+	{
+		string[] names = SplitPath(expression);
+
+		return names[^1];
+	}
+
+	static string[] SplitPath(
+		string? expression)
+	{
+		if (expression is null)
+			throw new ArgumentException("Binding path is missing. Pass a lambda so CallerArgumentExpression can capture it.");
+
+		int arrow = expression.IndexOf("=>", StringComparison.Ordinal);
+		if (arrow < 0)
+			throw new ArgumentException($"Binding path '{expression}' is not a lambda.");
+
+		string body = expression[(arrow + 2)..].Trim();
+		string[] parts = body.Split('.');
+		if (parts.Length < 2)
+			throw new ArgumentException($"Binding path '{expression}' must access at least one property.");
+
+		string[] names = parts[1..];
+		foreach (string name in names)
+		{
+			if (!IsIdentifier(name))
+				throw new ArgumentException($"Binding path '{expression}' must be plain member access (no calls, indexers or casts).");
+		}
+
+		return names;
+	}
+
+	static bool IsIdentifier(
+		string value)
+	{
+		if (value.Length == 0 || !char.IsLetter(value[0]) && value[0] != '_')
+			return false;
+
+		foreach (char character in value)
+		{
+			if (!char.IsLetterOrDigit(character) && character != '_')
+				return false;
+		}
+
+		return true;
+	}
+
+	
+	// "vm => vm.Movie.Title" -> ["Movie", "Title"]
+	internal static BindingSegment[] ParsePath(
+		string? expression)
+	{
+		string[] names = SplitPath(expression);
+		BindingSegment[] segments = new BindingSegment[names.Length];
+
+		for (int i = 0; i < names.Length; i++)
+			segments[i] = new(names[i], null);
+
+		return segments;
+	}
+
+
 	/// <summary>
 	/// A one-way binding that reads <paramref name="getter"/> from the source.
 	/// </summary>
@@ -206,67 +271,4 @@ public static class BindingFactory
 					setter(middle, value);
 			},
 			BindingMode.TwoWay);
-
-
-	// "vm => vm.Movie.Title" -> ["Movie", "Title"]
-	internal static BindingSegment[] ParsePath(
-		string? expression)
-	{
-		string[] names = SplitPath(expression);
-		BindingSegment[] segments = new BindingSegment[names.Length];
-
-		for (int i = 0; i < names.Length; i++)
-			segments[i] = new(names[i], null);
-
-		return segments;
-	}
-
-	// last property name of a single-segment lambda
-	static string LeafName(
-		string? expression)
-	{
-		string[] names = SplitPath(expression);
-
-		return names[^1];
-	}
-
-	static string[] SplitPath(
-		string? expression)
-	{
-		if (expression is null)
-			throw new ArgumentException("Binding path is missing. Pass a lambda so CallerArgumentExpression can capture it.");
-
-		int arrow = expression.IndexOf("=>", StringComparison.Ordinal);
-		if (arrow < 0)
-			throw new ArgumentException($"Binding path '{expression}' is not a lambda.");
-
-		string body = expression[(arrow + 2)..].Trim();
-		string[] parts = body.Split('.');
-		if (parts.Length < 2)
-			throw new ArgumentException($"Binding path '{expression}' must access at least one property.");
-
-		string[] names = parts[1..];
-		foreach (string name in names)
-		{
-			if (!IsIdentifier(name))
-				throw new ArgumentException($"Binding path '{expression}' must be plain member access (no calls, indexers or casts).");
-		}
-
-		return names;
-	}
-
-	static bool IsIdentifier(
-		string value)
-	{
-		if (value.Length == 0 || !char.IsLetter(value[0]) && value[0] != '_')
-			return false;
-
-		foreach (char character in value)
-		{
-			if (!char.IsLetterOrDigit(character) && character != '_')
-				return false;
-		}
-
-		return true;
-	}
 }

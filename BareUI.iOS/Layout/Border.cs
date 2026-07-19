@@ -5,6 +5,9 @@ namespace BareUI;
 /// </summary>
 public partial class Border : Panel
 {
+	Thickness Inset => new(Padding.Left + StrokeThickness, Padding.Top + StrokeThickness, Padding.Right + StrokeThickness, Padding.Bottom + StrokeThickness);
+
+
 	/// <summary>
 	/// The stroke color, or null (default) for no stroke.
 	/// </summary>
@@ -17,7 +20,6 @@ public partial class Border : Panel
 	/// Also insets the child so the stroke never overlaps content.
 	/// </remarks>
 	public double StrokeThickness { get; set; } = 0;
-
 
 	/// <summary>
 	/// The single wrapped child.
@@ -33,10 +35,7 @@ public partial class Border : Panel
 		}
 	}
 
-
-	Thickness Inset => new(Padding.Left + StrokeThickness, Padding.Top + StrokeThickness, Padding.Right + StrokeThickness, Padding.Bottom + StrokeThickness);
-
-
+	
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{

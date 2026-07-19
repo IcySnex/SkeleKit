@@ -16,7 +16,6 @@ internal sealed class ViewRegistry
 	readonly Dictionary<Type, Type> viewModelByView = [];
 
 
-	// the factory keeps page construction reflection-free: the ViewModel goes in by constructor
 	public void Add<TViewModel, TView>(
 		Func<TViewModel, TView> create,
 		bool singleton)
@@ -30,7 +29,6 @@ internal sealed class ViewRegistry
 		viewModelByView[typeof(TView)] = typeof(TViewModel);
 	}
 
-
 	public Type ViewModelOf<TView>() where TView : ContentView
 	{
 		if (!viewModelByView.TryGetValue(typeof(TView), out Type? viewModel))
@@ -38,7 +36,6 @@ internal sealed class ViewRegistry
 
 		return viewModel;
 	}
-
 
 	public ContentView CreatePage(
 		object viewModel)

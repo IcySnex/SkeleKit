@@ -30,24 +30,16 @@ public sealed class TabsBuilder
 		this.registry = registry;
 	}
 
+
 	internal List<Node> Nodes { get; } = [];
-
 	internal Type? SearchViewModel { get; private set; }
-
 	internal string? BubbleIcon { get; private set; }
-
 	internal Func<IServiceProvider, Action>? BubbleFactory { get; private set; }
-
 	internal Type? BubbleViewModel { get; private set; }
-
 	internal string? BubbleTitle { get; private set; }
-
 	internal TabBarMinimize Minimize { get; private set; } = TabBarMinimize.Never;
-
 	internal Func<View>? AccessoryFactory { get; private set; }
-
 	internal PadTabsBuilder? Pad { get; private set; }
-
 	internal bool UseLargeTitles { get; private set; }
 
 

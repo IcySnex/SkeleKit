@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Windows.Input;
 
 namespace BareUI;
@@ -77,7 +79,6 @@ public abstract partial class View
 	private protected virtual void PropagateBindingContext()
 	{ }
 
-	// literal -> apply now; expression -> keep a live binding the context can feed
 	private protected Binding<T>? Register<T>(
 		Binding<T>? existing,
 		Bindable<T> value,
@@ -172,7 +173,6 @@ public abstract partial class View
 
 	partial void RequestLayout();
 
-	// stores a property, pushes it to the native view once realized, and relayouts if it can change size
 	private protected void Set<T>(
 		ref T field,
 		T value,
@@ -182,7 +182,6 @@ public abstract partial class View
 		if (EqualityComparer<T>.Default.Equals(field, value))
 			return;
 
-		// inside an animation's changes: remember where this view was, in case UIKit reverts it
 		AnimationCapture.Record(this);
 
 		field = value;
@@ -197,12 +196,9 @@ public abstract partial class View
 	partial void ApplyIfRealized(
 		Action apply);
 
-	// scroll views clip by default in UIKit; forcing ClipsToBounds=false would let their content
-	// paint over everything around them
 	private protected virtual bool ClipsByDefault =>
 		false;
 
-	// a scrolling view manages its own content insets, and a page lets it slide under the bars
 	internal virtual bool Scrolls =>
 		false;
 
@@ -211,11 +207,9 @@ public abstract partial class View
 
 	partial void ApplyVisualStateCore();
 
-	// theme change: dynamic UIColors adapt on their own, but CGColor snapshots (borders, shadows) do not
 	internal virtual void ReapplyVisuals() =>
 		ApplyVisualState();
 
-	// the page came (back) on screen: a list uses this to release its still-selected row
 	internal virtual void PageAppeared()
 	{ }
 

@@ -8,6 +8,9 @@ namespace BareUI;
 /// </summary>
 public sealed class BareApplicationBuilder
 {
+	internal BareApplicationBuilder() { }
+
+
 	internal readonly ServiceCollection Services = [];
 	internal readonly ViewRegistry Registry = new();
 
@@ -16,7 +19,8 @@ public sealed class BareApplicationBuilder
 	internal TabsBuilder? TabsBuilder;
 	internal Type? RootViewModel;
 
-	internal BareApplicationBuilder() { }
+	internal Action? LifecycleBackground { get; private set; }
+	internal Action? LifecycleForeground { get; private set; }
 
 
 	/// <summary>
@@ -73,9 +77,6 @@ public sealed class BareApplicationBuilder
 		return this;
 	}
 
-	internal Action? LifecycleBackground { get; private set; }
-	internal Action? LifecycleForeground { get; private set; }
-
 	/// <summary>
 	/// Registers implicit styles applied to every view of a type as it is built.
 	/// </summary>
@@ -96,7 +97,6 @@ public sealed class BareApplicationBuilder
 	/// </remarks>
 	/// <param name="configure">Registers the pages.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	[EditorBrowsable(EditorBrowsableState.Never)]
 	public BareApplicationBuilder UsePages(
 		Action<PagesBuilder> configure)
 	{
@@ -104,7 +104,6 @@ public sealed class BareApplicationBuilder
 
 		return this;
 	}
-
 
 	/// <summary>
 	/// Configures the app to use as a single page without navigation chrome.

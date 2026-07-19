@@ -204,6 +204,15 @@ public abstract partial class ContentView : Panel
 	}
 
 
+	void ApplyTitle() =>
+		ApplyTitleCore();
+
+	partial void ApplyTitleCore();
+
+	partial void ApplyTabBadgeCore();
+
+	partial void ApplyLeaveGuardCore();
+
 
 	/// <summary>
 	/// Raised once, the first time the page is realized.
@@ -256,18 +265,8 @@ public abstract partial class ContentView : Panel
 	internal void NotifyDisappearing() =>
 		OnDisappearing();
 
-
-	void ApplyTitle() =>
-		ApplyTitleCore();
-
-	partial void ApplyTitleCore();
-
 	internal void ApplyTabBadge() =>
 		ApplyTabBadgeCore();
-
-	partial void ApplyTabBadgeCore();
-
-	partial void ApplyLeaveGuardCore();
 
 
 	protected override Size MeasureOverride(
@@ -297,23 +296,6 @@ public abstract partial class ContentView : Panel
 public abstract class ContentView<TViewModel> : ContentView
 	where TViewModel : class
 {
-	/// <summary>
-	/// Stores the ViewModel, so the derived constructor composes its tree against it directly.
-	/// </summary>
-	/// <param name="viewModel">The ViewModel driving this page.</param>
-	protected ContentView(
-		TViewModel viewModel)
-	{
-		ViewModel = viewModel;
-		BindingContext = viewModel;
-	}
-
-	/// <summary>
-	/// The ViewModel this page was built around. Bindings resolve against it.
-	/// </summary>
-	public TViewModel ViewModel { get; }
-
-
 	/// <summary>
 	/// Binds one way to a ViewModel property.
 	/// </summary>
@@ -399,4 +381,22 @@ public abstract class ContentView<TViewModel> : ContentView
 		Func<TViewModel, T> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
 		BindingFactory.BindOnce(getter, path);
+
+
+	/// <summary>
+	/// Stores the ViewModel, so the derived constructor composes its tree against it directly.
+	/// </summary>
+	/// <param name="viewModel">The ViewModel driving this page.</param>
+	protected ContentView(
+		TViewModel viewModel)
+	{
+		ViewModel = viewModel;
+		BindingContext = viewModel;
+	}
+
+
+	/// <summary>
+	/// The ViewModel this page was built around. Bindings resolve against it.
+	/// </summary>
+	public TViewModel ViewModel { get; }
 }

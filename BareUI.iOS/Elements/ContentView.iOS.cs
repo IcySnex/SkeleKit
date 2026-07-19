@@ -6,6 +6,8 @@ namespace BareUI;
 public abstract partial class ContentView
 {
 	internal PageHost? Host { get; set; }
+	internal Thickness PageSafeArea { get; set; } = Thickness.Zero;
+
 
 #pragma warning disable CA1822
 	/// <summary>
@@ -14,9 +16,7 @@ public abstract partial class ContentView
 	/// <remarks>
 	/// ViewModels take <see cref="INavigator"/> by constructor instead.
 	/// </remarks>
-	protected INavigator Navigator =>
-		BareApplication.Current?.Services.GetRequiredService<INavigator>()
-		?? throw new InvalidOperationException("There is no running application.");
+	protected INavigator Navigator => BareApplication.Current?.Services.GetRequiredService<INavigator>() ?? throw new InvalidOperationException("There is no running application.");
 
 	/// <summary>
 	/// The application's share sheet, for sharing from page code.
@@ -24,22 +24,16 @@ public abstract partial class ContentView
 	/// <remarks>
 	/// ViewModels take <see cref="ISharer"/> by constructor instead.
 	/// </remarks>
-	protected ISharer Sharer =>
-		BareApplication.Current?.Services.GetRequiredService<ISharer>()
-		?? throw new InvalidOperationException("There is no running application.");
+	protected ISharer Sharer => BareApplication.Current?.Services.GetRequiredService<ISharer>() ?? throw new InvalidOperationException("There is no running application.");
 #pragma warning restore CA1822
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	public UIViewController? Controller =>
-		Host;
 
-	// the page's safe-area insets, so a view with IgnoresSafeArea knows how far it may bleed
-	internal Thickness PageSafeArea { get; set; } = Thickness.Zero;
+	public UIViewController? Controller => Host;
+
 
 	partial void ApplyTitleCore() =>
 		Host?.NavigationItem.Title = Title.Value;
 
-	// a UITab-based bar renders from the tab, not the TabBarItem; UITab has no badge color
 	partial void ApplyTabBadgeCore()
 	{
 		if (Host is not PageHost host)
@@ -57,6 +51,7 @@ public abstract partial class ContentView
 
 	partial void ApplyLeaveGuardCore() =>
 		Host?.ApplyLeaveGuard();
+
 
 	private protected override void OnRealized()
 	{

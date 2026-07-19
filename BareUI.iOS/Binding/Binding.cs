@@ -22,41 +22,6 @@ internal sealed class Binding<T>(
 	public UpdateTrigger Trigger => expression.Trigger;
 
 
-	public override void Attach(
-		object? source)
-	{
-		Detach();
-
-		this.source = source;
-		if (source is null)
-			return;
-
-		if (expression.Mode is not BindingMode.OneTime)
-			Subscribe(source);
-
-		if (expression.Mode is not BindingMode.OneWayToSource)
-			apply(expression.Getter(source));
-	}
-
-	public override void Detach()
-	{
-		foreach (INotifyPropertyChanged subscription in subscriptions)
-			subscription.PropertyChanged -= OnSourcePropertyChanged;
-
-		subscriptions.Clear();
-		source = null;
-	}
-
-	public void PushToSource(
-		T? value)
-	{
-		if (expression.Mode is not (BindingMode.TwoWay or BindingMode.OneWayToSource))
-			return;
-
-		if (expression.Setter is not null && source is not null)
-			expression.Setter(source, value);
-	}
-
 	void Subscribe(
 		object source)
 	{
@@ -106,5 +71,41 @@ internal sealed class Binding<T>(
 		}
 
 		return false;
+	}
+
+
+	public override void Attach(
+		object? source)
+	{
+		Detach();
+
+		this.source = source;
+		if (source is null)
+			return;
+
+		if (expression.Mode is not BindingMode.OneTime)
+			Subscribe(source);
+
+		if (expression.Mode is not BindingMode.OneWayToSource)
+			apply(expression.Getter(source));
+	}
+
+	public override void Detach()
+	{
+		foreach (INotifyPropertyChanged subscription in subscriptions)
+			subscription.PropertyChanged -= OnSourcePropertyChanged;
+
+		subscriptions.Clear();
+		source = null;
+	}
+
+	public void PushToSource(
+		T? value)
+	{
+		if (expression.Mode is not (BindingMode.TwoWay or BindingMode.OneWayToSource))
+			return;
+
+		if (expression.Setter is not null && source is not null)
+			expression.Setter(source, value);
 	}
 }

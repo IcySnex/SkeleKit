@@ -1,38 +1,8 @@
-// ReSharper disable InconsistentNaming
 
 namespace BareUI;
 
 internal static class ColorInterop
 {
-	public static UIColor ToUIColor(
-		this Color color)
-	{
-		if (color.System is SystemColor system)
-			return Resolve(system);
-
-		if (color.Dark.HasValue)
-		{
-			(double Red, double Green, double Blue, double Alpha) dark = color.Dark.Value;
-
-			UIColor light = Rgba(color.Red, color.Green, color.Blue, color.Alpha);
-			UIColor darker = Rgba(dark.Red, dark.Green, dark.Blue, dark.Alpha);
-
-			return UIColor.FromDynamicProvider(traits =>
-				traits.UserInterfaceStyle is UIUserInterfaceStyle.Dark ? darker : light);
-		}
-
-		return Rgba(color.Red, color.Green, color.Blue, color.Alpha);
-	}
-
-	// a picked color is always concrete: no system semantics, no dark variant
-	public static Color ToColor(
-		this UIColor color)
-	{
-		color.GetRGBA(out nfloat red, out nfloat green, out nfloat blue, out nfloat alpha);
-
-		return new(red, green, blue, alpha);
-	}
-
 	static UIColor Rgba(
 		double red,
 		double green,
@@ -75,4 +45,34 @@ internal static class ColorInterop
 			SystemColor.SecondaryGroupedBackground => UIColor.SecondarySystemGroupedBackground,
 			_ => UIColor.TertiarySystemGroupedBackground
 		};
+
+	
+	// ReSharper disable once InconsistentNaming
+	public static UIColor ToUIColor(
+		this Color color)
+	{
+		if (color.System is SystemColor system)
+			return Resolve(system);
+
+		if (color.Dark.HasValue)
+		{
+			(double Red, double Green, double Blue, double Alpha) dark = color.Dark.Value;
+
+			UIColor light = Rgba(color.Red, color.Green, color.Blue, color.Alpha);
+			UIColor darker = Rgba(dark.Red, dark.Green, dark.Blue, dark.Alpha);
+
+			return UIColor.FromDynamicProvider(traits =>
+				traits.UserInterfaceStyle is UIUserInterfaceStyle.Dark ? darker : light);
+		}
+
+		return Rgba(color.Red, color.Green, color.Blue, color.Alpha);
+	}
+
+	public static Color ToColor(
+		this UIColor color)
+	{
+		color.GetRGBA(out nfloat red, out nfloat green, out nfloat blue, out nfloat alpha);
+
+		return new(red, green, blue, alpha);
+	}
 }

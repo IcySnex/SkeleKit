@@ -4,6 +4,7 @@ internal sealed class GridChild
 {
 	public static readonly GridChild Default = new();
 
+	
 	public int Row { get; set; } = 0;
 	public int Column { get; set; } = 0;
 	public int RowSpan { get; set; } = 1;
@@ -18,6 +19,7 @@ public static class GridExtensions
 	static GridChild Placement(
 		View view) =>
 		view.LayoutParams as GridChild ?? (GridChild)(view.LayoutParams = new GridChild());
+
 
 	/// <param name="view">The view target being placed.</param>
 	/// <typeparam name="T">The type of the view.</typeparam>

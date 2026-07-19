@@ -50,20 +50,6 @@ public partial class ScrollView : Panel
 	bool isRefreshing;
 	Binding<bool>? isRefreshingBinding;
 
-	internal void OnRefreshTriggered()
-	{
-		Set(ref isRefreshing, true, affectsMeasure: false);
-		isRefreshingBinding?.PushToSource(true);
-
-		if (RefreshCommand is ICommand command && command.CanExecute(null))
-			command.Execute(null);
-	}
-
-	void ApplyRefreshing() =>
-		ApplyRefreshingCore();
-
-	partial void ApplyRefreshingCore();
-
 	/// <summary>
 	/// Invoked as the view scrolls, with the offset in points.
 	/// </summary>
@@ -84,58 +70,36 @@ public partial class ScrollView : Panel
 	/// </summary>
 	public bool Paging
 	{
-		get => paging;
-		set => Set(ref paging, value, ApplyBehavior, affectsMeasure: false);
+		get;
+		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
 	}
-	bool paging;
 
 	/// <summary>
 	/// Whether the scroll indicator is shown.
 	/// </summary>
 	public bool ShowsIndicator
 	{
-		get => showsIndicator;
-		set => Set(ref showsIndicator, value, ApplyBehavior, affectsMeasure: false);
-	}
-	bool showsIndicator = true;
+		get;
+		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
+	} = true;
 
 	/// <summary>
 	/// The color of the scroll indicator.
 	/// </summary>
 	public IndicatorStyle IndicatorStyle
 	{
-		get => indicatorStyle;
-		set => Set(ref indicatorStyle, value, ApplyBehavior, affectsMeasure: false);
-	}
-	IndicatorStyle indicatorStyle = IndicatorStyle.Default;
+		get;
+		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
+	} = IndicatorStyle.Default;
 
 	/// <summary>
 	/// Insets the scroll indicator from the edges, or null to track the content insets.
 	/// </summary>
 	public Thickness? IndicatorInsets
 	{
-		get => indicatorInsets;
-		set => Set(ref indicatorInsets, value, ApplyBehavior, affectsMeasure: false);
+		get;
+		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
 	}
-	Thickness? indicatorInsets;
-
-	/// <summary>
-	/// Scrolls to an offset along the scroll axis, in points.
-	/// </summary>
-	public void ScrollTo(
-		double offset,
-		bool animated = true) =>
-		ScrollToCore(offset, animated);
-
-
-	void ApplyBehavior() =>
-		ApplyBehaviorCore();
-
-	partial void ApplyBehaviorCore();
-
-	partial void ScrollToCore(
-		double offset,
-		bool animated);
 
 	/// <summary>
 	/// The single scrollable child.
@@ -155,11 +119,25 @@ public partial class ScrollView : Panel
 	void ApplyKeyboardDismiss() =>
 		ApplyKeyboardDismissCore();
 
+	void ApplyBehavior() =>
+		ApplyBehaviorCore();
+
+	void ApplyRefreshing() =>
+		ApplyRefreshingCore();
 
 	partial void ApplyKeyboardDismissCore();
 
+	partial void ApplyBehaviorCore();
+
+	partial void ApplyRefreshingCore();
+
 	partial void ArrangeContent(
 		Size viewport);
+
+	partial void ScrollToCore(
+		double offset,
+		bool animated);
+
 
 	protected override Size MeasureOverride(
 		Size availableSize)
@@ -194,4 +172,23 @@ public partial class ScrollView : Panel
 
 		return finalSize;
 	}
+
+
+	internal void OnRefreshTriggered()
+	{
+		Set(ref isRefreshing, true, affectsMeasure: false);
+		isRefreshingBinding?.PushToSource(true);
+
+		if (RefreshCommand is ICommand command && command.CanExecute(null))
+			command.Execute(null);
+	}
+
+
+	/// <summary>
+	/// Scrolls to an offset along the scroll axis, in points.
+	/// </summary>
+	public void ScrollTo(
+		double offset,
+		bool animated = true) =>
+		ScrollToCore(offset, animated);
 }

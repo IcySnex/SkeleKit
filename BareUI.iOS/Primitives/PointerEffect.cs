@@ -17,7 +17,7 @@ public enum PointerEffect
 	/// The system effect matched to the view's size and role, highlighting small controls and lifting larger tiles.
 	/// </summary>
 	/// <remarks>
-	/// The explicit variants are not exposed: Microsoft.iOS 26.0 binds only the automatic effect factory, so distinguishing highlight/lift/hover is not possible yet.
+	/// The explicit variants are not exposed: Microsoft.iOS 26.0 binds only the automatic effect factory, so distinguishing highlight/lift/hover is not possible.
 	/// </remarks>
 	Automatic
 }

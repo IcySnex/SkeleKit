@@ -13,7 +13,10 @@ namespace BareUI;
 [CollectionBuilder(typeof(BindableList), nameof(BindableList.Create))]
 public readonly struct BindableList<TItem>
 {
-	// C# forbids conversions from interface types, so the concrete lists convert
+	static BindingExpression<IReadOnlyList<TItem>?> Widen<TList>(
+		BindingExpression<TList?> expression) where TList : class, IReadOnlyList<TItem> =>
+		new(expression.Segments, source => expression.Getter(source), null, expression.Mode);
+
 
 	/// <summary>
 	/// Wraps an array literal.
@@ -63,23 +66,19 @@ public readonly struct BindableList<TItem>
 		BindingExpression<ObservableCollection<TItem>?> expression) =>
 		new(Widen(expression));
 
-	static BindingExpression<IReadOnlyList<TItem>?> Widen<TList>(
-		BindingExpression<TList?> expression) where TList : class, IReadOnlyList<TItem> =>
-		new(expression.Segments, source => expression.Getter(source), null, expression.Mode);
-
-
-	internal BindableList(
-		IReadOnlyList<TItem>? value)
-	{
-		Value = value;
-		Expression = null;
-	}
 
 	BindableList(
 		BindingExpression<IReadOnlyList<TItem>?> expression)
 	{
 		Value = null;
 		Expression = expression;
+	}
+
+	internal BindableList(
+		IReadOnlyList<TItem>? value)
+	{
+		Value = value;
+		Expression = null;
 	}
 
 

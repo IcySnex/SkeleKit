@@ -49,7 +49,7 @@ internal sealed class AccessoryHost : UIView
 		}
 	}
 
-
+	
 	public override void LayoutSubviews()
 	{
 		base.LayoutSubviews();

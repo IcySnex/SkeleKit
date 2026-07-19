@@ -5,7 +5,6 @@ namespace BareUI;
 
 internal sealed class PageHost : UIViewController
 {
-	// delegate held weakly; dismissGuard roots this
 	sealed class SheetGuard : UIAdaptivePresentationControllerDelegate
 	{
 		readonly PageHost? host;
@@ -16,6 +15,7 @@ internal sealed class PageHost : UIViewController
 			this.host = host;
 		}
 
+		// ReSharper disable once UnusedMember.Local
 		public SheetGuard(
 			NativeHandle handle) : base(handle)
 		{ }
@@ -25,7 +25,6 @@ internal sealed class PageHost : UIViewController
 			UIPresentationController presentationController) =>
 			host?.ConfirmDismiss();
 
-		// the popover attempt arrives here; hold it, ask, dismiss manually
 		public override bool ShouldDismiss(
 			UIPresentationController presentationController)
 		{
@@ -36,24 +35,21 @@ internal sealed class PageHost : UIViewController
 			return false;
 		}
 
-		// a guarded popover must stay a bubble; a sheet is already adapted
 		public override UIModalPresentationStyle GetAdaptivePresentationStyle(
 			UIPresentationController forPresentationController) =>
 			UIModalPresentationStyle.None;
 	}
 
 
-	// the page's scrolling view, found through our own tree not UIKit guessing
-	internal static View? FindScrolling(
-		View view)
+	static UIView? FirstResponder(
+		UIView view)
 	{
-		if (view.Scrolls)
+		if (view.IsFirstResponder)
 			return view;
 
-		if (view is Panel panel)
-			foreach (View child in panel.Children)
-				if (FindScrolling(child) is View match)
-					return match;
+		foreach (UIView child in view.Subviews)
+			if (FirstResponder(child) is UIView found)
+				return found;
 
 		return null;
 	}
@@ -74,6 +70,91 @@ internal sealed class PageHost : UIViewController
 			bounds.Width - leading - trailing,
 			bounds.Height - top - bottom);
 	}
+
+
+	internal static View? FindScrolling(
+		View view)
+	{
+		if (view.Scrolls)
+			return view;
+
+		if (view is Panel panel)
+			foreach (View child in panel.Children)
+				if (FindScrolling(child) is View match)
+					return match;
+
+		return null;
+	}
+
+
+	readonly List<UIAction> menuActions = [];
+	readonly List<ToolbarItem> observedItems = [];
+
+	UITapGestureRecognizer? dismissKeyboard;
+	UIView? keyboardFocus;
+	nfloat keyboardCover;
+	IUITraitChangeRegistration? themeChange;
+	UISearchController? search;
+	UIAction? backAction;
+	SheetGuard? dismissGuard;
+
+	public PageHost(
+		ContentView page)
+	{
+		this.Page = page;
+		page.Host = this;
+
+		HidesBottomBarWhenPushed = page.HidesTabBar;
+
+		NSNotificationCenter.DefaultCenter.AddObserver(
+			this,
+			new("keyboardFrameChanged:"),
+			UIKeyboard.WillChangeFrameNotification,
+			null);
+		NSNotificationCenter.DefaultCenter.AddObserver(
+			this,
+			new("keyboardHidden:"),
+			UIKeyboard.WillHideNotification,
+			null);
+		NSNotificationCenter.DefaultCenter.AddObserver(
+			this,
+			new("contentSizeChanged:"),
+			UIApplication.ContentSizeCategoryChangedNotification,
+			null);
+	}
+
+	public PageHost(
+		NativeHandle handle) : base(handle)
+	{ }
+
+
+	internal new UITab? Tab { get; set; }
+
+
+	public ContentView? Page { get; }
+
+
+	// ReSharper disable once UnusedMember.Local
+	[Export("contentSizeChanged:")]
+	void ContentSizeChanged(
+		NSNotification notification)
+	{
+		Page?.InvalidateSubtree();
+		View?.SetNeedsLayout();
+	}
+
+	// ReSharper disable once UnusedMember.Local
+	[Export("keyboardFrameChanged:")]
+	void KeyboardFrameChanged(
+		NSNotification notification) =>
+		ApplyKeyboard(notification, hiding: false);
+
+	// ReSharper disable once UnusedMember.Local
+	[Export("keyboardHidden:")]
+	void KeyboardHidden(
+		NSNotification notification) =>
+		ApplyKeyboard(notification, hiding: true);
+
 
 	UIBarButtonItem Bar(
 		ToolbarItem item)
@@ -105,9 +186,6 @@ internal sealed class PageHost : UIViewController
 
 		return native;
 	}
-
-	// the actions stay rooted here: UIKit's retain alone would let their managed peers die
-	readonly List<UIAction> menuActions = [];
 
 	UIMenu BuildMenu(
 		ToolbarItem item)
@@ -155,91 +233,6 @@ internal sealed class PageHost : UIViewController
 		return native;
 	}
 
-	static UIView? FirstResponder(
-		UIView view)
-	{
-		if (view.IsFirstResponder)
-			return view;
-
-		foreach (UIView child in view.Subviews)
-			if (FirstResponder(child) is UIView found)
-				return found;
-
-		return null;
-	}
-
-
-	UITapGestureRecognizer? dismissKeyboard;
-	UIView? keyboardFocus;
-	nfloat keyboardCover;
-	IUITraitChangeRegistration? themeChange;
-	UISearchController? search;
-	UIAction? backAction;
-	SheetGuard? dismissGuard;
-
-	// the UITab rendering this page's tab, when the shell is tab-based
-	internal UITab? Tab { get; set; }
-
-	public PageHost(
-		ContentView page)
-	{
-		this.Page = page;
-		page.Host = this;
-
-		HidesBottomBarWhenPushed = page.HidesTabBar;
-
-		NSNotificationCenter.DefaultCenter.AddObserver(
-			this,
-			new("keyboardFrameChanged:"),
-			UIKeyboard.WillChangeFrameNotification,
-			null);
-		NSNotificationCenter.DefaultCenter.AddObserver(
-			this,
-			new("keyboardHidden:"),
-			UIKeyboard.WillHideNotification,
-			null);
-		NSNotificationCenter.DefaultCenter.AddObserver(
-			this,
-			new("contentSizeChanged:"),
-			UIApplication.ContentSizeCategoryChangedNotification,
-			null);
-	}
-
-	public PageHost(
-		NativeHandle handle) : base(handle)
-	{ }
-
-
-	public ContentView? Page { get; }
-
-	public override UIStatusBarStyle PreferredStatusBarStyle() =>
-		Page?.StatusBar switch
-		{
-			StatusBarStyle.Light => UIStatusBarStyle.LightContent,
-			StatusBarStyle.Dark => UIStatusBarStyle.DarkContent,
-			_ => UIStatusBarStyle.Default
-		};
-
-
-	[Export("contentSizeChanged:")]
-	void ContentSizeChanged(
-		NSNotification notification)
-	{
-		Page?.InvalidateSubtree();
-		View?.SetNeedsLayout();
-	}
-
-	[Export("keyboardFrameChanged:")]
-	void KeyboardFrameChanged(
-		NSNotification notification) =>
-		ApplyKeyboard(notification, hiding: false);
-
-	[Export("keyboardHidden:")]
-	void KeyboardHidden(
-		NSNotification notification) =>
-		ApplyKeyboard(notification, hiding: true);
-
-
 	void ApplyChrome(
 		ContentView page)
 	{
@@ -275,7 +268,6 @@ internal sealed class PageHost : UIViewController
 		ApplySearch(page);
 	}
 
-	// per-item appearances, so the colors leave every other page's bar alone
 	void ApplyBarAppearance(
 		ContentView page)
 	{
@@ -347,8 +339,6 @@ internal sealed class PageHost : UIViewController
 			View.LayoutIfNeeded();
 		});
 	}
-
-	readonly List<ToolbarItem> observedItems = [];
 
 	void ObserveToolbar(
 		ContentView page)
@@ -444,6 +434,70 @@ internal sealed class PageHost : UIViewController
 		DefinesPresentationContext = true;
 	}
 
+	void ApplyBackGuard()
+	{
+		if (Page?.ConfirmLeave is not null
+			&& backAction is null
+			&& NavigationController is UINavigationController leavable
+			&& (leavable.ViewControllers?.Length > 1 || leavable.PresentingViewController is not null))
+		{
+			backAction = UIAction.Create("", null, null, _ => ConfirmBack());
+			NavigationItem.BackAction = backAction;
+		}
+	}
+
+	void ApplySheetGuard()
+	{
+		if (NavigationController is not { PresentingViewController: not null } sheet)
+			return;
+
+		bool popover = sheet.PresentationController is UIPopoverPresentationController;
+
+		sheet.ModalInPresentation = Page?.ConfirmLeave is not null && !popover;
+
+		if (Page?.ConfirmLeave is not null && sheet.PresentationController is UIPresentationController presentation)
+		{
+			dismissGuard ??= new(this);
+			presentation.Delegate = dismissGuard;
+		}
+	}
+
+	void ApplyPopGestures()
+	{
+		if (NavigationController is not UINavigationController stack)
+			return;
+
+		bool free = Page?.ConfirmLeave is null;
+
+		if (stack.InteractivePopGestureRecognizer is UIGestureRecognizer swipe)
+			swipe.Enabled = free;
+
+		// iOS 26 pops from anywhere in the content, not just the edge
+		if (OperatingSystem.IsIOSVersionAtLeast(26) && stack.InteractiveContentPopGestureRecognizer is UIGestureRecognizer contentSwipe)
+			contentSwipe.Enabled = free;
+	}
+
+	// ReSharper disable once AsyncVoidMethod
+	async void ConfirmBack()
+	{
+		if (Page?.ConfirmLeave is Func<Task<bool>> confirm && !await confirm())
+			return;
+
+		if (NavigationController is { ViewControllers.Length: > 1 } stack)
+			stack.PopViewController(true);
+		else
+			NavigationController?.DismissViewController(true, null);
+	}
+
+	// ReSharper disable once AsyncVoidMethod
+	async void ConfirmDismiss()
+	{
+		if (Page?.ConfirmLeave is Func<Task<bool>> confirm && !await confirm())
+			return;
+
+		NavigationController?.DismissViewController(true, null);
+	}
+
 
 	protected override void Dispose(
 		bool disposing)
@@ -454,6 +508,25 @@ internal sealed class PageHost : UIViewController
 		base.Dispose(disposing);
 	}
 
+
+	internal void ApplyLeaveGuard()
+	{
+		if (Page is null || !IsViewLoaded)
+			return;
+
+		ApplyBackGuard();
+		ApplySheetGuard();
+		ApplyPopGestures();
+	}
+
+
+	public override UIStatusBarStyle PreferredStatusBarStyle() =>
+		Page?.StatusBar switch
+		{
+			StatusBarStyle.Light => UIStatusBarStyle.LightContent,
+			StatusBarStyle.Dark => UIStatusBarStyle.DarkContent,
+			_ => UIStatusBarStyle.Default
+		};
 
 	public override void ViewDidLoad()
 	{
@@ -516,64 +589,6 @@ internal sealed class PageHost : UIViewController
 		ApplySheetGuard();
 	}
 
-	// a pushed page's natural back keeps its look; a modal root synthesizes one that dismisses
-	void ApplyBackGuard()
-	{
-		if (Page?.ConfirmLeave is not null
-			&& backAction is null
-			&& NavigationController is UINavigationController leavable
-			&& (leavable.ViewControllers?.Length > 1 || leavable.PresentingViewController is not null))
-		{
-			backAction = UIAction.Create("", null, null, _ => ConfirmBack());
-			NavigationItem.BackAction = backAction;
-		}
-	}
-
-	// a guarded page pins its sheet; DidAttemptToDismiss then routes the swipe into the confirm.
-	// A pinned popover swallows outside taps with no callback at all, so it stays unpinned and
-	// the guard intercepts through ShouldDismiss instead
-	void ApplySheetGuard()
-	{
-		if (NavigationController is not { PresentingViewController: not null } sheet)
-			return;
-
-		bool popover = sheet.PresentationController is UIPopoverPresentationController;
-
-		sheet.ModalInPresentation = Page?.ConfirmLeave is not null && !popover;
-
-		if (Page?.ConfirmLeave is not null && sheet.PresentationController is UIPresentationController presentation)
-		{
-			dismissGuard ??= new(this);
-			presentation.Delegate = dismissGuard;
-		}
-	}
-
-	// ConfirmLeave can change while the page shows: re-arm everything that hangs off it
-	internal void ApplyLeaveGuard()
-	{
-		if (Page is null || !IsViewLoaded)
-			return;
-
-		ApplyBackGuard();
-		ApplySheetGuard();
-		ApplyPopGestures();
-	}
-
-	void ApplyPopGestures()
-	{
-		if (NavigationController is not UINavigationController stack)
-			return;
-
-		bool free = Page?.ConfirmLeave is null;
-
-		if (stack.InteractivePopGestureRecognizer is UIGestureRecognizer swipe)
-			swipe.Enabled = free;
-
-		// iOS 26 pops from anywhere in the content, not just the edge
-		if (OperatingSystem.IsIOSVersionAtLeast(26) && stack.InteractiveContentPopGestureRecognizer is UIGestureRecognizer contentSwipe)
-			contentSwipe.Enabled = free;
-	}
-
 	public override void ViewDidAppear(
 		bool animated)
 	{
@@ -585,9 +600,6 @@ internal sealed class PageHost : UIViewController
 		Page?.NotifyAppearing();
 	}
 
-	// manual frames do not follow safe-area guides: without this, a chrome change that only moves
-	// the insets (search bar activation) leaves the page parked at its old frame. Laying out
-	// immediately keeps the reframe inside UIKit's own chrome animation instead of jumping after it
 	public override void ViewSafeAreaInsetsDidChange()
 	{
 		base.ViewSafeAreaInsetsDidChange();
@@ -645,27 +657,4 @@ internal sealed class PageHost : UIViewController
 		if (IsMovingFromParentViewController)
 			Page?.Unrealize();
 	}
-
-
-	// on a modal root there is nothing to pop: the synthesized back button leaves by dismissing.
-	// a cleared guard passes straight through — the synthesized back stays installed
-	async void ConfirmBack()
-	{
-		if (Page?.ConfirmLeave is Func<Task<bool>> confirm && !await confirm())
-			return;
-
-		if (NavigationController is { ViewControllers.Length: > 1 } stack)
-			stack.PopViewController(true);
-		else
-			NavigationController?.DismissViewController(true, null);
-	}
-
-	async void ConfirmDismiss()
-	{
-		if (Page?.ConfirmLeave is Func<Task<bool>> confirm && !await confirm())
-			return;
-
-		NavigationController?.DismissViewController(true, null);
-	}
-
 }

@@ -8,7 +8,7 @@ namespace BareUI;
 public enum SwipeSide
 {
 	/// <summary>
-	/// Revealed by swiping from the trailing edge (the usual place for Delete).
+	/// Revealed by swiping from the trailing edge.
 	/// </summary>
 	Trailing,
 
