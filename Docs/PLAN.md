@@ -1,7 +1,7 @@
 # SkeleKit.iOS — Plan
 
-A declarative, WPF-inspired UI library for .NET for iOS (net10.0-ios). Wraps native UIKit controls
-behind a clean C# object-initializer syntax with AOT-safe MVVM bindings, so app code never touches
+A C# UI framework for .NET for iOS (net10.0-ios). Wraps native UIKit controls
+behind clean C# syntax with AOT-safe MVVM bindings, so app code never touches
 `UIViewController`, `NSLayoutConstraint`, or manual view wiring.
 
 **Reference app / acceptance target:** `../Velura`. The library is done when Velura's screens can be

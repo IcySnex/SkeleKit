@@ -1,18 +1,13 @@
 # SkeleKit.iOS
 
-A declarative, WPF-inspired UI library for **.NET for iOS** — no MAUI, no XAML. Native UIKit
-controls behind C# object-initializer syntax with AOT-safe MVVM bindings. App code never touches
-`UIViewController`, `NSLayoutConstraint`, or `AppDelegate` boilerplate.
+A WPF-inspired UI library for **.NET for iOS** — no MAUI, no XAML. Native UIKit controls behind C# object-initializer syntax with AOT-safe MVVM bindings. App code never touches `UIViewController`, `NSLayoutConstraint`, or `AppDelegate` boilerplate.
 
-- **100% native look & feel** — every control wraps the real UIKit control 1:1; SkeleKit owns
-  composition and layout, never rendering.
-- **WPF mental model, C# only** — `Grid`, `StackPanel`, `Margin`, `Alignment`, element trees via
-  object initializers, MVVM with bindings and commands.
-- **AOT-safe by construction** — device builds are Mono full AOT + trimmed; no reflection, expression
-  trees, or runtime codegen. Bindings use compiled getters + `[CallerArgumentExpression]`.
-- **Dark mode, Dynamic Type, safe areas, keyboard avoidance** handled by the framework.
-- Works with plain `INotifyPropertyChanged` / `ICommand` — CommunityToolkit.Mvvm fits, no SkeleKit
-  base ViewModel required.
+- **Native UIKit, 1:1** — wraps the real UIKit controls. SkeleKit owns composition and layout, never rendering.
+- **Clean C# syntax** — `Grid`, `StackPanel`, `Overlay`, `Border`, `Margin`, `Alignment`, MVVM bindings and commands. Element trees via object initializers.
+- **AOT-safe by construction** — device builds are Mono full AOT + trimmed. No reflection, no expression trees, no runtime codegen. Bindings use compiled getters + `[CallerArgumentExpression]`.
+- **Framework concerns handled** — dark mode, Dynamic Type, safe areas, keyboard avoidance.
+- **No base ViewModel required** — works with plain `INotifyPropertyChanged` / `ICommand`.
+  CommunityToolkit.Mvvm fits naturally.
 
 ## Quick start
 
