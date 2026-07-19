@@ -108,6 +108,14 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public CollectionLayout Layout { get; set; } = CollectionLayout.List();
 
 	/// <summary>
+	/// Gives each section its own layout, or null to arrange every section with <see cref="Layout"/>.
+	/// </summary>
+	/// <remarks>
+	/// Mixes arrangements in one collection, like a carousel row above a list. Every section shares the one <see cref="ItemTemplate"/>.
+	/// </remarks>
+	public Func<TSection, CollectionLayout>? SectionLayout { get; set; }
+
+	/// <summary>
 	/// Invoked with the tapped item.
 	/// </summary>
 	public ICommand? SelectionCommand

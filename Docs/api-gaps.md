@@ -261,8 +261,13 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   reorder/edit/selection/prefetch pipeline is untouched (works across list/grid/carousel too). Built-in
   chevron on the header (rotates 90 on expand); tapping the header toggles. Needs a `HeaderTemplate` (the
   chevron lives there); a collapsed section still shows its footer.
-- ◆ **Mixed sections** — per-section layout (a carousel row inside a list) — compositional
-  layout does this natively; the `CollectionLayout` model would grow a per-section variant.
+- ~~◆ **Mixed sections**~~ — **done** (`SectionLayout` = `Func<TSection, CollectionLayout>?` gives each
+  section its own layout, null falling back to the global `Layout`). When set, the whole thing is one
+  compositional layout whose section provider builds a list (`NSCollectionLayoutSection` from a list
+  config), grid, or carousel per index; a carousel section gets a measured absolute height and scrolls
+  horizontally via orthogonal scrolling. Every section shares the one `ItemTemplate` (per-section
+  templates left out). Note: the diffable source keys items by reference, so an item lives in one section
+  only.
 - ~~★ **Section footers**~~ — **done** (`FooterTemplate`, same plumbing as headers). Sections are
   now the app's own model (`ISection<TItem>` = `Items` and nothing else), so a header/footer binds
   whatever the app puts on it; `CollectionView<TItem, TSection>` carries the type, and

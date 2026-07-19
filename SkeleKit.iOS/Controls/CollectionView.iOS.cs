@@ -772,6 +772,11 @@ public partial class CollectionView<TItem, TSection>
 		bool headers,
 		bool footers)
 	{
+		// per-section: one compositional layout whose provider picks each section's own arrangement
+		if (SectionLayout is Func<TSection, CollectionLayout> perSection)
+			return new UICollectionViewCompositionalLayout((index, environment) =>
+				Section(SectionAt((int)index) is TSection section ? perSection(section) : layout, headers, footers, environment));
+
 		switch (layout.Kind)
 		{
 			case CollectionLayoutKind.Grid:
@@ -780,56 +785,93 @@ public partial class CollectionView<TItem, TSection>
 					GridSection(layout, headers, footers, environment.Container.EffectiveContentSize.Width));
 
 			case CollectionLayoutKind.Carousel:
-				return new UICollectionViewCompositionalLayout(CarouselSection(layout));
+				return new UICollectionViewCompositionalLayout(CarouselSection(layout, headers, footers));
 
 			default:
-				UICollectionLayoutListAppearance appearance = layout.Grouped
-					? UICollectionLayoutListAppearance.InsetGrouped
-					: UICollectionLayoutListAppearance.Plain;
-
-				// a list configuration paints its own opaque background, which would cover the empty view
-				UICollectionLayoutListConfiguration configuration = new(appearance)
-				{
-					BackgroundColor = UIColor.Clear,
-					ShowsSeparators = ShowsSeparators,
-					HeaderMode = headers
-						? UICollectionLayoutListHeaderMode.Supplementary
-						: UICollectionLayoutListHeaderMode.None,
-					FooterMode = footers
-						? UICollectionLayoutListFooterMode.Supplementary
-						: UICollectionLayoutListFooterMode.None
-				};
-
-				// a separator configuration overrides ShowsSeparators, so it has to carry the visibility too
-				if (SeparatorInsets is Thickness separator)
-				{
-					NSDirectionalEdgeInsets insets = new(0, (nfloat)separator.Left, 0, (nfloat)separator.Right);
-
-					UIListSeparatorVisibility visibility = ShowsSeparators
-						? UIListSeparatorVisibility.Automatic
-						: UIListSeparatorVisibility.Hidden;
-
-					configuration.SeparatorConfiguration = new(appearance)
-					{
-						TopSeparatorInsets = insets,
-						BottomSeparatorInsets = insets,
-						TopSeparatorVisibility = visibility,
-						BottomSeparatorVisibility = visibility
-					};
-				}
-
-				// native swipe actions: UIKit owns the gesture, the animation and the full-swipe
-				if (SwipeActions.Count > 0)
-				{
-					configuration.TrailingSwipeActionsConfigurationProvider =
-						path => SwipeConfiguration(path, SwipeSide.Trailing)!;
-
-					configuration.LeadingSwipeActionsConfigurationProvider =
-						path => SwipeConfiguration(path, SwipeSide.Leading)!;
-				}
-
-				return UICollectionViewCompositionalLayout.GetLayout(configuration);
+				return UICollectionViewCompositionalLayout.GetLayout(ListConfiguration(layout, headers, footers));
 		}
+	}
+
+	NSCollectionLayoutSection Section(
+		CollectionLayout layout,
+		bool headers,
+		bool footers,
+		INSCollectionLayoutEnvironment environment) =>
+		layout.Kind switch
+		{
+			CollectionLayoutKind.Grid => GridSection(layout, headers, footers, environment.Container.EffectiveContentSize.Width),
+			CollectionLayoutKind.Carousel => CarouselSection(layout, headers, footers, (nfloat)Math.Max(1, RowHeight(layout.ItemWidth))),
+			_ => NSCollectionLayoutSection.GetSection(ListConfiguration(layout, headers, footers), environment)
+		};
+
+	UICollectionLayoutListConfiguration ListConfiguration(
+		CollectionLayout layout,
+		bool headers,
+		bool footers)
+	{
+		UICollectionLayoutListAppearance appearance = layout.Grouped
+			? UICollectionLayoutListAppearance.InsetGrouped
+			: UICollectionLayoutListAppearance.Plain;
+
+		// a list configuration paints its own opaque background, which would cover the empty view
+		UICollectionLayoutListConfiguration configuration = new(appearance)
+		{
+			BackgroundColor = UIColor.Clear,
+			ShowsSeparators = ShowsSeparators,
+			HeaderMode = headers
+				? UICollectionLayoutListHeaderMode.Supplementary
+				: UICollectionLayoutListHeaderMode.None,
+			FooterMode = footers
+				? UICollectionLayoutListFooterMode.Supplementary
+				: UICollectionLayoutListFooterMode.None
+		};
+
+		// a separator configuration overrides ShowsSeparators, so it has to carry the visibility too
+		if (SeparatorInsets is Thickness separator)
+		{
+			NSDirectionalEdgeInsets insets = new(0, (nfloat)separator.Left, 0, (nfloat)separator.Right);
+
+			UIListSeparatorVisibility visibility = ShowsSeparators
+				? UIListSeparatorVisibility.Automatic
+				: UIListSeparatorVisibility.Hidden;
+
+			configuration.SeparatorConfiguration = new(appearance)
+			{
+				TopSeparatorInsets = insets,
+				BottomSeparatorInsets = insets,
+				TopSeparatorVisibility = visibility,
+				BottomSeparatorVisibility = visibility
+			};
+		}
+
+		// native swipe actions: UIKit owns the gesture, the animation and the full-swipe
+		if (SwipeActions.Count > 0)
+		{
+			configuration.TrailingSwipeActionsConfigurationProvider =
+				path => SwipeConfiguration(path, SwipeSide.Trailing)!;
+
+			configuration.LeadingSwipeActionsConfigurationProvider =
+				path => SwipeConfiguration(path, SwipeSide.Leading)!;
+		}
+
+		return configuration;
+	}
+
+	static void AddBoundaries(
+		NSCollectionLayoutSection section,
+		bool headers,
+		bool footers)
+	{
+		List<NSCollectionLayoutBoundarySupplementaryItem> boundaries = [];
+
+		if (headers)
+			boundaries.Add(Boundary(footer: false));
+
+		if (footers)
+			boundaries.Add(Boundary(footer: true));
+
+		if (boundaries.Count > 0)
+			section.BoundarySupplementaryItems = [.. boundaries];
 	}
 
 	static NSCollectionLayoutBoundarySupplementaryItem Boundary(
@@ -887,24 +929,24 @@ public partial class CollectionView<TItem, TSection>
 		section.InterGroupSpacing = spacing;
 		section.ContentInsets = new(spacing, spacing, spacing, spacing);
 
-		List<NSCollectionLayoutBoundarySupplementaryItem> boundaries = [];
-
-		if (headers)
-			boundaries.Add(Boundary(footer: false));
-
-		if (footers)
-			boundaries.Add(Boundary(footer: true));
-
-		if (boundaries.Count > 0)
-			section.BoundarySupplementaryItems = [.. boundaries];
+		AddBoundaries(section, headers, footers);
 
 		return section;
 	}
 
+	// height is absolute when the carousel is one section of a mixed layout, or fills the collection when
+	// it is the whole thing
 	static NSCollectionLayoutSection CarouselSection(
-		CollectionLayout layout)
+		CollectionLayout layout,
+		bool headers,
+		bool footers,
+		nfloat? height = null)
 	{
 		nfloat spacing = (nfloat)layout.Spacing;
+
+		NSCollectionLayoutDimension groupHeight = height is nfloat absolute
+			? NSCollectionLayoutDimension.CreateAbsolute(absolute)
+			: NSCollectionLayoutDimension.CreateFractionalHeight(1f);
 
 		NSCollectionLayoutItem item = NSCollectionLayoutItem.Create(
 			NSCollectionLayoutSize.Create(
@@ -914,7 +956,7 @@ public partial class CollectionView<TItem, TSection>
 		NSCollectionLayoutGroup group = NSCollectionLayoutGroup.CreateHorizontal(
 			NSCollectionLayoutSize.Create(
 				NSCollectionLayoutDimension.CreateAbsolute((nfloat)layout.ItemWidth),
-				NSCollectionLayoutDimension.CreateFractionalHeight(1f)),
+				groupHeight),
 			item,
 			1);
 
@@ -925,15 +967,18 @@ public partial class CollectionView<TItem, TSection>
 			CarouselSnap.LeadingBoundary => UICollectionLayoutSectionOrthogonalScrollingBehavior.ContinuousGroupLeadingBoundary,
 			CarouselSnap.LeadingBoundaryPeek => UICollectionLayoutSectionOrthogonalScrollingBehavior.ContinuousGroupLeadingBoundary,
 			CarouselSnap.Item => UICollectionLayoutSectionOrthogonalScrollingBehavior.GroupPaging,
+			CarouselSnap.ItemPeek => UICollectionLayoutSectionOrthogonalScrollingBehavior.GroupPaging,
 			CarouselSnap.ItemCentered => UICollectionLayoutSectionOrthogonalScrollingBehavior.GroupPagingCentered,
 			CarouselSnap.Page => UICollectionLayoutSectionOrthogonalScrollingBehavior.Paging,
 			_ => UICollectionLayoutSectionOrthogonalScrollingBehavior.Continuous
 		};
-		nfloat leadingInset = layout.Snap is CarouselSnap.LeadingBoundaryPeek
+		nfloat leadingInset = layout.Snap is CarouselSnap.LeadingBoundaryPeek or CarouselSnap.ItemPeek
 			? spacing * 2
 			: spacing;
 
 		section.ContentInsets = new(0, leadingInset, 0, spacing);
+
+		AddBoundaries(section, headers, footers);
 
 		return section;
 	}

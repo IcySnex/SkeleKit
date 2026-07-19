@@ -34,6 +34,7 @@ public sealed class DemoCatalog : IDemoCatalog
 		new("CollectionView list", typeof(ListDemoViewModel)),
 		new("CollectionView contacts", typeof(ContactsDemoViewModel)),
 		new("CollectionView carousel", typeof(CarouselDemoViewModel)),
+		new("CollectionView mixed", typeof(MixedDemoViewModel)),
 		new("CollectionView live + empty", typeof(LiveListDemoViewModel))
 	];
 }

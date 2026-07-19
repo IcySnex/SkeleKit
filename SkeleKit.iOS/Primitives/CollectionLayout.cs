@@ -50,6 +50,11 @@ public enum CarouselSnap
 	Item,
 
 	/// <summary>
+	/// Like <see cref="Item"/>, but leaves a small slice of the previous item visible.
+	/// </summary>
+	ItemPeek,
+
+	/// <summary>
 	/// Settles on an item, centered.
 	/// </summary>
 	ItemCentered,
