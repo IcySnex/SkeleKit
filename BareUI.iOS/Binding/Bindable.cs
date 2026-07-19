@@ -7,11 +7,21 @@ namespace BareUI;
 public readonly struct Bindable<T>
 {
 	/// <summary>
-	/// The literal value, or the last value a binding produced.
+	/// Creates a bindable container from a constant value.
 	/// </summary>
-	public T? Value { get; }
+	/// <param name="value">The raw value to wrap.</param>
+	public static implicit operator Bindable<T>(
+		T value) =>
+		new(value);
 
-	internal BindingExpression<T>? Expression { get; }
+	/// <summary>
+	/// Creates a bindable container from an active binding expression.
+	/// </summary>
+	/// <param name="expression">The evaluation rule for the property.</param>
+	public static implicit operator Bindable<T>(
+		BindingExpression<T> expression) =>
+		new(expression);
+
 
 	/// <summary>
 	/// Wraps a literal value. Needed for interface-typed properties.
@@ -33,20 +43,11 @@ public readonly struct Bindable<T>
 
 
 	/// <summary>
-	/// Creates a bindable container from a constant value.
+	/// The literal value, or the last value a binding produced.
 	/// </summary>
-	/// <param name="value">The raw value to wrap.</param>
-	public static implicit operator Bindable<T>(
-		T value) =>
-		new(value);
+	public T? Value { get; }
 
-	/// <summary>
-	/// Creates a bindable container from an active binding expression.
-	/// </summary>
-	/// <param name="expression">The evaluation rule for the property.</param>
-	public static implicit operator Bindable<T>(
-		BindingExpression<T> expression) =>
-		new(expression);
+	internal BindingExpression<T>? Expression { get; }
 }
 
 /// <summary>
