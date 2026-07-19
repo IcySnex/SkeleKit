@@ -50,7 +50,7 @@
          engine without a simulator. UIKit-touching code is compiled out of it by file, not by #if. -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
         <Compile Remove="Controls/**" />
-        <Compile Remove="Animation/**" />
+        <Compile Remove="Animation/Animator.cs" />
         <Compile Remove="**/*.iOS.cs" />
         <Compile Remove="Elements/LayoutHost.cs" />
         <Compile Remove="Elements/AccessoryHost.cs" />

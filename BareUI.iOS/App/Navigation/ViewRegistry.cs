@@ -56,5 +56,5 @@ internal sealed class ViewRegistry
 		Type viewModel,
 		IServiceProvider services) =>
 		services.GetRequiredService(viewModel);
-#pragma warning enable CA1822
+#pragma warning restore CA1822
 }
