@@ -38,6 +38,32 @@ internal sealed class Sharer : ISharer
 	}
 
 
+	static async Task<UIImage?> ResolveImage(
+		ImageSource source) =>
+		source.Kind switch
+		{
+			ImageSourceKind.Symbol => UIImage.GetSystemImage(source.Value),
+			ImageSourceKind.Bundle => UIImage.FromBundle(source.Value),
+			ImageSourceKind.Url => await Image.Loader.LoadAsync(source.Value, CancellationToken.None),
+			_ => UIImage.FromBundle(source.Value) ?? UIImage.GetSystemImage(source.Value)
+		};
+
+	static UIViewController? Top()
+	{
+		UIViewController? controller = UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows)
+			.FirstOrDefault(window => window.IsKeyWindow)?
+			.RootViewController;
+
+		while (controller?.PresentedViewController is UIViewController presented)
+			controller = presented;
+
+		return controller;
+	}
+
+
 	public async Task ShareAsync(
 		ShareContent content)
 	{
@@ -83,31 +109,5 @@ internal sealed class Sharer : ISharer
 
 		GC.KeepAlive(controller);
 		GC.KeepAlive(activityItems);
-	}
-
-
-	static async Task<UIImage?> ResolveImage(
-		ImageSource source) =>
-		source.Kind switch
-		{
-			ImageSourceKind.Symbol => UIImage.GetSystemImage(source.Value),
-			ImageSourceKind.Bundle => UIImage.FromBundle(source.Value),
-			ImageSourceKind.Url => await Image.Loader.LoadAsync(source.Value, CancellationToken.None),
-			_ => UIImage.FromBundle(source.Value) ?? UIImage.GetSystemImage(source.Value)
-		};
-
-	static UIViewController? Top()
-	{
-		UIViewController? controller = UIApplication.SharedApplication
-			.ConnectedScenes
-			.OfType<UIWindowScene>()
-			.SelectMany(scene => scene.Windows)
-			.FirstOrDefault(window => window.IsKeyWindow)?
-			.RootViewController;
-
-		while (controller?.PresentedViewController is UIViewController presented)
-			controller = presented;
-
-		return controller;
 	}
 }
