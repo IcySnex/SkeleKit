@@ -1,3 +1,8 @@
+> [!Important]
+> Work in progress, not ready for productive usage yet.
+
+---
+
 # SkeleKit.iOS
 
 A WPF-inspired UI library for **.NET for iOS** — no MAUI, no XAML. Native UIKit controls behind C# object-initializer syntax with AOT-safe MVVM bindings. App code never touches `UIViewController`, `NSLayoutConstraint`, or `AppDelegate` boilerplate.
