@@ -4,23 +4,6 @@ using System.Windows.Input;
 
 namespace BareUI;
 
-internal interface ICollectionHost
-{
-	void SyncEmptyState();
-
-	void SyncInsets();
-
-	bool CanMove(
-		int section,
-		int index);
-
-	void Move(
-		int fromSection,
-		int fromIndex,
-		int toSection,
-		int toIndex);
-}
-
 /// <summary>
 /// A data-driven list, grid, or carousel.
 /// </summary>
@@ -37,6 +20,44 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	where TItem : class
 	where TSection : class, ISection<TItem>
 {
+	// hooks live only while realized
+	bool hooked;
+
+	readonly List<INotifyCollectionChanged> sectionItemHooks = [];
+
+	int loadMoreFiredAt = -1;
+
+	// edit-mode tap toggles membership, not SelectionCommand
+	internal bool suppressSelectionSync;
+
+
+	private protected override bool ClipsByDefault => true;
+
+	internal override bool Scrolls => true;
+
+	internal ICommand? Selection =>
+		selectionCommand;
+
+	internal bool IsGrouped => sections is not null;
+
+	internal int SectionCount => sections?.Count ?? 1;
+
+	internal bool EditingNow => isEditing;
+
+	internal bool MultiSelects => selectedItems is not null;
+
+	internal bool IsEmpty
+	{
+		get
+		{
+			for (int section = 0; section < SectionCount; section++)
+				if (CountIn(section) > 0)
+					return false;
+
+			return true;
+		}
+	}
+
 	/// <summary>
 	/// The items to show.
 	/// </summary>
@@ -91,9 +112,6 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		set => Set(ref selectionCommand, value, affectsMeasure: false);
 	}
 	ICommand? selectionCommand;
-
-	internal ICommand? Selection =>
-		selectionCommand;
 
 	/// <summary>
 	/// Whether rows draw their separator lines.
@@ -161,20 +179,6 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	bool isRefreshing;
 	Binding<bool>? isRefreshingBinding;
 
-	void OnRefreshTriggered()
-	{
-		Set(ref isRefreshing, true, affectsMeasure: false);
-		isRefreshingBinding?.PushToSource(true);
-
-		if (RefreshCommand is ICommand command && command.CanExecute(null))
-			command.Execute(null);
-	}
-
-	void ApplyRefreshing() =>
-		ApplyRefreshingCore();
-
-	partial void ApplyRefreshingCore();
-
 	/// <summary>
 	/// Actions revealed by swiping a row.
 	/// </summary>
@@ -220,13 +224,6 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	/// </remarks>
 	public Func<TItem, string?>? Prefetch { get; set; }
 
-	internal string? PrefetchUrl(
-		int section,
-		int index) =>
-		ItemAt(section, index) is TItem item
-			? Prefetch?.Invoke(item)
-			: null;
-
 	/// <summary>
 	/// Invoked after a drag-to-reorder with an <see cref="ItemMove{TItem}"/>.
 	/// </summary>
@@ -261,85 +258,11 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	IReadOnlyList<TItem>? selectedItems;
 	Binding<IReadOnlyList<TItem>?>? selectedItemsBinding;
 
-	void ApplyEditing() =>
-		ApplyEditingCore();
-
-	partial void ApplyEditingCore();
-
-	void SetSelectedItems(
-		IReadOnlyList<TItem>? value)
-	{
-		if (ReferenceEquals(selectedItems, value))
-			return;
-
-		if (hooked && selectedItems is INotifyCollectionChanged old)
-			old.CollectionChanged -= OnSelectedItemsChanged;
-
-		selectedItems = value;
-
-		if (hooked && selectedItems is INotifyCollectionChanged live)
-			live.CollectionChanged += OnSelectedItemsChanged;
-
-		ApplySelection();
-	}
-
-	void OnSelectedItemsChanged(
-		object? sender,
-		NotifyCollectionChangedEventArgs e) =>
-		ApplySelection();
-
-	void ApplySelection() =>
-		ApplySelectionCore();
-
-	partial void ApplySelectionCore();
-
-	internal bool EditingNow => isEditing;
-
-	internal bool MultiSelects => selectedItems is not null;
-
-	// a tap in edit mode toggles membership instead of firing SelectionCommand
-	internal bool suppressSelectionSync;
-
-	internal void EditSelect(
-		int section,
-		int index,
-		bool selected)
-	{
-		if (ItemAt(section, index) is not TItem item || selectedItems is not IList<TItem> list)
-			return;
-
-		suppressSelectionSync = true;
-
-		try
-		{
-			if (selected)
-			{
-				if (!list.Contains(item))
-					list.Add(item);
-			}
-			else
-				list.Remove(item);
-		}
-		finally
-		{
-			suppressSelectionSync = false;
-		}
-	}
-
 	/// <summary>
 	/// Invoked as the collection scrolls, with the vertical offset in points.
 	/// </summary>
 	public Action<double>? Scrolled { get; set; }
 
-
-	private protected override bool ClipsByDefault => true;
-
-	internal override bool Scrolls => true;
-
-	// it scrolls itself, so it takes the space it is offered rather than sizing to its content
-	protected override Size MeasureOverride(
-		Size availableSize) =>
-		new(double.IsFinite(availableSize.Width) ? availableSize.Width : 0, double.IsFinite(availableSize.Height) ? availableSize.Height : 0);
 
 	void SetItemsSource(
 		IReadOnlyList<TItem>? value)
@@ -376,10 +299,22 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		ReloadItems();
 	}
 
-	// a source outlives its view: hooks live only while realized
-	bool hooked;
+	void SetSelectedItems(
+		IReadOnlyList<TItem>? value)
+	{
+		if (ReferenceEquals(selectedItems, value))
+			return;
 
-	readonly List<INotifyCollectionChanged> sectionItemHooks = [];
+		if (hooked && selectedItems is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnSelectedItemsChanged;
+
+		selectedItems = value;
+
+		if (hooked && selectedItems is INotifyCollectionChanged live)
+			live.CollectionChanged += OnSelectedItemsChanged;
+
+		ApplySelection();
+	}
 
 	void HookSources()
 	{
@@ -419,7 +354,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		hooked = false;
 	}
 
-	// each section's own items are a source in their own right, not just the list of sections
+	// each section's items are their own source, not just the list of sections
 	void HookSectionItems()
 	{
 		UnhookSectionItems();
@@ -443,7 +378,6 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		sectionItemHooks.Clear();
 	}
 
-	// a flat source change maps 1:1 onto the native batch update
 	void OnItemsChanged(
 		object? sender,
 		NotifyCollectionChangedEventArgs e) =>
@@ -462,14 +396,58 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		NotifyCollectionChangedEventArgs e) =>
 		ApplyChange();
 
+	void OnSelectedItemsChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs e) =>
+		ApplySelection();
+
+	void OnRefreshTriggered()
+	{
+		Set(ref isRefreshing, true, affectsMeasure: false);
+		isRefreshingBinding?.PushToSource(true);
+
+		if (RefreshCommand is ICommand command && command.CanExecute(null))
+			command.Execute(null);
+	}
+
+	void ApplyRefreshing() =>
+		ApplyRefreshingCore();
+
+	void ApplyEditing() =>
+		ApplyEditingCore();
+
+	void ApplySelection() =>
+		ApplySelectionCore();
+
+	// needs a writable list; an array throws on RemoveAt
+	IList<TItem>? WritableIn(
+		int section)
+	{
+		IList<TItem>? list = sections is IReadOnlyList<TSection> groups
+			? section >= 0 && section < groups.Count ? groups[section].Items as IList<TItem> : null
+			: itemsSource as IList<TItem>;
+
+		return list is { IsReadOnly: false } ? list : null;
+	}
+
+	partial void ApplyRefreshingCore();
+
+	partial void ApplyEditingCore();
+
+	partial void ApplySelectionCore();
+
 	partial void ReloadItems();
 
 	partial void ApplyChange();
 
+	partial void MovedInSource();
 
-	internal bool IsGrouped => sections is not null;
 
-	internal int SectionCount => sections?.Count ?? 1;
+	// scrolls itself, so it takes the space offered rather than sizing to its content
+	protected override Size MeasureOverride(
+		Size availableSize) =>
+		new(double.IsFinite(availableSize.Width) ? availableSize.Width : 0, double.IsFinite(availableSize.Height) ? availableSize.Height : 0);
+
 
 	internal int CountIn(
 		int section) =>
@@ -496,28 +474,37 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 			? groups[index]
 			: null;
 
-	internal bool IsEmpty
+	internal string? PrefetchUrl(
+		int section,
+		int index) =>
+		ItemAt(section, index) is TItem item
+			? Prefetch?.Invoke(item)
+			: null;
+
+	internal void EditSelect(
+		int section,
+		int index,
+		bool selected)
 	{
-		get
+		if (ItemAt(section, index) is not TItem item || selectedItems is not IList<TItem> list)
+			return;
+
+		suppressSelectionSync = true;
+
+		try
 		{
-			for (int section = 0; section < SectionCount; section++)
-				if (CountIn(section) > 0)
-					return false;
-
-			return true;
+			if (selected)
+			{
+				if (!list.Contains(item))
+					list.Add(item);
+			}
+			else
+				list.Remove(item);
 		}
-	}
-
-
-	// reorder needs a list it can write back into; an array answers IList but throws on RemoveAt
-	IList<TItem>? WritableIn(
-		int section)
-	{
-		IList<TItem>? list = sections is IReadOnlyList<TSection> groups
-			? section >= 0 && section < groups.Count ? groups[section].Items as IList<TItem> : null
-			: itemsSource as IList<TItem>;
-
-		return list is { IsReadOnly: false } ? list : null;
+		finally
+		{
+			suppressSelectionSync = false;
+		}
 	}
 
 	internal bool CanMove(
@@ -576,12 +563,6 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		}
 	}
 
-	// the native side lands the matching snapshot before UIKit's drop animation settles
-	partial void MovedInSource();
-
-
-	int loadMoreFiredAt = -1;
-
 	internal void OnWillDisplay(
 		int section,
 		int row)
@@ -600,7 +581,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 			total += CountIn(index);
 		}
 
-		// once per item count: one crossing asks for one page
+		// once per item count
 		if (total - position - 1 > LoadMoreThreshold || loadMoreFiredAt == total)
 			return;
 
@@ -609,4 +590,21 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		if (command.CanExecute(null))
 			command.Execute(null);
 	}
+}
+
+internal interface ICollectionHost
+{
+	void SyncEmptyState();
+
+	void SyncInsets();
+
+	bool CanMove(
+		int section,
+		int index);
+
+	void Move(
+		int fromSection,
+		int fromIndex,
+		int toSection,
+		int toIndex);
 }
