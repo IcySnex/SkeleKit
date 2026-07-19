@@ -37,6 +37,14 @@ public readonly record struct Thickness(
 	/// </summary>
 	public static readonly Thickness Zero = new(0);
 
+	/// <summary>
+	/// Creates a uniform thickness from a single numeric value.
+	/// </summary>
+	/// <param name="uniform">The uniform thickness value.</param>
+	public static implicit operator Thickness(
+		double uniform) =>
+		new(uniform);
+
 
 	/// <summary>
 	/// The total thickness on the horizontal axis (<see cref="Left"/> + <see cref="Right"/>).
@@ -47,13 +55,4 @@ public readonly record struct Thickness(
 	/// The total thickness on the vertical axis (<see cref="Top"/> + <see cref="Bottom"/>).
 	/// </summary>
 	public double Vertical => Top + Bottom;
-
-
-	/// <summary>
-	/// Creates a uniform thickness from a single numeric value.
-	/// </summary>
-	/// <param name="uniform">The uniform thickness value.</param>
-	public static implicit operator Thickness(
-		double uniform) =>
-		new(uniform);
 }

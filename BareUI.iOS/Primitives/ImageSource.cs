@@ -10,17 +10,6 @@ public readonly struct ImageSource(
 	string value)
 {
 	/// <summary>
-	/// How <see cref="Value"/> should be resolved.
-	/// </summary>
-	public ImageSourceKind Kind { get; } = kind;
-
-	/// <summary>
-	/// The symbol name, bundle asset name, or URL.
-	/// </summary>
-	public string Value { get; } = value;
-
-
-	/// <summary>
 	/// An image from an SF Symbol name.
 	/// </summary>
 	/// <param name="name">The name of the system symbol.</param>
@@ -47,7 +36,6 @@ public readonly struct ImageSource(
 		string url) =>
 		new(ImageSourceKind.Url, url);
 
-
 	/// <summary>
 	/// Treats a string as a URL when it looks like one, otherwise resolves it automatically.
 	/// </summary>
@@ -55,6 +43,17 @@ public readonly struct ImageSource(
 	public static implicit operator ImageSource(
 		string value) =>
 		new(value.Contains("://") ? ImageSourceKind.Url : ImageSourceKind.Auto, value);
+
+
+	/// <summary>
+	/// How <see cref="Value"/> should be resolved.
+	/// </summary>
+	public ImageSourceKind Kind { get; } = kind;
+
+	/// <summary>
+	/// The symbol name, bundle asset name, or URL.
+	/// </summary>
+	public string Value { get; } = value;
 }
 
 /// <summary>

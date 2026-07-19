@@ -6,6 +6,48 @@ namespace BareUI;
 public readonly struct CollectionLayout
 {
 	/// <summary>
+	/// A list of full-width rows; <paramref name="grouped"/> uses the native inset-grouped style.
+	/// </summary>
+	public static CollectionLayout List(
+		bool grouped = false) =>
+		new(CollectionLayoutKind.List, 1, 0, 0, grouped, CarouselSnap.None);
+
+	/// <summary>
+	/// A grid of equal columns.
+	/// </summary>
+	public static CollectionLayout Grid(
+		int columns,
+		double spacing = 8) =>
+		new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, false, CarouselSnap.None);
+
+	/// <summary>
+	/// A horizontally scrolling row of fixed-width items, optionally snapping as it settles.
+	/// </summary>
+	public static CollectionLayout Carousel(
+		double itemWidth,
+		double spacing = 8,
+		CarouselSnap snap = CarouselSnap.None) =>
+		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, false, snap);
+
+
+	CollectionLayout(
+		CollectionLayoutKind kind,
+		int columns,
+		double spacing,
+		double itemWidth,
+		bool grouped,
+		CarouselSnap snap)
+	{
+		Kind = kind;
+		Columns = columns;
+		Spacing = spacing;
+		ItemWidth = itemWidth;
+		Grouped = grouped;
+		Snap = snap;
+	}
+
+
+	/// <summary>
 	/// Which arrangement this is.
 	/// </summary>
 	public CollectionLayoutKind Kind { get; }
@@ -34,48 +76,6 @@ public readonly struct CollectionLayout
 	/// How a carousel settles when the drag ends.
 	/// </summary>
 	public CarouselSnap Snap { get; }
-
-
-	CollectionLayout(
-		CollectionLayoutKind kind,
-		int columns,
-		double spacing,
-		double itemWidth,
-		bool grouped,
-		CarouselSnap snap)
-	{
-		Kind = kind;
-		Columns = columns;
-		Spacing = spacing;
-		ItemWidth = itemWidth;
-		Grouped = grouped;
-		Snap = snap;
-	}
-
-
-	/// <summary>
-	/// A list of full-width rows; <paramref name="grouped"/> uses the native inset-grouped style.
-	/// </summary>
-	public static CollectionLayout List(
-		bool grouped = false) =>
-		new(CollectionLayoutKind.List, 1, 0, 0, grouped, CarouselSnap.None);
-
-	/// <summary>
-	/// A grid of equal columns.
-	/// </summary>
-	public static CollectionLayout Grid(
-		int columns,
-		double spacing = 8) =>
-		new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, false, CarouselSnap.None);
-
-	/// <summary>
-	/// A horizontally scrolling row of fixed-width items, optionally snapping as it settles.
-	/// </summary>
-	public static CollectionLayout Carousel(
-		double itemWidth,
-		double spacing = 8,
-		CarouselSnap snap = CarouselSnap.None) =>
-		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, false, snap);
 }
 
 /// <summary>

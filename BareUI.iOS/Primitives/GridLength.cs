@@ -5,26 +5,6 @@ namespace BareUI;
 /// </summary>
 public readonly record struct GridLength
 {
-	GridLength(
-		double value,
-		GridUnitType type)
-	{
-		Value = value;
-		Type = type;
-	}
-
-
-	/// <summary>
-	/// Points for a pixel track, the weight for a star track, ignored for auto.
-	/// </summary>
-	public double Value { get; }
-
-	/// <summary>
-	/// How <see cref="Value"/> is interpreted.
-	/// </summary>
-	public GridUnitType Type { get; }
-
-
 	/// <summary>
 	/// An auto-sized track.
 	/// </summary>
@@ -34,7 +14,6 @@ public readonly record struct GridLength
 	/// A single star track (weight 1).
 	/// </summary>
 	public static readonly GridLength Star = new(1, GridUnitType.Star);
-
 
 	/// <summary>
 	/// A fixed track of <paramref name="points"/> points.
@@ -54,6 +33,33 @@ public readonly record struct GridLength
 		double weight) =>
 		new(weight, GridUnitType.Star);
 
+	/// <summary>
+	/// A fixed track from a point value (so <c>Columns = { 200, GridLength.Star }</c> compiles).
+	/// </summary>
+	/// <param name="points">The absolute size in layout points.</param>
+	public static implicit operator GridLength(
+		double points) =>
+		Pixels(points);
+
+
+	GridLength(
+		double value,
+		GridUnitType type)
+	{
+		Value = value;
+		Type = type;
+	}
+
+
+	/// <summary>
+	/// Points for a pixel track, the weight for a star track, ignored for auto.
+	/// </summary>
+	public double Value { get; }
+
+	/// <summary>
+	/// How <see cref="Value"/> is interpreted.
+	/// </summary>
+	public GridUnitType Type { get; }
 
 	/// <summary>
 	/// True for an <see cref="GridUnitType.Auto"/> track.
@@ -69,15 +75,6 @@ public readonly record struct GridLength
 	/// True for a <see cref="GridUnitType.Star"/> track.
 	/// </summary>
 	public bool IsStar => Type == GridUnitType.Star;
-
-
-	/// <summary>
-	/// A fixed track from a point value (so <c>Columns = { 200, GridLength.Star }</c> compiles).
-	/// </summary>
-	/// <param name="points">The absolute size in layout points.</param>
-	public static implicit operator GridLength(
-		double points) =>
-		Pixels(points);
 }
 
 /// <summary>

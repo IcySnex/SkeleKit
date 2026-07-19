@@ -35,33 +35,6 @@ public enum Easing
 public readonly record struct Animation
 {
 	/// <summary>
-	/// Creates the default animation: 0.3 seconds, eased in and out.
-	/// </summary>
-	public Animation()
-	{ }
-
-	/// <summary>
-	/// How long the animation runs, in seconds.
-	/// </summary>
-	public double Duration { get; init; } = 0.3;
-
-	/// <summary>
-	/// How long to wait before it starts, in seconds.
-	/// </summary>
-	public double Delay { get; init; }
-
-	/// <summary>
-	/// The curve the animation follows. Ignored when <see cref="SpringDamping"/> is set.
-	/// </summary>
-	public Easing Easing { get; init; } = Easing.EaseInOut;
-
-	/// <summary>
-	/// The damping of a spring, from 0 (bounces forever) to 1 (settles without overshoot), or null for a curve instead.
-	/// </summary>
-	public double? SpringDamping { get; init; }
-
-
-	/// <summary>
 	/// The default: 0.3 seconds, eased in and out.
 	/// </summary>
 	public static Animation Default =>
@@ -96,6 +69,34 @@ public readonly record struct Animation
 			Duration = duration,
 			SpringDamping = damping
 		};
+
+
+	/// <summary>
+	/// Creates the default animation: 0.3 seconds, eased in and out.
+	/// </summary>
+	public Animation()
+	{ }
+
+
+	/// <summary>
+	/// How long the animation runs, in seconds.
+	/// </summary>
+	public double Duration { get; init; } = 0.3;
+
+	/// <summary>
+	/// How long to wait before it starts, in seconds.
+	/// </summary>
+	public double Delay { get; init; }
+
+	/// <summary>
+	/// The curve the animation follows. Ignored when <see cref="SpringDamping"/> is set.
+	/// </summary>
+	public Easing Easing { get; init; } = Easing.EaseInOut;
+
+	/// <summary>
+	/// The damping of a spring, from 0 (bounces forever) to 1 (settles without overshoot), or null for a curve instead.
+	/// </summary>
+	public double? SpringDamping { get; init; }
 
 
 	/// <summary>
