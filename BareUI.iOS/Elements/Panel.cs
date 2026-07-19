@@ -64,9 +64,10 @@ public abstract partial class Panel : View
 
 	internal override void TintChanged()
 	{
-		// a local tint shields its subtree
 		foreach (View child in Children)
+		{
 			if (child.LocalTint is null)
 				child.TintChanged();
+		}
 	}
 }

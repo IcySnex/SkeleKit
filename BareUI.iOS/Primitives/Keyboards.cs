@@ -1,5 +1,3 @@
-using UIKit;
-
 namespace BareUI;
 
 internal static class Keyboards
@@ -23,8 +21,8 @@ internal static class Keyboards
 		UIBarButtonItem[] items = kind is KeyboardToolbar.Navigation
 			?
 			[
-				new(UIImage.GetSystemImage("chevron.up"), UIBarButtonItemStyle.Plain, (_, _) => MoveFocus(owner, -1)),
-				new(UIImage.GetSystemImage("chevron.down"), UIBarButtonItemStyle.Plain, (_, _) => MoveFocus(owner, +1)),
+				new(UIImage.GetSystemImage("chevron.up")!, UIBarButtonItemStyle.Plain, (_, _) => MoveFocus(owner, -1)),
+				new(UIImage.GetSystemImage("chevron.down")!, UIBarButtonItemStyle.Plain, (_, _) => MoveFocus(owner, +1)),
 				new(UIBarButtonSystemItem.FlexibleSpace),
 				done
 			]
@@ -64,14 +62,17 @@ internal static class Keyboards
 		View view,
 		List<View> inputs)
 	{
-		if (view is TextField or TextEditor)
+		switch (view)
 		{
-			inputs.Add(view);
-			return;
+			case TextField or TextEditor:
+				inputs.Add(view);
+				return;
+			case Panel panel:
+				{
+					foreach (View child in panel.Children)
+						Collect(child, inputs);
+					break;
+				}
 		}
-
-		if (view is Panel panel)
-			foreach (View child in panel.Children)
-				Collect(child, inputs);
 	}
 }

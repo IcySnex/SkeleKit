@@ -120,11 +120,11 @@ internal sealed class Navigator(
 
 
 	public Task PushAsync<TViewModel>() where TViewModel : class =>
-		PushAsync(ViewRegistry.CreateViewModel(typeof(TViewModel), services));
+		PushAsync(registry.CreateViewModel(typeof(TViewModel), services));
 
 	public Task PushAsync(
 		Type viewModel) =>
-		PushAsync(ViewRegistry.CreateViewModel(viewModel, services));
+		PushAsync(registry.CreateViewModel(viewModel, services));
 
 	public Task PushAsync(
 		object viewModel)
@@ -177,12 +177,12 @@ internal sealed class Navigator(
 
 	public Task PresentAsync<TViewModel>(
 		ModalStyle style) where TViewModel : class =>
-		PresentAsync(ViewRegistry.CreateViewModel(typeof(TViewModel), services), style);
+		PresentAsync(registry.CreateViewModel(typeof(TViewModel), services), style);
 
 	public Task PresentAsync(
 		Type viewModel,
 		ModalStyle style) =>
-		PresentAsync(ViewRegistry.CreateViewModel(viewModel, services), style);
+		PresentAsync(registry.CreateViewModel(viewModel, services), style);
 
 	public Task PresentAsync(
 		object viewModel,

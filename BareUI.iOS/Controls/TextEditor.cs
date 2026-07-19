@@ -196,7 +196,6 @@ public class TextEditor : Control
 	}
 
 
-	// UITextView over-reports empty height; floor at one line
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{

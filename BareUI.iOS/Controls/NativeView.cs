@@ -19,8 +19,7 @@ public class NativeView : Control
 
 
 	// caller owns it, don't dispose
-	private protected override bool OwnsNative =>
-		false;
+	private protected override bool OwnsNative => false;
 
 	private protected override UIView CreateNative() =>
 		view;

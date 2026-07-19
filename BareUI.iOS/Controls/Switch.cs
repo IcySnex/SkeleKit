@@ -5,8 +5,7 @@ namespace BareUI;
 /// </summary>
 public class Switch : Control
 {
-	UISwitch Ui =>
-		(UISwitch)Native;
+	UISwitch Ui => (UISwitch)Native;
 
 
 	/// <summary>

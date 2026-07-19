@@ -7,8 +7,12 @@ namespace BareUI;
 /// </summary>
 public class DatePicker : Control
 {
-	UIDatePicker Ui =>
-		(UIDatePicker)Native;
+	static NSDate ToNative(
+		DateTime value) =>
+		(NSDate)DateTime.SpecifyKind(value, value.Kind is DateTimeKind.Unspecified ? DateTimeKind.Local : value.Kind).ToUniversalTime();
+
+
+	UIDatePicker Ui => (UIDatePicker)Native;
 
 
 	/// <summary>
@@ -67,11 +71,6 @@ public class DatePicker : Control
 	/// </summary>
 	public Action<DateTime>? DateChanged { get; set; }
 
-
-	// unspecified kind is taken as local
-	static NSDate ToNative(
-		DateTime value) =>
-		(NSDate)DateTime.SpecifyKind(value, value.Kind is DateTimeKind.Unspecified ? DateTimeKind.Local : value.Kind).ToUniversalTime();
 
 	void ApplyStyle()
 	{

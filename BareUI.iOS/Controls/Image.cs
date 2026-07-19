@@ -10,12 +10,12 @@ public class Image : Control
 	// URL-source loader; set through BareApplicationBuilder.UseImageLoader(...)
 	internal static IImageLoader Loader { get; set; } = new HttpImageLoader();
 
+
 	CancellationTokenSource? loadCancellation;
 	UIImage? displayed;
 
 
-	UIImageView Ui =>
-		(UIImageView)Native;
+	UIImageView Ui => (UIImageView)Native;
 
 
 	/// <summary>
@@ -69,8 +69,6 @@ public class Image : Control
 		set => Set(ref stretch, value, ApplyStretch, affectsMeasure: false);
 	}
 	Stretch stretch = Stretch.Uniform;
-
-	// symbol styling, SF Symbol sources only
 
 	/// <summary>
 	/// The symbol's point size, or NaN for its natural size.
@@ -241,7 +239,6 @@ public class Image : Control
 		loadCancellation = null;
 	}
 
-	// Auto: bundle beats symbol
 	UIImage? ResolveSync(
 		ImageSource source) =>
 		source.Kind switch
@@ -285,6 +282,7 @@ public class Image : Control
 			_ => UIImageSymbolWeight.Regular
 		};
 
+	// ReSharper disable once AsyncVoidMethod
 	async void LoadUrlAsync(
 		ImageSource source,
 		CancellationToken cancellationToken)
@@ -345,7 +343,6 @@ public class Image : Control
 		CancelLoad();
 
 
-	// explicit Tint only; inherited would flatten a photo
 	internal override void TintChanged()
 	{
 		if (IsRealized)
@@ -354,7 +351,7 @@ public class Image : Control
 
 
 	/// <summary>
-	/// Plays a symbol effect once, on top of any ambient <see cref="SymbolEffect"/>. No-op until realized.
+	/// Plays a symbol effect once, on top of any ambient <see cref="SymbolEffect"/>.
 	/// </summary>
 	/// <param name="effect">The effect to perform.</param>
 	public void PlaySymbolEffect(

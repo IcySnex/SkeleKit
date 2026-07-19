@@ -3,7 +3,7 @@ using System.Windows.Input;
 namespace BareUI;
 
 /// <summary>
-/// A single-line text input wrapping.
+/// A single-line text input.
 /// </summary>
 public class TextField : Control
 {
@@ -296,7 +296,6 @@ public class TextField : Control
 	}
 
 
-	// empty string clears a previously set content type
 	internal static void ApplyContentType(
 		NSString? current,
 		ContentKind kind,

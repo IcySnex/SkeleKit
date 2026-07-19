@@ -5,11 +5,8 @@ namespace BareUI;
 /// </summary>
 public class Label : Control
 {
-	UILabel Ui =>
-		(UILabel)Native;
-
-	bool UsesAttributes =>
-		lineSpacing is not 0 || letterSpacing is not 0 || underline || strikethrough;
+	UILabel Ui => (UILabel)Native;
+	bool UsesAttributes => lineSpacing is not 0 || letterSpacing is not 0 || underline || strikethrough;
 
 
 	/// <summary>
@@ -27,7 +24,7 @@ public class Label : Control
 	/// Styled runs composing the text, overriding <see cref="Text"/> when set.
 	/// </summary>
 	/// <remarks>
-	/// Each run styles itself over the label's own font and color, and a run with a <see cref="Span.Command"/> is tappable.
+	/// Each run styles itself over the label's own font and color.
 	/// </remarks>
 	public IReadOnlyList<Span>? Spans
 	{
@@ -224,7 +221,6 @@ public class Label : Control
 		Ui.AttributedText = new NSAttributedString(text, attributes);
 	}
 
-	// mirror the label's own wrap and alignment
 	NSMutableParagraphStyle BuildParagraph() =>
 		new()
 		{

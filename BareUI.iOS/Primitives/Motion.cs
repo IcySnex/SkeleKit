@@ -34,7 +34,7 @@ internal sealed class Motion(
 		double duration = Math.Max(animation.Duration * Math.Abs(Target - origin), 0.01);
 		double t = Math.Min(elapsed / duration, 1);
 
-		Position = origin + ((Target - origin) * Ease(t));
+		Position = origin + (Target - origin) * Ease(t);
 		Velocity = 0;
 
 		return t < 1;
@@ -55,7 +55,7 @@ internal sealed class Motion(
 
 		for (int i = 0; i < steps; i++)
 		{
-			Velocity += ((-stiffness * (Position - Target)) - (drag * Velocity)) * h;
+			Velocity += (-stiffness * (Position - Target) - drag * Velocity) * h;
 			Position += Velocity * h;
 		}
 
@@ -75,6 +75,6 @@ internal sealed class Motion(
 			Easing.Linear => t,
 			Easing.EaseIn => t * t,
 			Easing.EaseOut => t * (2 - t),
-			_ => t * t * (3 - (2 * t))
+			_ => t * t * (3 - 2 * t)
 		};
 }

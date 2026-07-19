@@ -7,10 +7,6 @@ namespace BareUI;
 /// <summary>
 /// Read-only rich text that can be selected, with tappable <see cref="Link"/> runs.
 /// </summary>
-/// <remarks>
-/// Backed by a UIKit text view, so a link gets the native tap highlight and a hold-to-peek menu that a plain <see cref="Label"/> deliberately leaves out.<br/>
-/// Runs style themselves over the view's own font and color; an unset run property follows the view.
-/// </remarks>
 public class TextView : Control
 {
 	sealed class TextItemDelegate : UITextViewDelegate
@@ -45,6 +41,7 @@ public class TextView : Control
 
 	// links matched by range in the delegate
 	readonly List<(NSRange range, Link link)> linkRanges = [];
+
 	TextItemDelegate? peer;
 	UIAction? heldPrimary;
 	UIAction[]? heldMenu;
@@ -52,8 +49,7 @@ public class TextView : Control
 	bool hooked;
 
 
-	UITextView Ui =>
-		(UITextView)Native;
+	UITextView Ui => (UITextView)Native;
 
 
 	/// <summary>

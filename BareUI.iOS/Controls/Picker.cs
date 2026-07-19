@@ -9,8 +9,7 @@ namespace BareUI;
 public class Picker<TItem> : Control
 	where TItem : class
 {
-	UIButton Ui =>
-		(UIButton)Native;
+	UIButton Ui => (UIButton)Native;
 
 
 	/// <summary>

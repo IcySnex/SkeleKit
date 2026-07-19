@@ -92,7 +92,7 @@ public class AnimationDemo : ContentView<AnimationDemoViewModel>
 			// a running animator is taken over, never replaced: two animators on one transform fight
 			case GestureState.Began:
 				drag ??= Prepare(card);
-				drag.Grab();
+				drag.Stop();
 
 				grabbedAt = drag.Fraction;
 

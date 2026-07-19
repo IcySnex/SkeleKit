@@ -260,7 +260,7 @@ public class BareApplication
 	internal UIViewController BuildShell()
 	{
 		PageHost Page(Type? viewModel) =>
-			new(registry.CreatePage(ViewRegistry.CreateViewModel(viewModel!, Services)));
+			new(registry.CreatePage(registry.CreateViewModel(viewModel!, Services)));
 
 		UINavigationController Stack(Type? viewModel, bool prefersLargeTitles = false)
 		{

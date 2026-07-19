@@ -50,8 +50,7 @@ public class WebView : Control
 	NavigationPeer? peer;
 
 
-	WKWebView Ui =>
-		(WKWebView)Native;
+	WKWebView Ui => (WKWebView)Native;
 
 
 	/// <summary>

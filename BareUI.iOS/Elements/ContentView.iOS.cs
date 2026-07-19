@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
-using UIKit;
 
 namespace BareUI;
 
@@ -8,6 +7,7 @@ public abstract partial class ContentView
 {
 	internal PageHost? Host { get; set; }
 
+#pragma warning disable CA1822
 	/// <summary>
 	/// The application's navigator, for navigation from page code.
 	/// </summary>
@@ -27,6 +27,7 @@ public abstract partial class ContentView
 	protected ISharer Sharer =>
 		BareApplication.Current?.Services.GetRequiredService<ISharer>()
 		?? throw new InvalidOperationException("There is no running application.");
+#pragma warning restore CA1822
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public UIViewController? Controller =>

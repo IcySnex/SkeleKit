@@ -5,8 +5,7 @@ namespace BareUI;
 /// </summary>
 public class ColorWell : Control
 {
-	UIColorWell Ui =>
-		(UIColorWell)Native;
+	UIColorWell Ui => (UIColorWell)Native;
 
 
 	/// <summary>

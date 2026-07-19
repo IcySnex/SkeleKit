@@ -5,8 +5,7 @@ namespace BareUI;
 /// </summary>
 public class PageControl : Control
 {
-	UIPageControl Ui =>
-		(UIPageControl)Native;
+	UIPageControl Ui => (UIPageControl)Native;
 
 
 	/// <summary>

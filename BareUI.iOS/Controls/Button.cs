@@ -7,12 +7,9 @@ namespace BareUI;
 /// </summary>
 public class Button : Control
 {
-	// rooted so the menu peers survive
 	UIAction[]? menuActions;
 
-
-	UIButton Ui =>
-		(UIButton)Native;
+	UIButton Ui => (UIButton)Native;
 
 
 	/// <summary>

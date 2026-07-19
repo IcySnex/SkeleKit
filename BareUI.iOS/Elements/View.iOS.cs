@@ -1,9 +1,6 @@
 using System.Windows.Input;
 using CoreAnimation;
-using CoreGraphics;
-using Foundation;
 using ObjCRuntime;
-using UIKit;
 
 namespace BareUI;
 
@@ -173,18 +170,22 @@ public abstract partial class View
 			native.AddGestureRecognizer(recognizer);
 		}
 
-		if (longPressRecognizer is not null)
-			longPressRecognizer.MinimumPressDuration = LongPressDuration;
+		longPressRecognizer?.MinimumPressDuration = LongPressDuration;
 
 		if (pressed is not null && pressRecognizer is null)
 		{
 			UILongPressGestureRecognizer recognizer = null!;
 			recognizer = new(() =>
 			{
-				if (recognizer.State is UIGestureRecognizerState.Began)
-					pressed?.Invoke(true);
-				else if (recognizer.State is UIGestureRecognizerState.Ended or UIGestureRecognizerState.Cancelled or UIGestureRecognizerState.Failed)
-					pressed?.Invoke(false);
+				switch (recognizer.State)
+				{
+					case UIGestureRecognizerState.Began:
+						pressed?.Invoke(true);
+						break;
+					case UIGestureRecognizerState.Ended or UIGestureRecognizerState.Cancelled or UIGestureRecognizerState.Failed:
+						pressed?.Invoke(false);
+						break;
+				}
 			});
 
 			// zero duration turns it into a touch-down tracker; not canceling keeps child controls live
@@ -201,8 +202,8 @@ public abstract partial class View
 			recognizer = new(() =>
 			{
 				// measured in the parent: the view's own space rotates and scales under the gesture
-				CGPoint translation = recognizer.TranslationInView(recognizer.View?.Superview);
-				CGPoint velocity = recognizer.VelocityInView(recognizer.View?.Superview);
+				CGPoint translation = recognizer.TranslationInView(recognizer.View.Superview);
+				CGPoint velocity = recognizer.VelocityInView(recognizer.View.Superview);
 
 				panned?.Invoke(new(
 					StateOf(recognizer),
@@ -240,23 +241,16 @@ public abstract partial class View
 			native.AddGestureRecognizer(recognizer);
 		}
 
-		if (tapRecognizer is not null)
-			tapRecognizer.Enabled = tapCommand is not null && IsEnabled;
-		if (doubleTapRecognizer is not null)
-			doubleTapRecognizer.Enabled = doubleTapCommand is not null && IsEnabled;
-		if (longPressRecognizer is not null)
-			longPressRecognizer.Enabled = longPressCommand is not null && IsEnabled;
-		if (pressRecognizer is not null)
-			pressRecognizer.Enabled = pressed is not null && IsEnabled;
-		if (panRecognizer is not null)
-			panRecognizer.Enabled = panned is not null && IsEnabled;
-		if (pinchRecognizer is not null)
-			pinchRecognizer.Enabled = pinched is not null && IsEnabled;
-		if (rotationRecognizer is not null)
-			rotationRecognizer.Enabled = rotated is not null && IsEnabled;
+		tapRecognizer?.Enabled = tapCommand is not null && IsEnabled;
+		doubleTapRecognizer?.Enabled = doubleTapCommand is not null && IsEnabled;
+		longPressRecognizer?.Enabled = longPressCommand is not null && IsEnabled;
+		pressRecognizer?.Enabled = pressed is not null && IsEnabled;
+		panRecognizer?.Enabled = panned is not null && IsEnabled;
+		pinchRecognizer?.Enabled = pinched is not null && IsEnabled;
+		rotationRecognizer?.Enabled = rotated is not null && IsEnabled;
 
 		// a hovered pointer picks up the effect through the delegate, which reads the live PointerEffect
-		if (PointerEffect is not BareUI.PointerEffect.None && pointerInteraction is null)
+		if (PointerEffect is not PointerEffect.None && pointerInteraction is null)
 		{
 			pointerDelegate = new(this);
 			pointerInteraction = new(pointerDelegate);
@@ -269,11 +263,11 @@ public abstract partial class View
 
 	internal UIPointerStyle? PointerStyle()
 	{
-		if (native is null || PointerEffect is BareUI.PointerEffect.None)
+		if (native is null || PointerEffect is PointerEffect.None)
 			return null;
 
 		// only the automatic effect is bound in Microsoft.iOS 26.0 (see PointerEffect)
-		return UIPointerStyle.Create(UIPointerEffect.Create(new UITargetedPreview(native)), null);
+		return UIPointerStyle.Create(UIPointerEffect.Create(new(native)), null);
 	}
 
 	static void Run(
@@ -284,7 +278,6 @@ public abstract partial class View
 			command.Execute(parameter);
 	}
 
-	// the delegate and the actions stay rooted here: UIKit's retain alone would let their peers die
 	ContextMenuDelegate? contextMenuDelegate;
 	UIContextMenuInteraction? contextMenuInteraction;
 	UIAction[]? contextMenuActions;
@@ -400,7 +393,7 @@ public abstract partial class View
 		// corner configuration instead: a layer clip would scissor its rim lensing
 		bool glass = Background is Material { Kind: MaterialKind.Glass } && OperatingSystem.IsIOSVersionAtLeast(26);
 
-		native.ClipsToBounds = ClipsToBounds || (CornerRadius > 0 && Shadow is null && !glass) || ClipsByDefault;
+		native.ClipsToBounds = ClipsToBounds || CornerRadius > 0 && Shadow is null && !glass || ClipsByDefault;
 
 		ApplyShadow();
 		native.Layer.CornerRadius = glass ? 0 : (nfloat)CornerRadius;
@@ -499,8 +492,10 @@ public abstract partial class View
 		string fill)
 	{
 		if (this is not Panel)
+		{
 			throw new InvalidOperationException(
 				$"{fill} background needs a panel (Border, Overlay, StackPanel, ...); {GetType().Name} draws its own content, which the fill would cover.");
+		}
 	}
 
 	void ApplyGradient(
@@ -608,8 +603,10 @@ public abstract partial class View
 		get
 		{
 			for (View? view = this; view is not null; view = view.Parent)
+			{
 				if (view is ContentView page)
 					return page.PageSafeArea;
+			}
 
 			return Thickness.Zero;
 		}
@@ -684,6 +681,7 @@ public abstract partial class View
 		};
 
 		if (animation.SpringDamping is double damping)
+		{
 			UIView.AnimateNotify(
 				animation.Duration,
 				animation.Delay,
@@ -692,13 +690,16 @@ public abstract partial class View
 				UIViewAnimationOptions.AllowUserInteraction,
 				animated,
 				done);
+		}
 		else
+		{
 			UIView.AnimateNotify(
 				animation.Duration,
 				animation.Delay,
 				Options(animation.Easing),
 				animated,
 				done);
+		}
 	}
 
 	/// <summary>
@@ -750,8 +751,10 @@ public abstract partial class View
 	void ApplyGestures()
 	{
 		foreach (UIGestureRecognizer gesture in gestures)
+		{
 			if (gesture.View is null)
 				native?.AddGestureRecognizer(gesture);
+		}
 	}
 
 	void ApplyShadow()
@@ -786,7 +789,7 @@ public abstract partial class View
 		// while the model reads as untransformed, and setting Frame under a transform is undefined.
 		// The origin stays — a scroll view keeps its content offset there
 		native.Bounds = new(native.Bounds.X, native.Bounds.Y, next.Width, next.Height);
-		native.Center = new(next.X + (next.Width / 2), next.Y + (next.Height / 2));
+		native.Center = new(next.X + next.Width / 2, next.Y + next.Height / 2);
 
 		if (resized)
 		{

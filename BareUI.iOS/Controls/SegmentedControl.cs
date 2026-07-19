@@ -5,8 +5,7 @@ namespace BareUI;
 /// </summary>
 public class SegmentedControl : Control
 {
-	UISegmentedControl Ui =>
-		(UISegmentedControl)Native;
+	UISegmentedControl Ui => (UISegmentedControl)Native;
 
 
 	/// <summary>

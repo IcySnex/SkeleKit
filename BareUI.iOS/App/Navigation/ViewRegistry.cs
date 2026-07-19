@@ -54,8 +54,10 @@ internal sealed class ViewRegistry
 		return registration.Instance ??= registration.Create(viewModel);
 	}
 
-	public static object CreateViewModel(
+#pragma warning disable CA1822
+	public object CreateViewModel(
 		Type viewModel,
 		IServiceProvider services) =>
 		services.GetRequiredService(viewModel);
+#pragma warning enable CA1822
 }

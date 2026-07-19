@@ -5,8 +5,7 @@ namespace BareUI;
 /// </summary>
 public class Stepper : Control
 {
-	UIStepper Ui =>
-		(UIStepper)Native;
+	UIStepper Ui => (UIStepper)Native;
 
 
 	/// <summary>

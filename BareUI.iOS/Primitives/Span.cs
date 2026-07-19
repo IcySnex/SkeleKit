@@ -13,8 +13,10 @@ public class Span
 	/// </summary>
 	/// <param name="text">The run's text.</param>
 	public Span(
-		string text) =>
+		string text)
+	{
 		Text = text;
+	}
 
 
 	/// <summary>

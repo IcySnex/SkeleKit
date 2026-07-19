@@ -1,5 +1,3 @@
-using UIKit;
-
 namespace BareUI;
 
 public abstract partial class Panel
@@ -35,12 +33,16 @@ public abstract partial class Panel
 
 		HashSet<UIView> wanted = [];
 		foreach (View child in Children)
+		{
 			if (child.IsRealized)
 				wanted.Add(child.Native);
+		}
 
 		foreach (UIView existing in host.Subviews)
+		{
 			if (!wanted.Contains(existing) && !ReferenceEquals(existing, BackgroundView))
 				existing.RemoveFromSuperview();
+		}
 
 		UIView[] subviews = host.Subviews;
 

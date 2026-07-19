@@ -5,8 +5,7 @@ namespace BareUI;
 /// </summary>
 public class Slider : Control
 {
-	UISlider Ui =>
-		(UISlider)Native;
+	UISlider Ui => (UISlider)Native;
 
 
 	/// <summary>

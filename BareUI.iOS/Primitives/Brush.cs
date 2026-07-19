@@ -30,18 +30,18 @@ public abstract class Brush
 			if (Color.Lerp(from.Color, to.Color, t) is not Color color)
 				return null;
 
-			stops.Add(new(color, from.Offset + ((to.Offset - from.Offset) * t)));
+			stops.Add(new(color, from.Offset + (to.Offset - from.Offset) * t));
 		}
 
 		return new LinearGradient
 		{
 			Stops = stops,
 			Start = new(
-				gradientA.Start.X + ((gradientB.Start.X - gradientA.Start.X) * t),
-				gradientA.Start.Y + ((gradientB.Start.Y - gradientA.Start.Y) * t)),
+				gradientA.Start.X + (gradientB.Start.X - gradientA.Start.X) * t,
+				gradientA.Start.Y + (gradientB.Start.Y - gradientA.Start.Y) * t),
 			End = new(
-				gradientA.End.X + ((gradientB.End.X - gradientA.End.X) * t),
-				gradientA.End.Y + ((gradientB.End.Y - gradientA.End.Y) * t))
+				gradientA.End.X + (gradientB.End.X - gradientA.End.X) * t,
+				gradientA.End.Y + (gradientB.End.Y - gradientA.End.Y) * t)
 		};
 	}
 

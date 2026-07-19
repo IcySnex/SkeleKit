@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using Foundation;
 using ObjCRuntime;
 
 namespace BareUI;

@@ -56,5 +56,6 @@
         <Compile Remove="Elements/AccessoryHost.cs" />
         <Compile Remove="Primitives/Fonts.cs" />
         <Compile Remove="Primitives/Keyboards.cs" />
+        <Compile Remove="Primitives/ItemKey.cs" />
     </ItemGroup>
 </Project>

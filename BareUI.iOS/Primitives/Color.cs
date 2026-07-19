@@ -55,7 +55,7 @@ public readonly record struct Color(
 	public static Color FromHex(
 		uint hex)
 	{
-		byte a = (hex >> 24) == 0 ? (byte)255 : (byte)(hex >> 24);
+		byte a = hex >> 24 == 0 ? (byte)255 : (byte)(hex >> 24);
 		byte r = (byte)(hex >> 16);
 		byte g = (byte)(hex >> 8);
 		byte b = (byte)hex;
@@ -106,12 +106,12 @@ public readonly record struct Color(
 		double Mix(
 			double from,
 			double to) =>
-			Math.Clamp(from + ((to - from) * t), 0, 1);
+			Math.Clamp(from + (to - from) * t, 0, 1);
 	}
 }
 
 // the UIKit colors that adapt to appearance, contrast and vibrancy on their own
-enum SystemColor
+internal enum SystemColor
 {
 	Red,
 	Orange,

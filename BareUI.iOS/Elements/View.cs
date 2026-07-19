@@ -10,8 +10,10 @@ public abstract partial class View
 	/// <summary>
 	/// Applies the app's implicit theme styles for this view's type.
 	/// </summary>
-	protected View() =>
+	protected View()
+	{
 		Theme.ApplyTo(this);
+	}
 
 
 	/// <summary>
@@ -478,7 +480,7 @@ public abstract partial class View
 	{
 		get;
 		set => Set(ref field, value);
-	} = 0;
+	}
 
 	/// <summary>
 	/// Maximum width in points.
@@ -496,7 +498,7 @@ public abstract partial class View
 	{
 		get;
 		set => Set(ref field, value);
-	} = 0;
+	}
 
 	/// <summary>
 	/// Maximum height in points.
@@ -512,20 +514,18 @@ public abstract partial class View
 	/// </summary>
 	public HorizontalAlignment HorizontalAlignment
 	{
-		get => horizontalAlignment;
-		set => Set(ref horizontalAlignment, value);
-	}
-	HorizontalAlignment horizontalAlignment = HorizontalAlignment.Stretch;
+		get;
+		set => Set(ref field, value);
+	} = HorizontalAlignment.Stretch;
 
 	/// <summary>
 	/// How the view is placed within the vertical space its parent gives it.
 	/// </summary>
 	public VerticalAlignment VerticalAlignment
 	{
-		get => verticalAlignment;
-		set => Set(ref verticalAlignment, value);
-	}
-	VerticalAlignment verticalAlignment = VerticalAlignment.Stretch;
+		get;
+		set => Set(ref field, value);
+	} = VerticalAlignment.Stretch;
 
 	/// <summary>
 	/// When false the view takes no space and is hidden natively.
@@ -674,10 +674,9 @@ public abstract partial class View
 	/// </remarks>
 	public Point AnchorPoint
 	{
-		get => anchorPoint;
-		set => Set(ref anchorPoint, value, ApplyAnchor, affectsMeasure: false);
-	}
-	Point anchorPoint = new(0.5, 0.5);
+		get;
+		set => Set(ref field, value, ApplyAnchor, affectsMeasure: false);
+	} = new(0.5, 0.5);
 
 	// the pivot lives in the transform matrix (baked around the center), so a change re-derives it
 	void ApplyAnchor() =>
