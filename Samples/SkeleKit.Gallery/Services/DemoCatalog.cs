@@ -26,6 +26,7 @@ public sealed class DemoCatalog : IDemoCatalog
 		new("ActivityIndicator", typeof(ActivityIndicatorDemoViewModel)),
 		new("Divider", typeof(DividerDemoViewModel)),
 		new("Picker", typeof(PickerDemoViewModel)),
+		new("System Picker", typeof(SystemPickerDemoViewModel)),
 		new("Image", typeof(ImageDemoViewModel)),
 		new("WebView & Safari", typeof(WebViewDemoViewModel)),
 		new("NativeView", typeof(NativeViewDemoViewModel)),

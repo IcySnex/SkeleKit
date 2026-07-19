@@ -32,6 +32,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<ActivityIndicatorDemoViewModel>();
 		services.AddTransient<DividerDemoViewModel>();
 		services.AddTransient<PickerDemoViewModel>();
+		services.AddTransient<SystemPickerDemoViewModel>();
 		services.AddTransient<ImageDemoViewModel>();
 		services.AddTransient<WebViewDemoViewModel>();
 		services.AddTransient<NativeViewDemoViewModel>();

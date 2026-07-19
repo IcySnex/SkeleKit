@@ -25,6 +25,14 @@ public abstract partial class ContentView
 	/// ViewModels take <see cref="ISharer"/> by constructor instead.
 	/// </remarks>
 	protected ISharer Sharer => SkeleApplication.Current?.Services.GetRequiredService<ISharer>() ?? throw new InvalidOperationException("There is no running application.");
+
+	/// <summary>
+	/// The application's photo and document pickers, for picking from page code.
+	/// </summary>
+	/// <remarks>
+	/// ViewModels take <see cref="ISystemPicker"/> by constructor instead.
+	/// </remarks>
+	protected ISystemPicker SystemPicker => SkeleApplication.Current?.Services.GetRequiredService<ISystemPicker>() ?? throw new InvalidOperationException("There is no running application.");
 #pragma warning restore CA1822
 
 

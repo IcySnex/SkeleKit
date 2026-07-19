@@ -3,11 +3,7 @@ namespace SkeleKit;
 /// <summary>
 /// Describes where an image comes from, without touching UIKit.
 /// </summary>
-/// <param name="kind">How the value should be resolved.</param>
-/// <param name="value">The symbol name, bundle asset name, or URL.</param>
-public readonly struct ImageSource(
-	ImageSourceKind kind,
-	string value)
+public readonly struct ImageSource
 {
 	/// <summary>
 	/// An image from an SF Symbol name.
@@ -37,6 +33,15 @@ public readonly struct ImageSource(
 		new(ImageSourceKind.Url, url);
 
 	/// <summary>
+	/// An image from raw encoded bytes.
+	/// </summary>
+	/// <param name="bytes">The encoded image data.</param>
+	/// <returns>An image source configured for in-memory data.</returns>
+	public static ImageSource Data(
+		byte[] bytes) =>
+		new(bytes);
+
+	/// <summary>
 	/// Treats a string as a URL when it looks like one, otherwise resolves it automatically.
 	/// </summary>
 	/// <param name="value">The string value to convert.</param>
@@ -45,15 +50,32 @@ public readonly struct ImageSource(
 		new(value.Contains("://") ? ImageSourceKind.Url : ImageSourceKind.Auto, value);
 
 
+	ImageSource(
+		ImageSourceKind kind,
+		string value)
+	{
+		Kind = kind;
+		Value = value;
+	}
+
+	ImageSource(
+		byte[] bytes) : this(ImageSourceKind.Data, "")
+	{
+		Bytes = bytes;
+	}
+
+
 	/// <summary>
 	/// How <see cref="Value"/> should be resolved.
 	/// </summary>
-	public ImageSourceKind Kind { get; } = kind;
+	public ImageSourceKind Kind { get; }
 
 	/// <summary>
 	/// The symbol name, bundle asset name, or URL.
 	/// </summary>
-	public string Value { get; } = value;
+	public string Value { get; }
+
+	internal byte[]? Bytes { get; }
 }
 
 /// <summary>
@@ -79,5 +101,10 @@ public enum ImageSourceKind
 	/// <summary>
 	/// A remote URL loaded asynchronously.
 	/// </summary>
-	Url
+	Url,
+
+	/// <summary>
+	/// Raw encoded image bytes held in memory.
+	/// </summary>
+	Data
 }

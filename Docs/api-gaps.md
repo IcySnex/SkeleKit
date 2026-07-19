@@ -325,7 +325,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   reaches, plus the `View.Tint` root fallback for the self-painting ones — switch fills, spinners,
   button configurations — which UIKit's inheritance never touches).
 - ~~★ **Scene lifecycle**~~ — **done** (`UseLifecycle(background, foreground)`).
-- ◆ (skip) **System pickers via navigator** — photo (`PHPickerViewController`), document
+- ◆ **System pickers via navigator** — photo (`PHPickerViewController`), document
   (`UIDocumentPickerViewController`); both are present-and-await wrappers, AOT-safe.
 - ★ **Haptic patterns** — `Haptics` covers impact/notify/selection; `CHHapticEngine` patterns
   only if Velura needs them (probably not).
