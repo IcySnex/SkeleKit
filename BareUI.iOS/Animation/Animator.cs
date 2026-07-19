@@ -11,6 +11,19 @@ namespace BareUI;
 /// </remarks>
 public sealed class Animator : IDisposable
 {
+	/// <summary>
+	/// Prepares an animation of the changes made in <paramref name="changes"/>.
+	/// </summary>
+	/// <remarks>
+	/// It does not run until <see cref="Start"/>.<br/>
+	/// Only what <paramref name="changes"/> touches is animated. Transforms, Opacity, CornerRadius, colors, gradients and layout lengths all interpolate; what has no in-between (a Material, a system color, an auto-sized Width) snaps when the animation settles.
+	/// </remarks>
+	public static Animator Create(
+		Animation animation,
+		Action changes) =>
+		new(animation, changes);
+
+
 	readonly Action changes;
 	readonly Motion motion;
 	readonly List<Action<bool>> completions = [];
@@ -30,18 +43,6 @@ public sealed class Animator : IDisposable
 
 		motion = new(animation);
 	}
-
-	/// <summary>
-	/// Prepares an animation of the changes made in <paramref name="changes"/>.
-	/// </summary>
-	/// <remarks>
-	/// It does not run until <see cref="Start"/>.<br/>
-	/// Only what <paramref name="changes"/> touches is animated. Transforms, Opacity, CornerRadius, colors, gradients and layout lengths all interpolate; what has no in-between (a Material, a system color, an auto-sized Width) snaps when the animation settles.
-	/// </remarks>
-	public static Animator Create(
-		Animation animation,
-		Action changes) =>
-		new(animation, changes);
 
 
 	void Materialize()
