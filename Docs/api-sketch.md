@@ -1,4 +1,4 @@
-# BareUI.iOS — API Sketch
+# SkeleKit.iOS — API Sketch
 
 What app code looks like; no UIKit type appears anywhere. Every section is the shipped API.
 
@@ -7,7 +7,7 @@ What app code looks like; no UIKit type appears anywhere. Every section is the s
 Replaces `Main`, `AppDelegate`, and the window/tab wiring:
 
 ```csharp
-BareApplication.CreateBuilder()
+SkeleApplication.CreateBuilder()
     .UseServices(services =>
     {
         services.AddSingleton<Config>();
@@ -169,7 +169,7 @@ public partial class HomeViewModel(INavigator navigator) : ObservableObject
 }
 ```
 
-ViewModels stay CommunityToolkit.Mvvm — BareUI requires only `INotifyPropertyChanged` / `ICommand`.
+ViewModels stay CommunityToolkit.Mvvm — SkeleKit requires only `INotifyPropertyChanged` / `ICommand`.
 
 ## 6. Styling & theming
 
@@ -200,7 +200,7 @@ static class Styles
 new Label { Style = Styles.Caption, Text = "Runtime" };
 
 // implicit — app-wide defaults for every instance of the type
-BareApplication.CreateBuilder()
+SkeleApplication.CreateBuilder()
     .UseTheme(theme => theme
         .Style(new Style<Label>(l => l.TextColor = Colors.Label))
         .Style(new Style<Button>(b => b.Kind = ButtonStyle.Tinted)));

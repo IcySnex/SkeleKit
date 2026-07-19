@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0-ios</TargetFramework>
+        <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
+        <OutputType>Exe</OutputType>
+        <ApplicationId>com.skelekit.gallery</ApplicationId>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <CodesignKey>iPhone Developer</CodesignKey>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <CodesignKey>iPhone Developer</CodesignKey>
+      <MtouchLink>Full</MtouchLink>
+      <DeviceSpecificBuild>true</DeviceSpecificBuild>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' And '$(RuntimeIdentifier)' == 'ios-arm64' ">
+      <MtouchLink>Full</MtouchLink>
+      <TrimmerSingleWarn>false</TrimmerSingleWarn>
+      <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\SkeleKit.iOS\SkeleKit.iOS.csproj" />
+        <ProjectReference Include="..\..\SkeleKit.Generators\SkeleKit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    </ItemGroup>
+</Project>

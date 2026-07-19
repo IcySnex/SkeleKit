@@ -1,4 +1,4 @@
-# BareUI.iOS — Plan
+# SkeleKit.iOS — Plan
 
 A declarative, WPF-inspired UI library for .NET for iOS (net10.0-ios). Wraps native UIKit controls
 behind a clean C# object-initializer syntax with AOT-safe MVVM bindings, so app code never touches
@@ -15,7 +15,7 @@ Related: [architecture.md](architecture.md) (design) · [api-sketch.md](api-sket
 1. **Zero visible UIKit** in app code; escape hatches are opt-in.
 2. **WPF-like mental model, C#-only** (no XAML): element trees via object initializers, MVVM with
    bindings and commands.
-3. **100% native look & feel**: every control wraps the real UIKit control 1:1. BareUI owns
+3. **100% native look & feel**: every control wraps the real UIKit control 1:1. SkeleKit owns
    composition and layout, never rendering.
 4. **AOT-safe by construction**: device builds are Mono full AOT + trimmed (no JIT). No reflection,
    expression trees, or runtime codegen. (NativeAOT/`PublishAot` does not exist for iOS.)
@@ -38,7 +38,7 @@ Related: [architecture.md](architecture.md) (design) · [api-sketch.md](api-sket
 | Mono full AOT + trimming on device (no JIT) | Typed-delegate bindings, explicit view registration, no assembly scanning, no `Expression<>` |
 | net10.0-ios, iOS 18 minimum | Compositional layout, `UICollectionLayoutListConfiguration`, modern APIs used freely |
 | Native look & feel non-negotiable | Controls are thin wrappers; never re-implement a control's drawing |
-| Consumers use CommunityToolkit.Mvvm | Bindings target plain `INotifyPropertyChanged` + `ICommand`; no BareUI VM base class |
+| Consumers use CommunityToolkit.Mvvm | Bindings target plain `INotifyPropertyChanged` + `ICommand`; no SkeleKit VM base class |
 
 ## Current state
 
@@ -50,7 +50,7 @@ Feature-complete for building a real app. Commits land on `main` (linear history
   `Switch`, `Slider`, `Stepper`, `ProgressBar`, `ActivityIndicator`, `Divider`, `Picker<T>`,
   `SegmentedControl`, `DatePicker`, `PageControl`, `ColorWell`, `WebView`, `NativeView`.
 - **Bindings**: AOT-safe, all four modes, converters, triggers, nested paths, main-thread marshalling.
-- **App model**: `BareApplication` bootstrap, DI, ViewModel-first `INavigator`, tabs/stack/single-page
+- **App model**: `SkeleApplication` bootstrap, DI, ViewModel-first `INavigator`, tabs/stack/single-page
   shells, iPad sidebar, page chrome, lifecycle hooks.
 - **CollectionView**: diffable, virtualized; per-section list/grid/carousel layouts; sections, cell
   accessories + selection state, selection modes, refresh, swipe, context menus, reorder, prefetch,

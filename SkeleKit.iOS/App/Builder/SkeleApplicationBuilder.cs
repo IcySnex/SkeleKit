@@ -1,0 +1,167 @@
+using System.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace SkeleKit;
+
+/// <summary>
+/// A builder used to configure and construct a <see cref="SkeleApplication"/>.
+/// </summary>
+public sealed class SkeleApplicationBuilder
+{
+	internal SkeleApplicationBuilder() { }
+
+
+	internal readonly ServiceCollection Services = [];
+	internal readonly ViewRegistry Registry = new();
+
+	internal SkeleApplication.ShellKind Shell = SkeleApplication.ShellKind.None;
+	internal bool PreferLargeTitles;
+	internal TabsBuilder? TabsBuilder;
+	internal Type? RootViewModel;
+
+	internal Action? LifecycleBackground { get; private set; }
+	internal Action? LifecycleForeground { get; private set; }
+
+
+	/// <summary>
+	/// Registers core dependencies and application services into the container.
+	/// </summary>
+	/// <param name="configure">Adds services to the container.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder UseServices(
+		Action<IServiceCollection> configure)
+	{
+		configure(Services);
+		return this;
+	}
+
+	/// <summary>
+	/// Sets how <c>Image</c> loads remote URLs.
+	/// </summary>
+	/// <remarks>
+	/// Plug in a caching loader here.
+	/// </remarks>
+	/// <param name="loader">The loader to use.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder UseImageLoader(
+		IImageLoader loader)
+	{
+		Image.Loader = loader;
+		return this;
+	}
+
+	/// <summary>
+	/// Sets the app-wide accent color every control tints with.
+	/// </summary>
+	/// <param name="accent">The accent color.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder UseAccent(
+		Color accent)
+	{
+		View.AppAccent = accent;
+		return this;
+	}
+
+	/// <summary>
+	/// Registers app lifecycle hooks, invoked as the app leaves for and returns from the background.
+	/// </summary>
+	/// <param name="background">Invoked when the app enters the background, or null.</param>
+	/// <param name="foreground">Invoked when the app returns to the foreground, or null.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder UseLifecycle(
+		Action? background = null,
+		Action? foreground = null)
+	{
+		LifecycleBackground = background;
+		LifecycleForeground = foreground;
+		return this;
+	}
+
+	/// <summary>
+	/// Registers implicit styles applied to every view of a type as it is built.
+	/// </summary>
+	/// <param name="configure">Registers the implicit styles.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder UseTheme(
+		Action<Theme> configure)
+	{
+		Theme.Use(configure);
+		return this;
+	}
+
+	/// <summary>
+	/// Registers pages by hand.
+	/// </summary>
+	/// <remarks>
+	/// Prefer the [Page] attribute, whose generated UsePages() calls this.
+	/// </remarks>
+	/// <param name="configure">Registers the pages.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder UsePages(
+		Action<PagesBuilder> configure)
+	{
+		configure(new(Registry));
+
+		return this;
+	}
+
+	/// <summary>
+	/// Configures the app to use as a single page without navigation chrome.
+	/// </summary>
+	/// <typeparam name="TView">The type of the root view.</typeparam>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder SinglePage<TView>() where TView : ContentView
+	{
+		RootViewModel = Registry.ViewModelOf<TView>();
+		Shell = SkeleApplication.ShellKind.SinglePage;
+
+		return this;
+	}
+
+	/// <summary>
+	/// Configures the app to use a stack-based navigation hierarchy.
+	/// </summary>
+	/// <typeparam name="TView">The type of the root view.</typeparam>
+	/// <param name="preferLargeTitles">Whether to enable large, collapsing titles.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder Stack<TView>(
+		bool preferLargeTitles = false) where TView : ContentView
+	{
+		PreferLargeTitles = preferLargeTitles;
+
+		RootViewModel = Registry.ViewModelOf<TView>();
+		Shell = SkeleApplication.ShellKind.Stack;
+
+		return this;
+	}
+
+	/// <summary>
+	/// Configures the app to use bottom navigation tabs with each tab having its own navigation stack.
+	/// </summary>
+	/// <param name="configure">Declares the tabs.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder Tabs(
+		Action<TabsBuilder> configure)
+	{
+		TabsBuilder = new(Registry);
+		configure(TabsBuilder);
+
+		Shell = SkeleApplication.ShellKind.Tabs;
+
+		return this;
+	}
+
+
+	/// <summary>
+	/// Builds and returns the configured application instance.
+	/// </summary>
+	/// <returns>The fully built application.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if a shell layout style has not been configured.</exception>
+	public SkeleApplication Build()
+	{
+		if (Shell == SkeleApplication.ShellKind.None)
+			throw new InvalidOperationException("Call Tabs(), Stack<TView>() or SinglePage<TView>() before Build().");
+
+		return new(this);
+	}
+}

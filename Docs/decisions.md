@@ -1,12 +1,12 @@
-# BareUI.iOS — Decision Records
+# SkeleKit.iOS — Decision Records
 
 Terse ADRs: the decision and the core reason. Deeper mechanics live in `architecture.md` and the
 code; UIKit gotchas live in `CLAUDE.md`.
 
 ## ADR-001: Name & package structure
 
-**Decision:** library **BareUI.iOS** (`.iOS` casing, .NET convention), single package in v1.
-**Why:** short, unique on NuGet, owner's pick. A later `BareUI` (core) + `BareUI.iOS` (backend) split
+**Decision:** library **SkeleKit.iOS** (`.iOS` casing, .NET convention), single package in v1.
+**Why:** short, unique on NuGet, owner's pick. A later `SkeleKit` (core) + `SkeleKit.iOS` (backend) split
 stays mechanical because layers 4–5 avoid UIKit types in public signatures; not exercised in v1.
 
 ## ADR-002: Layout — custom measure/arrange, not Auto Layout translation
@@ -87,10 +87,10 @@ moves a transform, not the layout engine 60×/s.
 
 ## ADR-011: Cells adopt UIKit's *state*, never its content configuration
 
-**Decision:** `BareCell : UICollectionViewListCell` overrides `UpdateConfiguration` to push
+**Decision:** `SkeleCell : UICollectionViewListCell` overrides `UpdateConfiguration` to push
 `IsSelected`/`IsHighlighted` into the hosted `ItemView`; accessories map to `UICellAccessory`. The
-cell's content stays a BareUI tree — no `UIContentConfiguration`.
-**Why:** adopting content configuration hands cell rendering back to UIKit (the composition BareUI
+cell's content stays a SkeleKit tree — no `UIContentConfiguration`.
+**Why:** adopting content configuration hands cell rendering back to UIKit (the composition SkeleKit
 owns), but state and accessories are chrome that make a row feel native. `IsSelected` is a bindable
 prop, so cells restyle on selection through ordinary bindings; list sections get the native tap
 highlight free.

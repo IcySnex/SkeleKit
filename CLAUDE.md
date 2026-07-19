@@ -1,5 +1,5 @@
 
-# BareUI.iOS
+# SkeleKit.iOS
 
 Declarative, WPF-inspired UI library for .NET for iOS (no MAUI, no XAML). Native UIKit
 controls behind C# object-initializer syntax with AOT-safe MVVM bindings. App code never
@@ -13,29 +13,29 @@ Acceptance target: rewrite its screens with zero UIKit imports.
 
 ## Structure
 
-- `BareUI.iOS/` — the library. Multi-targets `net10.0;net10.0-ios`, but **iOS is the only
+- `SkeleKit.iOS/` — the library. Multi-targets `net10.0;net10.0-ios`, but **iOS is the only
   platform**: `net10.0` is a test shim so the layout engine unit-tests without a simulator.
-  Root namespace is `BareUI` (not `BareUI.iOS`). Folders: `Primitives/` (structs+enums),
+  Root namespace is `SkeleKit` (not `SkeleKit.iOS`). Folders: `Primitives/` (structs+enums),
   `Elements/` (`View`, `Panel`, `ViewCollection`, `LayoutHost`), `Layout/` (panels),
   `Controls/` (native wrappers).
-- `BareUI.Tests/` — xunit, plain `net10.0`, references the neutral TFM. Layout
+- `SkeleKit.Tests/` — xunit, plain `net10.0`, references the neutral TFM. Layout
   engine must stay testable here without a simulator.
-- `Samples/BareUI.Gallery/` — iOS sample app for on-the-fly testing/debugging. Bootstraps through
-  `BareApplication.CreateBuilder()` like any consumer would.
+- `Samples/SkeleKit.Gallery/` — iOS sample app for on-the-fly testing/debugging. Bootstraps through
+  `SkeleApplication.CreateBuilder()` like any consumer would.
 
 ## Commands
 
-- Test: `dotnet test BareUI.Tests`
-- Build app: `dotnet build Samples/BareUI.Gallery -p:RuntimeIdentifier=iossimulator-arm64`
+- Test: `dotnet test SkeleKit.Tests`
+- Build app: `dotnet build Samples/SkeleKit.Gallery -p:RuntimeIdentifier=iossimulator-arm64`
 - Run app: add `-t:Run "-p:_DeviceName=:v2:udid=<UDID>"` (UDIDs: `xcrun simctl list devices available`)
 - Screenshot to verify layout: `xcrun simctl io <UDID> screenshot out.png` then Read it.
 - Release build on device (Mono full AOT + full trim; settings live in the Gallery csproj under
-  `Release`+`ios-arm64`): `dotnet publish Samples/BareUI.Gallery -p:PublishProfile=iOS-Device`, then
+  `Release`+`ios-arm64`): `dotnet publish Samples/SkeleKit.Gallery -p:PublishProfile=iOS-Device`, then
   `xcrun devicectl device install app --device <UDID> <path>.app`. Watch for `IL2xxx` warnings.
 - **Iterating on the sim:** rebuild the whole app after editing library code (a bare `-t:Run` can
-  relaunch a stale binary). `simctl terminate <UDID> com.bareui.gallery`, then `install` the fresh
+  relaunch a stale binary). `simctl terminate <UDID> com.skelekit.gallery`, then `install` the fresh
   `.app` + `launch`.
-- **A plist edit needs `rm -rf Samples/BareUI.Gallery/bin obj`** — incremental builds don't recopy
+- **A plist edit needs `rm -rf Samples/SkeleKit.Gallery/bin obj`** — incremental builds don't recopy
   `Info.plist`.
 
 ## Environment gotchas
@@ -121,7 +121,7 @@ Shape:
   (plain `ICommand?` from the ctor-injected ViewModel, ADR-012); continuous streams are past-tense
   `Action<T>` (`Panned`, `Scrolled`, `TextChanged`; `On…` = lifecycle overrides only). List sources
   are `BindableList<T>`.
-- **App**: `BareApplication.CreateBuilder().UseServices().UsePages().Tabs().Build().Run(args)`.
+- **App**: `SkeleApplication.CreateBuilder().UseServices().UsePages().Tabs().Build().Run(args)`.
   `ContentView<TVm>` takes its ViewModel by constructor; `PageHost` is the hidden
   `UIViewController`. `INavigator` is ViewModel-first push/pop/present + alert/confirm/sheet.
   `UsePages` uses factory lambdas — reflection-free page construction.

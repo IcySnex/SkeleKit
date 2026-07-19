@@ -9,7 +9,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 
 - ~~★ **Leading toolbar item next to the back button**~~ — **done** (`LeftItemsSupplementBackButton`
   always on).
-- ~~◆ **Large-title collapse driven by a BareUI scroll**~~ — **done** (`SetContentScrollView`
+- ~~◆ **Large-title collapse driven by a SkeleKit scroll**~~ — **done** (`SetContentScrollView`
   wires the page's root scroll to the bar).
 - ~~★ **Back button title / display mode**~~ — **done** (`ContentView.BackButtonTitle` +
   `BackButtonStyle`).
@@ -30,7 +30,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   accessory path (per-page hand-built `UITabAccessory`) was removed — it repurposed Apple's
   app-global mini-player slot and hand-wired chrome.
 - ~~◆ **Tab accessory**~~ — **done** (`Tabs.Accessory<PlayerBar>()`; the view resolves its
-  ViewModel from `BareApplication.Current.Services` in its ctor and sets its own
+  ViewModel from `SkeleApplication.Current.Services` in its ctor and sets its own
   BindingContext). The view's own `IsVisible` controls the slot — bind it or set it;
   showing and hiding animates, and a page that hides the tab bar takes the accessory with it.
   Content rides in an `AccessoryHost` answering `IntrinsicContentSize` from our measure pass.
@@ -49,7 +49,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   apps (Files, Weather) ship *custom results lists* instead of this UI. If suggestions are ever
   needed, the real path is a results overlay built from a `CollectionView` driven by
   `SearchChanged` — not this API.
-- ~~★ **Status bar style per page**~~ — **done** (`ContentView.StatusBar`, `BareStack` forwards).
+- ~~★ **Status bar style per page**~~ — **done** (`ContentView.StatusBar`, `SkeleStack` forwards).
 - ~~★ **Tab badges**~~ — **done** (`ContentView.TabBadge` bindable + `TabBadgeColor`; applies to
   never-opened tabs too).
 - ~~★ **Hide tab bar on push**~~ — **done** (`ContentView.HidesTabBar`).
@@ -244,7 +244,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~◆ **Edit mode & multi-select**~~ — **done** (`IsEditing` two-way + `SelectedItems`: hand the
   view an `ObservableCollection` and taps keep it in sync, mutations move the checkmarks; leaving
   edit mode clears both sides, and a diff re-syncs checkmarks to the shuffled index paths.
-  `BareCell` is now a `UICollectionViewListCell`, which brings the native edit accessories:
+  `SkeleCell` is now a `UICollectionViewListCell`, which brings the native edit accessories:
   multiselect circles when `SelectedItems` is set, the reorder drag handle when `ReorderCommand`
   is. The selection highlight moved from `SelectedBackgroundView` (dead on a list cell) to a
   `UIBackgroundConfiguration` in `UpdateConfiguration`. Edit/Done stays app-side: a toolbar item
@@ -267,7 +267,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   becomes the collection's `PrefetchDataSource`, warming the shared image loader (whose cache and
   per-url dedupe make the cell's later load a hit) with a `CancellationTokenSource` per index
   path honoured on cancel. Sim-verified: rows a screen ahead warm during a scroll).
-- ~~◆ **Context-menu previews**~~ — **done** as `ItemPreview` only: a BareUI tree as the floating
+- ~~◆ **Context-menu previews**~~ — **done** as `ItemPreview` only: a SkeleKit tree as the floating
   peek (hosted in a `PreviewHost` controller sized by our measure pass, rooted on the element
   while UIKit presents it), plus `PreviewCommand` fired with the item on a preview tap — deferred
   through `animator.AddCompletion`, or the dismissal tears the presented alert down with it. A

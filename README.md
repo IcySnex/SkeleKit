@@ -1,24 +1,24 @@
-# BareUI.iOS
+# SkeleKit.iOS
 
 A declarative, WPF-inspired UI library for **.NET for iOS** — no MAUI, no XAML. Native UIKit
 controls behind C# object-initializer syntax with AOT-safe MVVM bindings. App code never touches
 `UIViewController`, `NSLayoutConstraint`, or `AppDelegate` boilerplate.
 
-- **100% native look & feel** — every control wraps the real UIKit control 1:1; BareUI owns
+- **100% native look & feel** — every control wraps the real UIKit control 1:1; SkeleKit owns
   composition and layout, never rendering.
 - **WPF mental model, C# only** — `Grid`, `StackPanel`, `Margin`, `Alignment`, element trees via
   object initializers, MVVM with bindings and commands.
 - **AOT-safe by construction** — device builds are Mono full AOT + trimmed; no reflection, expression
   trees, or runtime codegen. Bindings use compiled getters + `[CallerArgumentExpression]`.
 - **Dark mode, Dynamic Type, safe areas, keyboard avoidance** handled by the framework.
-- Works with plain `INotifyPropertyChanged` / `ICommand` — CommunityToolkit.Mvvm fits, no BareUI
+- Works with plain `INotifyPropertyChanged` / `ICommand` — CommunityToolkit.Mvvm fits, no SkeleKit
   base ViewModel required.
 
 ## Quick start
 
 ```csharp
 // Program.cs
-BareApplication.CreateBuilder()
+SkeleApplication.CreateBuilder()
     .UseServices(services => services.AddTransient<CounterViewModel>())
     .UsePages(pages => pages.AddSingleton((CounterViewModel vm) => new CounterView(vm)))
     .SinglePage<CounterView>()
@@ -93,7 +93,7 @@ static class Styles
 new Label { Style = Styles.Caption, Text = "Runtime" };   // explicit: Style goes FIRST, later lines win
 
 // implicit: one app-global theme, applied to every view of the type
-BareApplication.CreateBuilder()
+SkeleApplication.CreateBuilder()
     .UseTheme(theme => theme.Style(new Style<Button>(b => b.Kind = ButtonStyle.Tinted)));
 ```
 
@@ -129,9 +129,9 @@ Precedence (each source beats the previous): control defaults → theme (base ty
 
 | Path | What |
 |---|---|
-| `BareUI.iOS/` | The library (multi-targets a `net10.0` shim so the layout engine unit-tests without a simulator) |
-| `BareUI.Tests/` | xunit tests for the layout + binding engines |
-| `Samples/BareUI.Gallery/` | Gallery app: every control and layout, MVVM end to end |
+| `SkeleKit.iOS/` | The library (multi-targets a `net10.0` shim so the layout engine unit-tests without a simulator) |
+| `SkeleKit.Tests/` | xunit tests for the layout + binding engines |
+| `Samples/SkeleKit.Gallery/` | Gallery app: every control and layout, MVVM end to end |
 | `Docs/` | Architecture, API sketch, ADRs |
 
 ## Escape hatches

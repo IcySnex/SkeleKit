@@ -68,7 +68,7 @@ csharp_indent_case_contents_when_block = true
 csharp_indent_labels = one_less_than_current
 csharp_indent_switch_labels = true
 
-[BareUI.{iOS,Generators}/**/*.cs]
+[SkeleKit.{iOS,Generators}/**/*.cs]
 dotnet_diagnostic.IDE0130.severity = none
 resharper_check_namespace_highlighting = none
 

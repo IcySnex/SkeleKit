@@ -1,9 +1,9 @@
-# BareUI.iOS — Architecture
+# SkeleKit.iOS — Architecture
 
 Five layers, each depending only on the ones below it:
 
 ```
-5. App model      BareApplication, INavigator, PageHost, ContentView<TVm>, Haptics
+5. App model      SkeleApplication, INavigator, PageHost, ContentView<TVm>, Haptics
 4. Binding        Bindable<T>, BindingExpression<T>, Binding<T>, commands, MainThread
 3. Controls       Label, Button, Image, TextField… (1:1 native wrappers)
 2. Layout         Grid, StackPanel, ScrollView, Border, Overlay + measure/arrange
@@ -46,7 +46,7 @@ Control : View   (base for native wrappers)
 Custom two-pass **measure/arrange** (WPF semantics), computing frames directly (ADR-002).
 
 - **Host**: each `Panel`'s native view is a `LayoutHost : UIView` overriding `LayoutSubviews()`
-  (arrange) and `SizeThatFits(CGSize)` (measure), so BareUI panels and native controls interoperate
+  (arrange) and `SizeThatFits(CGSize)` (measure), so SkeleKit panels and native controls interoperate
   through the standard UIKit sizing protocol.
 - **Measure** (`Size Measure(Size available)`): panels recurse; leaf controls delegate to the native
   `SizeThatFits`. Cached per available-size; `InvalidateMeasure()` bubbles to the root → `SetNeedsLayout`.
@@ -54,7 +54,7 @@ Custom two-pass **measure/arrange** (WPF semantics), computing frames directly (
   bounds+center. No constraints, no solver.
 - **Safe area — one regime**: a page sits inside the safe area (`PageHost` insets the root). A view
   escapes it with `IgnoresSafeArea` (edge flags); a *scrolling* view turns that bleed into a content
-  inset along its scroll axis, so the scroll passes under the bar but its content never does. BareUI
+  inset along its scroll axis, so the scroll passes under the bar but its content never does. SkeleKit
   owns every scroll inset (`ContentInsetAdjustmentBehavior = Never`).
 - **Environment changes**: `PageHost` observes Dynamic Type (→ `InvalidateSubtree`) and
   `UITraitUserInterfaceStyle` (→ `ReapplyVisuals`, re-resolving CGColor snapshots). Keyboard frame
@@ -77,7 +77,7 @@ Custom two-pass **measure/arrange** (WPF semantics), computing frames directly (
 Thin 1:1 wrappers — **configure the native view, never draw**. Each is ~50–150 lines: property
 forwarding + binding hookup + measure delegation.
 
-| BareUI | UIKit | Notes |
+| SkeleKit | UIKit | Notes |
 |---|---|---|
 | `Label` | `UILabel` | `Text`/`Spans`, `TextStyle`, `FontSize`/`FontWeight`/`FontDesign` (`UIFontMetrics`-scaled), `TextColor`, `MaxLines`, `Truncation`, `TextAlignment` |
 | `Button` | `UIButton` (config) | `Text`, `Icon` (SF Symbol), `Kind`, `Command`/`CommandParameter`, `Menu` |
@@ -140,7 +140,7 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
 ### Navigation (ViewModel-first, AOT-safe)
 
 ```csharp
-BareApplication.CreateBuilder()
+SkeleApplication.CreateBuilder()
     .UseServices(s => s.AddSingleton<IMovieService, MovieService>())
     .UsePages(pages => pages
         .AddSingleton((HomeViewModel vm) => new HomeView(vm))
@@ -157,7 +157,7 @@ BareApplication.CreateBuilder()
   `PopToRootAsync()`; `PresentAsync<TVm>(ModalStyle)` (sheet with detents / full-screen / form sheet /
   popover); `AlertAsync`/`ConfirmAsync`/`PromptAsync`/`SelectAsync`; `OpenUrlAsync`.
 - Shells: `Tabs(...)` (incl. iPad sidebar), `Stack<TView>()`, `SinglePage<TView>()`.
-- `BareApplication` hides `Main`/`AppDelegate`/scene wiring and hosts the DI `IServiceProvider`.
+- `SkeleApplication` hides `Main`/`AppDelegate`/scene wiring and hosts the DI `IServiceProvider`.
 
 ### CollectionView (virtualization)
 
@@ -194,7 +194,7 @@ new CollectionView<Movie>
 
 ## Interop & escape hatches
 
-1. `NativeView` — wrap any `UIView` as a BareUI child.
+1. `NativeView` — wrap any `UIView` as a SkeleKit child.
 2. `view.Native` — the wrapped UIKit view after realize.
 3. `ContentView.Controller` — the hosting `UIViewController`.
 4. Custom controls — subclass `Control`, override `CreateNative()` (+ measure if needed).
