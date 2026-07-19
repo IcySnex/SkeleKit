@@ -61,6 +61,14 @@ public class CollectionLayoutTests
 	}
 
 	[Fact]
+	public void Carousel_KeepsLeadingBoundaryPeek()
+	{
+		CollectionLayout layout = CollectionLayout.Carousel(itemWidth: 120, spacing: 10, snap: CarouselSnap.LeadingBoundaryPeek);
+
+		Assert.Equal(CarouselSnap.LeadingBoundaryPeek, layout.Snap);
+	}
+
+	[Fact]
 	public void Section_IsWhateverTheAppModelSays()
 	{
 		ISection<string> section = new Group("General", "settings", ["Appearance", "Language"]);

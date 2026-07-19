@@ -29,7 +29,7 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 				},
 				new CollectionView<Movie>
 				{
-					Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12, snap: CarouselSnap.LeadingBoundary),
+					Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12, snap: CarouselSnap.LeadingBoundaryPeek),
 					ItemTemplate = () => new MovieCell(),
 					ItemsSource = ViewModel.Movies,
 					SelectionCommand = ViewModel.OpenCommand,

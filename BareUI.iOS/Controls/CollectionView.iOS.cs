@@ -866,12 +866,17 @@ public partial class CollectionView<TItem, TSection>
 		section.OrthogonalScrollingBehavior = layout.Snap switch
 		{
 			CarouselSnap.LeadingBoundary => UICollectionLayoutSectionOrthogonalScrollingBehavior.ContinuousGroupLeadingBoundary,
+			CarouselSnap.LeadingBoundaryPeek => UICollectionLayoutSectionOrthogonalScrollingBehavior.ContinuousGroupLeadingBoundary,
 			CarouselSnap.Item => UICollectionLayoutSectionOrthogonalScrollingBehavior.GroupPaging,
 			CarouselSnap.ItemCentered => UICollectionLayoutSectionOrthogonalScrollingBehavior.GroupPagingCentered,
 			CarouselSnap.Page => UICollectionLayoutSectionOrthogonalScrollingBehavior.Paging,
 			_ => UICollectionLayoutSectionOrthogonalScrollingBehavior.Continuous
 		};
-		section.ContentInsets = new(0, spacing, 0, spacing);
+		nfloat leadingInset = layout.Snap is CarouselSnap.LeadingBoundaryPeek
+			? spacing * 2
+			: spacing;
+
+		section.ContentInsets = new(0, leadingInset, 0, spacing);
 
 		return section;
 	}

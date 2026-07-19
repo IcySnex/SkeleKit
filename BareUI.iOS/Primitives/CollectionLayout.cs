@@ -40,6 +40,11 @@ public enum CarouselSnap
 	LeadingBoundary,
 
 	/// <summary>
+	/// Like <see cref="LeadingBoundary"/>, but leaves a small slice of the previous item visible.
+	/// </summary>
+	LeadingBoundaryPeek,
+
+	/// <summary>
 	/// Settles on an item, leading edge aligned.
 	/// </summary>
 	Item,
