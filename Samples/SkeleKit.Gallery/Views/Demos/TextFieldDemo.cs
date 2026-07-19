@@ -22,10 +22,11 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 				Margin = new Thickness(16),
 				Children =
 				{
-					new Label { Style = Styles.Caption, Text = "Two-way" },
+					new Label { Style = Styles.Caption, Text = "Two-way, leading icon" },
 					new TextField
 					{
 						KeyboardToolbar = KeyboardToolbar.Navigation,
+						LeadingIcon = ImageSource.Symbol("magnifyingglass"),
 						Placeholder = "Name",
 						Text = Bind(vm => vm.Text, (vm, value) => vm.Text = value ?? "")
 					},
@@ -41,10 +42,11 @@ public class TextFieldDemo : ContentView<TextFieldDemoViewModel>
 						Text = Bind(vm => vm.Email, (vm, value) => vm.Email = value ?? "")
 					},
 
-					new Label { Style = Styles.Caption, Text = "SecureField — autofills a saved password" },
+					new Label { Style = Styles.Caption, Text = "SecureField — reveal button, autofills a saved password" },
 					new SecureField
 					{
 						KeyboardToolbar = KeyboardToolbar.Navigation,
+						RevealButton = true,
 						Placeholder = "Password",
 						ContentKind = ContentKind.Password,
 						ReturnKey = ReturnKeyType.Done,

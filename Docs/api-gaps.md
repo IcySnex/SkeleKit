@@ -181,7 +181,12 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Autocapitalization / autocorrection / spell-checking**~~ — **done** (`Capitalization`,
   `Autocorrection` drives both).
 - ~~★ **Clear button mode**~~ — **done** (`TextField.ClearButton`).
-- ◆ **Accessory icons in the field** — leading/trailing views (search icon, reveal-password eye).
+- ~~◆ **Accessory icons in the field**~~ — **done** (`TextField.LeadingIcon`/`TrailingIcon`, decorative
+  symbol/bundle icons only, no tap). `SecureField.RevealButton` adds a caret-safe eye toggle owning the
+  trailing slot. Icons are gray, ~15pt, padded by a `UITextField` subclass overriding the rect methods
+  (`LeftViewRect`/`RightViewRect`/`TextRect`/`EditingRect`) since UITextField sizes overlay views from
+  their intrinsic size and ignores a set frame. `TextEditor` has no native slot, so it stays out.
+  Trailing icon shares the slot with `ClearButton` (icon wins).
 - ~~◆ **Keyboard toolbar**~~ — **done** (`KeyboardToolbar` on `TextField`/`SecureField`/
   `TextEditor`: `Done` dismisses, `Navigation` adds previous/next arrows walking the top page's
   inputs in tree order. One shared bar per kind, rooted statically — per-field bars made the

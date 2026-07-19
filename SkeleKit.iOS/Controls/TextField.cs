@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using ObjCRuntime;
 
 namespace SkeleKit;
 
@@ -7,11 +8,77 @@ namespace SkeleKit;
 /// </summary>
 public class TextField : Control
 {
+	private protected class SkeleTextField : UITextField
+	{
+		const int EdgePadding = 8;
+		const int TextGapLeft = 0;
+		const int TextGapRight = 8;
+
+
+		public SkeleTextField()
+		{ }
+
+		public SkeleTextField(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		CGRect Inset(
+			CGRect rect)
+		{
+			if (LeftView is not null)
+			{
+				rect.X += TextGapLeft;
+				rect.Width -= TextGapLeft;
+			}
+
+			if (RightView is not null)
+				rect.Width -= TextGapRight;
+
+			return rect;
+		}
+
+
+		public override CGRect LeftViewRect(
+			CGRect forBounds)
+		{
+			if (LeftView is not UIView view)
+				return base.LeftViewRect(forBounds);
+
+			CGSize size = view.Frame.Size;
+			return new(EdgePadding, (forBounds.Height - size.Height) / 2, size.Width, size.Height);
+		}
+
+		public override CGRect RightViewRect(
+			CGRect forBounds)
+		{
+			if (RightView is not UIView view)
+				return base.RightViewRect(forBounds);
+
+			CGSize size = view.Frame.Size;
+			return new(forBounds.Width - size.Width - EdgePadding, (forBounds.Height - size.Height) / 2, size.Width, size.Height);
+		}
+
+		public override CGRect TextRect(
+			CGRect forBounds) =>
+			Inset(base.TextRect(forBounds));
+
+		public override CGRect EditingRect(
+			CGRect forBounds) =>
+			Inset(base.EditingRect(forBounds));
+	}
+
+
+	private protected static readonly UIImageSymbolConfiguration IconConfiguration = UIImageSymbolConfiguration.Create(15);
+
+
 	(UIToolbar Bar, UIBarButtonItem[] Items)? accessoryBar;
 	AccessoryHost? accessoryHost;
+	UIImageView? leadingView;
+	UIImageView? trailingView;
 
 
-	UITextField Ui => (UITextField)Native;
+	private protected UITextField Ui => (UITextField)Native;
 
 
 	/// <summary>
@@ -35,6 +102,27 @@ public class TextField : Control
 	}
 	string? placeholder;
 	Binding<string?>? placeholderBinding;
+
+	/// <summary>
+	/// A decorative symbol or bundle icon shown before the text, or null for none.
+	/// </summary>
+	public ImageSource? LeadingIcon
+	{
+		get;
+		set => Set(ref field, value, ApplyLeading, affectsMeasure: false);
+	}
+
+	/// <summary>
+	/// A decorative symbol or bundle icon shown after the text, or null for none.
+	/// </summary>
+	/// <remarks>
+	/// Shares the trailing slot with <see cref="ClearButton"/>, so an icon hides the clear button.
+	/// </remarks>
+	public ImageSource? TrailingIcon
+	{
+		get;
+		set => Set(ref field, value, ApplyTrailing, affectsMeasure: false);
+	}
 
 	/// <summary>
 	/// Which on-screen keyboard to show while editing.
@@ -187,6 +275,14 @@ public class TextField : Control
 	void ApplyPlaceholder() =>
 		Ui.Placeholder = placeholder;
 
+	void ApplyLeading()
+	{
+		leadingView = LeadingIcon is ImageSource source && ResolveIcon(source) is UIImage image ? IconView(image) : null;
+
+		Ui.LeftView = leadingView;
+		Ui.LeftViewMode = leadingView is null ? UITextFieldViewMode.Never : UITextFieldViewMode.Always;
+	}
+
 	void ApplyFont() =>
 		Ui.Font = Fonts.Scaled(fontSize, fontWeight, fontDesign);
 
@@ -263,7 +359,7 @@ public class TextField : Control
 
 	private protected override UIView CreateNative()
 	{
-		UITextField field = new()
+		UITextField field = new SkeleTextField
 		{
 			BorderStyle = UITextBorderStyle.RoundedRect,
 			AdjustsFontForContentSizeCategory = true
@@ -288,12 +384,42 @@ public class TextField : Control
 	{
 		ApplyText();
 		ApplyPlaceholder();
+		ApplyLeading();
+		ApplyTrailing();
 		ApplyFont();
 		ApplyKeyboard();
 		ApplyReturnKey();
 		ApplyTraits();
 		ApplyToolbar();
 	}
+
+	private protected virtual void ApplyTrailing()
+	{
+		trailingView = TrailingIcon is ImageSource source && ResolveIcon(source) is UIImage image ? IconView(image) : null;
+
+		Ui.RightView = trailingView;
+		Ui.RightViewMode = trailingView is null ? UITextFieldViewMode.Never : UITextFieldViewMode.Always;
+	}
+
+
+	private protected static UIImage? ResolveIcon(
+		ImageSource source) =>
+		source.Kind switch
+		{
+			ImageSourceKind.Symbol => UIImage.GetSystemImage(source.Value, IconConfiguration),
+			ImageSourceKind.Bundle => UIImage.FromBundle(source.Value),
+			ImageSourceKind.Url => null,
+			_ => UIImage.FromBundle(source.Value) ?? UIImage.GetSystemImage(source.Value, IconConfiguration)
+		};
+
+	static UIImageView IconView(
+		UIImage image) =>
+		new(image)
+		{
+			ContentMode = UIViewContentMode.Center,
+			TintColor = UIColor.SecondaryLabel,
+			Frame = new(0, 0, image.Size.Width, image.Size.Height)
+		};
 
 
 	internal static void ApplyContentType(
