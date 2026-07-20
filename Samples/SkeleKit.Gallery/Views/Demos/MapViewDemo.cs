@@ -26,7 +26,7 @@ public class MapViewDemo : ContentView<MapViewDemoViewModel>
 				new(new Coordinate(37.7599, -122.4148)) { Title = "Mission", Subtitle = "Burritos", Symbol = "heart.fill", Tint = Colors.Green },
 				new(new Coordinate(37.7649, -122.4550)) { Title = "Golden Gate Park", Subtitle = "Green", Symbol = "leaf.fill", Tint = Colors.Purple }
 			],
-			PinSelected = pin => Prompt = pin.Title
+			SelectionCommand = viewModel.SelectCommand
 		};
 
 		Content = map;
