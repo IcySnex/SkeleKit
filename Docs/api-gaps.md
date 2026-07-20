@@ -211,7 +211,17 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `NavigationFailed` streams, `AllowsBackGestures`, `GoBack`/`GoForward`/`Reload`, `EvaluateAsync` for
   JS. Fill-measured — it takes the offered slot, since web content has no intrinsic size — so give it a
   star row or an explicit height. Rooted `WKNavigationDelegate` peer).
-- ▲ **MapView** — `MKMapView`; probably out of scope, listed for completeness.
+- ~~▲ **MapView**~~ — **done** (ADR-015: `MapView` over `MKMapView`, declarative pins only). Two-way
+  `Region`, `Kind` (Standard/Muted/Satellite/Hybrid), `ShowsUserLocation`, interaction toggles
+  (`Scroll`/`Zoom`/`Rotate`/`PitchEnabled`) and chrome (`ShowsCompass`/`Scale`/`Traffic`). `Pins` is a
+  `BindableList<MapPin>` (coordinate, title, subtitle, SF-symbol glyph, tint) rendered as
+  `MKMarkerAnnotationView` with native title/subtitle callouts; `SelectionCommand`/`PinSelected` fire
+  on tap. Geography is neutral primitives (`Coordinate`, `MapRegion` + `FromRadius`, `MapKind`,
+  `MapPin`) so the public API stays UIKit-free. Pins fully refresh on a `Pins` change or
+  `INotifyCollectionChanged` mutation rather than diffing (a map has no focus to preserve). Rooted
+  `MKMapViewDelegate` peer. `ShowsUserLocation` needs `NSLocationWhenInUseUsageDescription` in the app
+  plist. **Out of v1:** overlays (polyline/polygon/circle) and SkeleKit-tree custom pins/callouts,
+  both additive follow-ups.
 - ~~★ **MenuPicker**~~ — covered by `Button.SelectsFromMenu`; no separate control.
 
 ## Slider / Switch / Progress / Stepper
@@ -325,8 +335,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   reaches, plus the `View.Tint` root fallback for the self-painting ones — switch fills, spinners,
   button configurations — which UIKit's inheritance never touches).
 - ~~★ **Scene lifecycle**~~ — **done** (`UseLifecycle(background, foreground)`).
-- ◆ **System pickers via navigator** — photo (`PHPickerViewController`), document
-  (`UIDocumentPickerViewController`); both are present-and-await wrappers, AOT-safe.
+- ◆ ~~**System pickers via navigator** — photo (`PHPickerViewController`), document
+  (`UIDocumentPickerViewController`); both are present-and-await wrappers, AOT-safe.~~
 - ★ **Haptic patterns** — `Haptics` covers impact/notify/selection; `CHHapticEngine` patterns
   only if Velura needs them (probably not).
 

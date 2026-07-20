@@ -130,3 +130,19 @@ bubble is single and dual-mode: `Search<TView>()` **or** `Action(icon, …)` (a 
 ships only one separated tab slot (`UISearchTab`), so it's the FAB or search, never both. iPadOS
 persists customization keyed by tab identifier (the ViewModel-type name) — renaming a ViewModel or a
 group resets the user's arrangement.
+
+## ADR-015: MapView — declarative pins over neutral geo primitives, no overlays or custom views
+
+**Decision:** `MapView` wraps `MKMapView` with a bindable two-way `Region`, a `Kind`, interaction and
+chrome toggles, and a `Pins` `BindableList<MapPin>` rendered as `MKMarkerAnnotationView` markers with
+native title/subtitle callouts and a `SelectionCommand`. The geography types are neutral SkeleKit
+primitives (`Coordinate`, `MapRegion`, `MapKind`, `MapPin`) so the public API stays UIKit-free and the
+structs unit-test in the shim; `MKMapView`/`CoreLocation` conversions live inside the iOS-only control.
+Overlays (polyline/polygon/circle) and SkeleKit-tree custom pins/callouts are **out of v1**.
+**Why:** pins-only matches the existing list-source pattern for a control that carries the whole rest
+of the app's geography intent, at one control plus four small structs. Overlays need a second diffed
+list plus renderer peers, and custom callout views a `PreviewHost`-style measure/host/root pass per
+annotation (a second CollectionView-sized surface) — neither has a v1 driver, both fit as additive
+follow-ups. Pins fully refresh on a `Pins` change or `INotifyCollectionChanged` mutation rather than
+diffing: a map has no focus to preserve and low pin churn, so the diff pipeline isn't worth its cost.
+User location (`ShowsUserLocation`) needs `NSLocationWhenInUseUsageDescription` in the app plist.

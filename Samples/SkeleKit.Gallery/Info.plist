@@ -47,5 +47,7 @@
     </array>
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>Save shared images to your photo library.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Show your location on the map.</string>
 </dict>
 </plist>

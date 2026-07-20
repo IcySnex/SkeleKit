@@ -35,6 +35,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<SystemPickerDemoViewModel>();
 		services.AddTransient<ImageDemoViewModel>();
 		services.AddTransient<WebViewDemoViewModel>();
+		services.AddTransient<MapViewDemoViewModel>();
 		services.AddTransient<NativeViewDemoViewModel>();
 		services.AddTransient<KeyboardDemoViewModel>();
 		services.AddTransient<GridDemoViewModel>();
