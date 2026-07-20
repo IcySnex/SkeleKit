@@ -218,9 +218,10 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `MKMarkerAnnotationView` with native title/subtitle callouts; `SelectionCommand`/`PinSelected` fire
   on tap. A pin can instead supply `Marker`/`Callout` builders (`Func<View>`) for arbitrary content,
   and `Overlays` (`BindableList<MapOverlay>` = `MapPolyline`/`MapPolygon`/`MapCircle` with stroke/fill/
-  dash) draw shapes beneath the pins. Geography is neutral primitives (`Coordinate`, `MapRegion` +
-  `FromRadius`, `MapKind`, `MapPin`, `MapOverlay`) so the public API stays UIKit-free; the `MKMapView`
-  is reachable through `View.Native` for anything else (custom tile overlays, camera, clustering).
+  dash) draw shapes beneath the pins. `ClustersPins` collapses nearby pins into counted clusters (with
+  an optional `ClusterMarker` view builder). Geography is neutral primitives (`Coordinate`,
+  `MapRegion` + `FromRadius`, `MapKind`, `MapPin`, `MapOverlay`) so the public API stays UIKit-free;
+  the `MKMapView` is reachable through `View.Native` for anything else (custom tile overlays, camera).
   Pins and overlays fully refresh on a change or `INotifyCollectionChanged` mutation rather than
   diffing (a map has no focus to preserve). Rooted `MKMapViewDelegate` peer. `ShowsUserLocation` needs
   `NSLocationWhenInUseUsageDescription` in the app plist.

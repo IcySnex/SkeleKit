@@ -12,7 +12,7 @@ namespace SkeleKit;
 /// </summary>
 /// <remarks>
 /// Shows a two-way <see cref="Region"/>, drops markers from <see cref="Pins"/>, draws shapes from <see cref="Overlays"/>, and reports taps through <see cref="SelectionCommand"/> and <see cref="PinSelected"/>.<br/>
-/// A pin styles the native marker or supplies its own <see cref="MapPin.Marker"/> and <see cref="MapPin.Callout"/> trees; reach for <see cref="View.Native"/> (the <c>MKMapView</c>) for anything the typed API leaves out.<br/>
+/// A pin styles the native marker or supplies its own <see cref="MapPin.Marker"/> and <see cref="MapPin.Callout"/> trees, and <see cref="ClustersPins"/> collapses crowded pins into counted clusters; reach for <see cref="View.Native"/> (the <c>MKMapView</c>) for anything the typed API leaves out.<br/>
 /// Give it a bounded slot (a fill row, an explicit height), since map content has no intrinsic size to measure against.<br/>
 /// <see cref="ShowsUserLocation"/> needs <c>NSLocationWhenInUseUsageDescription</c> in the app plist.
 /// </remarks>
@@ -106,6 +106,9 @@ public class MapView : Control
 	{
 		const string MarkerId = "skele.pin";
 		const string CustomId = "skele.pin.custom";
+		const string ClusterId = "skele.cluster";
+		const string ClusterCustomId = "skele.cluster.custom";
+		const string ClusterGroup = "skele.pins";
 
 		static void ApplyCallout(
 			MKAnnotationView view,
@@ -146,14 +149,40 @@ public class MapView : Control
 			MKMapView mapView,
 			IMKAnnotation annotation)
 		{
+			if (annotation is MKClusterAnnotation cluster)
+			{
+				int count = cluster.MemberAnnotations.Length;
+
+				if (owner?.ClusterMarker is Func<int, View> clusterMarker)
+				{
+					MarkerHost clusterHost = mapView.DequeueReusableAnnotation(ClusterCustomId) as MarkerHost ?? new MarkerHost(cluster, ClusterCustomId);
+
+					clusterHost.Annotation = cluster;
+					clusterHost.SetContent(clusterMarker(count));
+					owner?.Root(clusterHost);
+
+					return clusterHost;
+				}
+
+				MKMarkerAnnotationView clusterView = mapView.DequeueReusableAnnotation(ClusterId) as MKMarkerAnnotationView ?? new MKMarkerAnnotationView(cluster, ClusterId);
+
+				clusterView.Annotation = cluster;
+				clusterView.GlyphText = count.ToString();
+
+				return clusterView;
+			}
+
 			if (annotation is not PinAnnotation pin)
 				return null;
+
+			string? clusterId = owner?.ClustersPins == true ? ClusterGroup : null;
 
 			if (pin.Pin.Marker is Func<View> marker)
 			{
 				MarkerHost host = mapView.DequeueReusableAnnotation(CustomId) as MarkerHost ?? new MarkerHost(annotation, CustomId);
 
 				host.Annotation = annotation;
+				host.ClusteringIdentifier = clusterId;
 				host.SetContent(marker());
 				owner?.Root(host);
 				ApplyCallout(host, pin.Pin, owner);
@@ -164,6 +193,7 @@ public class MapView : Control
 			MKMarkerAnnotationView view = mapView.DequeueReusableAnnotation(MarkerId) as MKMarkerAnnotationView ?? new MKMarkerAnnotationView(annotation, MarkerId);
 
 			view.Annotation = annotation;
+			view.ClusteringIdentifier = clusterId;
 			view.MarkerTintColor = pin.Pin.Tint?.ToUIColor();
 			view.GlyphImage = pin.Pin.Symbol is string symbol ? UIImage.GetSystemImage(symbol) : null;
 			ApplyCallout(view, pin.Pin, owner);
@@ -206,17 +236,36 @@ public class MapView : Control
 			return renderer;
 		}
 
+		double selectionSpan;
+
 		public override void DidChangeVisibleRegion(
-			MKMapView mapView) =>
+			MKMapView mapView)
+		{
+			if (selectionSpan > 0 && mapView.Region.Span.LatitudeDelta > selectionSpan * 1.5)
+			{
+				foreach (IMKAnnotation annotation in mapView.SelectedAnnotations)
+					mapView.DeselectAnnotation(annotation, false);
+
+				selectionSpan = 0;
+			}
+
 			owner?.OnRegionChanged();
+		}
 
 		public override void DidSelectAnnotation(
 			MKMapView mapView,
 			IMKAnnotation annotation)
 		{
+			selectionSpan = mapView.Region.Span.LatitudeDelta;
+
 			if (annotation is PinAnnotation pin)
 				owner?.OnPinSelected(pin.Pin);
 		}
+
+		public override void DidDeselectAnnotation(
+			MKMapView mapView,
+			IMKAnnotation annotation) =>
+			selectionSpan = 0;
 	}
 
 
@@ -406,6 +455,24 @@ public class MapView : Control
 	}
 	IReadOnlyList<MapOverlay> overlays = [];
 	Binding<IReadOnlyList<MapOverlay>?>? overlaysBinding;
+
+	/// <summary>
+	/// Whether nearby pins collapse into a single counted marker that splits apart on zoom.
+	/// </summary>
+	public bool ClustersPins
+	{
+		get => clustersPins;
+		set => Set(ref clustersPins, value, ReloadPins, affectsMeasure: false);
+	}
+	bool clustersPins;
+
+	/// <summary>
+	/// Builds a custom view for a cluster from its pin count, or null for the native counted marker.
+	/// </summary>
+	/// <remarks>
+	/// Only used while <see cref="ClustersPins"/> is on.
+	/// </remarks>
+	public Func<int, View>? ClusterMarker { get; set; }
 
 	/// <summary>
 	/// Invoked with the tapped pin.

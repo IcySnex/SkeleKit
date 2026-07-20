@@ -7,6 +7,11 @@ public partial class MapViewDemoViewModel(
 {
 	[RelayCommand]
 	async Task Select(
-		MapPin pin) =>
-		await navigator.AlertAsync(pin.Title ?? "Pin", pin.Subtitle ?? "");
+		MapPin pin)
+	{
+		if (pin.Title is null)
+			return;
+
+		await navigator.AlertAsync(pin.Title, pin.Subtitle ?? "");
+	}
 }

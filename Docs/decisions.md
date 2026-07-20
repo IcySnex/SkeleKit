@@ -140,8 +140,9 @@ as `MKPolyline`/`MKPolygon`/`MKCircle` renderers. A pin may instead supply its o
 `Callout` builders (`Func<View>`) hosted in the annotation view and detail-callout slot. The geography
 types are neutral SkeleKit primitives (`Coordinate`, `MapRegion`, `MapKind`, `MapPin`, `MapOverlay`
 and its sealed shapes) so the public API stays UIKit-free and unit-tests in the shim; the
-`MKMapView`/`CoreLocation` conversions and view hosting live inside the iOS-only control. Anything the
-typed API leaves out is reached through the base `View.Native` handle (the `MKMapView`).
+`MKMapView`/`CoreLocation` conversions and view hosting live inside the iOS-only control. Nearby pins
+collapse into counted clusters through `ClustersPins` (with an optional `ClusterMarker` view builder).
+Anything the typed API leaves out is reached through the base `View.Native` handle (the `MKMapView`).
 **Why:** pins-plus-overlays plus per-pin `View` builders is "draw or show anything" without a second
 generic control: `Func<View>` on `MapPin` keeps the flat list API and gives arbitrary marker and
 callout content (chosen over a data-driven `MapView<TItem>` with recycled templates, which is a much
