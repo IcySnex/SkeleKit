@@ -22,9 +22,9 @@ public class MapViewDemo : ContentView<MapViewDemoViewModel>
 			ShowsUserLocation = true,
 			Pins =
 			[
-				new(new Coordinate(37.7749, -122.4194)) { Title = "San Francisco", Subtitle = "City Hall", Symbol = "building.columns" },
-				new(new Coordinate(37.8199, -122.4783)) { Title = "Golden Gate", Subtitle = "Bridge", Symbol = "car.fill", Tint = Colors.Orange },
-				new(new Coordinate(37.8080, -122.4177)) { Title = "Pier 39", Symbol = "ferry.fill", Tint = Colors.Blue }
+				new(new Coordinate(37.7880, -122.4074)) { Title = "Union Square", Subtitle = "Shopping", Symbol = "star.fill", Tint = Colors.Red },
+				new(new Coordinate(37.7599, -122.4148)) { Title = "Mission", Subtitle = "Burritos", Symbol = "heart.fill", Tint = Colors.Green },
+				new(new Coordinate(37.7649, -122.4550)) { Title = "Golden Gate Park", Subtitle = "Green", Symbol = "leaf.fill", Tint = Colors.Purple }
 			],
 			PinSelected = pin => Prompt = pin.Title
 		};
