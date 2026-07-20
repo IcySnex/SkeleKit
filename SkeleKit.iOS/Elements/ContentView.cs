@@ -56,7 +56,13 @@ public abstract partial class ContentView : Panel
 	/// <summary>
 	/// The small line of text above the navigation title, or null for none.
 	/// </summary>
-	public string? Prompt { get; set; }
+	public Bindable<string?> Prompt
+	{
+		get => prompt;
+		set => promptBinding = Register(promptBinding, value, value => Set(ref prompt, value, ApplyPrompt, affectsMeasure: false));
+	}
+	string? prompt;
+	Binding<string?>? promptBinding;
 
 	/// <summary>
 	/// The status bar look for this page.
@@ -207,7 +213,12 @@ public abstract partial class ContentView : Panel
 	void ApplyTitle() =>
 		ApplyTitleCore();
 
+	void ApplyPrompt() =>
+		ApplyPromptCore();
+
 	partial void ApplyTitleCore();
+
+	partial void ApplyPromptCore();
 
 	partial void ApplyTabBadgeCore();
 

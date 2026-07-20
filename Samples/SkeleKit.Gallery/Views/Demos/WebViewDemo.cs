@@ -12,6 +12,8 @@ public class WebViewDemo : ContentView<WebViewDemoViewModel>
 		WebViewDemoViewModel viewModel) : base(viewModel)
 	{
 		Title = "WebView";
+		Prompt = Bind(vm => vm.Address);
+
 
 		WebView web = new()
 		{

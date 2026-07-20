@@ -244,7 +244,7 @@ internal sealed class PageHost : UIViewController
 		};
 
 		NavigationItem.Title = page.Title.Value;
-		NavigationItem.Prompt = page.Prompt;
+		NavigationItem.Prompt = page.Prompt.Value;
 		NavigationItem.BackButtonTitle = page.BackButtonTitle;
 		NavigationItem.BackButtonDisplayMode = page.BackButtonStyle switch
 		{

@@ -42,6 +42,21 @@ public abstract partial class ContentView
 	partial void ApplyTitleCore() =>
 		Host?.NavigationItem.Title = Title.Value;
 
+	partial void ApplyPromptCore()
+	{
+		if (Host is null)
+			return;
+
+		Host.NavigationItem.Prompt = Prompt.Value;
+
+		// a prompt change resizes the bar, which the controller only relays out on the next layout pass
+		if (Host.NavigationController is UINavigationController navigation)
+		{
+			navigation.View.SetNeedsLayout();
+			navigation.View.LayoutIfNeeded();
+		}
+	}
+
 	partial void ApplyTabBadgeCore()
 	{
 		if (Host is not PageHost host)
