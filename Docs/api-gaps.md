@@ -216,12 +216,14 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   (`Scroll`/`Zoom`/`Rotate`/`PitchEnabled`) and chrome (`ShowsCompass`/`Scale`/`Traffic`). `Pins` is a
   `BindableList<MapPin>` (coordinate, title, subtitle, SF-symbol glyph, tint) rendered as
   `MKMarkerAnnotationView` with native title/subtitle callouts; `SelectionCommand`/`PinSelected` fire
-  on tap. Geography is neutral primitives (`Coordinate`, `MapRegion` + `FromRadius`, `MapKind`,
-  `MapPin`) so the public API stays UIKit-free. Pins fully refresh on a `Pins` change or
-  `INotifyCollectionChanged` mutation rather than diffing (a map has no focus to preserve). Rooted
-  `MKMapViewDelegate` peer. `ShowsUserLocation` needs `NSLocationWhenInUseUsageDescription` in the app
-  plist. **Out of v1:** overlays (polyline/polygon/circle) and SkeleKit-tree custom pins/callouts,
-  both additive follow-ups.
+  on tap. A pin can instead supply `Marker`/`Callout` builders (`Func<View>`) for arbitrary content,
+  and `Overlays` (`BindableList<MapOverlay>` = `MapPolyline`/`MapPolygon`/`MapCircle` with stroke/fill/
+  dash) draw shapes beneath the pins. Geography is neutral primitives (`Coordinate`, `MapRegion` +
+  `FromRadius`, `MapKind`, `MapPin`, `MapOverlay`) so the public API stays UIKit-free; the `MKMapView`
+  is reachable through `View.Native` for anything else (custom tile overlays, camera, clustering).
+  Pins and overlays fully refresh on a change or `INotifyCollectionChanged` mutation rather than
+  diffing (a map has no focus to preserve). Rooted `MKMapViewDelegate` peer. `ShowsUserLocation` needs
+  `NSLocationWhenInUseUsageDescription` in the app plist.
 - ~~★ **MenuPicker**~~ — covered by `Button.SelectsFromMenu`; no separate control.
 
 ## Slider / Switch / Progress / Stepper

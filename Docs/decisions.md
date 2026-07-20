@@ -131,18 +131,23 @@ ships only one separated tab slot (`UISearchTab`), so it's the FAB or search, ne
 persists customization keyed by tab identifier (the ViewModel-type name) — renaming a ViewModel or a
 group resets the user's arrangement.
 
-## ADR-015: MapView — declarative pins over neutral geo primitives, no overlays or custom views
+## ADR-015: MapView — pins, overlays, and View-tree markers over neutral geo primitives
 
 **Decision:** `MapView` wraps `MKMapView` with a bindable two-way `Region`, a `Kind`, interaction and
-chrome toggles, and a `Pins` `BindableList<MapPin>` rendered as `MKMarkerAnnotationView` markers with
-native title/subtitle callouts and a `SelectionCommand`. The geography types are neutral SkeleKit
-primitives (`Coordinate`, `MapRegion`, `MapKind`, `MapPin`) so the public API stays UIKit-free and the
-structs unit-test in the shim; `MKMapView`/`CoreLocation` conversions live inside the iOS-only control.
-Overlays (polyline/polygon/circle) and SkeleKit-tree custom pins/callouts are **out of v1**.
-**Why:** pins-only matches the existing list-source pattern for a control that carries the whole rest
-of the app's geography intent, at one control plus four small structs. Overlays need a second diffed
-list plus renderer peers, and custom callout views a `PreviewHost`-style measure/host/root pass per
-annotation (a second CollectionView-sized surface) — neither has a v1 driver, both fit as additive
-follow-ups. Pins fully refresh on a `Pins` change or `INotifyCollectionChanged` mutation rather than
-diffing: a map has no focus to preserve and low pin churn, so the diff pipeline isn't worth its cost.
-User location (`ShowsUserLocation`) needs `NSLocationWhenInUseUsageDescription` in the app plist.
+chrome toggles, a `Pins` `BindableList<MapPin>` (native `MKMarkerAnnotationView` markers with
+title/subtitle callouts and a `SelectionCommand`), and an `Overlays` `BindableList<MapOverlay>` drawn
+as `MKPolyline`/`MKPolygon`/`MKCircle` renderers. A pin may instead supply its own `Marker` and
+`Callout` builders (`Func<View>`) hosted in the annotation view and detail-callout slot. The geography
+types are neutral SkeleKit primitives (`Coordinate`, `MapRegion`, `MapKind`, `MapPin`, `MapOverlay`
+and its sealed shapes) so the public API stays UIKit-free and unit-tests in the shim; the
+`MKMapView`/`CoreLocation` conversions and view hosting live inside the iOS-only control. Anything the
+typed API leaves out is reached through the base `View.Native` handle (the `MKMapView`).
+**Why:** pins-plus-overlays plus per-pin `View` builders is "draw or show anything" without a second
+generic control: `Func<View>` on `MapPin` keeps the flat list API and gives arbitrary marker and
+callout content (chosen over a data-driven `MapView<TItem>` with recycled templates, which is a much
+heavier parallel surface and only pays off past thousands of pins). Custom raster tile overlays
+(`MKTileOverlay`) stay behind `.Native` rather than growing a URL-template sub-API. Pins and overlays
+fully refresh on a list change or `INotifyCollectionChanged` mutation rather than diffing: a map has
+no focus to preserve and low churn. `MapOverlay`'s ctor is `private protected`, closing the hierarchy
+to the three shapes we can render (custom overlays go through `.Native`). User location
+(`ShowsUserLocation`) needs `NSLocationWhenInUseUsageDescription` in the app plist.

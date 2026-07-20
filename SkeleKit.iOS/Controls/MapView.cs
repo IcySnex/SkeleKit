@@ -1,6 +1,7 @@
 using System.Collections.Specialized;
 using System.Windows.Input;
 using CoreLocation;
+using Foundation;
 using MapKit;
 using ObjCRuntime;
 
@@ -10,7 +11,8 @@ namespace SkeleKit;
 /// Embeds an interactive map in the tree, backed by a UIKit map view.
 /// </summary>
 /// <remarks>
-/// Shows a two-way <see cref="Region"/>, drops markers from <see cref="Pins"/>, and reports taps through <see cref="SelectionCommand"/> and <see cref="PinSelected"/>.<br/>
+/// Shows a two-way <see cref="Region"/>, drops markers from <see cref="Pins"/>, draws shapes from <see cref="Overlays"/>, and reports taps through <see cref="SelectionCommand"/> and <see cref="PinSelected"/>.<br/>
+/// A pin styles the native marker or supplies its own <see cref="MapPin.Marker"/> and <see cref="MapPin.Callout"/> trees; reach for <see cref="View.Native"/> (the <c>MKMapView</c>) for anything the typed API leaves out.<br/>
 /// Give it a bounded slot (a fill row, an explicit height), since map content has no intrinsic size to measure against.<br/>
 /// <see cref="ShowsUserLocation"/> needs <c>NSLocationWhenInUseUsageDescription</c> in the app plist.
 /// </remarks>
@@ -34,9 +36,97 @@ public class MapView : Control
 	}
 
 
+	sealed class MarkerHost : MKAnnotationView
+	{
+		View? content;
+
+		public MarkerHost(
+			IMKAnnotation annotation,
+			string reuseIdentifier) : base(annotation, reuseIdentifier)
+		{ }
+
+		// ReSharper disable once UnusedMember.Local
+		public MarkerHost(
+			NativeHandle handle) : base(handle)
+		{ }
+
+		public void SetContent(
+			View view)
+		{
+			content?.Native.RemoveFromSuperview();
+			content = view;
+
+			UIView native = view.Realize();
+			view.Measure(new(double.PositiveInfinity, double.PositiveInfinity));
+			Size size = view.DesiredSize;
+
+			Bounds = new(0, 0, size.Width, size.Height);
+			view.Arrange(new(0, 0, size.Width, size.Height));
+			AddSubview(native);
+		}
+	}
+
+
+	sealed class ContentHost : UIView
+	{
+		readonly View? content;
+
+		public ContentHost(
+			View content)
+		{
+			this.content = content;
+
+			content.Measure(new(double.PositiveInfinity, double.PositiveInfinity));
+			Size size = content.DesiredSize;
+
+			Frame = new(0, 0, size.Width, size.Height);
+			AddSubview(content.Realize());
+			content.Arrange(new(0, 0, size.Width, size.Height));
+		}
+
+		// ReSharper disable once UnusedMember.Local
+		public ContentHost(
+			NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override CGSize IntrinsicContentSize =>
+			content is null ? CGSize.Empty : new((nfloat)content.DesiredSize.Width, (nfloat)content.DesiredSize.Height);
+
+
+		public override void LayoutSubviews()
+		{
+			base.LayoutSubviews();
+			content?.Arrange(new(0, 0, Bounds.Width, Bounds.Height));
+		}
+	}
+
+
 	sealed class MapPeer : MKMapViewDelegate
 	{
 		const string MarkerId = "skele.pin";
+		const string CustomId = "skele.pin.custom";
+
+		static void ApplyCallout(
+			MKAnnotationView view,
+			MapPin pin,
+			MapView? owner)
+		{
+			if (pin.Callout is Func<View> callout)
+			{
+				ContentHost host = new(callout());
+				owner?.Root(host);
+
+				view.CanShowCallout = true;
+				view.DetailCalloutAccessoryView = host;
+
+				return;
+			}
+
+			view.CanShowCallout = pin.Title is not null || pin.Subtitle is not null;
+			view.DetailCalloutAccessoryView = null;
+		}
+
 
 		readonly MapView? owner;
 
@@ -59,14 +149,61 @@ public class MapView : Control
 			if (annotation is not PinAnnotation pin)
 				return null;
 
+			if (pin.Pin.Marker is Func<View> marker)
+			{
+				MarkerHost host = mapView.DequeueReusableAnnotation(CustomId) as MarkerHost ?? new MarkerHost(annotation, CustomId);
+
+				host.Annotation = annotation;
+				host.SetContent(marker());
+				owner?.Root(host);
+				ApplyCallout(host, pin.Pin, owner);
+
+				return host;
+			}
+
 			MKMarkerAnnotationView view = mapView.DequeueReusableAnnotation(MarkerId) as MKMarkerAnnotationView ?? new MKMarkerAnnotationView(annotation, MarkerId);
 
 			view.Annotation = annotation;
-			view.CanShowCallout = pin.Pin.Title is not null || pin.Pin.Subtitle is not null;
 			view.MarkerTintColor = pin.Pin.Tint?.ToUIColor();
 			view.GlyphImage = pin.Pin.Symbol is string symbol ? UIImage.GetSystemImage(symbol) : null;
+			ApplyCallout(view, pin.Pin, owner);
 
 			return view;
+		}
+
+		public override MKOverlayRenderer OverlayRenderer(
+			MKMapView mapView,
+			IMKOverlay overlay)
+		{
+			MKOverlayPathRenderer? renderer = overlay switch
+			{
+				MKPolyline line => new MKPolylineRenderer(line),
+				MKPolygon polygon => new MKPolygonRenderer(polygon),
+				MKCircle circle => new MKCircleRenderer(circle),
+				_ => null
+			};
+
+			if (renderer is null)
+				return new MKOverlayRenderer(overlay);
+
+			if (owner?.ModelFor(overlay) is MapOverlay model)
+			{
+				renderer.StrokeColor = model.StrokeColor?.ToUIColor();
+				renderer.LineWidth = (nfloat)model.StrokeWidth;
+				renderer.FillColor = model.FillColor?.ToUIColor();
+
+				if (model.LineDash is double[] dash)
+				{
+					NSNumber[] pattern = new NSNumber[dash.Length];
+
+					for (int index = 0; index < dash.Length; index++)
+						pattern[index] = NSNumber.FromDouble(dash[index]);
+
+					renderer.LineDashPattern = pattern;
+				}
+			}
+
+			return renderer;
 		}
 
 		public override void DidChangeVisibleRegion(
@@ -97,9 +234,49 @@ public class MapView : Control
 			_ => MKMapType.Standard
 		};
 
+	static CLLocationCoordinate2D[] ToCoordinates(
+		Coordinate[] points)
+	{
+		CLLocationCoordinate2D[] result = new CLLocationCoordinate2D[points.Length];
+
+		for (int index = 0; index < points.Length; index++)
+			result[index] = new CLLocationCoordinate2D(points[index].Latitude, points[index].Longitude);
+
+		return result;
+	}
+
+	static IMKOverlay ToNativeOverlay(
+		MapOverlay overlay) =>
+		overlay switch
+		{
+			MapPolyline line => MKPolyline.FromCoordinates(ToCoordinates(line.Points)),
+			MapPolygon polygon => MKPolygon.FromCoordinates(ToCoordinates(polygon.Points)),
+			MapCircle circle => MKCircle.Circle(new CLLocationCoordinate2D(circle.Center.Latitude, circle.Center.Longitude), circle.RadiusMeters),
+			_ => throw new NotSupportedException()
+		};
+
+	static bool NearlyEquals(
+		MKCoordinateRegion native,
+		MapRegion region) =>
+		Math.Abs(native.Center.Latitude - region.Center.Latitude) < 1e-6 &&
+		Math.Abs(native.Center.Longitude - region.Center.Longitude) < 1e-6 &&
+		Math.Abs(native.Span.LatitudeDelta - region.LatitudeSpan) < 1e-6 &&
+		Math.Abs(native.Span.LongitudeDelta - region.LongitudeSpan) < 1e-6;
+
+	static MapRegion FromNative(
+		MKCoordinateRegion native) =>
+		new(new Coordinate(native.Center.Latitude, native.Center.Longitude), native.Span.LatitudeDelta, native.Span.LongitudeDelta);
+
+	static MKCoordinateRegion ToNative(
+		MapRegion region) =>
+		new(new CLLocationCoordinate2D(region.Center.Latitude, region.Center.Longitude), new MKCoordinateSpan(region.LatitudeSpan, region.LongitudeSpan));
+
 
 	MapPeer? peer;
 	readonly List<PinAnnotation> added = [];
+	readonly List<UIView> rootedHosts = [];
+	readonly List<IMKOverlay> nativeOverlays = [];
+	readonly Dictionary<IMKOverlay, MapOverlay> overlayModels = [];
 	bool hooked;
 	bool applyingRegion;
 
@@ -220,6 +397,17 @@ public class MapView : Control
 	Binding<IReadOnlyList<MapPin>?>? pinsBinding;
 
 	/// <summary>
+	/// The shapes drawn on the map beneath its pins.
+	/// </summary>
+	public BindableList<MapOverlay> Overlays
+	{
+		get => new(overlays);
+		set => overlaysBinding = Register(overlaysBinding, value.Expression, value.Value, SetOverlays);
+	}
+	IReadOnlyList<MapOverlay> overlays = [];
+	Binding<IReadOnlyList<MapOverlay>?>? overlaysBinding;
+
+	/// <summary>
 	/// Invoked with the tapped pin.
 	/// </summary>
 	public ICommand? SelectionCommand { get; set; }
@@ -293,6 +481,8 @@ public class MapView : Control
 		if (!IsRealized)
 			return;
 
+		rootedHosts.Clear();
+
 		if (added.Count > 0)
 		{
 			Ui.RemoveAnnotations([.. added]);
@@ -304,6 +494,51 @@ public class MapView : Control
 
 		if (added.Count > 0)
 			Ui.AddAnnotations([.. added]);
+	}
+
+	void SetOverlays(
+		IReadOnlyList<MapOverlay>? value)
+	{
+		if (ReferenceEquals(overlays, value))
+			return;
+
+		if (hooked && overlays is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnOverlaysChanged;
+
+		overlays = value ?? [];
+
+		if (hooked && overlays is INotifyCollectionChanged live)
+			live.CollectionChanged += OnOverlaysChanged;
+
+		ReloadOverlays();
+	}
+
+	void OnOverlaysChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs args) =>
+		ReloadOverlays();
+
+	void ReloadOverlays()
+	{
+		if (!IsRealized)
+			return;
+
+		if (nativeOverlays.Count > 0)
+		{
+			Ui.RemoveOverlays([.. nativeOverlays]);
+			nativeOverlays.Clear();
+			overlayModels.Clear();
+		}
+
+		foreach (MapOverlay overlay in overlays)
+		{
+			IMKOverlay native = ToNativeOverlay(overlay);
+			nativeOverlays.Add(native);
+			overlayModels[native] = overlay;
+		}
+
+		if (nativeOverlays.Count > 0)
+			Ui.AddOverlays([.. nativeOverlays]);
 	}
 
 	void OnRegionChanged()
@@ -324,22 +559,13 @@ public class MapView : Control
 		PinSelected?.Invoke(pin);
 	}
 
+	void Root(
+		UIView host) =>
+		rootedHosts.Add(host);
 
-	static bool NearlyEquals(
-		MKCoordinateRegion native,
-		MapRegion region) =>
-		Math.Abs(native.Center.Latitude - region.Center.Latitude) < 1e-6 &&
-		Math.Abs(native.Center.Longitude - region.Center.Longitude) < 1e-6 &&
-		Math.Abs(native.Span.LatitudeDelta - region.LatitudeSpan) < 1e-6 &&
-		Math.Abs(native.Span.LongitudeDelta - region.LongitudeSpan) < 1e-6;
-
-	static MapRegion FromNative(
-		MKCoordinateRegion native) =>
-		new(new Coordinate(native.Center.Latitude, native.Center.Longitude), native.Span.LatitudeDelta, native.Span.LongitudeDelta);
-
-	static MKCoordinateRegion ToNative(
-		MapRegion region) =>
-		new(new CLLocationCoordinate2D(region.Center.Latitude, region.Center.Longitude), new MKCoordinateSpan(region.LatitudeSpan, region.LongitudeSpan));
+	MapOverlay? ModelFor(
+		IMKOverlay overlay) =>
+		overlayModels.TryGetValue(overlay, out MapOverlay? model) ? model : null;
 
 
 	private protected override UIView CreateNative()
@@ -359,19 +585,25 @@ public class MapView : Control
 		ApplyChrome();
 		ApplyRegion();
 
-		if (pins is INotifyCollectionChanged live)
-		{
-			live.CollectionChanged += OnPinsChanged;
-			hooked = true;
-		}
+		if (pins is INotifyCollectionChanged livePins)
+			livePins.CollectionChanged += OnPinsChanged;
+
+		if (overlays is INotifyCollectionChanged liveOverlays)
+			liveOverlays.CollectionChanged += OnOverlaysChanged;
+
+		hooked = true;
 
 		ReloadPins();
+		ReloadOverlays();
 	}
 
 	private protected override void OnUnrealized()
 	{
-		if (hooked && pins is INotifyCollectionChanged live)
-			live.CollectionChanged -= OnPinsChanged;
+		if (hooked && pins is INotifyCollectionChanged livePins)
+			livePins.CollectionChanged -= OnPinsChanged;
+
+		if (hooked && overlays is INotifyCollectionChanged liveOverlays)
+			liveOverlays.CollectionChanged -= OnOverlaysChanged;
 
 		hooked = false;
 	}

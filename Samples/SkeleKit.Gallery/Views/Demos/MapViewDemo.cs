@@ -10,6 +10,20 @@ public class MapViewDemo : ContentView<MapViewDemoViewModel>
 {
 	static readonly MapRegion BayArea = MapRegion.FromRadius(new Coordinate(37.7749, -122.4194), 6_000);
 
+	static readonly Coordinate UnionSquare = new(37.7880, -122.4074);
+	static readonly Coordinate Mission = new(37.7599, -122.4148);
+	static readonly Coordinate Park = new(37.7649, -122.4550);
+
+
+	static View Badge() =>
+		new Border
+		{
+			Background = Colors.Blue,
+			CornerRadius = 15,
+			Padding = new Thickness(12, 7),
+			Child = new Label { Text = "You", TextColor = Colors.White, FontSize = 14 }
+		};
+
 
 	public MapViewDemo(
 		MapViewDemoViewModel viewModel) : base(viewModel)
@@ -22,9 +36,15 @@ public class MapViewDemo : ContentView<MapViewDemoViewModel>
 			ShowsUserLocation = true,
 			Pins =
 			[
-				new(new Coordinate(37.7880, -122.4074)) { Title = "Union Square", Subtitle = "Shopping", Symbol = "star.fill", Tint = Colors.Red },
-				new(new Coordinate(37.7599, -122.4148)) { Title = "Mission", Subtitle = "Burritos", Symbol = "heart.fill", Tint = Colors.Green },
-				new(new Coordinate(37.7649, -122.4550)) { Title = "Golden Gate Park", Subtitle = "Green", Symbol = "leaf.fill", Tint = Colors.Purple }
+				new(UnionSquare) { Title = "Union Square", Subtitle = "Shopping", Symbol = "star.fill", Tint = Colors.Red },
+				new(Mission) { Title = "Mission", Subtitle = "Burritos", Symbol = "heart.fill", Tint = Colors.Green },
+				new(Park) { Title = "Golden Gate Park", Subtitle = "Green", Symbol = "leaf.fill", Tint = Colors.Purple },
+				new(new Coordinate(37.8010, -122.4180)) { Marker = Badge }
+			],
+			Overlays =
+			[
+				new MapPolyline([UnionSquare, Mission, Park]) { StrokeColor = Colors.Blue, StrokeWidth = 4, LineDash = [6, 4] },
+				new MapCircle(Mission, 800) { StrokeColor = Colors.Green, FillColor = Colors.Green.WithAlpha(0.2) }
 			],
 			SelectionCommand = viewModel.SelectCommand
 		};
