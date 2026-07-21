@@ -16,7 +16,15 @@ public class MenuView : ContentView<MenuViewModel>
 		ToolbarItems.Add(new()
 		{
 			Icon = "info.circle",
-			Command = Command.From(() => Navigator.PushAsync(new AboutView("SkeleKit Gallery", "1.0")))
+			Command = Command.From(() =>
+			{
+				Haptics.Play(
+					HapticEvent.Tap(0),
+					HapticEvent.Continuous(0.1, 0.3, intensity: 0.6, sharpness: 0.2),
+					HapticEvent.Tap(0.5));
+
+				Navigator.PushAsync(new AboutView("SkeleKit Gallery", "1.0"));
+			})
 		});
 
 		Content = new Grid

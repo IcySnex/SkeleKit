@@ -1,3 +1,5 @@
+using CoreHaptics;
+
 namespace SkeleKit;
 
 /// <summary>
@@ -5,12 +7,33 @@ namespace SkeleKit;
 /// </summary>
 public static class Haptics
 {
+	static CHHapticEngine? engine;
+
 	static UIWindow? Anchor() =>
 		UIApplication.SharedApplication
 			.ConnectedScenes
 			.OfType<UIWindowScene>()
 			.SelectMany(scene => scene.Windows)
 			.FirstOrDefault(window => window.IsKeyWindow);
+
+	static CHHapticEngine? SharedEngine()
+	{
+		if (CHHapticEngine.GetHardwareCapabilities().SupportsHaptics is false)
+			return null;
+
+		if (engine is not null)
+			return engine;
+
+		CHHapticEngine created = new(out NSError? error);
+		if (error is not null)
+			return null;
+
+		created.AutoShutdownEnabled = true;
+		created.ResetHandler = () => created.Start(out _);
+
+		engine = created;
+		return engine;
+	}
 
 
 	/// <summary>
@@ -73,5 +96,51 @@ public static class Haptics
 
 		generator.Prepare();
 		generator.NotificationOccurred(type);
+	}
+
+	/// <summary>
+	/// Plays a custom haptic pattern built from taps and sustained vibrations.
+	/// </summary>
+	/// <remarks>
+	/// Does nothing on hardware without a haptic engine, including the simulator.
+	/// </remarks>
+	/// <param name="events">The events making up the pattern, timed from its start.</param>
+	public static void Play(
+		params ReadOnlySpan<HapticEvent> events)
+	{
+		if (events.Length == 0)
+			return;
+
+		if (SharedEngine() is not CHHapticEngine engine)
+			return;
+
+		CHHapticEvent[] native = new CHHapticEvent[events.Length];
+		for (int i = 0; i < events.Length; i++)
+		{
+			HapticEvent element = events[i];
+
+			CHHapticEventParameter[] parameters =
+			[
+				new(CHHapticEventParameterId.HapticIntensity, element.Intensity),
+				new(CHHapticEventParameterId.HapticSharpness, element.Sharpness)
+			];
+
+			native[i] = element.IsContinuous
+				? new(CHHapticEventType.HapticContinuous, parameters, element.Time, element.Duration)
+				: new(CHHapticEventType.HapticTransient, parameters, element.Time);
+		}
+
+		CHHapticDynamicParameter[] dynamics = [];
+		CHHapticPattern pattern = new(native, dynamics, out NSError? patternError);
+		if (patternError is not null)
+			return;
+
+		if (engine.Start(out _) is false)
+			return;
+
+		if (engine.CreatePlayer(pattern, out NSError? playerError) is not ICHHapticPatternPlayer player || playerError is not null)
+			return;
+
+		player.Start(0, out _);
 	}
 }

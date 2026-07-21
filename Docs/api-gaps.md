@@ -233,8 +233,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   (`Min/MaxIcon`, `TrackColor`/`EmptyTrackColor`/`ThumbColor`, `Step`, `Continuous`).
 - ~~★ **Switch**: `OnTintColor`, `ThumbTintColor`~~ — **done** (`OnColor`, `ThumbColor`).
 - ~~★ **ProgressBar**: `TrackTintColor`~~ — **done** (`TrackColor`, and the filled part is
-  `FillColor` — renamed off `Tint`, which now means the inherited accent on every `View`);
-  indeterminate question open.
+  `FillColor` — renamed off `Tint`, which now means the inherited accent on every `View`).
 - ~~★ **ActivityIndicator**: `Color`~~ — already existed; nothing to do.
 
 ## ScrollView
@@ -340,8 +339,15 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Scene lifecycle**~~ — **done** (`UseLifecycle(background, foreground)`).
 - ◆ ~~**System pickers via navigator** — photo (`PHPickerViewController`), document
   (`UIDocumentPickerViewController`); both are present-and-await wrappers, AOT-safe.~~
-- ★ **Haptic patterns** — `Haptics` covers impact/notify/selection; `CHHapticEngine` patterns
-  only if Velura needs them (probably not).
+- ~~★ **Haptic patterns**~~ — **done** (`Haptics.Play(params ReadOnlySpan<HapticEvent>)` over a shared
+  `CHHapticEngine`). A `HapticEvent` is a pure struct (`Tap`/`Continuous` factories, intensity +
+  sharpness 0..1) so the pattern is declarative data and the public API stays CoreHaptics-free; `Play`
+  translates it into `CHHapticEvent`/`CHHapticPattern` and a fire-and-forget player. One engine, rooted
+  statically and restarted from its `ResetHandler`, auto-shuts-down when idle and `Start`s per play.
+  Silent no-op where `GetHardwareCapabilities().SupportsHaptics` is false, so the simulator (and any
+  non-haptic device) is safe. Only impact/notify/selection generators plus this event-pattern path are
+  wired; AHAP-file and dynamic-parameter playback are left for a screen that needs them. Device-only to
+  actually feel.
 
 ## Honest capability note
 
