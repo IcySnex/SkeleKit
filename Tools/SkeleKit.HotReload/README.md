@@ -67,6 +67,14 @@ Tools/SkeleKit.HotReload/run.sh <sim-udid>   # build, launch, and start the host
 
 Then edit any `.cs` under `Samples/SkeleKit.Gallery` and save.
 
+## Run, not Debug
+
+`MetadataUpdater.ApplyUpdate` is refused while a debugger is attached — the runtime lets only one
+owner drive Edit-and-Continue, and under a debugger that owner is the debugger (VS bridges deltas that
+way; Rider doesn't for iOS). So launch with Rider's **Run (▶)**, not **Debug (🐞)**: Run for live-UI
+work, Debug when you need breakpoints. The app logs a one-time hint and keeps running if it's launched
+under a debugger. (If a Rider *Run* still reports the debugger is attached, fall back to `run.sh`.)
+
 ## Scope
 
 Reloads **method / constructor / property-accessor body** edits (the common case — includes view-tree

@@ -61,6 +61,19 @@ internal static class HotReload
 		byte[] il = ReadExactly(stream, ilLength);
 		byte[] pdb = ReadExactly(stream, pdbLength);
 
+		// the runtime forbids ApplyUpdate under a debugger (it owns EnC), so a Rider "Debug" launch
+		// blocks hot reload while "Run" allows it — say so once instead of throwing on every edit
+		if (System.Diagnostics.Debugger.IsAttached)
+		{
+			if (!warnedDebugger)
+			{
+				warnedDebugger = true;
+				Console.WriteLine("[SkeleKit] hot reload is off while the debugger is attached — launch with Run (not Debug) to hot reload.");
+			}
+
+			return;
+		}
+
 		Assembly? target = AppDomain.CurrentDomain
 			.GetAssemblies()
 			.FirstOrDefault(assembly => !assembly.IsDynamic && assembly.ManifestModule.ModuleVersionId == module);
@@ -74,12 +87,22 @@ internal static class HotReload
 				MetadataUpdater.ApplyUpdate(target, metadata, il, pdb);
 				PageHost.ReloadLive();
 			}
+			catch (Exception exception) when (exception.Message.Contains("debugger", StringComparison.OrdinalIgnoreCase))
+			{
+				if (!warnedDebugger)
+				{
+					warnedDebugger = true;
+					Console.WriteLine("[SkeleKit] hot reload is off while the debugger is attached — launch with Run (not Debug) to hot reload.");
+				}
+			}
 			catch (Exception exception)
 			{
 				Console.WriteLine($"[SkeleKit] hot reload failed: {exception.Message}");
 			}
 		});
 	}
+
+	static bool warnedDebugger;
 
 	static byte[] ReadExactly(
 		NetworkStream stream,
