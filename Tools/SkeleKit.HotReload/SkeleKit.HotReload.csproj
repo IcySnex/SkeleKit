@@ -7,7 +7,35 @@
     <RootNamespace>SkeleKit.HotReload</RootNamespace>
     <AssemblyName>skele-hotreload</AssemblyName>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
   </ItemGroup>
+
+  <!-- Packs as the dev-only SkeleKit.iOS.HotReload package: the auto-import targets in build/ and the
+       host (with its Roslyn deps) in tools/hotreload/. Consumers add it with PrivateAssets=all. -->
+  <PropertyGroup>
+    <PackageId>SkeleKit.iOS.HotReload</PackageId>
+    <Version>0.1.0</Version>
+    <Description>Dev-only C# hot reload for SkeleKit.iOS on the simulator.</Description>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <!-- NU5100: tool assemblies live under tools/, not lib/ — intended for an MSBuild-tool package -->
+    <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackHost</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="build\SkeleKit.iOS.HotReload.targets" Pack="true" PackagePath="build\SkeleKit.iOS.HotReload.targets" />
+    <None Include="build\SkeleKit.iOS.HotReload.targets" Pack="true" PackagePath="buildTransitive\SkeleKit.iOS.HotReload.targets" />
+  </ItemGroup>
+
+  <Target Name="PackHost" DependsOnTargets="Publish">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(PublishDir)**\*">
+        <PackagePath>tools\hotreload\%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
 </Project>

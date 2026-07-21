@@ -39,6 +39,27 @@ away entirely.
 
 ## Use
 
+**As a consumer (NuGet)** — nothing to run by hand:
+
+```bash
+dotnet add package SkeleKit.iOS.HotReload   # dev-only; adds build/ targets + the bundled host
+```
+```xml
+<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+  <EnableHotReload>true</EnableHotReload>
+</PropertyGroup>
+```
+Build/run on the simulator (Rider or CLI). The package's MSBuild targets configure the runtime and
+auto-start the host after the build; the app connects on launch. Edit a `.cs`, save — it applies live.
+The host self-exits when idle, so there's no process to stop. This package is dev-only; reference it
+with `PrivateAssets="all"` (the template above does that via `DevelopmentDependency`).
+
+**Packaging it:** `dotnet pack Tools/SkeleKit.HotReload -c Release` → `SkeleKit.iOS.HotReload.nupkg`
+(targets in `build/`, host + Roslyn in `tools/hotreload/`).
+
+**In this repo** (developing SkeleKit itself), the Gallery imports the targets directly and a one-shot
+script also works:
+
 ```bash
 xcrun simctl list devices available          # pick a booted simulator UDID
 Tools/SkeleKit.HotReload/run.sh <sim-udid>   # build, launch, and start the host
