@@ -13,12 +13,20 @@ static class Program
 	{
 		if (args.Length < 2)
 		{
-			Console.WriteLine("usage: skele-hotreload <cscargs.json> <deployed.dll>");
+			Console.WriteLine("usage: skele-hotreload <cscargs> <deployed.dll> [projectDir]");
 			return 1;
 		}
 
-		CscInvocation csc = CscInvocation.Load(args[0]);
+		string projectDir = args.Length > 2 ? args[2] : Path.GetDirectoryName(Path.GetFullPath(args[0]))!;
+		CscInvocation csc = CscInvocation.Load(args[0], projectDir);
 		string deployedDll = args[1];
+
+		Server? server = Server.Bind(Port);
+		if (server is null)
+		{
+			Console.WriteLine($"a host is already running on 127.0.0.1:{Port}, exiting");
+			return 0;
+		}
 
 		Console.WriteLine($"building compilation ({csc.Sources.Count} sources, {csc.References.Count} refs)...");
 		Project project = Project.Build(csc);
@@ -36,7 +44,6 @@ static class Program
 		Baseline baseline = new(deployedDll, compilation);
 		Console.WriteLine($"baseline ready (MVID {baseline.Mvid})");
 
-		Server server = new(Port);
 		server.Accept();
 		Console.WriteLine($"listening on 127.0.0.1:{Port} — waiting for the app, edit a .cs file to hot reload");
 
@@ -97,8 +104,22 @@ static class Program
 		watcher.Renamed += (sender, change) => OnChanged(sender, change);
 		watcher.EnableRaisingEvents = true;
 
-		Thread.Sleep(Timeout.Infinite);
-		return 0;
+		// auto-start leaves this process detached, so it must never linger: exit once the app has been
+		// gone for a while (the next build restarts a fresh one)
+		TimeSpan idle = TimeSpan.FromMinutes(15);
+		while (true)
+		{
+			Thread.Sleep(TimeSpan.FromSeconds(30));
+
+			if (!server.EverConnected)
+				continue;
+
+			if (!server.HasClient && DateTime.UtcNow - server.LastActivity > idle)
+			{
+				Console.WriteLine("idle, exiting");
+				return 0;
+			}
+		}
 	}
 
 	static void Apply(

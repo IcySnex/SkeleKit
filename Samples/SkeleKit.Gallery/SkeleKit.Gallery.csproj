@@ -11,17 +11,9 @@
       <EnableHotReload>true</EnableHotReload>
     </PropertyGroup>
 
-    <!-- Opt-in hot reload: build with -p:EnableHotReload=true (or set it in the Rider run config).
-         The Mono interpreter ships the runtime's hot_reload component and the feature switch (baked
-         true by Trim="true") flips MetadataUpdater.IsSupported on, which the delta applier needs.
-         Off by default so a normal Debug build stays on the faster JIT. -->
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' And '$(EnableHotReload)' == 'true' ">
-      <UseInterpreter>true</UseInterpreter>
-    </PropertyGroup>
-    <ItemGroup Condition=" '$(Configuration)' == 'Debug' And '$(EnableHotReload)' == 'true' ">
-      <RuntimeHostConfigurationOption Include="System.Reflection.Metadata.MetadataUpdater.IsSupported" Value="true" Trim="true" />
-      <RuntimeEnvironmentVariable Include="DOTNET_MODIFIABLE_ASSEMBLIES" Value="debug" />
-    </ItemGroup>
+    <!-- Hot reload: set -p:EnableHotReload=true to turn it on. The imported targets (which the
+         SkeleKit.iOS.HotReload NuGet ships) configure the runtime and auto-start the delta host. -->
+    <Import Project="..\..\Tools\SkeleKit.HotReload\build\SkeleKit.iOS.HotReload.targets" />
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <CodesignKey>iPhone Developer</CodesignKey>
       <MtouchLink>Full</MtouchLink>

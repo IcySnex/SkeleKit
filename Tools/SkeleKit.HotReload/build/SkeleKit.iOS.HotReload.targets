@@ -1,0 +1,47 @@
+<Project>
+
+	<!-- Turns on SkeleKit hot reload for a Debug simulator build when the app sets
+	     <EnableHotReload>true</EnableHotReload>. Configures the runtime so MetadataUpdater works, then
+	     auto-starts the delta host in the background after the build. No effect otherwise. -->
+
+	<PropertyGroup Condition=" '$(EnableHotReload)' == 'true' And '$(Configuration)' == 'Debug' And $(RuntimeIdentifier.StartsWith('iossimulator')) ">
+		<_SkeleHotReload>true</_SkeleHotReload>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(_SkeleHotReload)' == 'true' ">
+		<!-- ships libmono-component-hot_reload.dylib and lets the interpreter apply deltas -->
+		<UseInterpreter>true</UseInterpreter>
+		<!-- so the after-build target can read @(CscCommandLineArgs) -->
+		<ProvideCommandLineArgs>true</ProvideCommandLineArgs>
+	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(_SkeleHotReload)' == 'true' ">
+		<!-- Trim="true" is load-bearing: without it the linker bakes IsSupported to a constant false -->
+		<RuntimeHostConfigurationOption Include="System.Reflection.Metadata.MetadataUpdater.IsSupported" Value="true" Trim="true" />
+		<RuntimeEnvironmentVariable Include="DOTNET_MODIFIABLE_ASSEMBLIES" Value="debug" />
+	</ItemGroup>
+
+	<!-- the packed host (tools/) in a real package; the repo build output when developing SkeleKit -->
+	<PropertyGroup Condition=" '$(SkeleHotReloadHost)' == '' And Exists('$(MSBuildThisFileDirectory)../tools/hotreload/skele-hotreload.dll') ">
+		<SkeleHotReloadHost>$(MSBuildThisFileDirectory)../tools/hotreload/skele-hotreload.dll</SkeleHotReloadHost>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(SkeleHotReloadHost)' == '' ">
+		<SkeleHotReloadHost>$(MSBuildThisFileDirectory)../bin/Release/net10.0/skele-hotreload.dll</SkeleHotReloadHost>
+	</PropertyGroup>
+
+	<Target Name="SkeleStartHotReload" AfterTargets="Build" Condition=" '$(_SkeleHotReload)' == 'true' ">
+		<PropertyGroup>
+			<_SkeleArgs>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)skelekit-hotreload.args</_SkeleArgs>
+			<_SkelePid>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)skelekit-hotreload.pid</_SkelePid>
+			<_SkeleLog>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)skelekit-hotreload.log</_SkeleLog>
+		</PropertyGroup>
+
+		<WriteLinesToFile File="$(_SkeleArgs)" Lines="@(CscCommandLineArgs)" Overwrite="true" />
+
+		<!-- restart with a fresh baseline for the just-built dll; nohup detaches so it outlives the build -->
+		<Exec Command="if [ -f '$(_SkelePid)' ]; then kill `cat '$(_SkelePid)'` 2&gt;/dev/null || true; sleep 0.3; fi; nohup dotnet '$(SkeleHotReloadHost)' '$(_SkeleArgs)' '$(TargetPath)' '$(MSBuildProjectDirectory)' &gt;'$(_SkeleLog)' 2&gt;&amp;1 &amp; echo $! &gt;'$(_SkelePid)'" />
+
+		<Message Importance="high" Text="SkeleKit hot reload: host running — edit any .cs and save to reload the sim" />
+	</Target>
+
+</Project>

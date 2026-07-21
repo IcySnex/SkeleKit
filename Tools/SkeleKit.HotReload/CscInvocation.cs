@@ -14,16 +14,22 @@ sealed class CscInvocation
 	public required bool AllowUnsafe { get; init; }
 
 	public static CscInvocation Load(
-		string jsonPath)
+		string argsPath,
+		string? projectDir = null)
 	{
-		string projectDir = Path.GetDirectoryName(Path.GetFullPath(jsonPath))!;
+		projectDir ??= Path.GetDirectoryName(Path.GetFullPath(argsPath))!;
 
-		using JsonDocument document = JsonDocument.Parse(File.ReadAllText(jsonPath));
-		string[] raw = [.. document.RootElement
-			.GetProperty("Items")
-			.GetProperty("CscCommandLineArgs")
-			.EnumerateArray()
-			.Select(item => item.GetProperty("Identity").GetString()!)];
+		string content = File.ReadAllText(argsPath).TrimStart();
+
+		// the MSBuild target hands off @(CscCommandLineArgs) one per line; the manual path is the JSON
+		// dumped by `dotnet build --getItem:CscCommandLineArgs`
+		string[] raw = content.StartsWith('{')
+			? [.. JsonDocument.Parse(content).RootElement
+				.GetProperty("Items")
+				.GetProperty("CscCommandLineArgs")
+				.EnumerateArray()
+				.Select(item => item.GetProperty("Identity").GetString()!)]
+			: [.. content.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
 
 		List<string> sources = [];
 		List<string> references = [];
