@@ -6,12 +6,11 @@
 
         <PackageId>SkeleKit.iOS</PackageId>
         <Version>0.1.0</Version>
-        <Description>Declarative, WPF-inspired UI library for .NET for iOS. Native UIKit controls behind a clean C# syntax with AOT-safe MVVM bindings.</Description>
+        <Description>A C# UI framework for native iOS - real UIKit controls, no storyboards or constraints, zero boilerplate.</Description>
         <RepositoryUrl>https://github.com/IcySnex/SkeleKit</RepositoryUrl>
         <PackageReadmeFile>README.md</PackageReadmeFile>
 
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <!-- CS1591: self-describing members (Colors.Red) carry no summary on purpose -->
         <NoWarn>$(NoWarn);CS1591</NoWarn>
     </PropertyGroup>
 
@@ -23,14 +22,12 @@
         <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
     </PropertyGroup>
 
-    <!-- The package ships iOS only. The net10.0 shim exists so the layout engine can be tested
-         without a simulator; shipping it would hand consumers a hollow lib with no controls. -->
+    <!-- The package ships iOS only. The net10.0 shim exists so the layout engine can be tested without a simulator. -->
     <PropertyGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
         <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 
     <PropertyGroup>
-        <!-- NU5128: the shim TFM has no lib/, which is the point -->
         <NoWarn>$(NoWarn);NU5128</NoWarn>
     </PropertyGroup>
 
@@ -46,8 +43,7 @@
         <Compile Remove="App/**" />
     </ItemGroup>
 
-    <!-- net10.0 is a test shim, not a platform: it exists so SkeleKit.Tests can run the layout
-         engine without a simulator. UIKit-touching code is compiled out of it by file, not by #if. -->
+    <!-- net10.0 is a test shim, not a platform: UIKit-touching code is compiled out of it by file. -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
         <Compile Remove="Controls/**" />
         <Compile Remove="Animation/Animator.cs" />
