@@ -1,3 +1,4 @@
+using System.Reflection.Metadata;
 using System.Windows.Input;
 using ObjCRuntime;
 
@@ -72,6 +73,26 @@ internal sealed class PageHost : UIViewController
 	}
 
 
+	static readonly List<WeakReference<PageHost>> live = [];
+
+
+	internal static void ReloadLive()
+	{
+		if (MetadataUpdater.IsSupported is false)
+			return;
+
+		UIApplication.SharedApplication.InvokeOnMainThread(() =>
+		{
+			for (int index = live.Count - 1; index >= 0; index--)
+			{
+				if (live[index].TryGetTarget(out PageHost? host))
+					host.Reload();
+				else
+					live.RemoveAt(index);
+			}
+		});
+	}
+
 	internal static View? FindScrolling(
 		View view)
 	{
@@ -121,6 +142,9 @@ internal sealed class PageHost : UIViewController
 			new("contentSizeChanged:"),
 			UIApplication.ContentSizeCategoryChangedNotification,
 			null);
+
+		if (MetadataUpdater.IsSupported)
+			live.Add(new(this));
 	}
 
 	public PageHost(
@@ -131,7 +155,7 @@ internal sealed class PageHost : UIViewController
 	internal new UITab? Tab { get; set; }
 
 
-	public ContentView? Page { get; }
+	public ContentView? Page { get; private set; }
 
 
 	// ReSharper disable once UnusedMember.Local
@@ -519,6 +543,46 @@ internal sealed class PageHost : UIViewController
 		ApplyPopGestures();
 	}
 
+	void InstallPage()
+	{
+		if (Page is not ContentView page)
+			return;
+
+		ApplyChrome(page);
+
+		View!.AddSubview(page.Realize());
+
+		// we own the insets, so UIKit cannot find the scroll view on its own: telling it which one
+		// drives the bar is what collapses a large title (and blurs the bar edge) on scroll
+		if (FindScrolling(page)?.Native is UIScrollView scroll)
+			SetContentScrollView(scroll, NSDirectionalRectEdge.Top | NSDirectionalRectEdge.Bottom);
+	}
+
+	void Reload()
+	{
+		if (Page is not ContentView old
+			|| !IsViewLoaded
+			|| old.BindingContext is not object viewModel
+			|| SkeleApplication.Current is not SkeleApplication app)
+			return;
+
+		ContentView fresh = app.RecreatePage(viewModel);
+		if (ReferenceEquals(fresh, old))
+			return;
+
+		old.Unrealize();
+		old.Host = null;
+
+		Page = fresh;
+		fresh.Host = this;
+
+		InstallPage();
+		NavigationController?.SetNavigationBarHidden(fresh.HidesNavigationBar, false);
+		ApplyLeaveGuard();
+
+		View!.SetNeedsLayout();
+	}
+
 
 	public override UIStatusBarStyle PreferredStatusBarStyle() =>
 		Page?.StatusBar switch
@@ -535,21 +599,14 @@ internal sealed class PageHost : UIViewController
 		if (Page is null)
 			return;
 
-		ApplyChrome(Page);
-
-		View!.AddSubview(Page.Realize());
-
-		// we own the insets, so UIKit cannot find the scroll view on its own: telling it which one
-		// drives the bar is what collapses a large title (and blurs the bar edge) on scroll
-		if (FindScrolling(Page)?.Native is UIScrollView scroll)
-			SetContentScrollView(scroll, NSDirectionalRectEdge.Top | NSDirectionalRectEdge.Bottom);
+		InstallPage();
 
 		// numeric keyboards have no return key, so tapping outside is the only way out
-		dismissKeyboard = new(() => View.EndEditing(true))
+		dismissKeyboard = new(() => View!.EndEditing(true))
 		{
 			CancelsTouchesInView = false
 		};
-		View.AddGestureRecognizer(dismissKeyboard);
+		View!.AddGestureRecognizer(dismissKeyboard);
 
 		themeChange = RegisterForTraitChanges([typeof(UITraitUserInterfaceStyle)], (_, _) => Page?.ReapplyVisuals());
 	}

@@ -7,3 +7,6 @@ obj/
 *.binlog
 TestResults/
 .claude/
+
+# SkeleKit.HotReload generated compiler-args snapshot
+cscargs.json

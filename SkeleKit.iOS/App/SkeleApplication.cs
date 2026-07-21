@@ -235,6 +235,10 @@ public class SkeleApplication
 	}
 
 
+	internal ContentView RecreatePage(
+		object viewModel) =>
+		registry.RecreatePage(viewModel);
+
 	internal void NotifyBackground() =>
 		Backgrounded?.Invoke();
 
@@ -465,6 +469,7 @@ public class SkeleApplication
 		string[] args)
 	{
 		Current = this;
+		HotReload.Start();
 		UIApplication.Main(args, null, typeof(SkeleApplicationDelegate));
 	}
 }

@@ -51,6 +51,22 @@ internal sealed class ViewRegistry
 		return registration.Instance ??= registration.Create(viewModel);
 	}
 
+	public ContentView RecreatePage(
+		object viewModel)
+	{
+		Type type = viewModel.GetType();
+
+		if (!byViewModel.TryGetValue(type, out PageRegistration? registration))
+			throw new InvalidOperationException($"No page is registered for '{type.Name}'. Add its view in UsePages(...).");
+
+		ContentView page = registration.Create(viewModel);
+
+		if (registration.Singleton)
+			registration.Instance = page;
+
+		return page;
+	}
+
 #pragma warning disable CA1822
 	public object CreateViewModel(
 		Type viewModel,
