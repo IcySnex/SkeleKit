@@ -11,9 +11,13 @@ static class Program
 	static int Main(
 		string[] args)
 	{
+		if (args is ["bridge", string bridgeArgs, string bridgeDll, string bridgeProjectDir, ..])
+			return new Sdb.DebugBridge(CscInvocation.Load(bridgeArgs, bridgeProjectDir), bridgeDll, bridgeProjectDir).Run();
+
 		if (args.Length < 2)
 		{
 			Console.WriteLine("usage: skele-hotreload <cscargs> <deployed.dll> [projectDir]");
+			Console.WriteLine("       skele-hotreload bridge <cscargs> <deployed.dll> <projectDir>");
 			return 1;
 		}
 
