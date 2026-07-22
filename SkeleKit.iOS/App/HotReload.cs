@@ -3,6 +3,8 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Reflection.Metadata;
 
+[assembly: MetadataUpdateHandler(typeof(SkeleKit.HotReload))]
+
 namespace SkeleKit;
 
 // Dev-only C# hot reload. Receives .NET metadata/IL deltas from the SkeleKit.HotReload host tool over
@@ -15,6 +17,15 @@ internal static class HotReload
 {
 	const int Port = 9988;
 
+
+	// invoked by the runtime after a delta is applied (whether via ApplyUpdate or the debugger), and
+	// reachable by name over the soft-debugger for the breakpoints-and-hot-reload proxy path
+	internal static void UpdateApplication(
+		Type[]? updatedTypes) =>
+		ForceReload();
+
+	internal static void ForceReload() =>
+		UIApplication.SharedApplication.InvokeOnMainThread(PageHost.ReloadLive);
 
 	internal static void Start()
 	{
@@ -61,14 +72,22 @@ internal static class HotReload
 		byte[] il = ReadExactly(stream, ilLength);
 		byte[] pdb = ReadExactly(stream, pdbLength);
 
-		// the runtime forbids ApplyUpdate under a debugger (it owns EnC), so a Rider "Debug" launch
-		// blocks hot reload while "Run" allows it — say so once instead of throwing on every edit
+		// an empty module is the "already applied via the debugger, just rebuild" signal from the
+		// breakpoints-and-hot-reload proxy: the debugger applied the delta over its own connection
+		// (the only EnC path allowed while attached), so we skip ApplyUpdate and only rebuild pages
+		if (module == Guid.Empty)
+		{
+			ForceReload();
+			return;
+		}
+
+		// with no debugger, we apply the delta ourselves; under one, only the proxy path works
 		if (System.Diagnostics.Debugger.IsAttached)
 		{
 			if (!warnedDebugger)
 			{
 				warnedDebugger = true;
-				Console.WriteLine("[SkeleKit] hot reload is off while the debugger is attached — launch with Run (not Debug) to hot reload.");
+				Console.WriteLine("[SkeleKit] hot reload is off while the debugger is attached — use the breakpoints+reload proxy, or launch with Run.");
 			}
 
 			return;
