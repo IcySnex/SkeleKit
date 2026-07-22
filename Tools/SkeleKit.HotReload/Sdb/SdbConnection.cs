@@ -7,30 +7,43 @@ using System.Text;
 namespace SkeleKit.HotReload.Sdb;
 
 // A Mono soft-debugger client speaking the wire protocol to the app's debugger agent. It handles the
-// Microsoft.iOS "start debugger: sdb" preamble, the DWP-Handshake, then command/reply framing. See
-// Docs/hot-reload-debugging.md for the protocol notes.
-sealed class SdbConnection : IDisposable
+// Microsoft.iOS "start debugger: sdb" preamble, the DWP-Handshake, then command/reply framing.
+//
+// Two modes:
+//   • self-drive — we are the only debugger; replies route to our waiters, events are ignored.
+//   • relay      — an IDE is also on the wire. Our injected commands use a high id range; their
+//                  replies are consumed here, everything else (the IDE's replies, events) is forwarded
+//                  to the IDE. The IDE's own commands are pumped straight through to the app.
+//
+// See Docs/hot-reload-debugging.md for the protocol notes.
+sealed class SdbConnection
 {
 	const byte CmdSetVm = 1;
 	const byte CmdSetAppDomain = 20;
 	const byte CmdSetAssembly = 21;
 	const byte CmdSetModule = 24;
 
+	const int InjectedIdBase = 0x40000000;
+
 	static readonly byte[] Handshake = "DWP-Handshake"u8.ToArray();
 
-	readonly Socket socket;
+	readonly Socket app;
 	readonly ConcurrentDictionary<int, TaskCompletionSource<(int Error, byte[] Data)>> pending = [];
+	readonly List<byte[]> buffered = [];
 
-	int nextId = 1;
+	Socket? ide;
+	bool buffering;
+	int nextId;
 
 	SdbConnection(
-		Socket socket)
+		Socket app)
 	{
-		this.socket = socket;
+		this.app = app;
 	}
 
 	// Accepts the app's debug connection, sends the length-prefixed "start debugger: sdb" command, and
-	// completes the handshake so the socket is left speaking raw sdb.
+	// completes the handshake so the socket is left speaking raw sdb. Buffers early packets until either
+	// an IDE relays in or self-drive starts.
 	public static SdbConnection AcceptApp(
 		int port)
 	{
@@ -39,19 +52,72 @@ sealed class SdbConnection : IDisposable
 		listener.Bind(new IPEndPoint(IPAddress.Loopback, port));
 		listener.Listen(1);
 
-		Socket app = listener.Accept();
+		Socket socket = listener.Accept();
 		listener.Dispose();
 
 		byte[] command = "start debugger: sdb"u8.ToArray();
-		app.Send([(byte)command.Length, .. command]);
+		socket.Send([(byte)command.Length, .. command]);
 
-		ReadExactly(app, Handshake.Length);
-		app.Send(Handshake);
+		ReadExactly(socket, Handshake.Length);
+		socket.Send(Handshake);
 
-		SdbConnection connection = new(app);
+		SdbConnection connection = new(socket)
+		{
+			buffering = true,
+			nextId = 1
+		};
 		connection.StartReader();
 
 		return connection;
+	}
+
+	// We drive the app alone: stop buffering, route replies to waiters, drop events.
+	public void SelfDrive() => buffering = false;
+
+	// An IDE attached: hand it the buffered startup packets, switch our injected commands to the high
+	// id range, and forward the IDE's traffic to the app.
+	public void Relay(
+		Socket ideSocket)
+	{
+		ide = ideSocket;
+		nextId = InjectedIdBase;
+
+		ideSocket.Send(Handshake);
+		ReadExactly(ideSocket, Handshake.Length);
+
+		lock (buffered)
+		{
+			buffering = false;
+			foreach (byte[] packet in buffered)
+				ideSocket.Send(packet);
+
+			buffered.Clear();
+		}
+
+		Thread pump = new(PumpIdeToApp)
+		{
+			IsBackground = true,
+			Name = "skele-sdb-ide"
+		};
+		pump.Start();
+	}
+
+	void PumpIdeToApp()
+	{
+		try
+		{
+			byte[] chunk = new byte[8192];
+			while (true)
+			{
+				int read = ide!.Receive(chunk);
+				if (read == 0)
+					break;
+
+				lock (app)
+					app.Send(chunk.AsSpan(0, read).ToArray());
+			}
+		}
+		catch { }
 	}
 
 	void StartReader()
@@ -70,20 +136,34 @@ sealed class SdbConnection : IDisposable
 		{
 			while (true)
 			{
-				byte[] header = ReadExactly(socket, 11);
+				byte[] header = ReadExactly(app, 11);
 				int length = BinaryPrimitives.ReadInt32BigEndian(header);
 				int id = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(4));
 				byte flags = header[8];
 
-				byte[] payload = length > 11 ? ReadExactly(socket, length - 11) : [];
+				byte[] payload = length > 11 ? ReadExactly(app, length - 11) : [];
 
-				// a reply carries the reply flag; anything else is an agent command (an event) we ignore
-				if ((flags & 0x80) != 0)
+				// our injected reply — consume it, never let the IDE see it
+				if ((flags & 0x80) != 0 && pending.TryRemove(id, out TaskCompletionSource<(int, byte[])>? waiter))
 				{
-					int error = BinaryPrimitives.ReadInt16BigEndian(header.AsSpan(9));
-					if (pending.TryRemove(id, out TaskCompletionSource<(int, byte[])>? waiter))
-						waiter.TrySetResult((error, payload));
+					waiter.TrySetResult((BinaryPrimitives.ReadInt16BigEndian(header.AsSpan(9)), payload));
+					continue;
 				}
+
+				if (buffering)
+				{
+					lock (buffered)
+						if (buffering)
+						{
+							buffered.Add([.. header, .. payload]);
+							continue;
+						}
+				}
+
+				// relay: forward the app's own replies/events to the IDE (dropping the EnC events our
+				// apply triggers, which the IDE doesn't expect)
+				if (ide is Socket target && !IsEncEvent(header, payload))
+					target.Send([.. header, .. payload]);
 			}
 		}
 		catch
@@ -91,6 +171,21 @@ sealed class SdbConnection : IDisposable
 			foreach (TaskCompletionSource<(int, byte[])> waiter in pending.Values)
 				waiter.TrySetException(new IOException("sdb connection closed"));
 		}
+	}
+
+	static bool IsEncEvent(
+		byte[] header,
+		byte[] payload)
+	{
+		// a COMPOSITE event (cmd set 64 EVENT, cmd 100) whose first event is ENC_UPDATE(18) or
+		// METHOD_UPDATE(19), sent with no suspend — safe to swallow
+		if ((header[8] & 0x80) != 0 || header[9] != 64 || header[10] != 100 || payload.Length < 6)
+			return false;
+
+		byte suspend = payload[0];
+		byte kind = payload[5];
+
+		return suspend == 0 && kind is 18 or 19;
 	}
 
 	(int Error, byte[] Data) Command(
@@ -110,8 +205,8 @@ sealed class SdbConnection : IDisposable
 		packet[10] = command;
 		payload.CopyTo(packet.AsSpan(11));
 
-		lock (socket)
-			socket.Send(packet);
+		lock (app)
+			app.Send(packet);
 
 		if (!waiter.Task.Wait(TimeSpan.FromSeconds(10)))
 			throw new TimeoutException($"sdb command {commandSet}/{command} timed out");
@@ -146,36 +241,30 @@ sealed class SdbConnection : IDisposable
 		return ReadInt(data, ref offset);
 	}
 
-	public int[] Assemblies(
-		int domain)
+	public int FindModule(
+		int domain,
+		string assemblyName)
 	{
 		(_, byte[] data) = Command(CmdSetAppDomain, 3, Int(domain));
 		int offset = 0;
 		int count = ReadInt(data, ref offset);
 
-		int[] ids = new int[count];
 		for (int index = 0; index < count; index++)
-			ids[index] = ReadInt(data, ref offset);
+		{
+			int assembly = ReadInt(data, ref offset);
 
-		return ids;
-	}
+			(_, byte[] name) = Command(CmdSetAssembly, 6, Int(assembly));
+			int nameOffset = 0;
+			if (ReadString(name, ref nameOffset).Contains($"{assemblyName},", StringComparison.Ordinal))
+			{
+				(_, byte[] module) = Command(CmdSetAssembly, 3, Int(assembly));
+				int moduleOffset = 0;
 
-	public string AssemblyName(
-		int assembly)
-	{
-		(_, byte[] data) = Command(CmdSetAssembly, 6, Int(assembly));
-		int offset = 0;
+				return ReadInt(module, ref moduleOffset);
+			}
+		}
 
-		return ReadString(data, ref offset);
-	}
-
-	public int ManifestModule(
-		int assembly)
-	{
-		(_, byte[] data) = Command(CmdSetAssembly, 3, Int(assembly));
-		int offset = 0;
-
-		return ReadInt(data, ref offset);
+		return 0;
 	}
 
 	int CreateByteArray(
@@ -255,6 +344,4 @@ sealed class SdbConnection : IDisposable
 
 		return buffer;
 	}
-
-	public void Dispose() => socket.Dispose();
 }

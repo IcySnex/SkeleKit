@@ -8,19 +8,24 @@ using Microsoft.CodeAnalysis.Text;
 namespace SkeleKit.HotReload.Sdb;
 
 // The unified hot-reload path: becomes the app's Mono soft-debugger, so it can apply EnC deltas over
-// the debugger connection (the only path allowed while a debugger is attached). On each save it
-// EmitDifference's a delta and applies it with MODULE APPLY_CHANGES, then signals the app to rebuild.
-// Self-drive today (no IDE); the IDE relay + command-id mux land on top of this.
+// the debugger connection (the only path allowed while a debugger is attached). If an IDE attaches
+// (Rider "Mono Remote" → the ide port), the bridge relays the sdb stream so breakpoints work and
+// injects its apply-changes on the side; if none attaches, it drives the app itself (hot reload only).
 sealed class DebugBridge
 {
-	const int DebugPort = 9987;
+	const int AppPort = 9987;
+	const int IdePort = 9986;
 	const int ReloadPort = 9988;
+
+	static readonly TimeSpan IdeWindow = TimeSpan.FromSeconds(60);
 
 	readonly CscInvocation csc;
 	readonly string deployedDll;
 	readonly string projectDir;
 
 	Socket? reloadClient;
+	int domain;
+	int module;
 
 	public DebugBridge(
 		CscInvocation csc,
@@ -52,47 +57,46 @@ sealed class DebugBridge
 		Console.WriteLine($"baseline ready (MVID {baseline.Mvid})");
 
 		AcceptReloadChannel();
+		Socket? ide = AcceptIde();
 
-		Console.WriteLine($"waiting for the app's debugger on 127.0.0.1:{DebugPort}...");
-		SdbConnection sdb = SdbConnection.AcceptApp(DebugPort);
+		Console.WriteLine($"waiting for the app's debugger on 127.0.0.1:{AppPort}...");
+		SdbConnection sdb = SdbConnection.AcceptApp(AppPort);
+		Console.WriteLine($"app connected — attach Rider \"Mono Remote\" to 127.0.0.1:{IdePort} within {IdeWindow.TotalSeconds:0}s for breakpoints (else hot reload only)");
 
-		(string name, int major, int minor) = sdb.Version();
-		Console.WriteLine($"app: {name} sdb {major}.{minor}");
-		sdb.SetProtocolVersion(major, minor);
-		sdb.Resume();
-		Thread.Sleep(2000);
-
-		int domain = sdb.RootDomain();
-		int module = FindModule(sdb, domain);
-		if (module == 0)
+		if (WaitForIde(ref ide))
 		{
-			Console.WriteLine("could not find the SkeleKit.Gallery module");
-			return 3;
+			sdb.Relay(ide!);
+			Console.WriteLine("IDE attached — breakpoints + hot reload. Edit a .cs file to reload.");
+		}
+		else
+		{
+			sdb.SelfDrive();
+			(_, int major, int minor) = sdb.Version();
+			sdb.SetProtocolVersion(major, minor);
+			sdb.Resume();
+			Thread.Sleep(2000);
+			EnsureModule(sdb);
+			Console.WriteLine("no IDE — hot reload only. Edit a .cs file to reload.");
 		}
 
-		Console.WriteLine($"debugging the app (module {module}) — edit a .cs file to hot reload");
-
-		Watch(compilation, sdb, domain, module, ref baseline);
+		Watch(compilation, sdb, baseline);
 		return 0;
 	}
 
-	int FindModule(
-		SdbConnection sdb,
-		int domain)
+	void EnsureModule(
+		SdbConnection sdb)
 	{
-		foreach (int assembly in sdb.Assemblies(domain))
-			if (sdb.AssemblyName(assembly).Contains($"{csc.AssemblyName},", StringComparison.Ordinal))
-				return sdb.ManifestModule(assembly);
+		if (module != 0)
+			return;
 
-		return 0;
+		domain = sdb.RootDomain();
+		module = sdb.FindModule(domain, csc.AssemblyName);
 	}
 
 	void Watch(
 		Compilation compilation,
 		SdbConnection sdb,
-		int domain,
-		int module,
-		ref Baseline baseline)
+		Baseline baseline)
 	{
 		Dictionary<string, SyntaxTree> trees = compilation.SyntaxTrees
 			.Where(tree => !string.IsNullOrEmpty(tree.FilePath) && File.Exists(tree.FilePath))
@@ -100,7 +104,6 @@ sealed class DebugBridge
 			.ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
 
 		object gate = new();
-		Baseline current = baseline;
 		Compilation snapshot = compilation;
 
 		using FileSystemWatcher watcher = new(projectDir)
@@ -148,11 +151,18 @@ sealed class DebugBridge
 				using MemoryStream pdb = new();
 
 				List<System.Reflection.Metadata.MethodDefinitionHandle> updated = [];
-				EmitDifferenceResult result = newCompilation.EmitDifference(current.Emit, edits, metadata, il, pdb, updated, CancellationToken.None);
-
+				EmitDifferenceResult result = newCompilation.EmitDifference(baseline.Emit, edits, metadata, il, pdb, updated, CancellationToken.None);
 				if (!result.Success)
 				{
 					Console.WriteLine($"  emit failed for {Path.GetFileName(path)}");
+					return;
+				}
+
+				// the app has assemblies loaded by now (the IDE resumed it), so the lookup succeeds
+				EnsureModule(sdb);
+				if (module == 0)
+				{
+					Console.WriteLine("  app module not found yet, try again");
 					return;
 				}
 
@@ -166,7 +176,7 @@ sealed class DebugBridge
 				SignalReload();
 				Console.WriteLine($"  {Path.GetFileName(path)}: {edits.Count} edit(s), reloaded");
 
-				current.Emit = result.Baseline;
+				baseline.Emit = result.Baseline;
 				snapshot = newCompilation;
 				trees[path] = newTree;
 			}
@@ -178,6 +188,46 @@ sealed class DebugBridge
 		watcher.EnableRaisingEvents = true;
 
 		Thread.Sleep(Timeout.Infinite);
+	}
+
+	Socket? pendingIde;
+
+	Socket? AcceptIde()
+	{
+		Socket listener = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+		listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+		listener.Bind(new IPEndPoint(IPAddress.Loopback, IdePort));
+		listener.Listen(1);
+
+		Thread thread = new(() =>
+		{
+			try { pendingIde = listener.Accept(); }
+			catch { }
+		})
+		{
+			IsBackground = true
+		};
+		thread.Start();
+
+		return null;
+	}
+
+	bool WaitForIde(
+		ref Socket? ide)
+	{
+		DateTime deadline = DateTime.UtcNow + IdeWindow;
+		while (DateTime.UtcNow < deadline)
+		{
+			if (pendingIde is Socket connected)
+			{
+				ide = connected;
+				return true;
+			}
+
+			Thread.Sleep(200);
+		}
+
+		return false;
 	}
 
 	void AcceptReloadChannel()
