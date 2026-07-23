@@ -43,7 +43,7 @@ public class SkeleApplication
 			}
 
 			if (tabBarController.SelectedTab?.Identifier == tab.Identifier)
-				SkeleApplication.HandleReselect(tabBarController);
+				HandleReselect(tabBarController);
 
 			return true;
 		}

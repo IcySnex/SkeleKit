@@ -8,7 +8,7 @@ public class SkeleWindowSceneDelegate : UIWindowSceneDelegate
 {
 	public override UIWindow? Window { get; set; }
 
-	
+
 	public override void WillConnect(
 		UIScene scene,
 		UISceneSession session,

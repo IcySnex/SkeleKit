@@ -147,7 +147,7 @@ public class Slider : Control
 
 		if (step > 0)
 		{
-			value = minimum + (Math.Round((value - minimum) / step) * step);
+			value = minimum + Math.Round((value - minimum) / step) * step;
 			Ui.Value = (float)value;
 		}
 

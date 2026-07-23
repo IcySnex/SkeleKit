@@ -4,9 +4,9 @@ internal sealed class GridChild
 {
 	public static readonly GridChild Default = new();
 
-	
-	public int Row { get; set; } = 0;
-	public int Column { get; set; } = 0;
+
+	public int Row { get; set; }
+	public int Column { get; set; }
 	public int RowSpan { get; set; } = 1;
 	public int ColumnSpan { get; set; } = 1;
 }

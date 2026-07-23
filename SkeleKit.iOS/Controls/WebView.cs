@@ -109,7 +109,7 @@ public class WebView : Control
 		if (html is not null)
 			Ui.LoadHtmlString(html, null!);
 		else if (url is not null && NSUrl.FromString(url) is NSUrl target)
-			Ui.LoadRequest(new NSUrlRequest(target));
+			Ui.LoadRequest(new(target));
 	}
 
 	void ApplyBackGestures()
@@ -121,7 +121,7 @@ public class WebView : Control
 
 	private protected override UIView CreateNative()
 	{
-		WKWebView view = new(CGRect.Empty, new WKWebViewConfiguration())
+		WKWebView view = new(CGRect.Empty, new())
 		{
 			BackgroundColor = UIColor.Clear,
 			Opaque = false

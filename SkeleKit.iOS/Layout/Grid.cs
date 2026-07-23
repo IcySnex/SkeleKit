@@ -106,12 +106,12 @@ public class Grid : Panel
 	/// <summary>
 	/// The gap in points inserted between rows.
 	/// </summary>
-	public double RowSpacing { get; set; } = 0;
+	public double RowSpacing { get; set; }
 
 	/// <summary>
 	/// The gap in points inserted between columns.
 	/// </summary>
-	public double ColumnSpacing { get; set; } = 0;
+	public double ColumnSpacing { get; set; }
 
 
 	protected override Size MeasureOverride(
@@ -176,7 +176,7 @@ public class Grid : Panel
 		bool horizontal)
 	{
 		// one axis: absolute = value, auto = fit children, star = split rest
-		
+
 		double[] sizes = new double[tracks.Count];
 		double used = 0;
 		double totalStars = 0;
@@ -190,9 +190,7 @@ public class Grid : Panel
 				used += sizes[i];
 			}
 			else if (track.IsStar)
-			{
 				totalStars += track.Value;
-			}
 		}
 
 		// auto: fit single-span children, unconstrained on this axis

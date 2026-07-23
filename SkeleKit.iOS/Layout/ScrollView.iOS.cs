@@ -195,7 +195,7 @@ public partial class ScrollView
 		double height = vertical ? desired.Height : viewport.Height;
 
 		content.Arrange(new(padLeft, padTop, width, height));
-		host.ContentSize = new CGSize(width + padLeft + padRight, height + padTop + padBottom);
+		host.ContentSize = new(width + padLeft + padRight, height + padTop + padBottom);
 	}
 
 	internal void OnKeyboardChanged(

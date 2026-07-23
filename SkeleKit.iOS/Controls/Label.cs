@@ -218,7 +218,7 @@ public class Label : Control
 		if (strikethrough)
 			attributes.StrikethroughStyle = NSUnderlineStyle.Single;
 
-		Ui.AttributedText = new NSAttributedString(text, attributes);
+		Ui.AttributedText = new(text, attributes);
 	}
 
 	NSMutableParagraphStyle BuildParagraph() =>
@@ -313,7 +313,7 @@ public class Label : Control
 			if (strikethrough || span.Strikethrough)
 				attributes.StrikethroughStyle = NSUnderlineStyle.Single;
 
-			composed.Append(new NSAttributedString(span.Text, attributes));
+			composed.Append(new(span.Text, attributes));
 		}
 
 		Ui.AttributedText = composed;

@@ -111,8 +111,6 @@ public partial class CollectionView<TItem, TSection>
 		FlushSnapshot();
 	}
 
-	// land the refresh's own changes first, then collapse the spinner — running both in
-	// one turn animates the diff against a moving content inset
 	void EndNativeRefresh() =>
 		FlushSnapshot(() =>
 		{
@@ -162,6 +160,9 @@ public partial class CollectionView<TItem, TSection>
 				}
 				break;
 
+			case UIGestureRecognizerState.Possible:
+			case UIGestureRecognizerState.Cancelled:
+			case UIGestureRecognizerState.Failed:
 			default:
 				if (reordering)
 				{
@@ -202,12 +203,16 @@ public partial class CollectionView<TItem, TSection>
 		HashSet<NSIndexPath> wanted = [];
 
 		foreach (TItem item in selectedItems ?? [])
+		{
 			if (keys.TryGetValue(item, out ItemKey? key) && data.GetIndexPath(key) is NSIndexPath path)
 				wanted.Add(path);
+		}
 
 		foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
+		{
 			if (!wanted.Remove(path))
 				Ui.DeselectItem(path, false);
+		}
 
 		foreach (NSIndexPath path in wanted)
 			Ui.SelectItem(path, false, UICollectionViewScrollPosition.None);
@@ -317,7 +322,7 @@ public partial class CollectionView<TItem, TSection>
 			: UISwipeActionsConfiguration.FromActions([.. actions]);
 	}
 
-	// roots the preview controller while UIKit presents it, or its managed peer dies mid-peek
+	// ReSharper disable once NotAccessedField.Local
 	PreviewHost? activePreview;
 	TItem? menuItem;
 
@@ -378,7 +383,6 @@ public partial class CollectionView<TItem, TSection>
 	internal void EndPreview() =>
 		activePreview = null;
 
-	// deliberately Velura-verbatim: no caching, no disposal, VisiblePath only
 	internal UITargetedPreview? ShapedPreview(
 		UIContextMenuConfiguration configuration)
 	{
@@ -410,11 +414,22 @@ public partial class CollectionView<TItem, TSection>
 		ApplyEditingCore();
 	}
 
-	private protected override void OnUnrealized() =>
+	private protected override void OnUnrealized()
+	{
 		UnhookSources();
 
-	UICollectionView Ui =>
-		(UICollectionView)Native;
+		if (reorderRecognizer is UILongPressGestureRecognizer recognizer && IsRealized)
+		{
+			Ui.RemoveGestureRecognizer(recognizer);
+			recognizer.Dispose();
+		}
+
+		reorderRecognizer = null;
+
+		activePreview = null;
+	}
+
+	UICollectionView Ui => (UICollectionView)Native;
 
 	internal override void ReapplyVisuals()
 	{
@@ -424,8 +439,10 @@ public partial class CollectionView<TItem, TSection>
 			return;
 
 		foreach (UICollectionViewCell cell in Ui.VisibleCells)
+		{
 			if (cell is SkeleCell { Hosted: { } hosted })
 				hosted.ReapplyVisuals();
+		}
 
 		EmptyView?.ReapplyVisuals();
 	}
@@ -436,10 +453,12 @@ public partial class CollectionView<TItem, TSection>
 			return;
 
 		foreach (UICollectionViewCell cell in Ui.VisibleCells)
+		{
 			if (cell is SkeleCell { Hosted: { LocalTint: null } hosted })
 				hosted.TintChanged();
+		}
 
-		if (EmptyView is { LocalTint: null } empty)
+		if (EmptyView is View empty && empty.LocalTint is null)
 			empty.TintChanged();
 	}
 
@@ -550,8 +569,6 @@ public partial class CollectionView<TItem, TSection>
 		SyncHeaderChevrons();
 	}
 
-	// a collapse toggled off-header (programmatically, or by another header's tap shifting sections)
-	// won't re-bind a visible header, so nudge each one's chevron to match its section
 	void SyncHeaderChevrons()
 	{
 		if (!IsGrouped)
@@ -560,8 +577,10 @@ public partial class CollectionView<TItem, TSection>
 		NSString kind = new(UICollectionElementKindSectionKey.Header.ToString());
 
 		foreach (NSIndexPath path in Ui.GetIndexPathsForVisibleSupplementaryElements(kind))
+		{
 			if (Ui.GetSupplementaryView(kind, path) is SkeleHeader header)
 				header.SetExpanded(Expanded(path.Section), animated: true);
+		}
 	}
 
 	ItemKey KeyFor(
@@ -585,13 +604,19 @@ public partial class CollectionView<TItem, TSection>
 		HashSet<object> current = new(ReferenceEqualityComparer.Instance);
 
 		for (int section = 0; section < SectionCount; section++)
+		{
 			for (int index = 0; index < CountIn(section); index++)
+			{
 				if (ItemAt(section, index) is TItem item)
 					current.Add(item);
+			}
+		}
 
 		foreach (object item in keys.Keys.ToArray())
+		{
 			if (!current.Contains(item))
 				keys.Remove(item);
+		}
 	}
 
 	SkeleCell CellFor(
@@ -767,26 +792,29 @@ public partial class CollectionView<TItem, TSection>
 			command.Execute(item);
 	}
 
-	UICollectionViewLayout CreateLayout(
+	UICollectionViewCompositionalLayout CreateLayout(
 		CollectionLayout layout,
 		bool headers,
 		bool footers)
 	{
 		// per-section: one compositional layout whose provider picks each section's own arrangement
 		if (SectionLayout is Func<TSection, CollectionLayout> perSection)
-			return new UICollectionViewCompositionalLayout((index, environment) =>
+		{
+			return new((index, environment) =>
 				Section(SectionAt((int)index) is TSection section ? perSection(section) : layout, headers, footers, environment));
+		}
 
 		switch (layout.Kind)
 		{
 			case CollectionLayoutKind.Grid:
 				// absolute row heights from our measure; estimated sizing breaks the peek portal
-				return new UICollectionViewCompositionalLayout((_, environment) =>
+				return new((_, environment) =>
 					GridSection(layout, headers, footers, environment.Container.EffectiveContentSize.Width));
 
 			case CollectionLayoutKind.Carousel:
-				return new UICollectionViewCompositionalLayout(CarouselSection(layout, headers, footers));
+				return new(CarouselSection(layout, headers, footers));
 
+			case CollectionLayoutKind.List:
 			default:
 				return UICollectionViewCompositionalLayout.GetLayout(ListConfiguration(layout, headers, footers));
 		}
@@ -1055,7 +1083,7 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 	public override void WillEndContextMenuInteraction(
 		UICollectionView collectionView,
 		UIContextMenuConfiguration configuration,
-		IUIContextMenuInteractionAnimating animator) =>
+		IUIContextMenuInteractionAnimating? animator) =>
 		element.EndPreview();
 
 
@@ -1082,11 +1110,13 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 		NSIndexPath[] indexPaths)
 	{
 		foreach (NSIndexPath path in indexPaths)
+		{
 			if (prefetches.Remove(path, out CancellationTokenSource? cancellation))
 			{
 				cancellation.Cancel();
 				cancellation.Dispose();
 			}
+		}
 	}
 
 	// warming the loader's cache is the whole job; a failed prefetch is invisible by design
@@ -1100,7 +1130,9 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 			await Image.Loader.LoadAsync(url, cancellation.Token);
 		}
 		catch
-		{ }
+		{
+			// ignored :3
+		}
 		finally
 		{
 			prefetches.Remove(path);
@@ -1161,21 +1193,21 @@ internal sealed class PreviewHost : UIViewController
 		if (content is null)
 			return;
 
-		View.BackgroundColor = UIColor.SystemBackground;
+		View!.BackgroundColor = UIColor.SystemBackground;
 		View.AddSubview(content.Realize());
 
 		// an explicit Width on the preview root sizes the peek; default is the list's width
 		nfloat effective = double.IsFinite(content.Width) ? (nfloat)content.Width : width;
 
 		content.Measure(new(effective, double.PositiveInfinity));
-		PreferredContentSize = new CGSize(effective, (nfloat)content.DesiredSize.Height);
+		PreferredContentSize = new(effective, (nfloat)content.DesiredSize.Height);
 	}
 
 	public override void ViewDidLayoutSubviews()
 	{
 		base.ViewDidLayoutSubviews();
 
-		content?.Arrange(new(0, 0, View.Bounds.Width, View.Bounds.Height));
+		content?.Arrange(new(0, 0, View!.Bounds.Width, View.Bounds.Height));
 	}
 }
 
@@ -1217,8 +1249,10 @@ internal sealed class CollectionSource : UICollectionViewDiffableDataSource<NSNu
 		nint sections = collectionView.NumberOfSections();
 
 		for (nint section = 0; section < sections; section++)
+		{
 			if (collectionView.NumberOfItemsInSection(section) > 0)
 				return element?.IndexTitles();
+		}
 
 		return null;
 	}
@@ -1266,7 +1300,6 @@ internal sealed class SkeleCell(
 
 	bool lit;
 
-	// a list cell ignores SelectedBackgroundView
 	public override void UpdateConfiguration(
 		UICellConfigurationState state)
 	{
@@ -1294,7 +1327,6 @@ internal sealed class SkeleCell(
 		Hosted?.Arrange(new(0, 0, ContentView.Bounds.Width, ContentView.Bounds.Height));
 	}
 
-	// self-sizing: the compositional layout asks, our engine answers
 	public override UICollectionViewLayoutAttributes PreferredLayoutAttributesFittingAttributes(
 		UICollectionViewLayoutAttributes layoutAttributes)
 	{
@@ -1317,7 +1349,7 @@ internal sealed class SkeleHeader(
 	const int ChevronEdge = 16;
 	const int ChevronGap = 8;
 
-	static readonly UIImageSymbolConfiguration ChevronConfiguration = UIImageSymbolConfiguration.Create((nfloat)13, UIImageSymbolWeight.Semibold);
+	static readonly UIImageSymbolConfiguration ChevronConfiguration = UIImageSymbolConfiguration.Create(13, UIImageSymbolWeight.Semibold);
 
 
 	UIImageView? chevron;
@@ -1346,11 +1378,8 @@ internal sealed class SkeleHeader(
 
 		if (!expandable)
 		{
-			if (chevron is not null)
-				chevron.Hidden = true;
-
-			if (tap is not null)
-				tap.Enabled = false;
+			chevron?.Hidden = true;
+			tap?.Enabled = false;
 
 			return;
 		}
@@ -1392,7 +1421,7 @@ internal sealed class SkeleHeader(
 			: CGAffineTransform.MakeIdentity();
 
 		if (animated)
-			UIView.Animate(0.25, () => chevron.Transform = transform);
+			Animate(0.25, () => chevron.Transform = transform);
 		else
 			chevron.Transform = transform;
 	}

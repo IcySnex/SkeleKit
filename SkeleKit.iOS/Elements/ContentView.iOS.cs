@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace SkeleKit;
@@ -50,7 +49,7 @@ public abstract partial class ContentView
 		Host.NavigationItem.Prompt = Prompt.Value;
 
 		// a prompt change resizes the bar, which the controller only relays out on the next layout pass
-		if (Host.NavigationController is UINavigationController navigation)
+		if (Host.NavigationController is UINavigationController navigation && navigation.View is not null)
 		{
 			navigation.View.SetNeedsLayout();
 			navigation.View.LayoutIfNeeded();

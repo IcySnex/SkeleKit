@@ -442,7 +442,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		object? sender,
 		PropertyChangedEventArgs e)
 	{
-		if (e.PropertyName is nameof(IExpandableSection<TItem>.IsExpanded))
+		if (e.PropertyName is nameof(IExpandableSection<>.IsExpanded))
 			ApplyChange();
 	}
 

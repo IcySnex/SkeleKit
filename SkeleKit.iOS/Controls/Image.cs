@@ -163,17 +163,24 @@ public class Image : Control
 			Add(UIImageSymbolConfiguration.Create(Weight(weight)));
 
 		if (SymbolScale is not SymbolScale.Default)
+		{
 			Add(UIImageSymbolConfiguration.Create(SymbolScale switch
 			{
 				SymbolScale.Small => UIImageSymbolScale.Small,
 				SymbolScale.Large => UIImageSymbolScale.Large,
 				_ => UIImageSymbolScale.Medium
 			}));
+		}
 
-		if (SymbolColors.Count == 1)
-			Add(UIImageSymbolConfiguration.Create(SymbolColors[0].ToUIColor()));
-		else if (SymbolColors.Count > 1)
-			Add(UIImageSymbolConfiguration.Create(SymbolColors.Select(color => color.ToUIColor()).ToArray()));
+		switch (SymbolColors.Count)
+		{
+			case 1:
+				Add(UIImageSymbolConfiguration.Create(SymbolColors[0].ToUIColor()));
+				break;
+			case > 1:
+				Add(UIImageSymbolConfiguration.Create(SymbolColors.Select(color => color.ToUIColor()).ToArray()));
+				break;
+		}
 
 		if (PrefersMulticolor)
 			Add(UIImageSymbolConfiguration.ConfigurationPreferringMulticolor);

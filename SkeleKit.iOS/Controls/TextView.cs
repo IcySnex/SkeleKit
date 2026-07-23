@@ -1,6 +1,7 @@
 using System.Collections.Specialized;
 using System.Windows.Input;
 using ObjCRuntime;
+using static SkeleKit.TextAlignment;
 
 namespace SkeleKit;
 
@@ -112,7 +113,7 @@ public class TextView : Control
 		get => weight;
 		set => Set(ref weight, value, ApplyText);
 	}
-	FontWeight weight = SkeleKit.FontWeight.Regular;
+	FontWeight weight = FontWeight.Regular;
 
 	/// <summary>
 	/// The base font design: system, rounded, serif or monospaced.
@@ -163,7 +164,7 @@ public class TextView : Control
 		get => textAlignment;
 		set => Set(ref textAlignment, value, ApplyText);
 	}
-	TextAlignment textAlignment = SkeleKit.TextAlignment.Leading;
+	TextAlignment textAlignment = Leading;
 
 	/// <summary>
 	/// Extra points between lines.
@@ -278,11 +279,11 @@ public class TextView : Control
 			// the URL just carries our link index, never opens
 			if (span is Link tappable)
 			{
-				attributes.Link = new NSUrl($"skelekit://link/{linkRanges.Count}");
-				linkRanges.Add((new NSRange(start, span.Text.Length), tappable));
+				attributes.Link = new($"skelekit://link/{linkRanges.Count}");
+				linkRanges.Add((new(start, span.Text.Length), tappable));
 			}
 
-			composed.Append(new NSAttributedString(span.Text, attributes));
+			composed.Append(new(span.Text, attributes));
 		}
 
 		Ui.AttributedText = composed;
@@ -301,15 +302,15 @@ public class TextView : Control
 	UITextAlignment Alignment() =>
 		textAlignment switch
 		{
-			SkeleKit.TextAlignment.Center => UITextAlignment.Center,
-			SkeleKit.TextAlignment.Trailing => UITextAlignment.Right,
+			Center => UITextAlignment.Center,
+			Trailing => UITextAlignment.Right,
 			_ => UITextAlignment.Left
 		};
 
 	UIFont FontFor(
 		Span span)
 	{
-		FontWeight w = span.Bold ? SkeleKit.FontWeight.Bold : span.FontWeight ?? weight;
+		FontWeight w = span.Bold ? FontWeight.Bold : span.FontWeight ?? weight;
 		FontDesign d = span.FontDesign ?? design;
 		double size = double.IsNaN(span.FontSize) ? fontSize : span.FontSize;
 
@@ -322,8 +323,10 @@ public class TextView : Control
 		UITextItem item)
 	{
 		foreach ((NSRange range, Link link) in linkRanges)
+		{
 			if (item.Range.Location >= range.Location && item.Range.Location < range.Location + range.Length)
 				return link;
+		}
 
 		return null;
 	}

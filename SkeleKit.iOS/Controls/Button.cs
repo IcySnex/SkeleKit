@@ -239,11 +239,13 @@ public class Button : Control
 			configuration.ImagePadding = (nfloat)iconSpacing;
 
 		if (padding is Thickness insets)
-			configuration.ContentInsets = new NSDirectionalEdgeInsets(
+		{
+			configuration.ContentInsets = new(
 				(nfloat)insets.Top,
 				(nfloat)insets.Left,
 				(nfloat)insets.Bottom,
 				(nfloat)insets.Right);
+		}
 
 		bool filled = kind is ButtonStyle.Filled or ButtonStyle.FilledCapsule;
 

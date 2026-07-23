@@ -1,4 +1,4 @@
-using System.Linq;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -7,39 +7,12 @@ using System.Reflection.Metadata;
 
 namespace SkeleKit;
 
-// Dev-only C# hot reload. Receives .NET metadata/IL deltas from the SkeleKit.HotReload host tool over
-// localhost TCP (the sim reaches the host on 127.0.0.1), applies them with MetadataUpdater.ApplyUpdate,
-// then rebuilds every live page through PageHost so the change shows without a reinstall. Mono does not
-// invoke [MetadataUpdateHandler]s itself, so the rebuild is driven straight from here. Inert unless
-// MetadataUpdater.IsSupported, which is only true on an -p:EnableHotReload=true build, so the whole
-// thing trims away in Release: zero cost when not developing.
 internal static class HotReload
 {
 	const int Port = 9988;
 
 
-	// invoked by the runtime after a delta is applied (whether via ApplyUpdate or the debugger), and
-	// reachable by name over the soft-debugger for the breakpoints-and-hot-reload proxy path
-	internal static void UpdateApplication(
-		Type[]? updatedTypes) =>
-		ForceReload();
-
-	internal static void ForceReload() =>
-		UIApplication.SharedApplication.InvokeOnMainThread(PageHost.ReloadLive);
-
-	internal static void Start()
-	{
-		if (MetadataUpdater.IsSupported is false)
-			return;
-
-		Thread thread = new(Listen)
-		{
-			IsBackground = true,
-			Name = "skele-hotreload"
-		};
-		thread.Start();
-	}
-
+	// ReSharper disable once FunctionNeverReturns
 	static void Listen()
 	{
 		while (true)
@@ -72,24 +45,15 @@ internal static class HotReload
 		byte[] il = ReadExactly(stream, ilLength);
 		byte[] pdb = ReadExactly(stream, pdbLength);
 
-		// an empty module is the "already applied via the debugger, just rebuild" signal from the
-		// breakpoints-and-hot-reload proxy: the debugger applied the delta over its own connection
-		// (the only EnC path allowed while attached), so we skip ApplyUpdate and only rebuild pages
 		if (module == Guid.Empty)
 		{
 			ForceReload();
 			return;
 		}
 
-		// with no debugger, we apply the delta ourselves; under one, only the proxy path works
-		if (System.Diagnostics.Debugger.IsAttached)
+		if (Debugger.IsAttached)
 		{
-			if (!warnedDebugger)
-			{
-				warnedDebugger = true;
-				Console.WriteLine("[SkeleKit] hot reload is off while the debugger is attached — use the breakpoints+reload proxy, or launch with Run.");
-			}
-
+			Debug.WriteLine("[SkeleKit] Hot reload is off while the debugger is attached.");
 			return;
 		}
 
@@ -105,23 +69,19 @@ internal static class HotReload
 			{
 				MetadataUpdater.ApplyUpdate(target, metadata, il, pdb);
 				PageHost.ReloadLive();
+
+				Debug.WriteLine("[SkeleKit] Hot reloaded: {0}.", target.GetName().Name);
 			}
 			catch (Exception exception) when (exception.Message.Contains("debugger", StringComparison.OrdinalIgnoreCase))
 			{
-				if (!warnedDebugger)
-				{
-					warnedDebugger = true;
-					Console.WriteLine("[SkeleKit] hot reload is off while the debugger is attached — launch with Run (not Debug) to hot reload.");
-				}
+				Debug.WriteLine("[SkeleKit] Hot reload is off while the debugger is attached.");
 			}
 			catch (Exception exception)
 			{
-				Console.WriteLine($"[SkeleKit] hot reload failed: {exception.Message}");
+				Debug.WriteLine($"[SkeleKit] Hot reload failed: {exception.Message}");
 			}
 		});
 	}
-
-	static bool warnedDebugger;
 
 	static byte[] ReadExactly(
 		NetworkStream stream,
@@ -140,5 +100,31 @@ internal static class HotReload
 		}
 
 		return buffer;
+	}
+
+
+	internal static void UpdateApplication(
+		Type[]? updatedTypes) =>
+		ForceReload();
+
+	internal static void ForceReload() =>
+		UIApplication.SharedApplication.InvokeOnMainThread(PageHost.ReloadLive);
+
+	internal static void Start()
+	{
+		if (!MetadataUpdater.IsSupported)
+		{
+			Debug.WriteLine("[SkeleKit] Hot reload could not be started: Metadata updater is not supported.");
+			return;
+		}
+
+		Thread thread = new(Listen)
+		{
+			IsBackground = true,
+			Name = "skele-hotreload"
+		};
+		thread.Start();
+
+		Debug.WriteLine("[SkeleKit] Hot reload started.");
 	}
 }

@@ -18,7 +18,7 @@ public static class Haptics
 
 	static CHHapticEngine? SharedEngine()
 	{
-		if (CHHapticEngine.GetHardwareCapabilities().SupportsHaptics is false)
+		if (!CHHapticEngine.GetHardwareCapabilities().SupportsHaptics)
 			return null;
 
 		if (engine is not null)
@@ -101,9 +101,6 @@ public static class Haptics
 	/// <summary>
 	/// Plays a custom haptic pattern built from taps and sustained vibrations.
 	/// </summary>
-	/// <remarks>
-	/// Does nothing on hardware without a haptic engine, including the simulator.
-	/// </remarks>
 	/// <param name="events">The events making up the pattern, timed from its start.</param>
 	public static void Play(
 		params ReadOnlySpan<HapticEvent> events)
@@ -135,7 +132,7 @@ public static class Haptics
 		if (patternError is not null)
 			return;
 
-		if (engine.Start(out _) is false)
+		if (!engine.Start(out _))
 			return;
 
 		if (engine.CreatePlayer(pattern, out NSError? playerError) is not ICHHapticPatternPlayer player || playerError is not null)

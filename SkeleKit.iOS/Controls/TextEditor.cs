@@ -1,6 +1,3 @@
-using CoreGraphics;
-using UIKit;
-
 namespace SkeleKit;
 
 /// <summary>
@@ -134,7 +131,7 @@ public class TextEditor : Control
 
 	void ApplyToolbar() =>
 		Ui.InputAccessoryView = keyboardAccessory is View custom
-			? (accessoryHost ??= AccessoryHost.ForKeyboard(custom))
+			? accessoryHost ??= AccessoryHost.ForKeyboard(custom)
 			: keyboardToolbar is KeyboardToolbar.None
 				? null
 				: (accessoryBar ??= Keyboards.Toolbar(this, keyboardToolbar)).Bar;

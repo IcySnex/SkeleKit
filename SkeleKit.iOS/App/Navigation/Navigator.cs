@@ -13,6 +13,7 @@ internal sealed class Navigator(
 		public PopoverStay()
 		{ }
 
+		// ReSharper disable once UnusedMember.Local
 		public PopoverStay(
 			NativeHandle handle) : base(handle)
 		{ }
@@ -22,6 +23,9 @@ internal sealed class Navigator(
 			UIPresentationController forPresentationController) =>
 			UIModalPresentationStyle.None;
 	}
+
+
+	static readonly PopoverStay Stay = new();
 
 
 	static UIViewController? Top()
@@ -59,142 +63,7 @@ internal sealed class Navigator(
 			completion.SetResult();
 	}
 
-
-	public Task SelectTabAsync(
-		string title)
-	{
-		if (Tabs() is not UITabBarController tabs)
-			throw new InvalidOperationException("There is no tab shell to select in.");
-
-		if (Find(tabs.Tabs, title) is not UITab tab)
-			throw new InvalidOperationException($"No tab titled '{title}'.");
-
-		tabs.SelectedTab = tab;
-
-		return Task.CompletedTask;
-	}
-
-	static UITab? Find(
-		UITab[] tabs,
-		string title)
-	{
-		foreach (UITab tab in tabs)
-		{
-			if (tab.Title == title)
-				return tab;
-
-			if (tab is UITabGroup group && Find(group.Children, title) is UITab match)
-				return match;
-		}
-
-		return null;
-	}
-
-	static UITabBarController? Tabs() =>
-		UIApplication.SharedApplication
-			.ConnectedScenes
-			.OfType<UIWindowScene>()
-			.SelectMany(scene => scene.Windows)
-			.FirstOrDefault(window => window.IsKeyWindow)?
-			.RootViewController as UITabBarController;
-
-
-	readonly List<PageHost> hosts = [];
-
-
-	PageHost Track(
-		ContentView page)
-	{
-		PageHost host = new(page);
-		hosts.Add(host);
-
-		return host;
-	}
-
-	void Prune()
-	{
-		UIViewController[] stack = currentStack()?.ViewControllers ?? [];
-
-		hosts.RemoveAll(host => !stack.Contains(host) && host.PresentingViewController is null);
-	}
-
-
-	public Task PushAsync<TViewModel>() where TViewModel : class =>
-		PushAsync(registry.CreateViewModel(typeof(TViewModel), services));
-
-	public Task PushAsync(
-		Type viewModel) =>
-		PushAsync(registry.CreateViewModel(viewModel, services));
-
-	public Task PushAsync(
-		object viewModel)
-	{
-		if (currentStack() is not UINavigationController stack)
-			throw new InvalidOperationException("There is no navigation stack to push onto.");
-
-		PageHost host = Track(registry.CreatePage(viewModel));
-		stack.PushViewController(host, true);
-
-		return Task.CompletedTask;
-	}
-
-	public Task PushAsync(
-		ContentView page)
-	{
-		if (currentStack() is not UINavigationController stack)
-			throw new InvalidOperationException("There is no navigation stack to push onto.");
-
-		stack.PushViewController(Host(page), true);
-
-		return Task.CompletedTask;
-	}
-
-	PageHost Host(
-		ContentView page)
-	{
-		if (page is { Host: not null, IsRealized: true })
-			throw new InvalidOperationException($"This {page.GetType().Name} is already presented. Create a new instance per navigation.");
-
-		return Track(page);
-	}
-
-	public Task PopAsync()
-	{
-		currentStack()?.PopViewController(true);
-		Prune();
-
-		return Task.CompletedTask;
-	}
-
-	public Task PopToRootAsync()
-	{
-		currentStack()?.PopToRootViewController(true);
-		Prune();
-
-		return Task.CompletedTask;
-	}
-
-
-	public Task PresentAsync<TViewModel>(
-		ModalStyle style) where TViewModel : class =>
-		PresentAsync(registry.CreateViewModel(typeof(TViewModel), services), style);
-
-	public Task PresentAsync(
-		Type viewModel,
-		ModalStyle style) =>
-		PresentAsync(registry.CreateViewModel(viewModel, services), style);
-
-	public Task PresentAsync(
-		object viewModel,
-		ModalStyle style) =>
-		PresentCore(Track(registry.CreatePage(viewModel)), style);
-
-	public Task PresentAsync(
-		ContentView page,
-		ModalStyle style) =>
-		PresentCore(Host(page), style);
-
-	Task PresentCore(
+	static Task PresentCore(
 		PageHost host,
 		ModalStyle style)
 	{
@@ -255,8 +124,6 @@ internal sealed class Navigator(
 			? UISheetPresentationControllerDetentIdentifier.Medium
 			: UISheetPresentationControllerDetentIdentifier.Large;
 
-	static readonly PopoverStay Stay = new();
-
 	static UIPopoverArrowDirection Directions(
 		PopoverArrow arrows)
 	{
@@ -273,6 +140,141 @@ internal sealed class Navigator(
 
 		return native == 0 ? UIPopoverArrowDirection.Any : native;
 	}
+
+	static UITab? Find(
+		UITab[] tabs,
+		string title)
+	{
+		foreach (UITab tab in tabs)
+		{
+			if (tab.Title == title)
+				return tab;
+
+			if (tab is UITabGroup group && Find(group.Children, title) is UITab match)
+				return match;
+		}
+
+		return null;
+	}
+
+	static UITabBarController? Tabs() =>
+		UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows)
+			.FirstOrDefault(window => window.IsKeyWindow)?
+			.RootViewController as UITabBarController;
+
+
+	readonly List<PageHost> hosts = [];
+
+
+	PageHost Host(
+		ContentView page)
+	{
+		if (page is { Host: not null, IsRealized: true })
+			throw new InvalidOperationException($"This {page.GetType().Name} is already presented. Create a new instance per navigation.");
+
+		return Track(page);
+	}
+
+	PageHost Track(
+		ContentView page)
+	{
+		PageHost host = new(page);
+		hosts.Add(host);
+
+		return host;
+	}
+
+	void Prune()
+	{
+		UIViewController[] stack = currentStack()?.ViewControllers ?? [];
+
+		hosts.RemoveAll(host => !stack.Contains(host) && host.PresentingViewController is null);
+	}
+
+
+	public Task SelectTabAsync(
+		string title)
+	{
+		if (Tabs() is not UITabBarController tabs)
+			throw new InvalidOperationException("There is no tab shell to select in.");
+
+		if (Find(tabs.Tabs, title) is not UITab tab)
+			throw new InvalidOperationException($"No tab titled '{title}'.");
+
+		tabs.SelectedTab = tab;
+
+		return Task.CompletedTask;
+	}
+
+
+	public Task PushAsync<TViewModel>() where TViewModel : class =>
+		PushAsync(registry.CreateViewModel(typeof(TViewModel), services));
+
+	public Task PushAsync(
+		Type viewModel) =>
+		PushAsync(registry.CreateViewModel(viewModel, services));
+
+	public Task PushAsync(
+		object viewModel)
+	{
+		if (currentStack() is not UINavigationController stack)
+			throw new InvalidOperationException("There is no navigation stack to push onto.");
+
+		PageHost host = Track(registry.CreatePage(viewModel));
+		stack.PushViewController(host, true);
+
+		return Task.CompletedTask;
+	}
+
+	public Task PushAsync(
+		ContentView page)
+	{
+		if (currentStack() is not UINavigationController stack)
+			throw new InvalidOperationException("There is no navigation stack to push onto.");
+
+		stack.PushViewController(Host(page), true);
+
+		return Task.CompletedTask;
+	}
+
+	public Task PopAsync()
+	{
+		currentStack()?.PopViewController(true);
+		Prune();
+
+		return Task.CompletedTask;
+	}
+
+	public Task PopToRootAsync()
+	{
+		currentStack()?.PopToRootViewController(true);
+		Prune();
+
+		return Task.CompletedTask;
+	}
+
+
+	public Task PresentAsync<TViewModel>(
+		ModalStyle style) where TViewModel : class =>
+		PresentAsync(registry.CreateViewModel(typeof(TViewModel), services), style);
+
+	public Task PresentAsync(
+		Type viewModel,
+		ModalStyle style) =>
+		PresentAsync(registry.CreateViewModel(viewModel, services), style);
+
+	public Task PresentAsync(
+		object viewModel,
+		ModalStyle style) =>
+		PresentCore(Track(registry.CreatePage(viewModel)), style);
+
+	public Task PresentAsync(
+		ContentView page,
+		ModalStyle style) =>
+		PresentCore(Host(page), style);
 
 	public Task DismissAsync()
 	{
@@ -363,7 +365,7 @@ internal sealed class Navigator(
 
 		alert.AddAction(UIAlertAction.Create(cancel, UIAlertActionStyle.Cancel, _ => completion.SetResult(null)));
 		alert.AddAction(UIAlertAction.Create(accept, UIAlertActionStyle.Default, _ =>
-			completion.SetResult(alert.TextFields?.FirstOrDefault()?.Text ?? "")));
+			completion.SetResult(alert.TextFields.FirstOrDefault()?.Text ?? "")));
 
 		Present(alert, completion);
 

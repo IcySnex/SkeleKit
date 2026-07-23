@@ -19,7 +19,7 @@ public partial class Border : Panel
 	/// <remarks>
 	/// Also insets the child so the stroke never overlaps content.
 	/// </remarks>
-	public double StrokeThickness { get; set; } = 0;
+	public double StrokeThickness { get; set; }
 
 	/// <summary>
 	/// The single wrapped child.
@@ -35,7 +35,7 @@ public partial class Border : Panel
 		}
 	}
 
-	
+
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{

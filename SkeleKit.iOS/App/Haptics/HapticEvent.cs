@@ -4,9 +4,7 @@ namespace SkeleKit;
 /// A single moment in a custom haptic pattern played through <see cref="Haptics.Play"/>.
 /// </summary>
 /// <remarks>
-/// Intensity and sharpness range from 0 to 1 and are clamped.
-/// <br/>
-/// Intensity controls how strong the sensation feels, sharpness how crisp against dull.
+/// Intensity and sharpness range from 0 to 1 and are clamped. Intensity controls how strong the sensation feels, sharpness how crisp against dull.
 /// </remarks>
 public readonly struct HapticEvent
 {

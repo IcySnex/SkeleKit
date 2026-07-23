@@ -42,6 +42,9 @@ internal sealed class PageHost : UIViewController
 	}
 
 
+	static readonly List<WeakReference<PageHost>> Live = [];
+
+
 	static UIView? FirstResponder(
 		UIView view)
 	{
@@ -49,8 +52,10 @@ internal sealed class PageHost : UIViewController
 			return view;
 
 		foreach (UIView child in view.Subviews)
+		{
 			if (FirstResponder(child) is UIView found)
 				return found;
+		}
 
 		return null;
 	}
@@ -73,22 +78,19 @@ internal sealed class PageHost : UIViewController
 	}
 
 
-	static readonly List<WeakReference<PageHost>> live = [];
-
-
 	internal static void ReloadLive()
 	{
-		if (MetadataUpdater.IsSupported is false)
+		if (!MetadataUpdater.IsSupported)
 			return;
 
 		UIApplication.SharedApplication.InvokeOnMainThread(() =>
 		{
-			for (int index = live.Count - 1; index >= 0; index--)
+			for (int index = Live.Count - 1; index >= 0; index--)
 			{
-				if (live[index].TryGetTarget(out PageHost? host))
+				if (Live[index].TryGetTarget(out PageHost? host))
 					host.Reload();
 				else
-					live.RemoveAt(index);
+					Live.RemoveAt(index);
 			}
 		});
 	}
@@ -100,14 +102,19 @@ internal sealed class PageHost : UIViewController
 			return view;
 
 		if (view is Panel panel)
+		{
 			foreach (View child in panel.Children)
+			{
 				if (FindScrolling(child) is View match)
 					return match;
+			}
+		}
 
 		return null;
 	}
 
 
+	// ReSharper disable once CollectionNeverQueried.Local
 	readonly List<UIAction> menuActions = [];
 	readonly List<ToolbarItem> observedItems = [];
 
@@ -122,7 +129,7 @@ internal sealed class PageHost : UIViewController
 	public PageHost(
 		ContentView page)
 	{
-		this.Page = page;
+		Page = page;
 		page.Host = this;
 
 		HidesBottomBarWhenPushed = page.HidesTabBar;
@@ -144,7 +151,7 @@ internal sealed class PageHost : UIViewController
 			null);
 
 		if (MetadataUpdater.IsSupported)
-			live.Add(new(this));
+			Live.Add(new(this));
 	}
 
 	public PageHost(
@@ -159,6 +166,7 @@ internal sealed class PageHost : UIViewController
 
 
 	// ReSharper disable once UnusedMember.Local
+	// ReSharper disable once UnusedParameter.Local
 	[Export("contentSizeChanged:")]
 	void ContentSizeChanged(
 		NSNotification notification)
@@ -179,6 +187,44 @@ internal sealed class PageHost : UIViewController
 		NSNotification notification) =>
 		ApplyKeyboard(notification, hiding: true);
 
+
+	void InstallPage()
+	{
+		if (Page is not ContentView page)
+			return;
+
+		ApplyChrome(page);
+
+		View!.AddSubview(page.Realize());
+
+		if (FindScrolling(page)?.Native is UIScrollView scroll)
+			SetContentScrollView(scroll, NSDirectionalRectEdge.Top | NSDirectionalRectEdge.Bottom);
+	}
+
+	void Reload()
+	{
+		if (Page is not ContentView old
+			|| !IsViewLoaded
+			|| old.BindingContext is not object viewModel
+			|| SkeleApplication.Current is not SkeleApplication app)
+			return;
+
+		ContentView fresh = app.RecreatePage(viewModel);
+		if (ReferenceEquals(fresh, old))
+			return;
+
+		old.Unrealize();
+		old.Host = null;
+
+		Page = fresh;
+		fresh.Host = this;
+
+		InstallPage();
+		NavigationController?.SetNavigationBarHidden(fresh.HidesNavigationBar, false);
+		ApplyLeaveGuard();
+
+		View!.SetNeedsLayout();
+	}
 
 	UIBarButtonItem Bar(
 		ToolbarItem item)
@@ -303,12 +349,9 @@ internal sealed class PageHost : UIViewController
 			return appearance;
 		}
 
-		// start from the bar's live appearances: rebuilding from scratch loses the system look
-		// (and its collapse transition) just to recolor a title
 		UINavigationBar? bar = NavigationController?.NavigationBar;
 		UINavigationBarAppearance standard = bar?.StandardAppearance.Copy() as UINavigationBarAppearance ?? new();
 
-		// no scroll-edge appearance means transparent-at-edge; the override must keep that
 		UINavigationBarAppearance edge = bar?.ScrollEdgeAppearance?.Copy() as UINavigationBarAppearance ?? Transparent();
 
 		if (page.TitleColor is Color title)
@@ -527,7 +570,12 @@ internal sealed class PageHost : UIViewController
 		bool disposing)
 	{
 		if (disposing)
+		{
+			menuActions.Clear();
+			themeChange?.Dispose();
+			themeChange = null;
 			NSNotificationCenter.DefaultCenter.RemoveObserver(this);
+		}
 
 		base.Dispose(disposing);
 	}
@@ -541,46 +589,6 @@ internal sealed class PageHost : UIViewController
 		ApplyBackGuard();
 		ApplySheetGuard();
 		ApplyPopGestures();
-	}
-
-	void InstallPage()
-	{
-		if (Page is not ContentView page)
-			return;
-
-		ApplyChrome(page);
-
-		View!.AddSubview(page.Realize());
-
-		// we own the insets, so UIKit cannot find the scroll view on its own: telling it which one
-		// drives the bar is what collapses a large title (and blurs the bar edge) on scroll
-		if (FindScrolling(page)?.Native is UIScrollView scroll)
-			SetContentScrollView(scroll, NSDirectionalRectEdge.Top | NSDirectionalRectEdge.Bottom);
-	}
-
-	void Reload()
-	{
-		if (Page is not ContentView old
-			|| !IsViewLoaded
-			|| old.BindingContext is not object viewModel
-			|| SkeleApplication.Current is not SkeleApplication app)
-			return;
-
-		ContentView fresh = app.RecreatePage(viewModel);
-		if (ReferenceEquals(fresh, old))
-			return;
-
-		old.Unrealize();
-		old.Host = null;
-
-		Page = fresh;
-		fresh.Host = this;
-
-		InstallPage();
-		NavigationController?.SetNavigationBarHidden(fresh.HidesNavigationBar, false);
-		ApplyLeaveGuard();
-
-		View!.SetNeedsLayout();
 	}
 
 
@@ -697,11 +705,13 @@ internal sealed class PageHost : UIViewController
 		nfloat hidden = target.GetMaxY() + 8 - shrunk.GetMaxY();
 
 		if (hidden > 0)
+		{
 			Page.Native.Frame = new(
 				shrunk.X,
 				shrunk.Y - (nfloat)Math.Min(hidden, keyboardCover),
 				shrunk.Width,
 				shrunk.Height);
+		}
 	}
 
 	public override void ViewDidDisappear(

@@ -70,5 +70,7 @@ csharp_indent_switch_labels = true
 
 [SkeleKit.{iOS,Generators}/**/*.cs]
 dotnet_diagnostic.IDE0130.severity = none
+dotnet_diagnostic.CA1001.severity = none
+dotnet_diagnostic.CA1711.severity = none
+dotnet_diagnostic.CA1720.severity = none
 resharper_check_namespace_highlighting = none
-

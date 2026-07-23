@@ -40,7 +40,7 @@ internal sealed class ViewRegistry
 	public ContentView CreatePage(
 		object viewModel)
 	{
-		Type? type = viewModel.GetType();
+		Type type = viewModel.GetType();
 
 		if (!byViewModel.TryGetValue(type, out PageRegistration? registration))
 			throw new InvalidOperationException($"No page is registered for '{type.Name}'. Add its view in UsePages(...).");

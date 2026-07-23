@@ -13,7 +13,7 @@ public class StackPanel : Panel
 	/// <summary>
 	/// The gap in points inserted between consecutive visible children.
 	/// </summary>
-	public double Spacing { get; set; } = 0;
+	public double Spacing { get; set; }
 
 
 	protected override Size MeasureOverride(

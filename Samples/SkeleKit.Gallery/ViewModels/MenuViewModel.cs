@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,6 +19,11 @@ public partial class MenuViewModel(
 		navigator.PushAsync(demo.ViewModel);
 
 	[RelayCommand]
-	Task OpenMovie() =>
-		navigator.PushAsync<MovieInfoViewModel>();
+	Task OpenMovie()
+	{
+		// navigator.AlertAsync("You pressed the movie!", "nahhhh");
+		Console.WriteLine("Opening movie view");
+		return Task.CompletedTask;
+	}
+	// navigator.PushAsync<MovieInfoViewModel>();
 }
