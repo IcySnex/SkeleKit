@@ -1,82 +1,53 @@
 # SkeleKit.HotReload
 
-C# hot reload for SkeleKit on the iOS **simulator** — edit a `.cs` file and the running app updates in
-place, no reinstall. Works without an IDE (Rider/VS never wired code hot reload for non-MAUI .NET iOS,
-and `dotnet watch` crashes on the sim — its named-pipe delta transport can't cross the sandbox).
+C# hot reload **and breakpoints together** on the iOS simulator — edit a `.cs` and the running app
+updates in place, while a debugger stays attached. Neither Rider, Visual Studio, nor `dotnet watch`
+does this for .NET iOS. The how-and-why is in [`Docs/hot-reload-debugging.md`](../../Docs/hot-reload-debugging.md).
 
-## How it works
+## How it works (short version)
+
+The app can only apply Edit-and-Continue deltas *through the debugger connection* while a debugger is
+attached. So the host becomes a **Mono soft-debugger proxy** on the wire between the app and the IDE:
 
 ```
-edit .cs ──▶ host tool (Roslyn EmitDifference) ──▶ TCP 127.0.0.1:9988 ──▶ app
-                                                                            │
-                     MetadataUpdater.ApplyUpdate(IL delta) ◀───────────────┘
-                                     │
-                     PageHost.ReloadLive() rebuilds every live page
+app  ⟷  SkeleKit bridge  ⟷  Rider ("Mono Remote" attach)
+              │
+   • relays sdb traffic          → breakpoints / stepping just work
+   • on save: EmitDifference → CREATE_BYTE_ARRAY ×3 + MODULE APPLY_CHANGES → ReloadLive
+   • no IDE attached (--self-drive) → the bridge is the debugger; hot reload only
+   • the app's second connection → "connect output" → its console prints here
 ```
 
-- **Host** (`Tools/SkeleKit.HotReload`, plain `net10.0`): reconstructs the app's Roslyn `Compilation`
-  from its exact compiler command line (references, defines, **source generators**), uses the deployed
-  dll as the `EmitBaseline`, and on each save computes a metadata/IL delta with `EmitDifference`, then
-  ships it over TCP.
-- **App** (`SkeleKit.iOS/App/HotReload.cs`, dev-only): a background TCP client applies the delta with
-  `MetadataUpdater.ApplyUpdate` and calls `PageHost.ReloadLive` (Mono does **not** invoke
-  `[MetadataUpdateHandler]`s itself). The page is reconstructed from its registry factory reusing the
-  same ViewModel, so a changed ctor / method body shows live with ViewModel state preserved.
+Ports: `9987` app debugger, `9986` IDE attach, `9988` reload signal.
 
-## Requirements (already wired in the Gallery)
+## Setup
 
-The app must be built so `MetadataUpdater.IsSupported` is true — the undocumented combo:
+The app must be built so `MetadataUpdater.IsSupported` is true — `UseInterpreter=true`, a
+`MetadataUpdater.IsSupported=true` runtime option with `Trim="true"`, and a baked
+`DOTNET_MODIFIABLE_ASSEMBLIES=debug`. The `SkeleKit.iOS.HotReload` NuGet's `build/` targets do all of
+that behind `<EnableHotReload>true</EnableHotReload>`.
 
-1. `<UseInterpreter>true</UseInterpreter>` — ships `libmono-component-hot_reload.dylib`.
-2. `<RuntimeHostConfigurationOption Include="System.Reflection.Metadata.MetadataUpdater.IsSupported"
-   Value="true" Trim="true" />` — **`Trim="true"` is essential**, or the linker bakes `IsSupported`
-   to a constant `false`.
-3. launched with env `DOTNET_MODIFIABLE_ASSEMBLIES=debug`.
-
-All three are behind `-p:EnableHotReload=true` in the Gallery csproj, so a normal Debug build stays on
-the faster JIT with zero hot-reload cost. Release (AOT) can never hot-reload; the app-side code trims
-away entirely.
-
-## Use
-
-**As a consumer (NuGet)** — nothing to run by hand:
+**Breakpoints + hot reload (Rider):**
 
 ```bash
-dotnet add package SkeleKit.iOS.HotReload   # dev-only; adds build/ targets + the bundled host
-```
-```xml
-<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-  <EnableHotReload>true</EnableHotReload>
-</PropertyGroup>
-```
-Build/run on the simulator (Rider or CLI). The package's MSBuild targets configure the runtime and
-auto-start the host after the build; the app connects on launch. Edit a `.cs`, save — it applies live.
-The host self-exits when idle, so there's no process to stop. This package is dev-only; reference it
-with `PrivateAssets="all"` (the template above does that via `DevelopmentDependency`).
-
-**Packaging it:** `dotnet pack Tools/SkeleKit.HotReload -c Release` → `SkeleKit.iOS.HotReload.nupkg`
-(targets in `build/`, host + Roslyn in `tools/hotreload/`).
-
-**In this repo** (developing SkeleKit itself), the Gallery imports the targets directly and a one-shot
-script also works:
-
-```bash
-xcrun simctl list devices available          # pick a booted simulator UDID
-Tools/SkeleKit.HotReload/run.sh <sim-udid>   # build, launch, and start the host
+xcrun simctl list devices available            # pick a booted simulator UDID
+Tools/SkeleKit.HotReload/skele-debug.sh <udid> # builds, starts the bridge, launches the app at it
 ```
 
-Then edit any `.cs` under `Samples/SkeleKit.Gallery` and save.
+Then in Rider: **Debug** a **Mono Remote** config (Host `127.0.0.1`, Port `9986`, Listen off). Set
+breakpoints, edit any `.cs`, save — both work. Make it one press by setting `skele-debug.sh` as that
+config's **Before Launch** step.
 
-## Run, not Debug
-
-`MetadataUpdater.ApplyUpdate` is refused while a debugger is attached — the runtime lets only one
-owner drive Edit-and-Continue, and under a debugger that owner is the debugger (VS bridges deltas that
-way; Rider doesn't for iOS). So launch with Rider's **Run (▶)**, not **Debug (🐞)**: Run for live-UI
-work, Debug when you need breakpoints. The app logs a one-time hint and keeps running if it's launched
-under a debugger. (If a Rider *Run* still reports the debugger is attached, fall back to `run.sh`.)
+**Hot reload only (no IDE):** build with `-p:EnableHotReload=true` (without `EnableHotReloadDebug`) —
+the build auto-starts the bridge in `--self-drive` and it drives the app itself.
 
 ## Scope
 
-Reloads **method / constructor / property-accessor body** edits (the common case — includes view-tree
-changes in a ctor). Adding or removing types/members is a rude edit and needs a restart; the host
-prints it and keeps going. One assembly (the app head); library edits need the app rebuilt.
+Reloads **method / constructor / property-accessor body** edits (covers view-tree changes in a ctor).
+Adding or removing types/members is a rude edit and needs a restart; the host prints it. One assembly
+(the app head); library edits need the app rebuilt.
+
+## Packaging
+
+`dotnet pack Tools/SkeleKit.HotReload -c Release` → `SkeleKit.iOS.HotReload.nupkg` (targets in
+`build/`, the bridge + Roslyn + `skele-debug.sh` in `tools/hotreload/`).

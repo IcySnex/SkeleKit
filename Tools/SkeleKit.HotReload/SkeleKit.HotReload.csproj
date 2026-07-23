@@ -29,6 +29,7 @@
   <ItemGroup>
     <None Include="build\SkeleKit.iOS.HotReload.targets" Pack="true" PackagePath="build\SkeleKit.iOS.HotReload.targets" />
     <None Include="build\SkeleKit.iOS.HotReload.targets" Pack="true" PackagePath="buildTransitive\SkeleKit.iOS.HotReload.targets" />
+    <None Include="skele-debug.sh" Pack="true" PackagePath="tools\hotreload\skele-debug.sh" />
   </ItemGroup>
 
   <Target Name="PackHost" DependsOnTargets="Publish">

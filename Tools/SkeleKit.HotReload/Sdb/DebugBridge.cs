@@ -17,12 +17,12 @@ sealed class DebugBridge
 	const int IdePort = 9986;
 	const int ReloadPort = 9988;
 
-	static readonly TimeSpan IdeWindow = TimeSpan.FromSeconds(60);
-
 	readonly CscInvocation csc;
 	readonly string deployedDll;
 	readonly string projectDir;
+	readonly bool selfDrive;
 
+	Socket? ideListener;
 	Socket? reloadClient;
 	int domain;
 	int module;
@@ -30,11 +30,13 @@ sealed class DebugBridge
 	public DebugBridge(
 		CscInvocation csc,
 		string deployedDll,
-		string projectDir)
+		string projectDir,
+		bool selfDrive)
 	{
 		this.csc = csc;
 		this.deployedDll = deployedDll;
 		this.projectDir = projectDir;
+		this.selfDrive = selfDrive;
 	}
 
 	public int Run()
@@ -57,18 +59,12 @@ sealed class DebugBridge
 		Console.WriteLine($"baseline ready (MVID {baseline.Mvid})");
 
 		AcceptReloadChannel();
-		Socket? ide = AcceptIde();
+		StartIdeListener();
 
 		Console.WriteLine($"waiting for the app's debugger on 127.0.0.1:{AppPort}...");
-		SdbConnection sdb = SdbConnection.AcceptApp(AppPort);
-		Console.WriteLine($"app connected — attach Rider \"Mono Remote\" to 127.0.0.1:{IdePort} within {IdeWindow.TotalSeconds:0}s for breakpoints (else hot reload only)");
+		SdbConnection sdb = AcceptApp();
 
-		if (WaitForIde(ref ide))
-		{
-			sdb.Relay(ide!);
-			Console.WriteLine("IDE attached — breakpoints + hot reload. Edit a .cs file to reload.");
-		}
-		else
+		if (selfDrive)
 		{
 			sdb.SelfDrive();
 			(_, int major, int minor) = sdb.Version();
@@ -77,6 +73,13 @@ sealed class DebugBridge
 			Thread.Sleep(2000);
 			EnsureModule(sdb);
 			Console.WriteLine("no IDE — hot reload only. Edit a .cs file to reload.");
+		}
+		else
+		{
+			Console.WriteLine($"app ready (suspended) — attach Rider \"Mono Remote\" to 127.0.0.1:{IdePort} whenever (no rush)");
+			Socket ide = WaitForIde();
+			sdb.Relay(ide);
+			Console.WriteLine("IDE attached — breakpoints + hot reload. Edit a .cs file to reload.");
 		}
 
 		Watch(compilation, sdb, baseline);
@@ -190,45 +193,47 @@ sealed class DebugBridge
 		Thread.Sleep(Timeout.Infinite);
 	}
 
-	Socket? pendingIde;
-
-	Socket? AcceptIde()
+	SdbConnection AcceptApp()
 	{
 		Socket listener = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 		listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-		listener.Bind(new IPEndPoint(IPAddress.Loopback, IdePort));
-		listener.Listen(1);
+		listener.Bind(new IPEndPoint(IPAddress.Loopback, AppPort));
+		listener.Listen(4);
+
+		// the app opens the debugger connection first, then one more for stdout/stderr; take exactly
+		// those two and stop listening (leaving it open lets the app storm connections until it runs
+		// out of file descriptors)
+		SdbConnection debug = SdbConnection.Adopt(listener.Accept());
 
 		Thread thread = new(() =>
 		{
-			try { pendingIde = listener.Accept(); }
+			try
+			{
+				SdbConnection.PipeOutput(listener.Accept());
+			}
 			catch { }
+			finally
+			{
+				listener.Dispose();
+			}
 		})
 		{
 			IsBackground = true
 		};
 		thread.Start();
 
-		return null;
+		return debug;
 	}
 
-	bool WaitForIde(
-		ref Socket? ide)
+	void StartIdeListener()
 	{
-		DateTime deadline = DateTime.UtcNow + IdeWindow;
-		while (DateTime.UtcNow < deadline)
-		{
-			if (pendingIde is Socket connected)
-			{
-				ide = connected;
-				return true;
-			}
-
-			Thread.Sleep(200);
-		}
-
-		return false;
+		ideListener = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+		ideListener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+		ideListener.Bind(new IPEndPoint(IPAddress.Loopback, IdePort));
+		ideListener.Listen(1);
 	}
+
+	Socket WaitForIde() => ideListener!.Accept();
 
 	void AcceptReloadChannel()
 	{

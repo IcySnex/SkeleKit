@@ -12,7 +12,7 @@ static class Program
 		string[] args)
 	{
 		if (args is ["bridge", string bridgeArgs, string bridgeDll, string bridgeProjectDir, ..])
-			return new Sdb.DebugBridge(CscInvocation.Load(bridgeArgs, bridgeProjectDir), bridgeDll, bridgeProjectDir).Run();
+			return new Sdb.DebugBridge(CscInvocation.Load(bridgeArgs, bridgeProjectDir), bridgeDll, bridgeProjectDir, args.Contains("--self-drive")).Run();
 
 		if (args.Length < 2)
 		{

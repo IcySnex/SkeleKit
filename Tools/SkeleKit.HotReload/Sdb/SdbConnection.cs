@@ -41,20 +41,12 @@ sealed class SdbConnection
 		this.app = app;
 	}
 
-	// Accepts the app's debug connection, sends the length-prefixed "start debugger: sdb" command, and
-	// completes the handshake so the socket is left speaking raw sdb. Buffers early packets until either
-	// an IDE relays in or self-drive starts.
-	public static SdbConnection AcceptApp(
-		int port)
+	// Takes an already-accepted app connection, sends the length-prefixed "start debugger: sdb"
+	// command, and completes the handshake so the socket is left speaking raw sdb. Buffers early
+	// packets until either an IDE relays in or self-drive starts.
+	public static SdbConnection Adopt(
+		Socket socket)
 	{
-		Socket listener = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-		listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-		listener.Bind(new IPEndPoint(IPAddress.Loopback, port));
-		listener.Listen(1);
-
-		Socket socket = listener.Accept();
-		listener.Dispose();
-
 		byte[] command = "start debugger: sdb"u8.ToArray();
 		socket.Send([(byte)command.Length, .. command]);
 
@@ -69,6 +61,33 @@ sealed class SdbConnection
 		connection.StartReader();
 
 		return connection;
+	}
+
+	// Takes a second app connection and turns it into the console channel: "connect output" redirects
+	// the app's stdout and stderr onto it, and we print what arrives (prefixed) since a debugger
+	// attach can't show it.
+	public static void PipeOutput(
+		Socket socket)
+	{
+		byte[] command = "connect output"u8.ToArray();
+		socket.Send([(byte)command.Length, .. command]);
+
+		Thread thread = new(() =>
+		{
+			try
+			{
+				using StreamReader reader = new(new NetworkStream(socket, ownsSocket: true));
+				string? line;
+				while ((line = reader.ReadLine()) is not null)
+					Console.WriteLine($"[app] {line}");
+			}
+			catch { }
+		})
+		{
+			IsBackground = true,
+			Name = "skele-app-output"
+		};
+		thread.Start();
 	}
 
 	// We drive the app alone: stop buffering, route replies to waiters, drop events.
