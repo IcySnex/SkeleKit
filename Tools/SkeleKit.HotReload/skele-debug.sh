@@ -1,41 +1,65 @@
 #!/usr/bin/env bash
-# Hot reload + breakpoints on the iOS simulator. Builds the app with the debug bridge, launches it on
-# the sim pointed at the bridge, and waits until it's ready — then you attach Rider's "Mono Remote"
-# once and get breakpoints AND live C# hot reload together.
+# Hot reload + breakpoints on the iOS simulator. Builds the app, starts the SkeleKit debug bridge,
+# and launches the app on the booted simulator pointed at the bridge. Then attach Rider's "Mono
+# Remote" (Host 127.0.0.1, Port 9986, Listen off) once and get breakpoints AND live C# hot reload.
 #
-#   Tools/SkeleKit.HotReload/skele-debug.sh <sim-udid> [project-dir]
+#   skele-debug.sh [project-dir]
 #
-# Use it as the "Before Launch" step of a Rider Mono Remote config (Host 127.0.0.1, Port 9986,
-# Listen off) so one Debug press does everything. Find a UDID: xcrun simctl list devices available
+# The booted simulator is auto-detected — just have one running (Rider's iOS run, or Simulator.app).
 set -euo pipefail
 
-UDID="${1:?usage: skele-debug.sh <sim-udid> [project-dir]}"
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-PROJ="${2:-$ROOT/Samples/SkeleKit.Gallery}"
-RID="iossimulator-arm64"
-OUT="$PROJ/bin/Debug/net10.0-ios/$RID"
-LOG="$PROJ/obj/Debug/net10.0-ios/$RID/skelekit-hotreload.log"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$HERE/skele-hotreload.dll" ]; then
+	# installed from the NuGet package: the host sits next to this script
+	HOST="$HERE/skele-hotreload.dll"
+	PROJ="${1:?usage: skele-debug.sh <project-dir>}"
+else
+	# running from the SkeleKit repo
+	ROOT="$(cd "$HERE/../.." && pwd)"
+	HOST="$ROOT/Tools/SkeleKit.HotReload/bin/Release/net10.0/skele-hotreload.dll"
+	PROJ="${1:-$ROOT/Samples/SkeleKit.Gallery}"
+fi
 
-echo "==> building with hot reload + debug bridge"
+RID="iossimulator-arm64"
+OBJ="$PROJ/obj/Debug/net10.0-ios/$RID"
+OUT="$PROJ/bin/Debug/net10.0-ios/$RID"
+LOG="$OBJ/skelekit-hotreload.log"
+PID="$OBJ/skelekit-hotreload.pid"
+
+UDID="$(xcrun simctl list devices booted 2>/dev/null | grep -oE '[0-9A-Fa-f-]{36}' | head -1 || true)"
+[ -n "$UDID" ] || { echo "no booted simulator — boot one first (Rider iOS run, or Simulator.app)"; exit 1; }
+
+echo "==> building $(basename "$PROJ") with hot reload + debug bridge"
 dotnet build "$PROJ" -p:RuntimeIdentifier=$RID -p:EnableHotReload=true -p:EnableHotReloadDebug=true
 
-APP="$(ls -d "$OUT"/*.app | head -1)"
+APP="$(ls -d "$OUT"/*.app 2>/dev/null | head -1)"
+[ -n "$APP" ] || { echo "no .app in $OUT"; exit 1; }
 APPID="$(plutil -extract CFBundleIdentifier raw "$APP/Info.plist")"
+DLL="$APP/$(basename "$APP" .app).dll"
 
-echo "==> launching $APPID on $UDID (debug endpoint -> bridge)"
+echo "==> starting the bridge"
+[ -f "$PID" ] && kill "$(cat "$PID")" 2>/dev/null || true
+sleep 0.3
+nohup dotnet "$HOST" bridge "$OBJ/skelekit-hotreload.args" "$DLL" "$PROJ" >"$LOG" 2>&1 &
+echo $! >"$PID"
+for _ in $(seq 1 40); do grep -q "waiting for the app" "$LOG" 2>/dev/null && break; sleep 0.25; done
+
+echo "==> launching $APPID on $UDID"
 xcrun simctl install "$UDID" "$APP"
 SIMCTL_CHILD___XAMARIN_DEBUG_HOSTS__=127.0.0.1 \
 SIMCTL_CHILD___XAMARIN_DEBUG_PORT__=9987 \
 SIMCTL_CHILD___XAMARIN_DEBUG_MODE__=1 \
 SIMCTL_CHILD___XAMARIN_DEBUG_CONNECT_TIMEOUT__=120 \
-	xcrun simctl launch --terminate-running-process "$UDID" "$APPID"
+	xcrun simctl launch --terminate-running-process "$UDID" "$APPID" >/dev/null
 
 echo "==> waiting for the app to reach the bridge..."
-for _ in $(seq 1 40); do
-	grep -q "attach Rider" "$LOG" 2>/dev/null && break
-	sleep 0.5
-done
+for _ in $(seq 1 60); do grep -q "attach Rider" "$LOG" 2>/dev/null && break; sleep 0.25; done
 
-echo ""
-echo "  Ready. In Rider: Debug the 'Mono Remote' config (Host 127.0.0.1, Port 9986, Listen off)."
-echo "  Then set breakpoints and edit any .cs — both work. App console: $LOG"
+if grep -q "attach Rider" "$LOG" 2>/dev/null; then
+	echo ""
+	echo "  Ready. In Rider: Debug the 'Mono Remote' config (Host 127.0.0.1, Port 9986, Listen off)."
+	echo "  Then set breakpoints and edit any .cs — both work. App console: $LOG"
+else
+	echo "  the app did not reach the bridge — check $LOG"
+	exit 1
+fi

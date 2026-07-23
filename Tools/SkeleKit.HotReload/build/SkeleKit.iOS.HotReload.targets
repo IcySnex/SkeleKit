@@ -29,25 +29,15 @@
 		<SkeleHotReloadHost>$(MSBuildThisFileDirectory)../bin/Release/net10.0/skele-hotreload.dll</SkeleHotReloadHost>
 	</PropertyGroup>
 
-	<Target Name="SkeleStartHotReload" AfterTargets="Build" Condition=" '$(_SkeleHotReload)' == 'true' ">
-		<PropertyGroup>
-			<_SkeleArgs>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)skelekit-hotreload.args</_SkeleArgs>
-			<_SkelePid>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)skelekit-hotreload.pid</_SkelePid>
-			<_SkeleLog>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)skelekit-hotreload.log</_SkeleLog>
-		</PropertyGroup>
-
+	<!-- Records the compiler inputs the bridge needs (references, defines, source generators). The
+	     bridge itself is started by skele-debug.sh, not here, so a build-only leaves nothing running. -->
+	<Target Name="SkeleWriteHotReloadArgs" AfterTargets="Build" Condition=" '$(_SkeleHotReload)' == 'true' ">
 		<!-- only when CoreCompile actually ran; an up-to-date build reuses the previous args file -->
-		<WriteLinesToFile File="$(_SkeleArgs)" Lines="@(CscCommandLineArgs)" Overwrite="true" Condition=" '@(CscCommandLineArgs)' != '' " />
-
-		<!-- start the debug bridge with a fresh baseline for the just-built dll; nohup detaches so it
-		     outlives the build. Self-drive (hot reload, no IDE) unless EnableHotReloadDebug is set. -->
-		<PropertyGroup>
-			<_SkeleMode Condition=" '$(EnableHotReloadDebug)' != 'true' ">$([System.String]::Concat('-', '-self-drive'))</_SkeleMode>
-		</PropertyGroup>
-
-		<Exec Command="if [ -f '$(_SkelePid)' ]; then kill `cat '$(_SkelePid)'` 2&gt;/dev/null || true; sleep 0.3; fi; nohup dotnet '$(SkeleHotReloadHost)' bridge '$(_SkeleArgs)' '$(TargetPath)' '$(MSBuildProjectDirectory)' $(_SkeleMode) &gt;'$(_SkeleLog)' 2&gt;&amp;1 &amp; echo $! &gt;'$(_SkelePid)'" />
-
-		<Message Importance="high" Text="SkeleKit hot reload: bridge running ($(_SkeleLog))" />
+		<WriteLinesToFile
+			File="$(MSBuildProjectDirectory)/$(IntermediateOutputPath)skelekit-hotreload.args"
+			Lines="@(CscCommandLineArgs)"
+			Overwrite="true"
+			Condition=" '@(CscCommandLineArgs)' != '' " />
 	</Target>
 
 </Project>
