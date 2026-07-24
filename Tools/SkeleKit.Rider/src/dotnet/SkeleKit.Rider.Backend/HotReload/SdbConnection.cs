@@ -29,7 +29,9 @@ sealed class SdbConnection
 	readonly List<byte[]> buffered = [];
 
 	Socket? ide;
-	Action? onClosed;
+	Action<SdbConnection>? onSdbIdentified;
+	Action? onSdbClosed;
+	bool isSdb;
 	bool buffering;
 	int nextId;
 
@@ -86,20 +88,25 @@ sealed class SdbConnection
 	// runs the debugger; we relay everything transparently and inject apply-changes on the side. The
 	// app->Rider stream begins with the 13-byte DWP-Handshake, then sdb frames; we forward the handshake
 	// raw, then frame-parse so we can swallow our own injected replies + the ENC events.
+	// Sits between one app connection and Rider. The app opens several connections (sdb + stdout +
+	// stderr); only the sdb one starts with the DWP-Handshake, so each connection self-identifies:
+	// onSdbIdentified fires for the debugger connection (frame-parsed + injected on), the rest relay
+	// raw. onSdbClosed fires when the debugger connection drops (session end).
 	public static SdbConnection Mitm(
 		Socket appSocket,
 		Socket riderSocket,
-		Action onClosed)
+		Action<SdbConnection> onSdbIdentified,
+		Action onSdbClosed)
 	{
 		SdbConnection connection = new(appSocket)
 		{
 			ide = riderSocket,
-			onClosed = onClosed,
+			onSdbIdentified = onSdbIdentified,
+			onSdbClosed = onSdbClosed,
 			buffering = false,
 			nextId = InjectedIdBase
 		};
 
-		// Rider -> app: pure passthrough (Rider drives the debug session)
 		Thread pump = new(connection.PumpIdeToApp)
 		{
 			IsBackground = true,
@@ -107,7 +114,6 @@ sealed class SdbConnection
 		};
 		pump.Start();
 
-		// app -> Rider: forward the handshake raw, then frame-parse
 		Thread reader = new(connection.ReadMitm)
 		{
 			IsBackground = true,
@@ -122,8 +128,26 @@ sealed class SdbConnection
 	{
 		try
 		{
-			byte[] handshake = ReadExactly(app, Handshake.Length);
-			ide!.Send(handshake);
+			byte[] first = ReadExactly(app, Handshake.Length);
+			ide!.Send(first);
+
+			if (!first.AsSpan().SequenceEqual(Handshake))
+			{
+				byte[] buffer = new byte[8192];
+				while (true)
+				{
+					int read = app.Receive(buffer);
+					if (read == 0)
+						break;
+
+					ide!.Send(buffer.AsSpan(0, read).ToArray());
+				}
+
+				return;
+			}
+
+			isSdb = true;
+			onSdbIdentified?.Invoke(this);
 
 			while (true)
 			{
@@ -140,8 +164,7 @@ sealed class SdbConnection
 					continue;
 				}
 
-				// forward everything (incl. the ENC/METHOD_UPDATE events our apply triggers) so Rider
-				// learns of the new method versions and re-syncs its symbols for edited methods
+				// forward everything (incl. the ENC/METHOD_UPDATE events our apply triggers)
 				ide!.Send([.. header, .. payload]);
 			}
 		}
@@ -149,6 +172,17 @@ sealed class SdbConnection
 		{
 			foreach (TaskCompletionSource<(int, byte[])> waiter in pending.Values)
 				waiter.TrySetException(new IOException("sdb connection closed"));
+		}
+		finally
+		{
+			if (isSdb)
+			{
+				// hand Rider a clean VM_DEATH so it ends the session instead of hanging on the drop
+				try { ide?.Send(VmDeath()); } catch { }
+				try { onSdbClosed?.Invoke(); } catch { }
+			}
+
+			CloseBoth();
 		}
 	}
 
@@ -211,7 +245,6 @@ sealed class SdbConnection
 
 		try { app.Dispose(); } catch { }
 		try { ide?.Dispose(); } catch { }
-		try { onClosed?.Invoke(); } catch { }
 	}
 
 	void StartReader()

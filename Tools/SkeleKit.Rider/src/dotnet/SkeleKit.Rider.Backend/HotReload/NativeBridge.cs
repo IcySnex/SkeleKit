@@ -98,18 +98,18 @@ sealed class NativeBridge
 			return;
 		}
 
-		// the app opens the sdb debugger connection first; MITM it for injection, dumb-relay the rest.
-		// build the engine baseline now (Rider has just deployed the current dll)
-		if (Interlocked.Increment(ref connections) == 1)
-		{
-			sessionDef = lifetime.CreateNested();
-			sdb = SdbConnection.Mitm(appSocket, riderSocket, EndSession);
-			StartEngine(sessionDef.Lifetime);
-		}
-		else
-		{
-			DumbRelay(appSocket, riderSocket);
-		}
+		// MITM every connection; the debugger (sdb) one self-identifies via its handshake
+		SdbConnection.Mitm(appSocket, riderSocket, OnSdbIdentified, EndSession);
+	}
+
+	void OnSdbIdentified(
+		SdbConnection connection)
+	{
+		// the debug connection is live and Rider has just deployed the current dll: capture it for
+		// injection and build the engine baseline against that dll
+		sdb = connection;
+		sessionDef = lifetime.CreateNested();
+		StartEngine(sessionDef.Lifetime);
 	}
 
 	void StartEngine(
@@ -186,6 +186,21 @@ sealed class NativeBridge
 
 		void OnChanged(
 			object _,
+			FileSystemEventArgs change)
+		{
+			try
+			{
+				Apply(change);
+			}
+			catch (Exception exception)
+			{
+				// a bad delta or a stuck sdb command must never crash the backend
+				log($"hot reload error: {exception.Message}");
+				module = 0;
+			}
+		}
+
+		void Apply(
 			FileSystemEventArgs change)
 		{
 			string path = Path.GetFullPath(change.FullPath);
