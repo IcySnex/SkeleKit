@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using JetBrains.Lifetimes;
 using Microsoft.CodeAnalysis;
@@ -251,6 +252,16 @@ sealed class NativeBridge
 					return;
 				}
 
+				// Mono's interpreter EnC can't resolve a newly-added type/assembly reference in a delta
+				// (e.g. first use of Debug.WriteLine), which crashes the app when the method runs; skip it
+				if (AddsNewReferences(metadata.ToArray()))
+				{
+					log($"  {Path.GetFileName(path)}: adds a new type reference, restart to apply (not hot-reloaded)");
+					snapshot = newCompilation;
+					trees[path] = newTree;
+					return;
+				}
+
 				if (sdb is not SdbConnection connection)
 				{
 					log("  no debug session yet");
@@ -382,6 +393,25 @@ sealed class NativeBridge
 			Name = "skele-accept"
 		};
 		thread.Start();
+	}
+
+	// True if the metadata delta introduces a new TypeRef/AssemblyRef — i.e. the edit references a type
+	// the baseline didn't, which Mono's EnC can't resolve at runtime.
+	static bool AddsNewReferences(
+		byte[] metadataDelta)
+	{
+		try
+		{
+			using MetadataReaderProvider provider = MetadataReaderProvider.FromMetadataStream(new MemoryStream(metadataDelta));
+			MetadataReader reader = provider.GetMetadataReader();
+
+			return reader.GetTableRowCount(TableIndex.TypeRef) > 0
+				|| reader.GetTableRowCount(TableIndex.AssemblyRef) > 0;
+		}
+		catch
+		{
+			return false;
+		}
 	}
 
 	static Socket Bind(

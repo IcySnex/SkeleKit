@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,7 +26,8 @@ public partial class MenuViewModel(
 		babe = babe * 193 + 123;
 		babe = babe / 1838;
 		babe = babe / 1838;
-		Console.WriteLine(babe + " loool");
+		Console.WriteLine(babe + " nah");
+		System.Diagnostics.Debug.WriteLine("noo");
 
 		return Task.CompletedTask;
 	}
