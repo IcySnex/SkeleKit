@@ -14,13 +14,4 @@
     <postStartupActivity implementation="com.skelekit.rider.ios.IosPortInstrumenter"/>
   </extensions>
 
-  <actions>
-    <action id="SkeleKit.Debug"
-            class="com.skelekit.rider.actions.SkeleKitDebugAction"
-            text="SkeleKit: Start Hot Reload Bridge"
-            description="Starts the SkeleKit hot-reload debug bridge (temporary pipe test).">
-      <add-to-group group-id="ToolsMenu" anchor="last"/>
-    </action>
-  </actions>
-
 </idea-plugin>

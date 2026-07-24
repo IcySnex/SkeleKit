@@ -31,8 +31,6 @@ class IosPortInstrumenter : ProjectActivity {
                 }
                 .installOn(instrumentation)
 
-            TcpForwarder.ensureStarted(PreparePortsAdvice.BRIDGE_APP_PORT, PreparePortsAdvice.RIDER_PORT)
-
             LOG.info("[SkeleKit] iOS port instrumenter installed")
         } catch (throwable: Throwable) {
             LOG.warn("[SkeleKit] iOS port instrumentation failed", throwable)

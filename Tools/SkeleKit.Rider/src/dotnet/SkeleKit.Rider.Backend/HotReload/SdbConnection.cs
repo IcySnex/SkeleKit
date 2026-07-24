@@ -81,6 +81,73 @@ sealed class SdbConnection
 		thread.Start();
 	}
 
+	// MITM: sit between the app (accepted on our port) and Rider (we connected to its listener). Rider
+	// runs the debugger; we relay everything transparently and inject apply-changes on the side. The
+	// app->Rider stream begins with the 13-byte DWP-Handshake, then sdb frames; we forward the handshake
+	// raw, then frame-parse so we can swallow our own injected replies + the ENC events.
+	public static SdbConnection Mitm(
+		Socket appSocket,
+		Socket riderSocket)
+	{
+		SdbConnection connection = new(appSocket)
+		{
+			ide = riderSocket,
+			buffering = false,
+			nextId = InjectedIdBase
+		};
+
+		// Rider -> app: pure passthrough (Rider drives the debug session)
+		Thread pump = new(connection.PumpIdeToApp)
+		{
+			IsBackground = true,
+			Name = "skele-sdb-rider"
+		};
+		pump.Start();
+
+		// app -> Rider: forward the handshake raw, then frame-parse
+		Thread reader = new(connection.ReadMitm)
+		{
+			IsBackground = true,
+			Name = "skele-sdb-mitm"
+		};
+		reader.Start();
+
+		return connection;
+	}
+
+	void ReadMitm()
+	{
+		try
+		{
+			byte[] handshake = ReadExactly(app, Handshake.Length);
+			ide!.Send(handshake);
+
+			while (true)
+			{
+				byte[] header = ReadExactly(app, 11);
+				int length = BinaryPrimitives.ReadInt32BigEndian(header);
+				int id = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(4));
+				byte flags = header[8];
+
+				byte[] payload = length > 11 ? ReadExactly(app, length - 11) : [];
+
+				if ((flags & 0x80) != 0 && pending.TryRemove(id, out TaskCompletionSource<(int, byte[])>? waiter))
+				{
+					waiter.TrySetResult((BinaryPrimitives.ReadInt16BigEndian(header.AsSpan(9)), payload));
+					continue;
+				}
+
+				if (!IsEncEvent(header, payload))
+					ide!.Send([.. header, .. payload]);
+			}
+		}
+		catch
+		{
+			foreach (TaskCompletionSource<(int, byte[])> waiter in pending.Values)
+				waiter.TrySetException(new IOException("sdb connection closed"));
+		}
+	}
+
 	public void SelfDrive() => buffering = false;
 
 	public void Relay(
