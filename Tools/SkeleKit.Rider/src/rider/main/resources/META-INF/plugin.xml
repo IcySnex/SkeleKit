@@ -1,0 +1,26 @@
+<idea-plugin require-restart="true">
+  <id>com.skelekit.rider</id>
+  <name>SkeleKit</name>
+  <vendor url="https://github.com/IcySnex/SkeleKit">SkeleKit</vendor>
+  <depends>com.intellij.modules.rider</depends>
+
+  <description>
+<![CDATA[
+<p>Hot reload and breakpoints together for SkeleKit.iOS apps: pick a device, press Run for a plain launch or Debug for live C# hot reload with breakpoints.</p>
+]]>
+  </description>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <postStartupActivity implementation="com.skelekit.rider.ios.IosPortInstrumenter"/>
+  </extensions>
+
+  <actions>
+    <action id="SkeleKit.Debug"
+            class="com.skelekit.rider.actions.SkeleKitDebugAction"
+            text="SkeleKit: Start Hot Reload Bridge"
+            description="Starts the SkeleKit hot-reload debug bridge (temporary pipe test).">
+      <add-to-group group-id="ToolsMenu" anchor="last"/>
+    </action>
+  </actions>
+
+</idea-plugin>

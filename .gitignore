@@ -10,3 +10,12 @@ TestResults/
 
 # SkeleKit.HotReload generated compiler-args snapshot
 cscargs.json
+
+# SkeleKit.Rider plugin — Gradle + sandbox
+Tools/SkeleKit.Rider/.gradle/
+Tools/SkeleKit.Rider/.intellijPlatform/
+Tools/SkeleKit.Rider/**/build/
+Tools/SkeleKit.Rider/output/
+# rdgen-generated model sources (regenerated each build)
+Tools/SkeleKit.Rider/src/rider/main/kotlin/com/jetbrains/rider/model/
+Tools/SkeleKit.Rider/src/dotnet/SkeleKit.Rider.Backend/Model/

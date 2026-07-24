@@ -1,0 +1,10 @@
+[versions]
+kotlin = "2.3.0" # must read rider-model.jar's Kotlin metadata (2.3.0 for Rider 2026.1.4)
+rdGen = "2026.1.1" # https://github.com/JetBrains/rd/releases — keep aligned with ProductVersion
+
+[libraries]
+kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+rdGen = { group = "com.jetbrains.rd", name = "rd-gen", version.ref = "rdGen" }
+
+[plugins]
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
