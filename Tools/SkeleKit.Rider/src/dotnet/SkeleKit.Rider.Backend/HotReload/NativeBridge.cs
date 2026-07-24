@@ -28,6 +28,7 @@ sealed class NativeBridge
 	readonly Action<string> log;
 
 	SdbConnection? sdb;
+	SdbConnection? output;
 	Socket? reloadClient;
 	Lifetime lifetime;
 	LifetimeDefinition? sessionDef;
@@ -85,6 +86,7 @@ sealed class NativeBridge
 		engineStarted = 0;
 		module = 0;
 		sdb = null;
+		output = null;
 		log("debug session ended");
 	}
 
@@ -99,9 +101,16 @@ sealed class NativeBridge
 			return;
 		}
 
-		// MITM every connection; the debugger (sdb) one self-identifies via its handshake
-		SdbConnection.Mitm(appSocket, riderSocket, OnSdbIdentified, EndSession);
+		// MITM every connection; the debugger (sdb) one self-identifies via its handshake, the first
+		// output one becomes our console-notice channel
+		SdbConnection.Mitm(appSocket, riderSocket, OnSdbIdentified, EndSession, connection => output ??= connection);
 	}
+
+	// write a line to Rider's debug console (via a raw stdout/stderr connection, so it can't corrupt
+	// the sdb debug stream)
+	void Notice(
+		string message) =>
+		output?.SendToIde(Encoding.UTF8.GetBytes($"[SkeleKit] {message}\n"));
 
 	void OnSdbIdentified(
 		SdbConnection connection)
@@ -230,6 +239,7 @@ sealed class NativeBridge
 					foreach (string note in rude)
 						log($"  ! {note}");
 					log($"  {Path.GetFileName(path)}: structural change, restart to apply (not hot-reloaded)");
+					Notice($"Skipped {Path.GetFileName(path)}: structural change (added/removed member) \u2014 restart to apply.");
 					return;
 				}
 
@@ -249,6 +259,7 @@ sealed class NativeBridge
 				if (!result.Success)
 				{
 					log($"  emit failed for {Path.GetFileName(path)}");
+					Notice($"Hot reload failed for {Path.GetFileName(path)}: could not build the delta.");
 					return;
 				}
 
@@ -257,6 +268,7 @@ sealed class NativeBridge
 				if (AddsNewReferences(metadata.ToArray()))
 				{
 					log($"  {Path.GetFileName(path)}: adds a new type reference, restart to apply (not hot-reloaded)");
+					Notice($"Skipped {Path.GetFileName(path)}: adds a new type reference (Mono can't resolve it live) \u2014 restart to apply.");
 					snapshot = newCompilation;
 					trees[path] = newTree;
 					return;
@@ -283,11 +295,13 @@ sealed class NativeBridge
 				if (error != 0)
 				{
 					log($"  APPLY_CHANGES error {error} for {Path.GetFileName(path)}");
+					Notice($"Hot reload failed for {Path.GetFileName(path)}: apply error {error}.");
 					return;
 				}
 
 				SignalReload();
 				log($"  {Path.GetFileName(path)}: {edits.Count} edit(s), reloaded");
+				Notice($"Hot reloaded {Path.GetFileName(path)}.");
 
 				baseline.Emit = result.Baseline;
 				snapshot = newCompilation;

@@ -28,9 +28,12 @@ sealed class SdbConnection
 	readonly ConcurrentDictionary<int, TaskCompletionSource<(int Error, byte[] Data)>> pending = [];
 	readonly List<byte[]> buffered = [];
 
+	readonly object ideLock = new();
+
 	Socket? ide;
 	Action<SdbConnection>? onSdbIdentified;
 	Action? onSdbClosed;
+	Action<SdbConnection>? onOutput;
 	bool isSdb;
 	bool buffering;
 	int nextId;
@@ -96,13 +99,15 @@ sealed class SdbConnection
 		Socket appSocket,
 		Socket riderSocket,
 		Action<SdbConnection> onSdbIdentified,
-		Action onSdbClosed)
+		Action onSdbClosed,
+		Action<SdbConnection> onOutput)
 	{
 		SdbConnection connection = new(appSocket)
 		{
 			ide = riderSocket,
 			onSdbIdentified = onSdbIdentified,
 			onSdbClosed = onSdbClosed,
+			onOutput = onOutput,
 			buffering = false,
 			nextId = InjectedIdBase
 		};
@@ -133,6 +138,9 @@ sealed class SdbConnection
 
 			if (!first.AsSpan().SequenceEqual(Handshake))
 			{
+				// stdout / stderr: relay app -> Rider (and let the host write console notices here)
+				onOutput?.Invoke(this);
+
 				byte[] buffer = new byte[8192];
 				while (true)
 				{
@@ -140,7 +148,7 @@ sealed class SdbConnection
 					if (read == 0)
 						break;
 
-					ide!.Send(buffer.AsSpan(0, read).ToArray());
+					SendToIde(buffer.AsSpan(0, read).ToArray());
 				}
 
 				return;
@@ -233,6 +241,17 @@ sealed class SdbConnection
 		finally
 		{
 			CloseBoth();
+		}
+	}
+
+	// Write raw bytes to Rider on this (output) connection, serialized against the relay pump so host
+	// console notices don't interleave mid-write with the app's own output.
+	public void SendToIde(
+		byte[] data)
+	{
+		lock (ideLock)
+		{
+			try { ide?.Send(data); } catch { }
 		}
 	}
 

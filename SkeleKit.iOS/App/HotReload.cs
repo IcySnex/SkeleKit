@@ -108,11 +108,7 @@ internal static class HotReload
 		ForceReload();
 
 	internal static void ForceReload() =>
-		UIApplication.SharedApplication.InvokeOnMainThread(() =>
-		{
-			PageHost.ReloadLive();
-			Debug.WriteLine("[SkeleKit] Hot reloaded.");
-		});
+		UIApplication.SharedApplication.InvokeOnMainThread(PageHost.ReloadLive);
 
 	internal static void Start()
 	{
