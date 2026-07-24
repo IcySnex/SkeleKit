@@ -90,15 +90,10 @@ sealed class NativeBridge
 	void OnApp(
 		Socket appSocket)
 	{
-		Socket riderSocket;
-		try
+		Socket? riderSocket = ConnectRider();
+		if (riderSocket is null)
 		{
-			riderSocket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-			riderSocket.Connect(new IPEndPoint(IPAddress.Loopback, RiderPort));
-		}
-		catch (Exception exception)
-		{
-			log($"could not reach Rider on {RiderPort}: {exception.Message}");
+			log($"could not reach Rider on {RiderPort} (worker not listening)");
 			Close(appSocket);
 			return;
 		}
@@ -289,6 +284,28 @@ sealed class NativeBridge
 			reloadClient?.Send(new byte[28]);
 		}
 		catch { }
+	}
+
+	// Rider's debugger worker may start listening a moment after the app connects (esp. on a second
+	// session), so retry rather than dropping the app's debug connection.
+	static Socket? ConnectRider()
+	{
+		for (int attempt = 0; attempt < 100; attempt++)
+		{
+			try
+			{
+				Socket socket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+				socket.Connect(new IPEndPoint(IPAddress.Loopback, RiderPort));
+
+				return socket;
+			}
+			catch
+			{
+				Thread.Sleep(50);
+			}
+		}
+
+		return null;
 	}
 
 	static void DumbRelay(

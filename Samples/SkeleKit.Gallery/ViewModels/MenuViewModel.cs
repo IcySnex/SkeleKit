@@ -26,7 +26,8 @@ public partial class MenuViewModel(
 
 		babe = babe * 193 + 123;
 		babe = babe / 1838;
-		Console.WriteLine(babe);
+		babe = babe / 1838;
+		Console.WriteLine(babe + " loool");
 
 		return Task.CompletedTask;
 	}

@@ -111,7 +111,7 @@ internal static class HotReload
 		UIApplication.SharedApplication.InvokeOnMainThread(() =>
 		{
 			PageHost.ReloadLive();
-			Debug.WriteLine("[SkeleKit] Hot reloaded: live UI rebuilt.");
+			Debug.WriteLine("[SkeleKit] Hot reloaded.");
 		});
 
 	internal static void Start()
