@@ -12,6 +12,7 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <postStartupActivity implementation="com.skelekit.rider.ios.IosPortInstrumenter"/>
+    <postStartupActivity implementation="com.skelekit.rider.ios.BridgePortPublisher"/>
   </extensions>
 
 </idea-plugin>

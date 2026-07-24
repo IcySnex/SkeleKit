@@ -5,17 +5,16 @@ using System.Text;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
-// A Mono soft-debugger client speaking the wire protocol to the app's debugger agent. It handles the
-// Microsoft.iOS "start debugger: sdb" preamble, the DWP-Handshake, then command/reply framing.
+// One socket the app opened, wired through to Rider.
 //
-// Two modes:
-//   • self-drive — we are the only debugger; replies route to our waiters, events are ignored.
-//   • relay      — an IDE is also on the wire. Our injected commands use a high id range; their
-//                  replies are consumed here, everything else (the IDE's replies, events) is forwarded
-//                  to the IDE. The IDE's own commands are pumped straight through to the app.
+// The app makes several connections (the soft-debugger one plus stdout and stderr) and they are not
+// distinguishable by order, so each one identifies itself: only the debugger connection opens with the
+// DWP handshake. That one gets frame-parsed, which lets us inject apply-changes commands of our own
+// while everything the app and Rider say to each other passes through untouched, so breakpoints and
+// stepping are unaffected. Injected commands take ids from a reserved high range and their replies are
+// consumed here, so Rider never sees traffic it did not ask for.
 sealed class SdbConnection
 {
-	const byte CmdSetVm = 1;
 	const byte CmdSetAppDomain = 20;
 	const byte CmdSetAssembly = 21;
 	const byte CmdSetModule = 24;
@@ -23,78 +22,35 @@ sealed class SdbConnection
 	const int InjectedIdBase = 0x40000000;
 
 	static readonly byte[] Handshake = "DWP-Handshake"u8.ToArray();
+	static readonly TimeSpan CommandTimeout = TimeSpan.FromSeconds(10);
 
 	readonly Socket app;
+	readonly Socket ide;
 	readonly ConcurrentDictionary<int, TaskCompletionSource<(int Error, byte[] Data)>> pending = [];
-	readonly List<byte[]> buffered = [];
-
 	readonly object ideLock = new();
 
-	Socket? ide;
-	Action<SdbConnection>? onSdbIdentified;
-	Action? onSdbClosed;
-	Action<SdbConnection>? onOutput;
+	readonly Action<SdbConnection> onSdbIdentified;
+	readonly Action onSdbClosed;
+	readonly Action<SdbConnection> onOutput;
+
 	bool isSdb;
-	bool buffering;
-	int nextId;
+	int nextId = InjectedIdBase;
+	int closed;
 
 	SdbConnection(
-		Socket app)
+		Socket app,
+		Socket ide,
+		Action<SdbConnection> onSdbIdentified,
+		Action onSdbClosed,
+		Action<SdbConnection> onOutput)
 	{
 		this.app = app;
+		this.ide = ide;
+		this.onSdbIdentified = onSdbIdentified;
+		this.onSdbClosed = onSdbClosed;
+		this.onOutput = onOutput;
 	}
 
-	public static SdbConnection Adopt(
-		Socket socket)
-	{
-		byte[] command = "start debugger: sdb"u8.ToArray();
-		socket.Send([(byte)command.Length, .. command]);
-
-		ReadExactly(socket, Handshake.Length);
-		socket.Send(Handshake);
-
-		SdbConnection connection = new(socket)
-		{
-			buffering = true,
-			nextId = 1
-		};
-		connection.StartReader();
-
-		return connection;
-	}
-
-	public static void PipeOutput(
-		Socket socket)
-	{
-		byte[] command = "connect output"u8.ToArray();
-		socket.Send([(byte)command.Length, .. command]);
-
-		Thread thread = new(() =>
-		{
-			try
-			{
-				using StreamReader reader = new(new NetworkStream(socket, ownsSocket: true));
-				string? line;
-				while ((line = reader.ReadLine()) is not null)
-					Console.WriteLine($"[app] {line}");
-			}
-			catch { }
-		})
-		{
-			IsBackground = true,
-			Name = "skele-app-output"
-		};
-		thread.Start();
-	}
-
-	// MITM: sit between the app (accepted on our port) and Rider (we connected to its listener). Rider
-	// runs the debugger; we relay everything transparently and inject apply-changes on the side. The
-	// app->Rider stream begins with the 13-byte DWP-Handshake, then sdb frames; we forward the handshake
-	// raw, then frame-parse so we can swallow our own injected replies + the ENC events.
-	// Sits between one app connection and Rider. The app opens several connections (sdb + stdout +
-	// stderr); only the sdb one starts with the DWP-Handshake, so each connection self-identifies:
-	// onSdbIdentified fires for the debugger connection (frame-parsed + injected on), the rest relay
-	// raw. onSdbClosed fires when the debugger connection drops (session end).
 	public static SdbConnection Mitm(
 		Socket appSocket,
 		Socket riderSocket,
@@ -102,124 +58,95 @@ sealed class SdbConnection
 		Action onSdbClosed,
 		Action<SdbConnection> onOutput)
 	{
-		SdbConnection connection = new(appSocket)
-		{
-			ide = riderSocket,
-			onSdbIdentified = onSdbIdentified,
-			onSdbClosed = onSdbClosed,
-			onOutput = onOutput,
-			buffering = false,
-			nextId = InjectedIdBase
-		};
+		SdbConnection connection = new(appSocket, riderSocket, onSdbIdentified, onSdbClosed, onOutput);
 
-		Thread pump = new(connection.PumpIdeToApp)
-		{
-			IsBackground = true,
-			Name = "skele-sdb-rider"
-		};
-		pump.Start();
-
-		Thread reader = new(connection.ReadMitm)
-		{
-			IsBackground = true,
-			Name = "skele-sdb-mitm"
-		};
-		reader.Start();
+		Start(connection.PumpIdeToApp, "skele-sdb-rider");
+		Start(connection.ReadApp, "skele-sdb-mitm");
 
 		return connection;
 	}
 
-	void ReadMitm()
+	// Write raw bytes to Rider on this (output) connection, serialized against the relay pump so host
+	// console notices cannot interleave mid-write with the app's own output.
+	public void SendToIde(
+		byte[] data)
+	{
+		lock (ideLock)
+		{
+			try { ide.Send(data); } catch { }
+		}
+	}
+
+	void ReadApp()
 	{
 		try
 		{
 			byte[] first = ReadExactly(app, Handshake.Length);
-			ide!.Send(first);
+			SendToIde(first);
 
 			if (!first.AsSpan().SequenceEqual(Handshake))
 			{
-				// stdout / stderr: relay app -> Rider (and let the host write console notices here)
-				onOutput?.Invoke(this);
-
-				byte[] buffer = new byte[8192];
-				while (true)
-				{
-					int read = app.Receive(buffer);
-					if (read == 0)
-						break;
-
-					SendToIde(buffer.AsSpan(0, read).ToArray());
-				}
-
+				RelayOutput();
 				return;
 			}
 
 			isSdb = true;
-			onSdbIdentified?.Invoke(this);
+			onSdbIdentified(this);
 
-			while (true)
-			{
-				byte[] header = ReadExactly(app, 11);
-				int length = BinaryPrimitives.ReadInt32BigEndian(header);
-				int id = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(4));
-				byte flags = header[8];
-
-				byte[] payload = length > 11 ? ReadExactly(app, length - 11) : [];
-
-				if ((flags & 0x80) != 0 && pending.TryRemove(id, out TaskCompletionSource<(int, byte[])>? waiter))
-				{
-					waiter.TrySetResult((BinaryPrimitives.ReadInt16BigEndian(header.AsSpan(9)), payload));
-					continue;
-				}
-
-				// forward everything (incl. the ENC/METHOD_UPDATE events our apply triggers)
-				ide!.Send([.. header, .. payload]);
-			}
+			ReadFrames();
 		}
 		catch
 		{
-			foreach (TaskCompletionSource<(int, byte[])> waiter in pending.Values)
-				waiter.TrySetException(new IOException("sdb connection closed"));
+			FailPending();
 		}
 		finally
 		{
 			if (isSdb)
 			{
 				// hand Rider a clean VM_DEATH so it ends the session instead of hanging on the drop
-				try { ide?.Send(VmDeath()); } catch { }
-				try { onSdbClosed?.Invoke(); } catch { }
+				SendToIde(VmDeath());
+				try { onSdbClosed(); } catch { }
 			}
 
 			CloseBoth();
 		}
 	}
 
-	public void SelfDrive() => buffering = false;
-
-	public void Relay(
-		Socket ideSocket)
+	void RelayOutput()
 	{
-		ide = ideSocket;
-		nextId = InjectedIdBase;
+		onOutput(this);
 
-		ideSocket.Send(Handshake);
-		ReadExactly(ideSocket, Handshake.Length);
-
-		lock (buffered)
+		byte[] buffer = new byte[8192];
+		while (true)
 		{
-			buffering = false;
-			foreach (byte[] packet in buffered)
-				ideSocket.Send(packet);
+			int read = app.Receive(buffer);
+			if (read == 0)
+				break;
 
-			buffered.Clear();
+			SendToIde(buffer.AsSpan(0, read).ToArray());
 		}
+	}
 
-		Thread pump = new(PumpIdeToApp)
+	void ReadFrames()
+	{
+		while (true)
 		{
-			IsBackground = true,
-			Name = "skele-sdb-ide"
-		};
-		pump.Start();
+			byte[] header = ReadExactly(app, 11);
+			int length = BinaryPrimitives.ReadInt32BigEndian(header);
+			int id = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(4));
+			byte flags = header[8];
+
+			byte[] payload = length > 11 ? ReadExactly(app, length - 11) : [];
+
+			if ((flags & 0x80) != 0 && pending.TryRemove(id, out TaskCompletionSource<(int, byte[])>? waiter))
+			{
+				waiter.TrySetResult((BinaryPrimitives.ReadInt16BigEndian(header.AsSpan(9)), payload));
+				continue;
+			}
+
+			// forward everything, including the ENC/METHOD_UPDATE events our apply triggers
+			SendToIde([.. header, .. payload]);
+		}
 	}
 
 	void PumpIdeToApp()
@@ -229,7 +156,7 @@ sealed class SdbConnection
 			byte[] chunk = new byte[8192];
 			while (true)
 			{
-				int read = ide!.Receive(chunk);
+				int read = ide.Receive(chunk);
 				if (read == 0)
 					break;
 
@@ -244,119 +171,22 @@ sealed class SdbConnection
 		}
 	}
 
-	// Write raw bytes to Rider on this (output) connection, serialized against the relay pump so host
-	// console notices don't interleave mid-write with the app's own output.
-	public void SendToIde(
-		byte[] data)
+	void FailPending()
 	{
-		lock (ideLock)
-		{
-			try { ide?.Send(data); } catch { }
-		}
+		foreach (int id in pending.Keys)
+			if (pending.TryRemove(id, out TaskCompletionSource<(int, byte[])>? waiter))
+				waiter.TrySetException(new IOException("the debug connection closed"));
 	}
-
-	int closed;
 
 	void CloseBoth()
 	{
 		if (Interlocked.Exchange(ref closed, 1) == 1)
 			return;
 
+		FailPending();
+
 		try { app.Dispose(); } catch { }
-		try { ide?.Dispose(); } catch { }
-	}
-
-	void StartReader()
-	{
-		Thread thread = new(Read)
-		{
-			IsBackground = true,
-			Name = "skele-sdb-reader"
-		};
-		thread.Start();
-	}
-
-	void Read()
-	{
-		try
-		{
-			while (true)
-			{
-				byte[] header = ReadExactly(app, 11);
-				int length = BinaryPrimitives.ReadInt32BigEndian(header);
-				int id = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(4));
-				byte flags = header[8];
-
-				byte[] payload = length > 11 ? ReadExactly(app, length - 11) : [];
-
-				// our injected reply — consume it, never let the IDE see it
-				if ((flags & 0x80) != 0 && pending.TryRemove(id, out TaskCompletionSource<(int, byte[])>? waiter))
-				{
-					waiter.TrySetResult((BinaryPrimitives.ReadInt16BigEndian(header.AsSpan(9)), payload));
-					continue;
-				}
-
-				if (buffering)
-				{
-					lock (buffered)
-						if (buffering)
-						{
-							buffered.Add([.. header, .. payload]);
-							continue;
-						}
-				}
-
-				// relay: forward the app's own replies/events to the IDE (dropping the EnC events our
-				// apply triggers, which the IDE doesn't expect)
-				if (ide is Socket target && !IsEncEvent(header, payload))
-					target.Send([.. header, .. payload]);
-			}
-		}
-		catch
-		{
-			foreach (TaskCompletionSource<(int, byte[])> waiter in pending.Values)
-				waiter.TrySetException(new IOException("sdb connection closed"));
-		}
-		finally
-		{
-			// the app died/detached; hand Rider a clean VM_DEATH so it ends the session instead of
-			// hanging on the dropped socket
-			try { ide?.Send(VmDeath()); } catch { }
-			CloseBoth();
-		}
-	}
-
-	// a COMPOSITE event (set 64, cmd 100) carrying one VMDeath (kind 0x01, exit_code 0)
-	static byte[] VmDeath()
-	{
-		byte[] packet = new byte[25];
-		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(0), packet.Length);
-		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(4), 0);
-		packet[8] = 0;
-		packet[9] = 64;
-		packet[10] = 100;
-		packet[11] = 0;
-		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(12), 1);
-		packet[16] = 0x01;
-		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(17), 0);
-		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(21), 0);
-
-		return packet;
-	}
-
-	static bool IsEncEvent(
-		byte[] header,
-		byte[] payload)
-	{
-		// a COMPOSITE event (cmd set 64 EVENT, cmd 100) whose first event is ENC_UPDATE(18) or
-		// METHOD_UPDATE(19), sent with no suspend — safe to swallow
-		if ((header[8] & 0x80) != 0 || header[9] != 64 || header[10] != 100 || payload.Length < 6)
-			return false;
-
-		byte suspend = payload[0];
-		byte kind = payload[5];
-
-		return suspend == 0 && kind is 18 or 19;
+		try { ide.Dispose(); } catch { }
 	}
 
 	(int Error, byte[] Data) Command(
@@ -368,41 +198,30 @@ sealed class SdbConnection
 		TaskCompletionSource<(int, byte[])> waiter = new(TaskCreationOptions.RunContinuationsAsynchronously);
 		pending[id] = waiter;
 
-		byte[] packet = new byte[11 + payload.Length];
-		BinaryPrimitives.WriteInt32BigEndian(packet, packet.Length);
-		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(4), id);
-		packet[8] = 0;
-		packet[9] = commandSet;
-		packet[10] = command;
-		payload.CopyTo(packet.AsSpan(11));
+		try
+		{
+			byte[] packet = new byte[11 + payload.Length];
+			BinaryPrimitives.WriteInt32BigEndian(packet, packet.Length);
+			BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(4), id);
+			packet[8] = 0;
+			packet[9] = commandSet;
+			packet[10] = command;
+			payload.CopyTo(packet.AsSpan(11));
 
-		lock (app)
-			app.Send(packet);
+			lock (app)
+				app.Send(packet);
 
-		if (!waiter.Task.Wait(TimeSpan.FromSeconds(10)))
-			throw new TimeoutException($"sdb command {commandSet}/{command} timed out");
+			if (!waiter.Task.Wait(CommandTimeout))
+				throw new TimeoutException(
+					$"the app did not answer sdb command {commandSet}/{command} within {CommandTimeout.TotalSeconds:0}s; it is probably stopped at a breakpoint");
 
-		return waiter.Task.Result;
+			return waiter.Task.Result;
+		}
+		finally
+		{
+			pending.TryRemove(id, out _);
+		}
 	}
-
-
-	public (string Name, int Major, int Minor) Version()
-	{
-		(_, byte[] data) = Command(CmdSetVm, 1, []);
-		int offset = 0;
-		string name = ReadString(data, ref offset);
-		int major = ReadInt(data, ref offset);
-		int minor = ReadInt(data, ref offset);
-
-		return (name, major, minor);
-	}
-
-	public void SetProtocolVersion(
-		int major,
-		int minor) =>
-		Command(CmdSetVm, 8, [.. Int(major), .. Int(minor)]);
-
-	public void Resume() => Command(CmdSetVm, 4, []);
 
 	public int RootDomain()
 	{
@@ -426,7 +245,7 @@ sealed class SdbConnection
 
 			(_, byte[] name) = Command(CmdSetAssembly, 6, Int(assembly));
 			int nameOffset = 0;
-			if (ReadString(name, ref nameOffset).Contains($"{assemblyName},", StringComparison.Ordinal))
+			if (ReadString(name, ref nameOffset).StartsWith($"{assemblyName},", StringComparison.Ordinal))
 			{
 				(_, byte[] module) = Command(CmdSetAssembly, 3, Int(assembly));
 				int moduleOffset = 0;
@@ -438,14 +257,19 @@ sealed class SdbConnection
 		return 0;
 	}
 
-	int CreateByteArray(
-		int domain,
-		byte[] bytes)
+	// MODULE_GET_INFO answers name, scopename, fqname, guid, assembly. The guid is the module's MVID,
+	// which says whether the app is running the same build we baselined against.
+	public Guid ModuleMvid(
+		int module)
 	{
-		(_, byte[] data) = Command(CmdSetAppDomain, 8, [.. Int(domain), .. Int(bytes.Length), .. bytes]);
+		(_, byte[] data) = Command(CmdSetModule, 1, Int(module));
 		int offset = 0;
 
-		return ReadInt(data, ref offset);
+		ReadString(data, ref offset);
+		ReadString(data, ref offset);
+		ReadString(data, ref offset);
+
+		return Guid.TryParse(ReadString(data, ref offset), out Guid mvid) ? mvid : Guid.Empty;
 	}
 
 	// Applies an EnC delta over the debugger: pushes the byte arrays into the runtime, then calls
@@ -466,6 +290,45 @@ sealed class SdbConnection
 		return error;
 	}
 
+	int CreateByteArray(
+		int domain,
+		byte[] bytes)
+	{
+		(_, byte[] data) = Command(CmdSetAppDomain, 8, [.. Int(domain), .. Int(bytes.Length), .. bytes]);
+		int offset = 0;
+
+		return ReadInt(data, ref offset);
+	}
+
+	static void Start(
+		ThreadStart body,
+		string name)
+	{
+		Thread thread = new(body)
+		{
+			IsBackground = true,
+			Name = name
+		};
+		thread.Start();
+	}
+
+	// a COMPOSITE event (set 64, cmd 100) carrying one VMDeath (kind 0x01, exit_code 0)
+	static byte[] VmDeath()
+	{
+		byte[] packet = new byte[25];
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(0), packet.Length);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(4), 0);
+		packet[8] = 0;
+		packet[9] = 64;
+		packet[10] = 100;
+		packet[11] = 0;
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(12), 1);
+		packet[16] = 0x01;
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(17), 0);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(21), 0);
+
+		return packet;
+	}
 
 	static byte[] Int(
 		int value)

@@ -1,93 +1,89 @@
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Reflection.Metadata;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using JetBrains.Lifetimes;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Emit;
-using Microsoft.CodeAnalysis.Text;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
-// Sits inside Rider's native iOS debug session (the ports are rerouted here by the frontend advice):
-// the app connects to AppPort, Rider listens on RiderPort. For each app connection we open one to
-// Rider and relay transparently, so breakpoints/stepping/console are untouched. The first (sdb)
-// connection is MITM'd so that on a source save we inject apply-changes over it (host Roslyn builds
-// the delta), then signal the app on ReloadPort to rebuild its live UI.
+// Sits inside Rider's own native iOS debug session and adds hot reload to it.
+//
+// The frontend points the session's two debug ports at us, so the app connects to AppPort while Rider
+// listens on RiderPort. Every connection is relayed straight through, which is what keeps breakpoints,
+// stepping and the console working; the debugger connection is additionally frame-parsed so a saved
+// file can be turned into an Edit-and-Continue delta and injected. Applying a delta updates method
+// bodies but does not redraw anything, so afterwards the app is nudged on ReloadPort to rebuild its
+// live UI. An app that does not answer there still gets its code updated.
 sealed class NativeBridge
 {
-	const int AppPort = 10098;
-	const int RiderPort = 10099;
+	// the in-app agent dials this one, so unlike the debug ports it cannot move
 	const int ReloadPort = 9988;
 
-	readonly string cscArgs;
-	readonly string deployedDll;
-	readonly string projectDir;
+	const int DebounceMilliseconds = 150;
+
+	readonly string solutionFile;
 	readonly Action<string> log;
+
+	readonly object queueGate = new();
+	readonly HashSet<string> queued = new(StringComparer.OrdinalIgnoreCase);
+
+	readonly object sessionGate = new();
 
 	SdbConnection? sdb;
 	SdbConnection? output;
 	Socket? reloadClient;
 	Lifetime lifetime;
 	LifetimeDefinition? sessionDef;
-	int connections;
-	int engineStarted;
-	int domain;
-	int module;
-	string assemblyName = "";
+
+	List<AppProject> watched = [];
+	Dictionary<string, ReloadEngine?> engines = new(StringComparer.OrdinalIgnoreCase);
+
+	public int AppPort { get; private set; }
+	public int RiderPort { get; private set; }
 
 	public NativeBridge(
-		string cscArgs,
-		string deployedDll,
-		string projectDir,
+		string solutionFile,
 		Action<string> log)
 	{
-		this.cscArgs = cscArgs;
-		this.deployedDll = deployedDll;
-		this.projectDir = projectDir;
+		this.solutionFile = solutionFile;
 		this.log = log;
 	}
 
-	public void Start(
+	// Binds the bridge and reports whether there is anything here to hot reload. False leaves the ports
+	// unpublished, and an iOS debug session then runs exactly as it would without the plugin.
+	public bool Start(
 		Lifetime lifetime)
 	{
 		this.lifetime = lifetime;
 
-		Socket appListener = Bind(AppPort);
-		Socket reloadListener = Bind(ReloadPort);
+		if (!AppProject.AnyIosProject(solutionFile))
+		{
+			log("no .NET iOS project in this solution; leaving iOS debug sessions alone");
+			return false;
+		}
+
+		Socket appListener = Bind(0);
+		AppPort = ((IPEndPoint)appListener.LocalEndPoint).Port;
+		RiderPort = FreePort();
+
+		Socket? reloadListener = TryBind(ReloadPort);
+		if (reloadListener is null)
+			log($"port {ReloadPort} is taken, so the app cannot be asked to rebuild its UI after a reload");
 
 		lifetime.OnTermination(() =>
 		{
 			Close(appListener);
 			Close(reloadListener);
-			Close(reloadClient);
-			connections = 0;
-			engineStarted = 0;
-			sdb = null;
-			module = 0;
+			EndSession();
 		});
 
 		Accept(appListener, OnApp);
-		Accept(reloadListener, socket => reloadClient = socket);
+		if (reloadListener is not null)
+			Accept(reloadListener, socket => reloadClient = socket);
 
-		log($"native bridge up: app :{AppPort} -> Rider :{RiderPort}, reload :{ReloadPort}");
-	}
+		log($"bridge up: app :{AppPort} -> Rider :{RiderPort}, reload :{ReloadPort}");
 
-	// the sdb connection dropped (app died/detached); reset per-session state so the next Debug
-	// re-MITMs cleanly and rebuilds a baseline against the freshly-deployed dll
-	void EndSession()
-	{
-		LifetimeDefinition? def = Interlocked.Exchange(ref sessionDef, null);
-		def?.Terminate();
-
-		connections = 0;
-		engineStarted = 0;
-		module = 0;
-		sdb = null;
-		output = null;
-		log("debug session ended");
+		return true;
 	}
 
 	void OnApp(
@@ -96,18 +92,18 @@ sealed class NativeBridge
 		Socket? riderSocket = ConnectRider();
 		if (riderSocket is null)
 		{
-			log($"could not reach Rider on {RiderPort} (worker not listening)");
+			log($"could not reach Rider on {RiderPort}; the debugger worker never started listening");
 			Close(appSocket);
+
 			return;
 		}
 
-		// MITM every connection; the debugger (sdb) one self-identifies via its handshake, the first
-		// output one becomes our console-notice channel
-		SdbConnection.Mitm(appSocket, riderSocket, OnSdbIdentified, EndSession, connection => output ??= connection);
+		// the newest output connection carries our notices; writes to a closed one are harmless
+		SdbConnection.Mitm(appSocket, riderSocket, OnSdbIdentified, EndSession, connection => output = connection);
 	}
 
-	// write a line to Rider's debug console (via a raw stdout/stderr connection, so it can't corrupt
-	// the sdb debug stream)
+	// Write a line to Rider's debug console. It goes over a raw stdout connection so it can never
+	// corrupt the debugger stream.
 	void Notice(
 		string message) =>
 		output?.SendToIde(Encoding.UTF8.GetBytes($"[SkeleKit] {message}\n"));
@@ -115,206 +111,242 @@ sealed class NativeBridge
 	void OnSdbIdentified(
 		SdbConnection connection)
 	{
-		// the debug connection is live and Rider has just deployed the current dll: capture it for
-		// injection and build the engine baseline against that dll
-		sdb = connection;
-		sessionDef = lifetime.CreateNested();
-		StartEngine(sessionDef.Lifetime);
-	}
+		LifetimeDefinition session;
 
-	void StartEngine(
-		Lifetime sessionLifetime)
-	{
-		if (Interlocked.Exchange(ref engineStarted, 1) == 1)
-			return;
+		// a session whose socket never closed cleanly would otherwise keep its watchers and worker alive
+		EndSession();
 
-		Thread engine = new(() =>
+		lock (sessionGate)
 		{
-			try
-			{
-				RunEngine(sessionLifetime);
-			}
-			catch (Exception exception)
-			{
-				log($"engine stopped: {exception.Message}");
-			}
-		})
-		{
-			IsBackground = true,
-			Name = "skele-native-engine"
-		};
-		engine.Start();
-	}
-
-	void RunEngine(
-		Lifetime lifetime)
-	{
-		if (!File.Exists(cscArgs) || !File.Exists(deployedDll))
-		{
-			log($"engine idle: build the app with EnableHotReload first ({Path.GetFileName(cscArgs)} missing)");
-			return;
+			sdb = connection;
+			sessionDef = session = lifetime.CreateNested();
+			engines = new(StringComparer.OrdinalIgnoreCase);
 		}
 
-		log($"building compilation from {Path.GetFileName(cscArgs)}...");
-		CscInvocation csc = CscInvocation.Load(cscArgs, projectDir);
-		assemblyName = csc.AssemblyName;
-		Project project = Project.Build(csc);
-		Compilation compilation = project.Compilation;
+		// Rider has just deployed, so this is the moment the build on disk and the build in the app
+		// agree; everything is baselined against it
+		Start(() => Prepare(session.Lifetime), "skele-engine-start");
+	}
 
-		Diagnostic[] errors = [.. compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)];
-		if (errors.Length > 0)
+	// the debugger connection dropped, so the app died or detached; reset per-session state and let the
+	// next Debug rebuild against whatever it deploys
+	void EndSession()
+	{
+		LifetimeDefinition? session;
+
+		lock (sessionGate)
 		{
-			log($"compilation has {errors.Length} errors, cannot baseline; first: {errors[0]}");
-			return;
+			session = Interlocked.Exchange(ref sessionDef, null);
+			if (session is null)
+				return;
+
+			sdb = null;
+			engines = new(StringComparer.OrdinalIgnoreCase);
+			watched = [];
 		}
 
-		Baseline baseline = new(deployedDll, compilation);
-		log($"engine ready (MVID {baseline.Mvid}); edit a .cs file to hot reload");
+		session.Terminate();
+		lock (queueGate)
+			queued.Clear();
 
-		Watch(lifetime, compilation, baseline);
+		log("debug session ended");
+	}
+
+	void Prepare(
+		Lifetime session)
+	{
+		try
+		{
+			List<AppProject> apps = AppProject.Discover(solutionFile);
+			if (apps.Count == 0)
+				return;
+
+			// the project Rider built last is the one it just deployed
+			AppProject app = apps.OrderByDescending(candidate => File.GetLastWriteTimeUtc(candidate.DeployedDll)).First();
+			List<AppProject> projects = AppProject.WithReferences(app);
+
+			lock (sessionGate)
+			{
+				if (!session.IsAlive)
+					return;
+
+				watched = projects;
+			}
+
+			log($"debugging {app.AssemblyName}; watching {string.Join(", ", projects.Select(project => project.AssemblyName))}");
+
+			Watch(session, projects);
+			Start(() => Drain(session), "skele-reload-worker");
+
+			// warm the app's own compilation now so the first edit does not pay for it
+			EngineFor(app);
+		}
+		catch (Exception exception)
+		{
+			log($"could not prepare hot reload: {exception.Message}");
+		}
+	}
+
+	ReloadEngine? EngineFor(
+		AppProject project)
+	{
+		lock (sessionGate)
+			if (engines.TryGetValue(project.ProjectFile, out ReloadEngine? cached))
+				return cached;
+
+		ReloadEngine? engine = null;
+		try
+		{
+			engine = ReloadEngine.Create(project, log);
+		}
+		catch (Exception exception)
+		{
+			log($"{project.AssemblyName}: {exception.Message}");
+		}
+
+		lock (sessionGate)
+			engines[project.ProjectFile] = engine;
+
+		if (engine is not null)
+			log($"{project.AssemblyName} ready (MVID {engine.Mvid:D})");
+
+		return engine;
 	}
 
 	void Watch(
-		Lifetime lifetime,
-		Compilation compilation,
-		Baseline baseline)
+		Lifetime session,
+		List<AppProject> projects)
 	{
-		Dictionary<string, SyntaxTree> trees = compilation.SyntaxTrees
-			.Where(tree => !string.IsNullOrEmpty(tree.FilePath) && File.Exists(tree.FilePath))
-			.GroupBy(tree => Path.GetFullPath(tree.FilePath), StringComparer.OrdinalIgnoreCase)
-			.ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
-
-		object gate = new();
-		Compilation snapshot = compilation;
-
-		FileSystemWatcher watcher = new(projectDir)
+		foreach (AppProject project in projects)
 		{
-			IncludeSubdirectories = true,
-			Filter = "*.cs",
-			NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
-		};
-
-		void OnChanged(
-			object _,
-			FileSystemEventArgs change)
-		{
-			try
+			FileSystemWatcher watcher = new(project.ProjectDir)
 			{
-				Apply(change);
+				IncludeSubdirectories = true,
+				Filter = "*.cs",
+				// a save storm (a formatter, a branch switch) otherwise overflows and drops events
+				InternalBufferSize = 64 * 1024,
+				NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName
+			};
+
+			watcher.Changed += OnChanged;
+			watcher.Created += OnChanged;
+			watcher.Renamed += OnChanged;
+			watcher.Error += (_, error) => log($"file watcher on {project.AssemblyName} failed: {error.GetException().Message}");
+			watcher.EnableRaisingEvents = true;
+
+			session.OnTermination(() =>
+			{
+				watcher.EnableRaisingEvents = false;
+				watcher.Dispose();
+			});
+		}
+	}
+
+	// The watcher's own thread must never block, or its buffer overflows and edits go missing; queue the
+	// path and let the worker do the compiling.
+	void OnChanged(
+		object sender,
+		FileSystemEventArgs change)
+	{
+		lock (queueGate)
+		{
+			queued.Add(Path.GetFullPath(change.FullPath));
+			Monitor.Pulse(queueGate);
+		}
+	}
+
+	void Drain(
+		Lifetime session)
+	{
+		while (session.IsAlive)
+		{
+			string[] batch;
+
+			lock (queueGate)
+			{
+				while (queued.Count == 0)
+				{
+					if (!Monitor.Wait(queueGate, 500))
+						if (!session.IsAlive)
+							return;
+				}
 			}
-			catch (Exception exception)
+
+			// an editor writes a file two or three times per save, and a formatter touches several at
+			// once; collect the burst before compiling anything
+			Thread.Sleep(DebounceMilliseconds);
+
+			lock (queueGate)
 			{
-				// a bad delta or a stuck sdb command must never crash the backend
-				log($"hot reload error: {exception.Message}");
-				module = 0;
+				batch = [.. queued];
+				queued.Clear();
+			}
+
+			foreach (string path in batch)
+			{
+				if (!session.IsAlive)
+					return;
+
+				ApplyOne(path);
 			}
 		}
+	}
 
-		void Apply(
-			FileSystemEventArgs change)
+	void ApplyOne(
+		string path)
+	{
+		try
 		{
-			string path = Path.GetFullPath(change.FullPath);
+			AppProject? project = Owner(path);
+			if (project is null)
+				return;
 
-			lock (gate)
+			SdbConnection? connection;
+			lock (sessionGate)
+				connection = sdb;
+
+			if (connection is null)
+				return;
+
+			ReloadEngine? engine = EngineFor(project);
+			if (engine is null)
+				return;
+
+			if (!engine.Matches(connection, out string reason))
 			{
-				if (!trees.TryGetValue(path, out SyntaxTree? oldTree))
-					return;
+				log($"  {Path.GetFileName(path)}: {reason}");
+				Notice(reason);
 
-				string text = ReadStable(path);
-				if (text == oldTree.ToString())
-					return;
+				return;
+			}
 
-				SyntaxTree newTree = CSharpSyntaxTree.ParseText(
-					SourceText.From(text, Encoding.UTF8),
-					(CSharpParseOptions)oldTree.Options,
-					path);
-
-				Compilation newCompilation = snapshot.ReplaceSyntaxTree(oldTree, newTree);
-				List<SemanticEdit> edits = Differ.Edits(snapshot, newCompilation, oldTree, newTree, out List<string> rude);
-
-				// a structural change (added/removed member, changed signature) can push a delta that
-				// crashes the app; skip it and keep the baseline, the user restarts to pick it up
-				if (rude.Count > 0)
-				{
-					foreach (string note in rude)
-						log($"  ! {note}");
-					log($"  {Path.GetFileName(path)}: structural change, restart to apply (not hot-reloaded)");
-					Notice($"Skipped {Path.GetFileName(path)}: structural change (added/removed member) \u2014 restart to apply.");
-					return;
-				}
-
-				if (edits.Count == 0)
-				{
-					snapshot = newCompilation;
-					trees[path] = newTree;
-					return;
-				}
-
-				using MemoryStream metadata = new();
-				using MemoryStream il = new();
-				using MemoryStream pdb = new();
-
-				List<MethodDefinitionHandle> updated = [];
-				EmitDifferenceResult result = newCompilation.EmitDifference(baseline.Emit, edits, metadata, il, pdb, updated, CancellationToken.None);
-				if (!result.Success)
-				{
-					log($"  emit failed for {Path.GetFileName(path)}");
-					Notice($"Hot reload failed for {Path.GetFileName(path)}: could not build the delta.");
-					return;
-				}
-
-				// Mono's interpreter EnC can't resolve a newly-added type/assembly reference in a delta
-				// (e.g. first use of Debug.WriteLine), which crashes the app when the method runs; skip it
-				if (AddsNewReferences(metadata.ToArray()))
-				{
-					log($"  {Path.GetFileName(path)}: adds a new type reference, restart to apply (not hot-reloaded)");
-					Notice($"Skipped {Path.GetFileName(path)}: adds a new type reference (Mono can't resolve it live) \u2014 restart to apply.");
-					snapshot = newCompilation;
-					trees[path] = newTree;
-					return;
-				}
-
-				if (sdb is not SdbConnection connection)
-				{
-					log("  no debug session yet");
-					return;
-				}
-
-				if (module == 0)
-				{
-					domain = connection.RootDomain();
-					module = connection.FindModule(domain, assemblyName);
-				}
-				if (module == 0)
-				{
-					log("  app module not found yet, try again");
-					return;
-				}
-
-				int error = connection.ApplyChanges(domain, module, metadata.ToArray(), il.ToArray(), pdb.ToArray());
-				if (error != 0)
-				{
-					log($"  APPLY_CHANGES error {error} for {Path.GetFileName(path)}");
-					Notice($"Hot reload failed for {Path.GetFileName(path)}: apply error {error}.");
-					return;
-				}
-
+			if (engine.Apply(path, connection, log, Notice) == ReloadEngine.Outcome.Applied)
 				SignalReload();
-				log($"  {Path.GetFileName(path)}: {edits.Count} edit(s), reloaded");
-				Notice($"Hot reloaded {Path.GetFileName(path)}.");
-
-				baseline.Emit = result.Baseline;
-				snapshot = newCompilation;
-				trees[path] = newTree;
-			}
 		}
+		catch (Exception exception)
+		{
+			// a bad delta or a stuck debugger connection must never take the backend down with it
+			log($"hot reload error on {Path.GetFileName(path)}: {exception.Message}");
+			Notice($"Hot reload failed for {Path.GetFileName(path)}: {exception.Message}");
+		}
+	}
 
-		watcher.Changed += OnChanged;
-		watcher.Created += OnChanged;
-		watcher.Renamed += (sender, change) => OnChanged(sender, change);
-		watcher.EnableRaisingEvents = true;
+	AppProject? Owner(
+		string path)
+	{
+		List<AppProject> projects;
+		lock (sessionGate)
+			projects = watched;
 
-		lifetime.OnTermination(() => watcher.Dispose());
+		AppProject? owner = null;
+
+		// the innermost project wins, so a nested project is not claimed by the one above it
+		foreach (AppProject project in projects)
+			if (path.StartsWith(project.ProjectDir + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+				&& (owner is null || project.ProjectDir.Length > owner.ProjectDir.Length))
+				owner = project;
+
+		return owner;
 	}
 
 	void SignalReload()
@@ -326,9 +358,9 @@ sealed class NativeBridge
 		catch { }
 	}
 
-	// Rider's debugger worker may start listening a moment after the app connects (esp. on a second
-	// session), so retry rather than dropping the app's debug connection.
-	static Socket? ConnectRider()
+	// Rider's debugger worker may start listening a moment after the app connects, especially on a
+	// second session, so retry rather than dropping the app's debug connection.
+	Socket? ConnectRider()
 	{
 		for (int attempt = 0; attempt < 100; attempt++)
 		{
@@ -348,52 +380,11 @@ sealed class NativeBridge
 		return null;
 	}
 
-	static void DumbRelay(
-		Socket a,
-		Socket b)
-	{
-		Pump(a, b);
-		Pump(b, a);
-	}
-
-	static void Pump(
-		Socket from,
-		Socket to)
-	{
-		Thread thread = new(() =>
-		{
-			try
-			{
-				byte[] buffer = new byte[8192];
-				while (true)
-				{
-					int read = from.Receive(buffer);
-					if (read == 0)
-						break;
-
-					to.Send(buffer.AsSpan(0, read).ToArray());
-				}
-			}
-			catch { }
-			finally
-			{
-				// propagate the disconnect so the peer (and Rider's session) tears down
-				Close(from);
-				Close(to);
-			}
-		})
-		{
-			IsBackground = true,
-			Name = "skele-dumb-pump"
-		};
-		thread.Start();
-	}
-
 	static void Accept(
 		Socket listener,
 		Action<Socket> onAccept)
 	{
-		Thread thread = new(() =>
+		Start(() =>
 		{
 			try
 			{
@@ -401,42 +392,68 @@ sealed class NativeBridge
 					onAccept(listener.Accept());
 			}
 			catch { }
-		})
+		}, "skele-accept");
+	}
+
+	static void Start(
+		ThreadStart body,
+		string name)
+	{
+		Thread thread = new(body)
 		{
 			IsBackground = true,
-			Name = "skele-accept"
+			Name = name
 		};
 		thread.Start();
 	}
 
-	// True if the metadata delta introduces a new TypeRef/AssemblyRef — i.e. the edit references a type
-	// the baseline didn't, which Mono's EnC can't resolve at runtime.
-	static bool AddsNewReferences(
-		byte[] metadataDelta)
+	// A port for Rider's debugger worker to listen on. We cannot hold it ourselves, so pick one nothing
+	// is using and hand it over.
+	static int FreePort()
 	{
-		try
-		{
-			using MetadataReaderProvider provider = MetadataReaderProvider.FromMetadataStream(new MemoryStream(metadataDelta));
-			MetadataReader reader = provider.GetMetadataReader();
+		HashSet<int> taken = [.. IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Select(endpoint => endpoint.Port)];
 
-			return reader.GetTableRowCount(TableIndex.TypeRef) > 0
-				|| reader.GetTableRowCount(TableIndex.AssemblyRef) > 0;
-		}
-		catch
+		for (int attempt = 0; attempt < 64; attempt++)
 		{
-			return false;
+			Socket probe = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			try
+			{
+				probe.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+				int port = ((IPEndPoint)probe.LocalEndPoint).Port;
+
+				if (!taken.Contains(port))
+					return port;
+			}
+			finally
+			{
+				Close(probe);
+			}
 		}
+
+		return 10099;
 	}
 
 	static Socket Bind(
 		int port)
 	{
 		Socket listener = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-		listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 		listener.Bind(new IPEndPoint(IPAddress.Loopback, port));
 		listener.Listen(8);
 
 		return listener;
+	}
+
+	static Socket? TryBind(
+		int port)
+	{
+		try
+		{
+			return Bind(port);
+		}
+		catch
+		{
+			return null;
+		}
 	}
 
 	static void Close(
@@ -447,24 +464,5 @@ sealed class NativeBridge
 			socket?.Dispose();
 		}
 		catch { }
-	}
-
-	static string ReadStable(
-		string path)
-	{
-		for (int attempt = 0; ; attempt++)
-		{
-			try
-			{
-				using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-				using StreamReader reader = new(stream);
-
-				return reader.ReadToEnd();
-			}
-			catch (IOException) when (attempt < 10)
-			{
-				Thread.Sleep(30);
-			}
-		}
 	}
 }

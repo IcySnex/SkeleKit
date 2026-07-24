@@ -50,6 +50,10 @@ dependencies {
 }
 
 intellijPlatform {
+    // it starts a headless IDE to index settings pages, which fails while Rider is open and indexes
+    // nothing anyway: the plugin contributes no settings UI
+    buildSearchableOptions = false
+
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "261"

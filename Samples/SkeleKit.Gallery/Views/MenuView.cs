@@ -36,7 +36,7 @@ public class MenuView : ContentView<MenuViewModel>
 			{
 				new Button
 				{
-					Text = "MovieInfoo",
+					Text = "MovieInfo",
 					Kind = ButtonStyle.Filled,
 					Margin = new Thickness(16, 0),
 					Command = ViewModel.OpenMovieCommand

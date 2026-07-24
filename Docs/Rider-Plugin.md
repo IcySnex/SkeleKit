@@ -1,12 +1,16 @@
 # SkeleKit Rider Plugin — Status & Handoff
 
-Transparent native-session hot reload for SkeleKit.iOS in Rider: the user presses the **normal
-Debug** on the stock **Multi Platform > iOS** run config (native device picker, deploy, breakpoints,
-console) and **also gets live C# hot reload** — one button, zero extra steps, nothing new to learn.
+Transparent native-session hot reload in Rider: the user presses the **normal Debug** on the stock
+**Multi Platform > iOS** run config (native device picker, deploy, breakpoints, console) and **also
+gets live C# hot reload** — one button, zero extra steps, nothing new to learn.
 
 **Status: WORKING, sim-verified** (Rider 2026.1.4, local iOS simulator). Build, deploy, breakpoints,
 pause/step, console, app-close-ends-session, multi-session, and live hot reload of method-body edits
-all work. Remaining items are polish + hardening (see Next steps).
+all work.
+
+**It is not SkeleKit-specific.** The delta engine reconstructs the app's compilation from the real
+`csc` command line, so any .NET iOS project in the solution works with no MSBuild opt-in. See
+[Scope](#scope-what-works-for-which-apps).
 
 Companion docs: [`hot-reload-debugging.md`](hot-reload-debugging.md) (wire-level sdb mechanism),
 [`Plan-HotReload.md`](Plan-HotReload.md) (original plan). Plugin lives at `Tools/SkeleKit.Rider/`.
@@ -19,74 +23,149 @@ Rider does **not** support C# hot reload for Mono/iOS (its debugger runs a `Dumm
 sit transparently inside Rider's own native debug session and inject Edit-and-Continue deltas ourselves.
 
 1. **Reroute the debug ports (frontend, ByteBuddy).** `preparePortsForDebugging` on the base class
-   `IOSSessionHandler` returns `IOSDebuggingPorts(portForDebugger, portForDevice)` (both = a single
-   port normally). The concrete handlers (`IOSLocalSessionHandler`) are `final` and in the
-   off-classpath `intellij.rider.macos` module, so we can't subclass. Instead a **self-attached
-   ByteBuddy agent** (`IosPortInstrumenter` postStartupActivity → `PreparePortsAdvice`) rewrites that
-   method's return to fixed ports: **`portForDevice = 10098`** (app connects here) and
-   **`portForDebugger = 10099`** (Rider's debugger listens here). Sandbox JVM already has
-   `-Djdk.attach.allowAttachSelf=true`.
+   `IOSSessionHandler` returns `IOSDebuggingPorts(portForDebugger, portForDevice)`. The concrete
+   handlers (`IOSLocalSessionHandler`) are `final` and in the off-classpath `intellij.rider.macos`
+   module, so we can't subclass. Instead a **self-attached ByteBuddy agent**
+   (`IosPortInstrumenter` postStartupActivity → `PreparePortsAdvice`) rewrites that method's return.
+   Sandbox JVM already has `-Djdk.attach.allowAttachSelf=true`.
 
-2. **Sit in the middle (backend, `NativeBridge`).** A `[SolutionComponent]` starts `NativeBridge` on
-   solution load. It listens on **10098** (where the app connects) and **9988** (the in-app reload
-   channel), and for each app connection opens one to Rider's **10099** (with retry — the worker may
-   start listening a beat late). Every connection is relayed transparently, so breakpoints / stepping /
-   console are untouched.
+2. **The ports are negotiated, not hardcoded.** The backend binds a free pair at solution load and
+   publishes them over rd; `BridgePortPublisher` mirrors them into the `skelekit.ios.appPort` /
+   `skelekit.ios.riderPort` **system properties**, which is the only channel the advice can read (its
+   body is inlined into a class that cannot see plugin types). **Unset means no reroute at all** — that
+   is both the gate (a solution with no .NET iOS project is left alone) and the failure-safe.
 
-3. **Topology (confirmed by lsof):** Rider **LISTENS** on `portForDebugger`; the app **CONNECTS** to
+3. **Sit in the middle (backend, `NativeBridge`).** A `[SolutionComponent]` starts the bridge. It
+   listens on the app port and on **9988** (the in-app reload channel), and for each app connection
+   opens one to Rider's port (with retry — the worker may start listening a beat late). Every
+   connection is relayed transparently, so breakpoints / stepping / console are untouched.
+
+4. **Topology (confirmed by lsof):** Rider **LISTENS** on `portForDebugger`; the app **CONNECTS** to
    `portForDevice` (3 connections: sdb-debug + stdout + stderr).
 
-4. **Identify + inject on the sdb connection.** Each connection self-identifies: the sdb one starts
-   with the `DWP-Handshake` (`SdbConnection.Mitm` → `ReadMitm`). On the sdb connection we frame-parse
-   app→Rider (forwarding everything, incl. the runtime's ENC/METHOD_UPDATE events) and can inject sdb
-   commands with a reserved high id range (`0x40000000`), swallowing our own replies. On a source
-   save the engine builds an EnC delta with the **host's Roslyn** (`EmitDifference`) and injects
-   `CREATE_BYTE_ARRAY ×3 + MODULE APPLY_CHANGES`, then signals the app on 9988 to rebuild the live UI.
+5. **Identify + inject on the sdb connection.** Each connection self-identifies: the sdb one starts
+   with the `DWP-Handshake`. On it we frame-parse app→Rider (forwarding everything, incl. the runtime's
+   ENC/METHOD_UPDATE events) and inject sdb commands with a reserved high id range (`0x40000000`),
+   swallowing our own replies. On a source save the engine builds an EnC delta with the **host's
+   Roslyn** (`EmitDifference`) and injects `CREATE_BYTE_ARRAY ×3 + MODULE APPLY_CHANGES`, then signals
+   the app on 9988 to rebuild the live UI.
 
-5. **The app side.** The SkeleKit.iOS app must be built with `<EnableHotReload>true</EnableHotReload>`
-   (Debug) — this ships the Mono interpreter + `MetadataUpdater` support + writes `cscargs` + includes
-   the in-app `HotReload.cs` agent (connects to 9988; on an empty-module signal it calls
-   `PageHost.ReloadLive`, which works even under the debugger). The Gallery csproj already sets it.
+6. **The app side.** `SkeleKit.iOS/App/HotReload.cs` connects to 9988 and calls `PageHost.ReloadLive`
+   on an empty-module signal, which works even under the debugger. An app without that agent still
+   gets its **code** updated; it just doesn't redraw.
+
+---
+
+## Scope: what works for which apps
+
+| Piece | SkeleKit app | Any other .NET iOS app |
+| --- | --- | --- |
+| Breakpoints / stepping / console through the bridge | yes | yes |
+| Reconstructing the compilation, building + applying deltas | yes | yes |
+| Live UI rebuild after a delta | yes (`HotReload.cs` → `PageHost.ReloadLive`) | no — code updates, UI redraws on its own next pass |
+| Runtime prerequisites | `<EnableHotReload>true</EnableHotReload>` | see below |
+
+Nothing in the engine is SkeleKit-aware any more. The two things that used to bind it:
+
+- **The csc command line** used to come from `skelekit-hotreload.args`, written by SkeleKit's MSBuild
+  targets. It now comes from `dotnet msbuild -t:Compile -p:ProvideCommandLineArgs=true
+  -p:SkipCompilerExecution=true` with the dump target injected via `CustomAfterMicrosoftCommonTargets`
+  (`MsBuild.cs`). Stock Roslyn properties, ~1s, nothing in the user's project changes, and
+  `SkipCompilerExecution` means the deployed build is not touched.
+- **Source generators** used to be an allowlist of two. All of them now run, with the real
+  `/analyzerconfig:` and `/additionalfile:` inputs (`AnalyzerConfig.cs`).
+
+**Untested for non-SkeleKit apps:** whether the Mono runtime accepts `APPLY_CHANGES` without the
+`EnableHotReload` MSBuild gates (`UseInterpreter=true`, the `MetadataUpdater.IsSupported`
+`RuntimeHostConfigurationOption` with `Trim="true"`, `DOTNET_MODIFIABLE_ASSEMBLIES=debug`). The sdb
+path does not go through managed `MetadataUpdater`, so a plain Debug simulator build may well work as
+is — worth one experiment. On a **device** the interpreter is required regardless (full AOT cannot be
+patched).
+
+---
+
+## Load-bearing rules (don't relearn)
+
+- **The compilation must reproduce the deployed assembly, and it is checked.** `MetadataShape` emits
+  the rebuilt compilation and compares its declarations to the deployed dll. A mismatch means a
+  generator silently didn't run, and every later delta would describe code the app isn't running.
+  On mismatch the engine retries without generators, then **disables itself for that assembly** rather
+  than applying something dangerous.
+- **Compare declarations as a set, ignoring `<`-named members.** Compiler-synthesized plumbing
+  (closures, `<>y__InlineArray*`, extension metadata) differs between Roslyn builds, and ours is never
+  the exact one that built the app. Row *order* differs too, and that is fine: Roslyn matches an edited
+  member to its baseline row by name and signature, not position. An earlier ordered byte-for-byte
+  check rejected every real project.
+- **Analyzer assemblies demand their own Roslyn version.** Every SDK generator asks for
+  `Microsoft.CodeAnalysis, Version=5.x`; the host has a different one, so `LoadFrom` fails and the
+  generators quietly produce nothing. `Project.UnifyCompilerAssemblies` installs an `AssemblyResolve`
+  hook mapping `Microsoft.CodeAnalysis*` / `System.Collections.Immutable` /
+  `System.Reflection.Metadata` onto the loaded copies. Without it the Gallery loaded **1 of 16**
+  generators and would not compile.
+- **`/langversion:latest` must become `LanguageVersion.Preview`, not `Latest`.** "Latest" means
+  whatever the SDK's compiler supported; mapping it to our Roslyn's `Latest` drops `field`, partial
+  properties and C# 14 `extension` members that the app already uses. An explicit version is honored.
+- **Use the host's Roslyn, ship none.** No `Microsoft.CodeAnalysis` PackageReference — the NuGet drags
+  Immutable 10.x and shipping it FileLoadExceptions the SolutionComponent.
+- **Rider 2026.1.4 version pins:** Kotlin **2.3.0** (rider-model.jar metadata is 2.3.0),
+  IntelliJ-platform-gradle-plugin 2.10.5, rdGen 2026.1.1, `JetBrains.Rider.SDK` 2026.1.4,
+  ByteBuddy 1.15.11.
+- **net472 port:** the engine is net10 code; needs `Polyfills.cs` (init/required).
+- **`compileDotNet` needs brew dotnet** at `/opt/homebrew/bin/dotnet` (Gradle's PATH lacks it).
+- **Component must be eager:** `[SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]`. Ride
+  Rider's active `IRiderModelZone` via `[ZoneMarker] IRequire<IRiderModelZone>` — don't define a custom
+  zone (stays inactive). Discovery + binding run on a background thread; the rd write is posted back
+  through `IShellLocks.ExecuteOrQueueEx`.
+- **iOS session seam:** `IOSDefaultSessionHandlerProvider` (open service, macOS override =
+  `RiderLocalIOSSessionProvider`, both `final`). Port logic is on the base `preparePortsForDebugging` →
+  instrument it, don't subclass.
+- **sdb connection id must be by handshake, not order** — the "first connection is sdb" guess broke on
+  later sessions (APPLY_CHANGES to a stdout socket → timeout → crash).
+- **Never let a hot-reload error crash the backend** — every apply is wrapped.
+- **The watcher thread must not block.** Saves are queued and handled by one worker with a 150 ms
+  debounce; compiling on the watcher's callback overflows its buffer and silently drops edits.
+- **VM_DEATH on app drop** so a crashing/closing app ends the session (iOS *suspend*, i.e. swipe-away,
+  legitimately keeps it alive).
+- **Conservative apply:** skip structural edits (added/removed members) AND deltas that add a new
+  `TypeRef`/`AssemblyRef` (Mono EnC can't resolve a newly-referenced type live, e.g. first
+  `Debug.WriteLine` → crash). Both notify "restart to apply".
+- **The app must be running the assembly we baselined.** Before applying, `MODULE_GET_INFO` gives the
+  running module's MVID and it is compared to the baseline's.
+- **`buildSearchableOptions` is off** — it starts a headless IDE, which fails while Rider is open.
 
 ---
 
 ## Key files
 
-- `Tools/SkeleKit.Rider/src/rider/main/java/.../PreparePortsAdvice.java` — ByteBuddy advice rewriting the ports.
-- `.../kotlin/com/skelekit/rider/ios/IosPortInstrumenter.kt` — installs the agent (postStartupActivity).
-- `.../dotnet/SkeleKit.Rider.Backend/SkeleKitHost.cs` — `[SolutionComponent]`, starts `NativeBridge`.
-  **Gallery paths are HARDCODED here** (TODO: derive from the project model).
-- `.../HotReload/NativeBridge.cs` — the MITM orchestrator + engine (watch → EmitDifference → inject → reload notice).
-- `.../HotReload/SdbConnection.cs` — sdb wire client; `Mitm` mode (self-identify sdb via handshake, inject, VM_DEATH on drop, locked `SendToIde` for console notices).
-- `.../HotReload/{CscInvocation,Project,Baseline,Differ,Pe,Polyfills}.cs` — the ported Roslyn delta engine (net472).
-- `SkeleKit.iOS/App/HotReload.cs` — the in-app agent (unchanged by the plugin; reload + ReloadLive).
-- `protocol/…/SkeleKitModel.kt` — rd model (currently UNUSED; NativeBridge doesn't use rd — safe to remove later).
+- `.../rider/main/java/.../PreparePortsAdvice.java` — ByteBuddy advice; reads the two system properties.
+- `.../kotlin/com/skelekit/rider/ios/IosPortInstrumenter.kt` — installs the agent.
+- `.../kotlin/com/skelekit/rider/ios/BridgePortPublisher.kt` — rd → system properties.
+- `.../dotnet/SkeleKit.Rider.Backend/SkeleKitHost.cs` — `[SolutionComponent]`, starts the bridge,
+  publishes the ports.
+- `.../HotReload/NativeBridge.cs` — ports, MITM, session lifecycle, watcher + debounce worker.
+- `.../HotReload/ReloadEngine.cs` — one per assembly: reconstruct, verify, diff, emit, apply.
+- `.../HotReload/AppProject.cs` — solution/project discovery and build-output location, by reading the
+  solution and project files rather than Rider's project model (no load-order or read-lock coupling,
+  and no API that shifts between Rider releases).
+- `.../HotReload/{MsBuild,CscInvocation,AnalyzerConfig,Project,Baseline,MetadataShape,Differ}.cs` —
+  the delta engine.
+- `.../HotReload/SdbConnection.cs` — sdb wire client in MITM mode.
+- `SkeleKit.iOS/App/HotReload.cs` — the in-app agent (unchanged by the plugin).
 
 ---
 
 ## Build / run / test loop
 
 - **Backend only** (fast error check): `dotnet build Tools/SkeleKit.Rider/SkeleKit.Rider.Backend.sln -c Debug /p:HostFullIdentifier=` (use `/opt/homebrew/bin/dotnet`).
-- **Launch sandbox Rider:** `cd Tools/SkeleKit.Rider && JAVA_HOME="$(/usr/libexec/java_home -v 21)" ./gradlew runIde --args="/Users/kevin/Repos/SkeleKit/SkeleKit.slnx"`. Opens the real SkeleKit solution (has the iOS Gallery). Rebuilds rdgen → compileDotNet → prepareSandbox and **detaches** (gradle exits 0, Rider keeps running).
-- **Verify from logs:** backend `build/idea-sandbox/RD-2026.1.4/log/backend.*.log` — grep `[native]` for engine + inject/reload lines. Frontend `idea.log` for the agent install + advice. Clear old `backend.*.log` before each launch.
-- **GUI test needs the user:** iOS Debug + edit a `.cs` can't be driven headlessly. lsof on 10098/10099 shows the relay topology.
-- Ports 10098/10099/9988 are loopback; `lsof -nP -iTCP:10098 -iTCP:10099` shows app↔bridge↔Rider.
-
----
-
-## Load-bearing gotchas (don't relearn)
-
-- **Rider 2026.1.4 version pins:** Kotlin **2.3.0** (rider-model.jar metadata is 2.3.0), IntelliJ-platform-gradle-plugin 2.10.5, rdGen 2026.1.1, `JetBrains.Rider.SDK` 2026.1.4, ByteBuddy 1.15.11.
-- **Use the host's Roslyn, ship none.** No `Microsoft.CodeAnalysis` PackageReference — the NuGet drags Immutable 10.x and shipping it FileLoadExceptions the SolutionComponent. Rider bundles Roslyn (`42.42.42.42`) exposed by the SDK; just `using Microsoft.CodeAnalysis…`.
-- **net472 port:** the engine is net10 code; needs `Polyfills.cs` (init/required) + net472 rewrites (`Split`, ranges collide with host `System.Index/Range`, `DistinctBy`, KeyValuePair deconstruction).
-- **`compileDotNet` needs brew dotnet** at `/opt/homebrew/bin/dotnet` (Gradle's PATH lacks it).
-- **Component must be eager:** `[SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]`. Ride Rider's active `IRiderModelZone` via `[ZoneMarker] IRequire<IRiderModelZone>` — don't define a custom zone (stays inactive).
-- **iOS session seam:** `IOSDefaultSessionHandlerProvider` (open service, macOS override = `RiderLocalIOSSessionProvider`, both `final`). Port logic is on the base `preparePortsForDebugging` → instrument it, don't subclass.
-- **sdb connection id must be by handshake, not order** — the "first connection is sdb" guess broke on later sessions (APPLY_CHANGES to a stdout socket → timeout → crash).
-- **Never let a hot-reload error crash the backend** — the apply is wrapped; a TypeLoad/timeout logs + skips.
-- **Per-session reset** (`EndSession` on sdb drop) + **build the baseline on app-connect** (matches the just-deployed dll's MVID).
-- **VM_DEATH on app drop** so a crashing/closing app ends the session (iOS *suspend*, i.e. swipe-away, legitimately keeps it alive).
-- **Conservative apply:** skip structural edits (added/removed members) AND deltas that add a new `TypeRef`/`AssemblyRef` (Mono EnC can't resolve a newly-referenced type live, e.g. first `Debug.WriteLine` → crash). Both notify "restart to apply".
+- **Launch sandbox Rider:** `cd Tools/SkeleKit.Rider && JAVA_HOME="$(/usr/libexec/java_home -v 21)" ./gradlew runIde --args="/Users/kevin/Repos/SkeleKit/SkeleKit.slnx"`.
+- **Package:** `./gradlew buildPlugin` → `build/distributions/SkeleKit.Rider-<version>.zip`.
+- **Verify from logs:** backend `build/idea-sandbox/RD-2026.1.4/log/backend.*.log` — grep `[native]`.
+  Frontend `idea.log` for the agent install + the published ports. Clear old `backend.*.log` first.
+- **The engine is testable without Rider.** It is plain .NET: point a small harness at the solution and
+  run discovery → `MsBuild.CscCommandLineArgs` → `Project.Build` → `MetadataShape` → `EmitDifference`.
+  That is how the generator, langversion and shape-check problems above were found and fixed; the sim
+  was only needed to confirm the wire path.
+- **GUI test needs the user:** iOS Debug + edit a `.cs` can't be driven headlessly.
 
 ---
 
@@ -101,37 +180,23 @@ sit transparently inside Rider's own native debug session and inject Edit-and-Co
   itself applies). Simple body edits step fine. **Fully fixing needs injecting a CLR profiler/agent
   into the worker process** — big, fragile, uncertain payoff. Accepted for v1.
 - **Structural + new-type-reference edits are skipped**, not applied (restart to pick them up).
-- **Fixed ports 10098/10099/9988** — a second Rider instance or parallel sessions would collide.
+- **The reload port 9988 is still fixed** (the in-app agent dials it). If it is taken, deltas still
+  apply; only the UI-rebuild nudge is lost.
+- **The port system properties are JVM-global.** With several solutions open in one Rider, the last one
+  loaded owns them; the others still debug normally through the bridge but don't hot reload.
 
 ---
 
-## Next steps (priority order)
+## Next steps
 
-1. **Derive the app paths from the project model** — `SkeleKitHost` hardcodes the Gallery's cscargs +
-   dll. Use the ReSharper project model to find the iOS runnable project's Debug/iossimulator build
-   output (cscargs = `obj/…/skelekit-hotreload.args`, dll = `bin/…/<App>.dll`). Until then it only
-   hot-reloads *this* Gallery. This is the #1 blocker for real use.
-2. **Gate the reroute** on hot-reload-enabled projects — the advice currently reroutes *every* iOS
-   Debug. Harmless (transparent relay) but should no-op / not spin the engine when not a SkeleKit app.
-3. **Dynamic ports** instead of fixed — avoid multi-instance/parallel-session conflicts. Tricky because
-   the advice (frontend) must communicate the port to the backend bridge; or keep the app port fixed
-   and let the bridge discover Rider's real `portForDebugger` (the advice knows it pre-rewrite).
-4. **Verify the console notices** actually display (stdout-connection injection — confirm in Rider's
-   Debug/console tab). If not, fall back to crafting a `USER_LOG` sdb event
-   (`UserLogEvent(req_id, thread_id, level, category, message)`; EventType.UserLog = 0x10).
-5. **Delete the dead code / old host** once confident: `Tools/SkeleKit.HotReload` (the old standalone
-   bridge this replaces), the unused `HotReload/Bridge.cs` (old relay + SelfTest/SmokeEmit scaffold),
-   the unused `SdbConnection` legacy path (`Adopt`/`Relay`/`Read`/`SelfDrive`/`PipeOutput`), the unused
-   rd `:protocol` model, and the leftover `connections`/`domain` fields in NativeBridge.
-6. **Package/distribute** the plugin (`buildPlugin`), and confirm it works in the user's *real* Rider
-   (not just the sandbox) — same iOS support is present.
-7. Optional stretch: the worker-process profiler injection for full symbol sync (limitation above).
-
----
-
-## The git trail (feat/rider-plugin branch)
-
-Milestones are committed so you can bisect/rollback:
-`feat(rider): plugin + in-proc hot-reload engine` → `transparent reroute` → `working native hot reload
-+ breakpoints` → robustness (`session end`, `retry`, `sdb id`, `crash guard`, `new type refs`) →
-`plugin-side console notices`. HEAD is a working build.
+1. **Sim-verify this rewrite end to end** (see the test plan handed over with it) — especially a
+   library edit, which is new.
+2. **Try a non-SkeleKit iOS app without the `EnableHotReload` gates** to settle whether the runtime
+   prerequisites are needed on the simulator.
+3. **Confirm the console notices** actually render in Rider's Debug console. If not, fall back to
+   crafting a `USER_LOG` sdb event (`UserLogEvent(req_id, thread_id, level, category, message)`;
+   EventType.UserLog = 0x10).
+4. **Retire `Tools/SkeleKit.HotReload`** or keep it deliberately as the no-IDE / CI path — it is the
+   only remaining consumer of the `skelekit-hotreload.args` MSBuild target.
+5. **Install the packaged zip into the real Rider** and confirm it behaves the same as the sandbox.
+6. Optional stretch: the worker-process profiler injection for full symbol sync (limitation above).

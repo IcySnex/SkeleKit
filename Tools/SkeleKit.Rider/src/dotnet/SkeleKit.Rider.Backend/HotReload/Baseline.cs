@@ -6,6 +6,10 @@ using Microsoft.CodeAnalysis.Emit;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
+// The deployed assembly, as the starting point every delta is generated against.
+//
+// The dll and pdb are read into memory rather than mapped, so a rebuild can replace them while a
+// session is running without us holding the old files open.
 sealed class Baseline
 {
 	static readonly Guid EncLocalSlotMap = new("755F52A8-91C5-45BE-B4B8-209571E552BD");
@@ -22,19 +26,19 @@ sealed class Baseline
 		string dllPath,
 		Compilation compilation)
 	{
-		pe = new(File.OpenRead(dllPath));
+		byte[] assembly = File.ReadAllBytes(dllPath);
+
+		pe = new(new MemoryStream(assembly));
 		metadata = pe.GetMetadataReader();
 		Mvid = metadata.GetGuid(metadata.GetModuleDefinition().Mvid);
 
 		string pdbPath = Path.ChangeExtension(dllPath, ".pdb");
 		if (File.Exists(pdbPath))
-			pdb = MetadataReaderProvider.FromPortablePdbStream(File.OpenRead(pdbPath)).GetMetadataReader();
-
-		ModuleMetadata module = ModuleMetadata.CreateFromStream(File.OpenRead(dllPath));
+			pdb = MetadataReaderProvider.FromPortablePdbStream(new MemoryStream(File.ReadAllBytes(pdbPath))).GetMetadataReader();
 
 		Emit = EmitBaseline.CreateInitialBaseline(
 			compilation,
-			module,
+			ModuleMetadata.CreateFromStream(new MemoryStream(assembly)),
 			DebugInformation,
 			LocalSignature,
 			hasPortableDebugInformation: pdb is not null);

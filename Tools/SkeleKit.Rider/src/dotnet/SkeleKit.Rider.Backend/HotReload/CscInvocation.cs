@@ -1,51 +1,87 @@
+using Microsoft.CodeAnalysis;
+
 namespace SkeleKit.Rider.Backend.HotReload;
 
+// The C# compiler's command line for the app, split into the pieces needed to rebuild its Roslyn
+// compilation. Everything that changes what lands in metadata is carried across; anything that only
+// affects the PE file or diagnostics is ignored.
 sealed class CscInvocation
 {
 	public required string ProjectDir { get; init; }
 	public required string AssemblyName { get; init; }
 	public required List<string> Sources { get; init; }
 	public required List<string> References { get; init; }
-	public required List<string> Generators { get; init; }
+	public required List<string> Analyzers { get; init; }
+	public required List<string> AnalyzerConfigs { get; init; }
+	public required List<string> AdditionalFiles { get; init; }
 	public required List<string> Defines { get; init; }
+	public required Dictionary<string, string> Features { get; init; }
 	public required string LangVersion { get; init; }
 	public required bool AllowUnsafe { get; init; }
+	public required bool CheckOverflow { get; init; }
+	public required bool Optimize { get; init; }
+	public required OutputKind OutputKind { get; init; }
+	public required NullableContextOptions Nullable { get; init; }
+	public required string? MainTypeName { get; init; }
 
-	public static CscInvocation Load(
-		string argsPath,
-		string? projectDir = null)
+	public static CscInvocation Parse(
+		IEnumerable<string> commandLine,
+		string projectDir)
 	{
-		projectDir ??= Path.GetDirectoryName(Path.GetFullPath(argsPath))!;
-
-		// the MSBuild target hands off @(CscCommandLineArgs) one per line
-		List<string> raw = [.. File.ReadAllLines(argsPath)
-			.Select(line => line.Trim())
-			.Where(line => line.Length > 0)];
-
 		List<string> sources = [];
 		List<string> references = [];
-		List<string> generators = [];
+		List<string> analyzers = [];
+		List<string> analyzerConfigs = [];
+		List<string> additionalFiles = [];
 		List<string> defines = [];
+		Dictionary<string, string> features = new(StringComparer.Ordinal);
 		string langVersion = "latest";
 		bool allowUnsafe = false;
+		bool checkOverflow = false;
+		bool optimize = false;
 		string assemblyName = "app";
+		string? mainTypeName = null;
+		OutputKind outputKind = OutputKind.ConsoleApplication;
+		NullableContextOptions nullable = NullableContextOptions.Disable;
 
-		foreach (string arg in raw)
+		foreach (string line in commandLine)
 		{
-			if (arg.StartsWith("/reference:"))
-				references.Add(Rooted(projectDir, Unquote(Rest(arg, "/reference:"))));
-			else if (arg.StartsWith("/analyzer:"))
-				generators.Add(Rooted(projectDir, Unquote(Rest(arg, "/analyzer:"))));
-			else if (arg.StartsWith("/embed:"))
-				sources.Add(Rooted(projectDir, Unquote(Rest(arg, "/embed:"))));
-			else if (arg.StartsWith("/define:"))
-				defines.AddRange(Rest(arg, "/define:").Split([';'], StringSplitOptions.RemoveEmptyEntries));
-			else if (arg.StartsWith("/langversion:"))
-				langVersion = Rest(arg, "/langversion:");
-			else if (arg is "/unsafe+" or "/unsafe")
+			string arg = line.Trim();
+			if (arg.Length == 0)
+				continue;
+
+			if (Value(arg, "/reference:") is string reference)
+				references.Add(Rooted(projectDir, reference));
+			else if (Value(arg, "/analyzer:") is string analyzer)
+				analyzers.Add(Rooted(projectDir, analyzer));
+			else if (Value(arg, "/analyzerconfig:") is string analyzerConfig)
+				analyzerConfigs.Add(Rooted(projectDir, analyzerConfig));
+			else if (Value(arg, "/additionalfile:") is string additionalFile)
+				additionalFiles.Add(Rooted(projectDir, additionalFile));
+			else if (Value(arg, "/embed:") is string embedded)
+				sources.Add(Rooted(projectDir, embedded));
+			else if (Value(arg, "/define:") is string define)
+				defines.AddRange(define.Split([';'], StringSplitOptions.RemoveEmptyEntries));
+			else if (Value(arg, "/features:") is string feature)
+				AddFeature(features, feature);
+			else if (Value(arg, "/langversion:") is string language)
+				langVersion = language;
+			else if (Value(arg, "/out:") is string output)
+				assemblyName = Path.GetFileNameWithoutExtension(output);
+			else if (Value(arg, "/main:") is string main)
+				mainTypeName = main;
+			else if (Value(arg, "/target:") is string target)
+				outputKind = Kind(target);
+			else if (Value(arg, "/nullable:") is string nullableMode)
+				nullable = Nullability(nullableMode);
+			else if (arg is "/nullable" or "/nullable+")
+				nullable = NullableContextOptions.Enable;
+			else if (arg is "/unsafe" or "/unsafe+")
 				allowUnsafe = true;
-			else if (arg.StartsWith("/out:"))
-				assemblyName = Path.GetFileNameWithoutExtension(Unquote(Rest(arg, "/out:")));
+			else if (arg is "/checked" or "/checked+")
+				checkOverflow = true;
+			else if (arg is "/optimize" or "/optimize+" or "/o" or "/o+")
+				optimize = true;
 			else if (!arg.StartsWith("/") && arg.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
 				sources.Add(Rooted(projectDir, Unquote(arg)));
 		}
@@ -56,17 +92,57 @@ sealed class CscInvocation
 			AssemblyName = assemblyName,
 			Sources = sources,
 			References = references,
-			Generators = generators,
+			Analyzers = analyzers,
+			AnalyzerConfigs = analyzerConfigs,
+			AdditionalFiles = additionalFiles,
 			Defines = defines,
+			Features = features,
 			LangVersion = langVersion,
-			AllowUnsafe = allowUnsafe
+			AllowUnsafe = allowUnsafe,
+			CheckOverflow = checkOverflow,
+			Optimize = optimize,
+			OutputKind = outputKind,
+			Nullable = nullable,
+			MainTypeName = mainTypeName
 		};
 	}
 
-	static string Rest(
+	// a feature is name=value, and the value may itself contain the separators we split other options on
+	static void AddFeature(
+		Dictionary<string, string> features,
+		string feature)
+	{
+		int separator = feature.IndexOf('=');
+
+		features[separator < 0 ? feature : feature.Substring(0, separator)] =
+			separator < 0 ? "true" : feature.Substring(separator + 1);
+	}
+
+	static OutputKind Kind(
+		string target) =>
+		target.ToLowerInvariant() switch
+		{
+			"library" => OutputKind.DynamicallyLinkedLibrary,
+			"module" => OutputKind.NetModule,
+			"winexe" => OutputKind.WindowsApplication,
+			"winmdobj" => OutputKind.WindowsRuntimeMetadata,
+			_ => OutputKind.ConsoleApplication
+		};
+
+	static NullableContextOptions Nullability(
+		string mode) =>
+		mode.ToLowerInvariant() switch
+		{
+			"enable" => NullableContextOptions.Enable,
+			"warnings" => NullableContextOptions.Warnings,
+			"annotations" => NullableContextOptions.Annotations,
+			_ => NullableContextOptions.Disable
+		};
+
+	static string? Value(
 		string arg,
 		string prefix) =>
-		arg.Substring(prefix.Length);
+		arg.StartsWith(prefix, StringComparison.Ordinal) ? Unquote(arg.Substring(prefix.Length)) : null;
 
 	static string Unquote(
 		string value) =>
