@@ -22,10 +22,12 @@ public partial class MenuViewModel(
 	Task OpenMovie()
 	{
 		// navigator.AlertAsync("You pressed the movie!", "nahhhh");
-		Console.WriteLine("Opening movie view");
-		Console.WriteLine("Opening movie view");
-		Console.WriteLine("Opening movie view");
-		Console.WriteLine("Opening movie view");
+		int babe = 13;
+
+		babe = babe * 193 + 123;
+		babe = babe / 1838;
+		Console.WriteLine(babe);
+
 		return Task.CompletedTask;
 	}
 	// navigator.PushAsync<MovieInfoViewModel>();

@@ -29,6 +29,7 @@ sealed class SdbConnection
 	readonly List<byte[]> buffered = [];
 
 	Socket? ide;
+	Action? onClosed;
 	bool buffering;
 	int nextId;
 
@@ -87,11 +88,13 @@ sealed class SdbConnection
 	// raw, then frame-parse so we can swallow our own injected replies + the ENC events.
 	public static SdbConnection Mitm(
 		Socket appSocket,
-		Socket riderSocket)
+		Socket riderSocket,
+		Action onClosed)
 	{
 		SdbConnection connection = new(appSocket)
 		{
 			ide = riderSocket,
+			onClosed = onClosed,
 			buffering = false,
 			nextId = InjectedIdBase
 		};
@@ -137,8 +140,9 @@ sealed class SdbConnection
 					continue;
 				}
 
-				if (!IsEncEvent(header, payload))
-					ide!.Send([.. header, .. payload]);
+				// forward everything (incl. the ENC/METHOD_UPDATE events our apply triggers) so Rider
+				// learns of the new method versions and re-syncs its symbols for edited methods
+				ide!.Send([.. header, .. payload]);
 			}
 		}
 		catch
@@ -192,6 +196,22 @@ sealed class SdbConnection
 			}
 		}
 		catch { }
+		finally
+		{
+			CloseBoth();
+		}
+	}
+
+	int closed;
+
+	void CloseBoth()
+	{
+		if (Interlocked.Exchange(ref closed, 1) == 1)
+			return;
+
+		try { app.Dispose(); } catch { }
+		try { ide?.Dispose(); } catch { }
+		try { onClosed?.Invoke(); } catch { }
 	}
 
 	void StartReader()
@@ -245,6 +265,31 @@ sealed class SdbConnection
 			foreach (TaskCompletionSource<(int, byte[])> waiter in pending.Values)
 				waiter.TrySetException(new IOException("sdb connection closed"));
 		}
+		finally
+		{
+			// the app died/detached; hand Rider a clean VM_DEATH so it ends the session instead of
+			// hanging on the dropped socket
+			try { ide?.Send(VmDeath()); } catch { }
+			CloseBoth();
+		}
+	}
+
+	// a COMPOSITE event (set 64, cmd 100) carrying one VMDeath (kind 0x01, exit_code 0)
+	static byte[] VmDeath()
+	{
+		byte[] packet = new byte[25];
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(0), packet.Length);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(4), 0);
+		packet[8] = 0;
+		packet[9] = 64;
+		packet[10] = 100;
+		packet[11] = 0;
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(12), 1);
+		packet[16] = 0x01;
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(17), 0);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(21), 0);
+
+		return packet;
 	}
 
 	static bool IsEncEvent(

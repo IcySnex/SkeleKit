@@ -28,7 +28,10 @@ sealed class NativeBridge
 
 	SdbConnection? sdb;
 	Socket? reloadClient;
+	Lifetime lifetime;
+	LifetimeDefinition? sessionDef;
 	int connections;
+	int engineStarted;
 	int domain;
 	int module;
 	string assemblyName = "";
@@ -48,6 +51,8 @@ sealed class NativeBridge
 	public void Start(
 		Lifetime lifetime)
 	{
+		this.lifetime = lifetime;
+
 		Socket appListener = Bind(AppPort);
 		Socket reloadListener = Bind(ReloadPort);
 
@@ -56,29 +61,30 @@ sealed class NativeBridge
 			Close(appListener);
 			Close(reloadListener);
 			Close(reloadClient);
+			connections = 0;
+			engineStarted = 0;
+			sdb = null;
+			module = 0;
 		});
 
 		Accept(appListener, OnApp);
 		Accept(reloadListener, socket => reloadClient = socket);
 
-		Thread engine = new(() =>
-		{
-			try
-			{
-				RunEngine(lifetime);
-			}
-			catch (Exception exception)
-			{
-				log($"engine stopped: {exception.Message}");
-			}
-		})
-		{
-			IsBackground = true,
-			Name = "skele-native-engine"
-		};
-		engine.Start();
-
 		log($"native bridge up: app :{AppPort} -> Rider :{RiderPort}, reload :{ReloadPort}");
+	}
+
+	// the sdb connection dropped (app died/detached); reset per-session state so the next Debug
+	// re-MITMs cleanly and rebuilds a baseline against the freshly-deployed dll
+	void EndSession()
+	{
+		LifetimeDefinition? def = Interlocked.Exchange(ref sessionDef, null);
+		def?.Terminate();
+
+		connections = 0;
+		engineStarted = 0;
+		module = 0;
+		sdb = null;
+		log("debug session ended");
 	}
 
 	void OnApp(
@@ -97,11 +103,42 @@ sealed class NativeBridge
 			return;
 		}
 
-		// the app opens the sdb debugger connection first; MITM it for injection, dumb-relay the rest
+		// the app opens the sdb debugger connection first; MITM it for injection, dumb-relay the rest.
+		// build the engine baseline now (Rider has just deployed the current dll)
 		if (Interlocked.Increment(ref connections) == 1)
-			sdb = SdbConnection.Mitm(appSocket, riderSocket);
+		{
+			sessionDef = lifetime.CreateNested();
+			sdb = SdbConnection.Mitm(appSocket, riderSocket, EndSession);
+			StartEngine(sessionDef.Lifetime);
+		}
 		else
+		{
 			DumbRelay(appSocket, riderSocket);
+		}
+	}
+
+	void StartEngine(
+		Lifetime sessionLifetime)
+	{
+		if (Interlocked.Exchange(ref engineStarted, 1) == 1)
+			return;
+
+		Thread engine = new(() =>
+		{
+			try
+			{
+				RunEngine(sessionLifetime);
+			}
+			catch (Exception exception)
+			{
+				log($"engine stopped: {exception.Message}");
+			}
+		})
+		{
+			IsBackground = true,
+			Name = "skele-native-engine"
+		};
+		engine.Start();
 	}
 
 	void RunEngine(
@@ -175,8 +212,15 @@ sealed class NativeBridge
 				Compilation newCompilation = snapshot.ReplaceSyntaxTree(oldTree, newTree);
 				List<SemanticEdit> edits = Differ.Edits(snapshot, newCompilation, oldTree, newTree, out List<string> rude);
 
-				foreach (string note in rude)
-					log($"  ! {note}");
+				// a structural change (added/removed member, changed signature) can push a delta that
+				// crashes the app; skip it and keep the baseline, the user restarts to pick it up
+				if (rude.Count > 0)
+				{
+					foreach (string note in rude)
+						log($"  ! {note}");
+					log($"  {Path.GetFileName(path)}: structural change, restart to apply (not hot-reloaded)");
+					return;
+				}
 
 				if (edits.Count == 0)
 				{
@@ -274,6 +318,12 @@ sealed class NativeBridge
 				}
 			}
 			catch { }
+			finally
+			{
+				// propagate the disconnect so the peer (and Rider's session) tears down
+				Close(from);
+				Close(to);
+			}
 		})
 		{
 			IsBackground = true,
