@@ -23,6 +23,9 @@ public partial class MenuViewModel(
 	{
 		// navigator.AlertAsync("You pressed the movie!", "nahhhh");
 		Console.WriteLine("Opening movie view");
+		Console.WriteLine("Opening movie view");
+		Console.WriteLine("Opening movie view");
+		Console.WriteLine("Opening movie view");
 		return Task.CompletedTask;
 	}
 	// navigator.PushAsync<MovieInfoViewModel>();
