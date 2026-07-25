@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using Mono.Cecil;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
@@ -45,7 +46,7 @@ sealed class Project
 		List<MetadataReference> references = [.. csc.References
 			.Where(File.Exists)
 			.Distinct(StringComparer.OrdinalIgnoreCase)
-			.Select(path => (MetadataReference)MetadataReference.CreateFromFile(path))];
+			.Select(path => Reference(path, csc.ReferenceVersionOverrides))];
 
 		CSharpCompilationOptions options = new(
 			csc.OutputKind,
@@ -84,6 +85,31 @@ sealed class Project
 			Compilation = compilation,
 			ParseOptions = parseOptions
 		};
+	}
+
+	static MetadataReference Reference(
+		string path,
+		Dictionary<string, Version> versionOverrides)
+	{
+		if (!versionOverrides.TryGetValue(path, out Version? version))
+			return MetadataReference.CreateFromFile(path);
+
+		// Roslyn reads AssemblyRef identities from referenced metadata when emitting a delta. Rewriting
+		// a private in-memory copy gives it the linked identity without compiling against the trimmed
+		// runtime assembly, whose deliberately reduced API surface cannot rebuild library source.
+		using AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(path, new ReaderParameters
+		{
+			InMemory = true,
+			ReadingMode = ReadingMode.Immediate
+		});
+		assembly.Name.Version = version;
+
+		using MemoryStream image = new();
+		assembly.Write(image);
+
+		return MetadataReference.CreateFromImage(
+			ImmutableArray.Create(image.ToArray()),
+			filePath: path);
 	}
 
 	// The SDK asks for "latest", meaning whatever the compiler that ran the build supports. Ours is a

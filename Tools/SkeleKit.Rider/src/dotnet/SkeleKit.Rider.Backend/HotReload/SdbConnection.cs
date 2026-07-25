@@ -15,6 +15,7 @@ namespace SkeleKit.Rider.Backend.HotReload;
 // consumed here, so Rider never sees traffic it did not ask for.
 sealed class SdbConnection
 {
+	const byte CmdSetVm = 1;
 	const byte CmdSetAppDomain = 20;
 	const byte CmdSetAssembly = 21;
 	const byte CmdSetModule = 24;
@@ -30,35 +31,32 @@ sealed class SdbConnection
 	readonly object ideLock = new();
 
 	readonly Action<SdbConnection> onSdbIdentified;
-	readonly Action onSdbClosed;
-	readonly Action<SdbConnection> onOutput;
+	readonly Action<SdbConnection> onSdbClosed;
 
 	bool isSdb;
 	int nextId = InjectedIdBase;
+	int logThreadId;
 	int closed;
 
 	SdbConnection(
 		Socket app,
 		Socket ide,
 		Action<SdbConnection> onSdbIdentified,
-		Action onSdbClosed,
-		Action<SdbConnection> onOutput)
+		Action<SdbConnection> onSdbClosed)
 	{
 		this.app = app;
 		this.ide = ide;
 		this.onSdbIdentified = onSdbIdentified;
 		this.onSdbClosed = onSdbClosed;
-		this.onOutput = onOutput;
 	}
 
 	public static SdbConnection Mitm(
 		Socket appSocket,
 		Socket riderSocket,
 		Action<SdbConnection> onSdbIdentified,
-		Action onSdbClosed,
-		Action<SdbConnection> onOutput)
+		Action<SdbConnection> onSdbClosed)
 	{
-		SdbConnection connection = new(appSocket, riderSocket, onSdbIdentified, onSdbClosed, onOutput);
+		SdbConnection connection = new(appSocket, riderSocket, onSdbIdentified, onSdbClosed);
 
 		Start(connection.PumpIdeToApp, "skele-sdb-rider");
 		Start(connection.ReadApp, "skele-sdb-mitm");
@@ -66,14 +64,12 @@ sealed class SdbConnection
 		return connection;
 	}
 
-	// Write raw bytes to Rider on this (output) connection, serialized against the relay pump so host
-	// console notices cannot interleave mid-write with the app's own output.
-	public void SendToIde(
+	void SendToIde(
 		byte[] data)
 	{
 		lock (ideLock)
 		{
-			try { ide.Send(data); } catch { }
+			try { SendAll(ide, data); } catch { }
 		}
 	}
 
@@ -105,7 +101,7 @@ sealed class SdbConnection
 			{
 				// hand Rider a clean VM_DEATH so it ends the session instead of hanging on the drop
 				SendToIde(VmDeath());
-				try { onSdbClosed(); } catch { }
+				try { onSdbClosed(this); } catch { }
 			}
 
 			CloseBoth();
@@ -114,8 +110,6 @@ sealed class SdbConnection
 
 	void RelayOutput()
 	{
-		onOutput(this);
-
 		byte[] buffer = new byte[8192];
 		while (true)
 		{
@@ -133,6 +127,9 @@ sealed class SdbConnection
 		{
 			byte[] header = ReadExactly(app, 11);
 			int length = BinaryPrimitives.ReadInt32BigEndian(header);
+			if (length < 11 || length > 256 * 1024 * 1024)
+				throw new InvalidDataException($"invalid sdb packet length {length}");
+
 			int id = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(4));
 			byte flags = header[8];
 
@@ -161,7 +158,7 @@ sealed class SdbConnection
 					break;
 
 				lock (app)
-					app.Send(chunk.AsSpan(0, read).ToArray());
+					SendAll(app, chunk, read);
 			}
 		}
 		catch { }
@@ -209,7 +206,7 @@ sealed class SdbConnection
 			payload.CopyTo(packet.AsSpan(11));
 
 			lock (app)
-				app.Send(packet);
+				SendAll(app, packet);
 
 			if (!waiter.Task.Wait(CommandTimeout))
 				throw new TimeoutException(
@@ -227,6 +224,36 @@ sealed class SdbConnection
 	{
 		(_, byte[] data) = Command(CmdSetAppDomain, 1, []);
 		int offset = 0;
+
+		return ReadInt(data, ref offset);
+	}
+
+	// USER_LOG is the debugger protocol event used by Debug.WriteLine. Injecting the same event keeps
+	// hot-reload feedback in Rider's existing Debug output, without borrowing stdout or creating a
+	// second UI surface.
+	public void UserLog(
+		string message)
+	{
+		int thread = Volatile.Read(ref logThreadId);
+		if (thread == 0)
+		{
+			thread = FirstThread();
+			Volatile.Write(ref logThreadId, thread);
+		}
+
+		SendToIde(UserLogEvent(thread, $"[SkeleKit] {message}\n"));
+	}
+
+	int FirstThread()
+	{
+		(int error, byte[] data) = Command(CmdSetVm, 2, []);
+		if (error != 0)
+			throw new InvalidOperationException($"ALL_THREADS failed with sdb error {error}");
+
+		int offset = 0;
+		int count = ReadInt(data, ref offset);
+		if (count < 1)
+			throw new InvalidOperationException("the app has no debugger-visible threads");
 
 		return ReadInt(data, ref offset);
 	}
@@ -312,22 +339,52 @@ sealed class SdbConnection
 		thread.Start();
 	}
 
-	// a COMPOSITE event (set 64, cmd 100) carrying one VMDeath (kind 0x01, exit_code 0)
+	// A COMPOSITE event (set 64, cmd 100) carrying one USER_LOG. Object ids are four bytes in
+	// Mono's negotiated protocol used by Rider and by every command above.
+	static byte[] UserLogEvent(
+		int thread,
+		string message)
+	{
+		byte[] category = Encoding.UTF8.GetBytes("");
+		byte[] text = Encoding.UTF8.GetBytes(message);
+		byte[] packet = new byte[37 + category.Length + text.Length];
+
+		CompositeHeader(packet, 0x10);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(21), thread);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(25), 0);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(29), category.Length);
+		category.CopyTo(packet.AsSpan(33));
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(33 + category.Length), text.Length);
+		text.CopyTo(packet.AsSpan(37 + category.Length));
+
+		return packet;
+	}
+
+	// A clean VM_DEATH keeps Rider from hanging when the app socket disappears. Every COMPOSITE event,
+	// including VM_DEATH, contains a thread id before its event-specific payload.
 	static byte[] VmDeath()
 	{
-		byte[] packet = new byte[25];
-		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(0), packet.Length);
+		byte[] packet = new byte[29];
+		CompositeHeader(packet, 0x01);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(21), 0);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(25), 0);
+
+		return packet;
+	}
+
+	static void CompositeHeader(
+		byte[] packet,
+		byte eventKind)
+	{
+		BinaryPrimitives.WriteInt32BigEndian(packet, packet.Length);
 		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(4), 0);
 		packet[8] = 0;
 		packet[9] = 64;
 		packet[10] = 100;
 		packet[11] = 0;
 		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(12), 1);
-		packet[16] = 0x01;
+		packet[16] = eventKind;
 		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(17), 0);
-		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(21), 0);
-
-		return packet;
 	}
 
 	static byte[] Int(
@@ -377,5 +434,24 @@ sealed class SdbConnection
 		}
 
 		return buffer;
+	}
+
+	static void SendAll(
+		Socket socket,
+		byte[] data,
+		int count = -1)
+	{
+		if (count < 0)
+			count = data.Length;
+
+		int sent = 0;
+		while (sent < count)
+		{
+			int chunk = socket.Send(data, sent, count - sent, SocketFlags.None);
+			if (chunk == 0)
+				throw new EndOfStreamException();
+
+			sent += chunk;
+		}
 	}
 }

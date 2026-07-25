@@ -21,6 +21,5 @@ object SkeleKitModel : Ext(SolutionModel.Solution) {
         property("bridgePorts", BridgePorts.nullable)
 
         // backend -> frontend: bridge / hot-reload status lines
-        signal("log", string)
     }
 }

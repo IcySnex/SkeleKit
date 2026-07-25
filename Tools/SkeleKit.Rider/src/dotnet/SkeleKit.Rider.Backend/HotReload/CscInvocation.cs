@@ -1,3 +1,6 @@
+using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
 
 namespace SkeleKit.Rider.Backend.HotReload;
@@ -11,6 +14,7 @@ sealed class CscInvocation
 	public required string AssemblyName { get; init; }
 	public required List<string> Sources { get; init; }
 	public required List<string> References { get; init; }
+	public Dictionary<string, Version> ReferenceVersionOverrides { get; } = new(StringComparer.OrdinalIgnoreCase);
 	public required List<string> Analyzers { get; init; }
 	public required List<string> AnalyzerConfigs { get; init; }
 	public required List<string> AdditionalFiles { get; init; }
@@ -105,6 +109,74 @@ sealed class CscInvocation
 			Nullable = nullable,
 			MainTypeName = mainTypeName
 		};
+	}
+
+	// Linking can retarget an assembly reference to the runtime-pack version. The compiler command line
+	// still points at the targeting-pack facade, and Roslyn refuses to emit an EnC delta when that
+	// facade's identity differs from the deployed module's AssemblyRef. Record only identities the
+	// linker changed; Project retargets those facades in memory while preserving their full API surface.
+	public void AlignReferencesWithDeployment(
+		string deployedDll,
+		Action<string> log)
+	{
+		Dictionary<string, Version> expected = AssemblyReferences(deployedDll);
+		string deployedDirectory = Path.GetDirectoryName(deployedDll)!;
+
+		for (int index = 0; index < References.Count; index++)
+		{
+			AssemblyName? current = AssemblyIdentity(References[index]);
+			if (current?.Name is not string name
+				|| current.Version is not Version currentVersion
+				|| !expected.TryGetValue(name, out Version? expectedVersion)
+				|| currentVersion == expectedVersion)
+				continue;
+
+			string candidate = Path.Combine(deployedDirectory, Path.GetFileName(References[index]));
+			AssemblyName? deployed = AssemblyIdentity(candidate);
+			if (deployed?.Name != name || deployed.Version != expectedVersion)
+				continue;
+
+			ReferenceVersionOverrides[References[index]] = expectedVersion;
+			log($"  retargeting {name} reference {currentVersion} to deployed {expectedVersion}");
+		}
+	}
+
+	static Dictionary<string, Version> AssemblyReferences(
+		string path)
+	{
+		Dictionary<string, Version> references = new(StringComparer.OrdinalIgnoreCase);
+
+		try
+		{
+			using FileStream stream = File.OpenRead(path);
+			using PEReader pe = new(stream);
+			MetadataReader metadata = pe.GetMetadataReader();
+
+			foreach (AssemblyReferenceHandle handle in metadata.AssemblyReferences)
+			{
+				AssemblyReference reference = metadata.GetAssemblyReference(handle);
+				references[metadata.GetString(reference.Name)] = reference.Version;
+			}
+		}
+		catch { }
+
+		return references;
+	}
+
+	static AssemblyName? AssemblyIdentity(
+		string path)
+	{
+		if (!File.Exists(path))
+			return null;
+
+		try
+		{
+			return System.Reflection.AssemblyName.GetAssemblyName(path);
+		}
+		catch
+		{
+			return null;
+		}
 	}
 
 	// a feature is name=value, and the value may itself contain the separators we split other options on

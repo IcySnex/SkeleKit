@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 
@@ -19,8 +20,16 @@ static class Differ
 		SemanticModel oldModel = oldCompilation.GetSemanticModel(oldTree);
 		SemanticModel newModel = newCompilation.GetSemanticModel(newTree);
 
-		Dictionary<string, SyntaxNode> oldBodies = Bodies(oldTree);
-		Dictionary<string, SyntaxNode> newBodies = Bodies(newTree);
+		// Anything outside the body shapes this deliberately-small engine understands is structural or
+		// unsupported. Never silently accept it into the snapshot: the runtime would still be executing
+		// the old declaration while later deltas were built from the new one.
+		SyntaxNode oldShape = BodyStripper.Instance.Visit(oldTree.GetRoot())!;
+		SyntaxNode newShape = BodyStripper.Instance.Visit(newTree.GetRoot())!;
+		if (!TokensEquivalent(oldShape, newShape))
+			rude.Add("structural or unsupported edit (needs restart)");
+
+		Dictionary<string, SyntaxNode> oldBodies = Bodies(oldTree, oldModel);
+		Dictionary<string, SyntaxNode> newBodies = Bodies(newTree, newModel);
 
 		foreach (KeyValuePair<string, SyntaxNode> pair in newBodies)
 		{
@@ -33,7 +42,7 @@ static class Differ
 				continue;
 			}
 
-			if (Body(oldNode) == Body(newNode))
+			if (oldNode.IsEquivalentTo(newNode))
 				continue;
 
 			if (oldModel.GetDeclaredSymbol(oldNode) is not ISymbol oldSymbol
@@ -50,52 +59,86 @@ static class Differ
 		return edits;
 	}
 
+	// SyntaxNode.IsEquivalentTo can still distinguish trivia attached to nodes removed by BodyStripper
+	// (for example the blank line left behind after an added method is deleted). Declaration tokens are
+	// the actual structural contract; comparing them ignores whitespace/comments without weakening the
+	// member/signature guard.
+	static bool TokensEquivalent(
+		SyntaxNode oldShape,
+		SyntaxNode newShape)
+	{
+		using IEnumerator<SyntaxToken> oldTokens = oldShape.DescendantTokens().GetEnumerator();
+		using IEnumerator<SyntaxToken> newTokens = newShape.DescendantTokens().GetEnumerator();
+
+		while (true)
+		{
+			bool hasOld = oldTokens.MoveNext();
+			bool hasNew = newTokens.MoveNext();
+			if (hasOld != hasNew)
+				return false;
+
+			if (!hasOld)
+				return true;
+
+			if (oldTokens.Current.RawKind != newTokens.Current.RawKind
+				|| oldTokens.Current.Text != newTokens.Current.Text)
+				return false;
+		}
+	}
+
 	static Dictionary<string, SyntaxNode> Bodies(
-		SyntaxTree tree)
+		SyntaxTree tree,
+		SemanticModel model)
 	{
 		Dictionary<string, SyntaxNode> map = [];
 
 		foreach (SyntaxNode node in tree.GetRoot().DescendantNodes())
 		{
-			string? key = node switch
-			{
-				MethodDeclarationSyntax method => Key(method, method.Identifier.Text, method.ParameterList),
-				ConstructorDeclarationSyntax constructor => Key(constructor, ".ctor", constructor.ParameterList),
-				PropertyDeclarationSyntax property => Key(property, property.Identifier.Text, null),
-				_ => null
-			};
+			if (node is not (MethodDeclarationSyntax or ConstructorDeclarationSyntax or PropertyDeclarationSyntax))
+				continue;
 
-			if (key is not null)
-				map[key] = node;
+			ISymbol? symbol = model.GetDeclaredSymbol(node);
+			if (symbol is not null)
+				map[symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)] = node;
 		}
 
 		return map;
 	}
 
-	static string Key(
-		SyntaxNode node,
-		string name,
-		ParameterListSyntax? parameters)
+	sealed class BodyStripper : CSharpSyntaxRewriter
 	{
-		string type = node.Ancestors()
-			.OfType<TypeDeclarationSyntax>()
-			.Select(declaration => declaration.Identifier.Text)
-			.Aggregate("", (outer, inner) => inner + "+" + outer);
+		public static readonly BodyStripper Instance = new();
 
-		string signature = parameters is null
-			? name
-			: name + "(" + string.Join(",", parameters.Parameters.Select(parameter => parameter.Type?.ToString())) + ")";
+		public override SyntaxNode? VisitMethodDeclaration(
+			MethodDeclarationSyntax node) =>
+			base.VisitMethodDeclaration(node
+				.WithBody(null)
+				.WithExpressionBody(null)
+				.WithSemicolonToken(default));
 
-		return type + signature;
-	}
+		public override SyntaxNode? VisitConstructorDeclaration(
+			ConstructorDeclarationSyntax node) =>
+			base.VisitConstructorDeclaration(node
+				.WithBody(null)
+				.WithExpressionBody(null)
+				.WithInitializer(null)
+				.WithSemicolonToken(default));
 
-	static string Body(
-		SyntaxNode node) =>
-		node switch
+		public override SyntaxNode? VisitPropertyDeclaration(
+			PropertyDeclarationSyntax node)
 		{
-			MethodDeclarationSyntax method => method.Body?.ToString() ?? method.ExpressionBody?.ToString() ?? "",
-			ConstructorDeclarationSyntax constructor => constructor.Body?.ToString() ?? "",
-			PropertyDeclarationSyntax property => property.ToString(),
-			_ => ""
-		};
+			AccessorListSyntax? accessors = node.AccessorList;
+			if (accessors is not null)
+				accessors = accessors.WithAccessors(new SyntaxList<AccessorDeclarationSyntax>(
+					accessors.Accessors.Select(accessor => accessor
+						.WithBody(null)
+						.WithExpressionBody(null)
+						.WithSemicolonToken(default))));
+
+			return base.VisitPropertyDeclaration(node
+				.WithAccessorList(accessors)
+				.WithExpressionBody(null)
+				.WithSemicolonToken(default));
+		}
+	}
 }

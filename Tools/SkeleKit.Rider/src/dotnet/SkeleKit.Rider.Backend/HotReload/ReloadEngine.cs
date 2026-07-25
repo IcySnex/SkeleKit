@@ -1,9 +1,8 @@
-using System.Reflection.Metadata;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
+using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.Text;
 
 namespace SkeleKit.Rider.Backend.HotReload;
@@ -59,6 +58,7 @@ sealed class ReloadEngine
 			return null;
 
 		CscInvocation csc = CscInvocation.Parse(commandLine, project.ProjectDir);
+		csc.AlignReferencesWithDeployment(project.DeployedDll, log);
 
 		MetadataShape? deployed = MetadataShape.OfAssembly(project.DeployedDll);
 		if (deployed is null)
@@ -110,10 +110,17 @@ sealed class ReloadEngine
 		}
 
 		Guid running = connection.ModuleMvid(module);
-		if (running == Guid.Empty || running == baseline.Mvid)
+		if (running == baseline.Mvid)
 		{
 			reason = "";
 			return true;
+		}
+
+		if (running == Guid.Empty)
+		{
+			reason = $"could not verify the running build of {project.AssemblyName}; restart the debug session";
+			module = 0;
+			return false;
 		}
 
 		reason = $"the app is running a different build of {project.AssemblyName} ({running:D}) than the one on disk ({baseline.Mvid:D}); rebuild and redeploy";
@@ -164,6 +171,17 @@ sealed class ReloadEngine
 			return Outcome.Unchanged;
 		}
 
+		// Mono does not add new external TypeRefs reliably during EnC. Inspect the operations that
+		// actually form the changed methods, rather than every row Roslyn happens to put in the delta:
+		// current Roslyn emits an unused InlineArrayAttribute TypeRef even for a literal-only edit.
+		if (UsesUnreferencedType(snapshot, updated, edits, out string unsafeReference))
+		{
+			log($"  {name}: uses an unreferenced runtime type ({unsafeReference}), restart to apply");
+			notice($"Skipped {name}: uses a type the running build never referenced — restart to apply.");
+
+			return Outcome.Skipped;
+		}
+
 		using MemoryStream metadata = new();
 		using MemoryStream il = new();
 		using MemoryStream pdb = new();
@@ -181,24 +199,14 @@ sealed class ReloadEngine
 			return Outcome.Failed;
 		}
 
-		// Mono's Edit-and-Continue cannot resolve a type the baseline never referenced (the first use of
-		// Debug.WriteLine, say), and the app dies when the edited method runs
-		if (AddsNewReferences(metadata.ToArray()))
-		{
-			log($"  {name}: adds a new type reference, restart to apply");
-			notice($"Skipped {name}: uses a type the running build never referenced — restart to apply.");
-			Accept(path, newTree, updated);
-
-			return Outcome.Skipped;
-		}
-
+		byte[] metadataBytes = metadata.ToArray();
 		if (!Resolve(connection))
 		{
 			log($"  {name}: {project.AssemblyName} is not loaded in the app yet");
 			return Outcome.Failed;
 		}
 
-		int error = connection.ApplyChanges(domain, module, metadata.ToArray(), il.ToArray(), pdb.ToArray());
+		int error = connection.ApplyChanges(domain, module, metadataBytes, il.ToArray(), pdb.ToArray());
 		if (error != 0)
 		{
 			log($"  {name}: APPLY_CHANGES error {error}");
@@ -240,21 +248,299 @@ sealed class ReloadEngine
 		return module != 0;
 	}
 
-	// True if the delta introduces a TypeRef or AssemblyRef the baseline did not have.
-	static bool AddsNewReferences(
-		byte[] metadataDelta)
+	bool UsesUnreferencedType(
+		Compilation oldCompilation,
+		Compilation newCompilation,
+		IEnumerable<SemanticEdit> edits,
+		out string unsafeReference)
 	{
-		try
-		{
-			using MetadataReaderProvider provider = MetadataReaderProvider.FromMetadataStream(new MemoryStream(metadataDelta));
-			MetadataReader reader = provider.GetMetadataReader();
+		HashSet<string> existingMethodTypes = ReferencedTypes(
+			oldCompilation,
+			edits.Select(edit => edit.OldSymbol).OfType<IMethodSymbol>());
+		HashSet<string> checkedTypes = new(StringComparer.Ordinal);
+		string foundReference = "";
 
-			return reader.GetTableRowCount(TableIndex.TypeRef) > 0
-				|| reader.GetTableRowCount(TableIndex.AssemblyRef) > 0;
-		}
-		catch
+		foreach (IMethodSymbol method in edits
+			.Select(edit => edit.NewSymbol)
+			.OfType<IMethodSymbol>())
 		{
-			return false;
+			foreach (SyntaxReference syntaxReference in method.DeclaringSyntaxReferences)
+			{
+				SyntaxNode declaration = syntaxReference.GetSyntax();
+				SemanticModel model = newCompilation.GetSemanticModel(declaration.SyntaxTree);
+				IOperation? root = model.GetOperation(declaration);
+				if (root is null)
+					continue;
+
+				foreach (IOperation operation in Operations(root))
+				{
+					if (UnsafeType(operation.Type)
+						|| operation switch
+						{
+							IInvocationOperation value => UnsafeSymbol(value.TargetMethod),
+							IObjectCreationOperation value => UnsafeSymbol(value.Constructor),
+							IFieldReferenceOperation value => UnsafeSymbol(value.Field),
+							IPropertyReferenceOperation value => UnsafeSymbol(value.Property),
+							IEventReferenceOperation value => UnsafeSymbol(value.Event),
+							IMethodReferenceOperation value => UnsafeSymbol(value.Method),
+							IConversionOperation value => UnsafeSymbol(value.OperatorMethod),
+							IUnaryOperation value => UnsafeSymbol(value.OperatorMethod),
+							IBinaryOperation value => UnsafeSymbol(value.OperatorMethod),
+							ICompoundAssignmentOperation value => UnsafeSymbol(value.OperatorMethod),
+							IIncrementOrDecrementOperation value => UnsafeSymbol(value.OperatorMethod),
+							ITypeOfOperation value => UnsafeType(value.TypeOperand),
+							ISizeOfOperation value => UnsafeType(value.TypeOperand),
+							IIsTypeOperation value => UnsafeType(value.TypeOperand),
+							IDeclarationPatternOperation value => UnsafeType(value.MatchedType),
+							ITypePatternOperation value => UnsafeType(value.MatchedType),
+							IRecursivePatternOperation value => UnsafeType(value.MatchedType),
+							_ => false
+						})
+					{
+						unsafeReference = foundReference;
+						return true;
+					}
+				}
+			}
+		}
+
+		unsafeReference = "";
+		return false;
+
+		bool UnsafeSymbol(
+			ISymbol? symbol) =>
+			symbol switch
+			{
+				ITypeSymbol type => UnsafeType(type),
+				IMethodSymbol value => UnsafeType(value.ContainingType)
+					|| UnsafeType(value.ReturnType)
+					|| value.Parameters.Any(parameter => UnsafeType(parameter.Type))
+					|| value.TypeArguments.Any(UnsafeType),
+				IFieldSymbol value => UnsafeType(value.ContainingType) || UnsafeType(value.Type),
+				IPropertySymbol value => UnsafeType(value.ContainingType)
+					|| UnsafeType(value.Type)
+					|| value.Parameters.Any(parameter => UnsafeType(parameter.Type)),
+				IEventSymbol value => UnsafeType(value.ContainingType) || UnsafeType(value.Type),
+				_ => false
+			};
+
+		bool UnsafeType(
+			ITypeSymbol? type)
+		{
+			if (type is null || type.SpecialType != SpecialType.None)
+				return false;
+
+			switch (type)
+			{
+				case IArrayTypeSymbol array:
+					return UnsafeType(array.ElementType);
+				case IPointerTypeSymbol pointer:
+					return UnsafeType(pointer.PointedAtType);
+				case IFunctionPointerTypeSymbol function:
+					return UnsafeSymbol(function.Signature);
+				case ITypeParameterSymbol:
+				case IDynamicTypeSymbol:
+					return false;
+				case INamedTypeSymbol named:
+				{
+					foreach (ITypeSymbol argument in named.TypeArguments)
+						if (UnsafeType(argument))
+							return true;
+
+					INamedTypeSymbol definition = named.OriginalDefinition;
+					if (definition.TypeKind == TypeKind.Error
+						|| definition.IsAnonymousType
+						|| SymbolEqualityComparer.Default.Equals(definition.ContainingAssembly, newCompilation.Assembly)
+						|| definition.ContainingAssembly is null)
+						return false;
+
+					string name = FullMetadataName(definition);
+					string key = $"{definition.ContainingAssembly.Identity.Name}:{name}";
+					if (!checkedTypes.Add(key)
+						|| existingMethodTypes.Contains(key)
+						|| baseline.ContainsType(name))
+						return false;
+
+					foundReference = $"{name} from {definition.ContainingAssembly.Identity.Name}";
+					return true;
+				}
+				default:
+					return false;
+			}
+		}
+	}
+
+	static HashSet<string> ReferencedTypes(
+		Compilation compilation,
+		IEnumerable<IMethodSymbol> methods)
+	{
+		HashSet<string> found = new(StringComparer.Ordinal);
+
+		foreach (IMethodSymbol method in methods)
+		{
+			foreach (SyntaxReference syntaxReference in method.DeclaringSyntaxReferences)
+			{
+				SyntaxNode declaration = syntaxReference.GetSyntax();
+				IOperation? root = compilation.GetSemanticModel(declaration.SyntaxTree).GetOperation(declaration);
+				if (root is null)
+					continue;
+
+				foreach (IOperation operation in Operations(root))
+				AddOperation(operation);
+			}
+		}
+
+		return found;
+
+		void AddOperation(
+			IOperation operation)
+		{
+			AddType(operation.Type);
+
+			switch (operation)
+			{
+				case IInvocationOperation value:
+					AddSymbol(value.TargetMethod);
+					break;
+				case IObjectCreationOperation value:
+					AddSymbol(value.Constructor);
+					break;
+				case IFieldReferenceOperation value:
+					AddSymbol(value.Field);
+					break;
+				case IPropertyReferenceOperation value:
+					AddSymbol(value.Property);
+					break;
+				case IEventReferenceOperation value:
+					AddSymbol(value.Event);
+					break;
+				case IMethodReferenceOperation value:
+					AddSymbol(value.Method);
+					break;
+				case IConversionOperation value:
+					AddSymbol(value.OperatorMethod);
+					break;
+				case IUnaryOperation value:
+					AddSymbol(value.OperatorMethod);
+					break;
+				case IBinaryOperation value:
+					AddSymbol(value.OperatorMethod);
+					break;
+				case ICompoundAssignmentOperation value:
+					AddSymbol(value.OperatorMethod);
+					break;
+				case IIncrementOrDecrementOperation value:
+					AddSymbol(value.OperatorMethod);
+					break;
+				case ITypeOfOperation value:
+					AddType(value.TypeOperand);
+					break;
+				case ISizeOfOperation value:
+					AddType(value.TypeOperand);
+					break;
+				case IIsTypeOperation value:
+					AddType(value.TypeOperand);
+					break;
+				case IDeclarationPatternOperation value:
+					AddType(value.MatchedType);
+					break;
+				case ITypePatternOperation value:
+					AddType(value.MatchedType);
+					break;
+				case IRecursivePatternOperation value:
+					AddType(value.MatchedType);
+					break;
+			}
+		}
+
+		void AddSymbol(
+			ISymbol? symbol)
+		{
+			switch (symbol)
+			{
+				case ITypeSymbol type:
+					AddType(type);
+					break;
+				case IMethodSymbol value:
+					AddType(value.ContainingType);
+					AddType(value.ReturnType);
+					foreach (IParameterSymbol parameter in value.Parameters)
+						AddType(parameter.Type);
+					foreach (ITypeSymbol argument in value.TypeArguments)
+						AddType(argument);
+					break;
+				case IFieldSymbol value:
+					AddType(value.ContainingType);
+					AddType(value.Type);
+					break;
+				case IPropertySymbol value:
+					AddType(value.ContainingType);
+					AddType(value.Type);
+					foreach (IParameterSymbol parameter in value.Parameters)
+						AddType(parameter.Type);
+					break;
+				case IEventSymbol value:
+					AddType(value.ContainingType);
+					AddType(value.Type);
+					break;
+			}
+		}
+
+		void AddType(
+			ITypeSymbol? type)
+		{
+			if (type is null || type.SpecialType != SpecialType.None)
+				return;
+
+			switch (type)
+			{
+				case IArrayTypeSymbol array:
+					AddType(array.ElementType);
+					break;
+				case IPointerTypeSymbol pointer:
+					AddType(pointer.PointedAtType);
+					break;
+				case IFunctionPointerTypeSymbol function:
+					AddSymbol(function.Signature);
+					break;
+				case INamedTypeSymbol named:
+					foreach (ITypeSymbol argument in named.TypeArguments)
+						AddType(argument);
+
+					INamedTypeSymbol definition = named.OriginalDefinition;
+					if (definition.TypeKind != TypeKind.Error
+						&& !definition.IsAnonymousType
+						&& !SymbolEqualityComparer.Default.Equals(definition.ContainingAssembly, compilation.Assembly)
+						&& definition.ContainingAssembly is not null)
+						found.Add($"{definition.ContainingAssembly.Identity.Name}:{FullMetadataName(definition)}");
+					break;
+			}
+		}
+	}
+
+	static string FullMetadataName(
+		INamedTypeSymbol type)
+	{
+		if (type.ContainingType is INamedTypeSymbol containing)
+			return FullMetadataName(containing) + "+" + type.MetadataName;
+
+		string @namespace = type.ContainingNamespace?.ToDisplayString() ?? "";
+		return @namespace.Length == 0 ? type.MetadataName : @namespace + "." + type.MetadataName;
+	}
+
+	static IEnumerable<IOperation> Operations(
+		IOperation root)
+	{
+		Stack<IOperation> pending = new();
+		pending.Push(root);
+
+		while (pending.Count > 0)
+		{
+			IOperation current = pending.Pop();
+			yield return current;
+
+			foreach (IOperation child in current.ChildOperations)
+				pending.Push(child);
 		}
 	}
 

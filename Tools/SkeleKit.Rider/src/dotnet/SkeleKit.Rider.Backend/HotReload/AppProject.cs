@@ -18,6 +18,10 @@ sealed class AppProject
 		@"<AssemblyName>([^<]*)</AssemblyName>",
 		RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+	static readonly Regex OutputTypePattern = new(
+		@"<OutputType>\s*(Exe|WinExe)\s*</OutputType>",
+		RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
 	static readonly Regex SlnProjectPattern = new(
 		"^Project\\(\"\\{[^}]*\\}\"\\)\\s*=\\s*\"[^\"]*\",\\s*\"([^\"]+)\"",
 		RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline);
@@ -27,7 +31,11 @@ sealed class AppProject
 		RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 	static readonly Regex ProjectReferencePattern = new(
-		"<ProjectReference\\s+Include=\"([^\"]+)\"",
+		"<ProjectReference\\b[^>]*\\bInclude=\"([^\"]+)\"[^>]*>",
+		RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+	static readonly Regex ReferenceOutputAssemblyFalsePattern = new(
+		"\\bReferenceOutputAssembly\\s*=\\s*\"false\"",
 		RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 	public required string ProjectFile { get; init; }
@@ -37,6 +45,7 @@ sealed class AppProject
 	public required string Configuration { get; init; }
 	public required string TargetFramework { get; init; }
 	public required string RuntimeIdentifier { get; init; }
+	public required bool IsExecutable { get; init; }
 
 	public override string ToString() =>
 		$"{AssemblyName} ({Configuration}/{TargetFramework}/{RuntimeIdentifier})";
@@ -98,11 +107,39 @@ sealed class AppProject
 
 				AppProject? project = TryLoad(reference, requireIos: false, preferTargetFramework: app.TargetFramework);
 				if (project is AppProject candidate)
-					projects.Add(candidate);
+					projects.Add(UseAppDeployment(candidate, app));
 			}
 		}
 
 		return projects;
+	}
+
+	// Referenced projects are linked into the deployed app and can have a different MVID from their
+	// loose bin output. Baseline against the exact copy the runtime loaded; otherwise every library edit
+	// is rejected as a build mismatch even though app-project edits work.
+	static AppProject UseAppDeployment(
+		AppProject project,
+		AppProject app)
+	{
+		string outputDirectory = Path.GetDirectoryName(app.DeployedDll)!;
+		string appDirectory = outputDirectory.EndsWith(".app", StringComparison.OrdinalIgnoreCase)
+			? outputDirectory
+			: Path.Combine(outputDirectory, app.AssemblyName + ".app");
+		string deployed = Path.Combine(appDirectory, project.AssemblyName + ".dll");
+		if (!File.Exists(deployed))
+			return project;
+
+		return new()
+		{
+			ProjectFile = project.ProjectFile,
+			ProjectDir = project.ProjectDir,
+			AssemblyName = project.AssemblyName,
+			DeployedDll = deployed,
+			Configuration = project.Configuration,
+			TargetFramework = project.TargetFramework,
+			RuntimeIdentifier = project.RuntimeIdentifier,
+			IsExecutable = false
+		};
 	}
 
 	static List<string> ProjectReferences(
@@ -123,6 +160,11 @@ sealed class AppProject
 
 		foreach (Match match in ProjectReferencePattern.Matches(text))
 		{
+			// Analyzer/source-generator projects are build inputs, not runtime modules. Watching and
+			// warming them only delays readiness, then module resolution inevitably fails.
+			if (ReferenceOutputAssemblyFalsePattern.IsMatch(match.Value))
+				continue;
+
 			string path = match.Groups[1].Value.Replace('\\', Path.DirectorySeparatorChar);
 			if (path.IndexOf('$') >= 0)
 				continue;
@@ -177,7 +219,9 @@ sealed class AppProject
 			DeployedDll = dll,
 			Configuration = configuration,
 			TargetFramework = targetFramework,
-			RuntimeIdentifier = runtimeIdentifier
+			RuntimeIdentifier = runtimeIdentifier,
+			IsExecutable = OutputTypePattern.IsMatch(text)
+				|| dll.IndexOf($"{Path.DirectorySeparatorChar}{name}.app{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) >= 0
 		};
 	}
 

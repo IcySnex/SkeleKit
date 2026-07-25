@@ -22,7 +22,9 @@ public sealed class SkeleKitHost
 		ISolution solution,
 		IShellLocks locks)
 	{
-		NativeBridge bridge = new(SolutionFile(solution), line => OurLog.Info($"[native] {line}"));
+		NativeBridge bridge = new(
+			SolutionFile(solution),
+			line => OurLog.Info($"[native] {line}"));
 
 		// discovery walks the solution's build outputs, which is too much to do on the way in
 		Thread start = new(() =>

@@ -18,9 +18,17 @@ sealed class Baseline
 	readonly PEReader pe;
 	readonly MetadataReader metadata;
 	readonly MetadataReader? pdb;
+	readonly HashSet<string> referencedTypes = new(StringComparer.Ordinal);
 
 	public EmitBaseline Emit { get; set; }
 	public Guid Mvid { get; }
+
+	// Mono can resolve a runtime type in an edited body only if the deployed module already had a
+	// TypeRef for it. Scope is deliberately ignored: compiler facades and type forwarding can make
+	// Roslyn name System.Runtime while the deployed row names the implementation assembly.
+	public bool ContainsType(
+		string metadataName) =>
+		referencedTypes.Contains(metadataName);
 
 	public Baseline(
 		string dllPath,
@@ -31,6 +39,8 @@ sealed class Baseline
 		pe = new(new MemoryStream(assembly));
 		metadata = pe.GetMetadataReader();
 		Mvid = metadata.GetGuid(metadata.GetModuleDefinition().Mvid);
+		foreach (TypeReferenceHandle handle in metadata.TypeReferences)
+			referencedTypes.Add(TypeReferenceName(handle));
 
 		string pdbPath = Path.ChangeExtension(dllPath, ".pdb");
 		if (File.Exists(pdbPath))
@@ -42,6 +52,19 @@ sealed class Baseline
 			DebugInformation,
 			LocalSignature,
 			hasPortableDebugInformation: pdb is not null);
+	}
+
+	string TypeReferenceName(
+		TypeReferenceHandle handle)
+	{
+		TypeReference type = metadata.GetTypeReference(handle);
+		string name = metadata.GetString(type.Name);
+
+		if (type.ResolutionScope.Kind == HandleKind.TypeReference)
+			return TypeReferenceName((TypeReferenceHandle)type.ResolutionScope) + "+" + name;
+
+		string @namespace = metadata.GetString(type.Namespace);
+		return @namespace.Length == 0 ? name : @namespace + "." + name;
 	}
 
 	EditAndContinueMethodDebugInformation DebugInformation(

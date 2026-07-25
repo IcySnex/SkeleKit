@@ -33,8 +33,20 @@ sealed class MetadataShape
 		$"{declarations.Count} declarations";
 
 	public bool Matches(
-		MetadataShape other) =>
-		declarations.SetEquals(other.declarations);
+		MetadataShape deployed)
+	{
+		// The iOS linker injects static constructors into a rooted assembly (native registration
+		// plumbing) even when it preserves every source declaration. Those extra methods do not change
+		// the identity of source members Roslyn updates. Everything produced by the compilation must
+		// still exist in the deployed module, and every deployed-only declaration must be one of those
+		// linker constructors.
+		if (!declarations.IsSubsetOf(deployed.declarations))
+			return false;
+
+		return deployed.declarations
+			.Except(declarations)
+			.All(declaration => declaration.EndsWith("..cctor", StringComparison.Ordinal));
+	}
 
 	public IEnumerable<string> Missing(
 		MetadataShape other) =>

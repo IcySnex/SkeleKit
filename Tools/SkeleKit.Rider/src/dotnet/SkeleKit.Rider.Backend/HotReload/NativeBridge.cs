@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
 using JetBrains.Lifetimes;
 
 namespace SkeleKit.Rider.Backend.HotReload;
@@ -30,10 +29,10 @@ sealed class NativeBridge
 	readonly object sessionGate = new();
 
 	SdbConnection? sdb;
-	SdbConnection? output;
 	Socket? reloadClient;
 	Lifetime lifetime;
 	LifetimeDefinition? sessionDef;
+	long sessionVersion;
 
 	List<AppProject> watched = [];
 	Dictionary<string, ReloadEngine?> engines = new(StringComparer.OrdinalIgnoreCase);
@@ -74,12 +73,19 @@ sealed class NativeBridge
 		{
 			Close(appListener);
 			Close(reloadListener);
+			Socket? client;
+			lock (sessionGate)
+			{
+				client = reloadClient;
+				reloadClient = null;
+			}
+			Close(client);
 			EndSession();
 		});
 
 		Accept(appListener, OnApp);
 		if (reloadListener is not null)
-			Accept(reloadListener, socket => reloadClient = socket);
+			Accept(reloadListener, OnReloadClient);
 
 		log($"bridge up: app :{AppPort} -> Rider :{RiderPort}, reload :{ReloadPort}");
 
@@ -98,15 +104,26 @@ sealed class NativeBridge
 			return;
 		}
 
-		// the newest output connection carries our notices; writes to a closed one are harmless
-		SdbConnection.Mitm(appSocket, riderSocket, OnSdbIdentified, EndSession, connection => output = connection);
+		SdbConnection.Mitm(appSocket, riderSocket, OnSdbIdentified, EndSession);
 	}
 
-	// Write a line to Rider's debug console. It goes over a raw stdout connection so it can never
-	// corrupt the debugger stream.
+	// Use Mono's USER_LOG debugger event—the same path as Debug.WriteLine—so Rider owns presentation
+	// and the message appears in the existing Debug output.
 	void Notice(
-		string message) =>
-		output?.SendToIde(Encoding.UTF8.GetBytes($"[SkeleKit] {message}\n"));
+		string message,
+		SdbConnection? expected = null)
+	{
+		SdbConnection? connection;
+		lock (sessionGate)
+		{
+			connection = sdb;
+			if (expected is not null && !ReferenceEquals(connection, expected))
+				return;
+		}
+
+		try { connection?.UserLog(message); }
+		catch (Exception exception) { log($"could not publish debugger notice: {exception.Message}"); }
+	}
 
 	void OnSdbIdentified(
 		SdbConnection connection)
@@ -120,26 +137,38 @@ sealed class NativeBridge
 		{
 			sdb = connection;
 			sessionDef = session = lifetime.CreateNested();
+			sessionVersion++;
 			engines = new(StringComparer.OrdinalIgnoreCase);
 		}
 
 		// Rider has just deployed, so this is the moment the build on disk and the build in the app
 		// agree; everything is baselined against it
-		Start(() => Prepare(session.Lifetime), "skele-engine-start");
+		long version;
+		lock (sessionGate)
+			version = sessionVersion;
+
+		Start(() => Prepare(session.Lifetime, version), "skele-engine-start");
 	}
 
 	// the debugger connection dropped, so the app died or detached; reset per-session state and let the
 	// next Debug rebuild against whatever it deploys
-	void EndSession()
+	void EndSession(
+		SdbConnection? closing = null)
 	{
 		LifetimeDefinition? session;
 
 		lock (sessionGate)
 		{
+			// A previous session can finish closing after its replacement has already connected. It must
+			// not tear down the replacement's watchers and engine state.
+			if (closing is not null && !ReferenceEquals(sdb, closing))
+				return;
+
 			session = Interlocked.Exchange(ref sessionDef, null);
 			if (session is null)
 				return;
 
+			sessionVersion++;
 			sdb = null;
 			engines = new(StringComparer.OrdinalIgnoreCase);
 			watched = [];
@@ -153,7 +182,8 @@ sealed class NativeBridge
 	}
 
 	void Prepare(
-		Lifetime session)
+		Lifetime session,
+		long version)
 	{
 		try
 		{
@@ -162,12 +192,15 @@ sealed class NativeBridge
 				return;
 
 			// the project Rider built last is the one it just deployed
-			AppProject app = apps.OrderByDescending(candidate => File.GetLastWriteTimeUtc(candidate.DeployedDll)).First();
+			List<AppProject> executables = [.. apps.Where(candidate => candidate.IsExecutable)];
+			AppProject app = (executables.Count > 0 ? executables : apps)
+				.OrderByDescending(candidate => File.GetLastWriteTimeUtc(candidate.DeployedDll))
+				.First();
 			List<AppProject> projects = AppProject.WithReferences(app);
 
 			lock (sessionGate)
 			{
-				if (!session.IsAlive)
+				if (!session.IsAlive || version != sessionVersion)
 					return;
 
 				watched = projects;
@@ -175,11 +208,25 @@ sealed class NativeBridge
 
 			log($"debugging {app.AssemblyName}; watching {string.Join(", ", projects.Select(project => project.AssemblyName))}");
 
-			Watch(session, projects);
-			Start(() => Drain(session), "skele-reload-worker");
+			// Every engine must snapshot source before its first save. Lazy creation on the first library
+			// edit builds from the already-edited file and silently treats that edit as the baseline.
+			// Warm all runtime projects once, before enabling their watchers.
+			foreach (AppProject project in projects)
+			{
+				if (!session.IsAlive)
+					return;
 
-			// warm the app's own compilation now so the first edit does not pay for it
-			EngineFor(app);
+				EngineFor(project, version);
+			}
+
+			Watch(session, projects);
+			Start(() => Drain(session, version), "skele-reload-worker");
+
+			SdbConnection? connection;
+			lock (sessionGate)
+				connection = version == sessionVersion ? sdb : null;
+			if (connection is not null)
+				Notice("Hot reload ready.", connection);
 		}
 		catch (Exception exception)
 		{
@@ -188,11 +235,17 @@ sealed class NativeBridge
 	}
 
 	ReloadEngine? EngineFor(
-		AppProject project)
+		AppProject project,
+		long version)
 	{
 		lock (sessionGate)
+		{
+			if (version != sessionVersion)
+				return null;
+
 			if (engines.TryGetValue(project.ProjectFile, out ReloadEngine? cached))
 				return cached;
+		}
 
 		ReloadEngine? engine = null;
 		try
@@ -205,7 +258,14 @@ sealed class NativeBridge
 		}
 
 		lock (sessionGate)
+		{
+			// Engine construction runs generators and may take seconds. Never let an engine completed
+			// by an old session leak into the replacement session's cache.
+			if (version != sessionVersion)
+				return null;
+
 			engines[project.ProjectFile] = engine;
+		}
 
 		if (engine is not null)
 			log($"{project.AssemblyName} ready (MVID {engine.Mvid:D})");
@@ -256,7 +316,8 @@ sealed class NativeBridge
 	}
 
 	void Drain(
-		Lifetime session)
+		Lifetime session,
+		long version)
 	{
 		while (session.IsAlive)
 		{
@@ -287,56 +348,64 @@ sealed class NativeBridge
 				if (!session.IsAlive)
 					return;
 
-				ApplyOne(path);
+				ApplyOne(path, version);
 			}
 		}
 	}
 
 	void ApplyOne(
-		string path)
+		string path,
+		long version)
 	{
+		SdbConnection? connection = null;
+
 		try
 		{
-			AppProject? project = Owner(path);
+			AppProject? project = Owner(path, version);
 			if (project is null)
 				return;
 
-			SdbConnection? connection;
 			lock (sessionGate)
-				connection = sdb;
+				connection = version == sessionVersion ? sdb : null;
 
 			if (connection is null)
 				return;
 
-			ReloadEngine? engine = EngineFor(project);
+			ReloadEngine? engine = EngineFor(project, version);
 			if (engine is null)
 				return;
 
 			if (!engine.Matches(connection, out string reason))
 			{
 				log($"  {Path.GetFileName(path)}: {reason}");
-				Notice(reason);
+				Notice(reason, connection);
 
 				return;
 			}
 
-			if (engine.Apply(path, connection, log, Notice) == ReloadEngine.Outcome.Applied)
-				SignalReload();
+			if (engine.Apply(path, connection, log, message => Notice(message, connection)) == ReloadEngine.Outcome.Applied)
+				SignalReload(version);
 		}
 		catch (Exception exception)
 		{
 			// a bad delta or a stuck debugger connection must never take the backend down with it
 			log($"hot reload error on {Path.GetFileName(path)}: {exception.Message}");
-			Notice($"Hot reload failed for {Path.GetFileName(path)}: {exception.Message}");
+			Notice($"Hot reload failed for {Path.GetFileName(path)}: {exception.Message}", connection);
 		}
 	}
 
 	AppProject? Owner(
-		string path)
+		string path,
+		long version)
 	{
 		List<AppProject> projects;
 		lock (sessionGate)
+		{
+			if (version != sessionVersion)
+				return null;
+
 			projects = watched;
+		}
 
 		AppProject? owner = null;
 
@@ -349,13 +418,39 @@ sealed class NativeBridge
 		return owner;
 	}
 
-	void SignalReload()
+	void SignalReload(
+		long version)
 	{
+		Socket? client;
+		lock (sessionGate)
+			client = version == sessionVersion ? reloadClient : null;
+
 		try
 		{
-			reloadClient?.Send(new byte[28]);
+			if (client is not null)
+				SendAll(client, new byte[28]);
 		}
-		catch { }
+		catch
+		{
+			lock (sessionGate)
+				if (ReferenceEquals(reloadClient, client))
+					reloadClient = null;
+
+			Close(client);
+		}
+	}
+
+	void OnReloadClient(
+		Socket socket)
+	{
+		Socket? previous;
+		lock (sessionGate)
+		{
+			previous = reloadClient;
+			reloadClient = socket;
+		}
+
+		Close(previous);
 	}
 
 	// Rider's debugger worker may start listening a moment after the app connects, especially on a
@@ -464,5 +559,20 @@ sealed class NativeBridge
 			socket?.Dispose();
 		}
 		catch { }
+	}
+
+	static void SendAll(
+		Socket socket,
+		byte[] data)
+	{
+		int sent = 0;
+		while (sent < data.Length)
+		{
+			int chunk = socket.Send(data, sent, data.Length - sent, SocketFlags.None);
+			if (chunk == 0)
+				throw new EndOfStreamException();
+
+			sent += chunk;
+		}
 	}
 }

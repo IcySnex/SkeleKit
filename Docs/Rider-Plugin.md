@@ -5,8 +5,8 @@ Transparent native-session hot reload in Rider: the user presses the **normal De
 gets live C# hot reload** — one button, zero extra steps, nothing new to learn.
 
 **Status: WORKING, sim-verified** (Rider 2026.1.4, local iOS simulator). Build, deploy, breakpoints,
-pause/step, console, app-close-ends-session, multi-session, and live hot reload of method-body edits
-all work.
+pause/step, Debug-output feedback, app-close-ends-session, multi-session, and cumulative live hot
+reload of method-body edits in both the app and `SkeleKit.iOS` all work.
 
 **It is not SkeleKit-specific.** The delta engine reconstructs the app's compilation from the real
 `csc` command line, so any .NET iOS project in the solution works with no MSBuild opt-in. See
@@ -127,8 +127,18 @@ patched).
 - **VM_DEATH on app drop** so a crashing/closing app ends the session (iOS *suspend*, i.e. swipe-away,
   legitimately keeps it alive).
 - **Conservative apply:** skip structural edits (added/removed members) AND deltas that add a new
-  `TypeRef`/`AssemblyRef` (Mono EnC can't resolve a newly-referenced type live, e.g. first
-  `Debug.WriteLine` → crash). Both notify "restart to apply".
+  runtime type dependency (Mono EnC can't resolve a newly-referenced type live, e.g. first
+  `Debug.WriteLine` → crash). Dependency checks inspect only changed methods and compare their old
+  and new semantic operations; scanning raw delta `TypeRef` rows produces false positives from
+  Roslyn-generated metadata. Both cases notify "restart to apply".
+- **Referenced libraries use the deployed copy as their baseline.** Linker output has a different
+  MVID and may retarget `Microsoft.iOS` from the targeting-pack version to the runtime-pack version.
+  The compiler reference is retargeted in memory to that deployed identity while retaining the full
+  targeting API; compiling against the trimmed deployed `Microsoft.iOS.dll` does not work.
+- **Prewarm every assembly before starting its watcher.** Lazy initialization after the first save
+  snapshots already-edited source and silently consumes that edit.
+- **Feedback uses Mono `USER_LOG`.** Rider renders readiness, applied, skipped, and failed messages in
+  its existing Debug output, on the same presentation path as `Debug.WriteLine`.
 - **The app must be running the assembly we baselined.** Before applying, `MODULE_GET_INFO` gives the
   running module's MVID and it is compared to the baseline's.
 - **`buildSearchableOptions` is off** — it starts a headless IDE, which fails while Rider is open.
@@ -189,14 +199,17 @@ patched).
 
 ## Next steps
 
-1. **Sim-verify this rewrite end to end** (see the test plan handed over with it) — especially a
-   library edit, which is new.
-2. **Try a non-SkeleKit iOS app without the `EnableHotReload` gates** to settle whether the runtime
+1. **Test breakpoint/sequence-point behavior after several edits**, especially edits that add/remove
+   lines before an active breakpoint. This is the largest remaining seamlessness gap.
+2. **Add automated engine tests** for structural rejection, semantic new-type rejection, cumulative
+   deltas, linked-library reference retargeting, and stale-session isolation.
+3. **Run repeated start/stop/restart and app-crash soak tests** to exercise connection replacement
+   and debugger-worker timing.
+4. **Try a non-SkeleKit iOS app without the `EnableHotReload` gates** to settle whether the runtime
    prerequisites are needed on the simulator.
-3. **Confirm the console notices** actually render in Rider's Debug console. If not, fall back to
-   crafting a `USER_LOG` sdb event (`UserLogEvent(req_id, thread_id, level, category, message)`;
-   EventType.UserLog = 0x10).
-4. **Retire `Tools/SkeleKit.HotReload`** or keep it deliberately as the no-IDE / CI path — it is the
+5. **Retire `Tools/SkeleKit.HotReload`** or keep it deliberately as the no-IDE / CI path — it is the
    only remaining consumer of the `skelekit-hotreload.args` MSBuild target.
-5. **Install the packaged zip into the real Rider** and confirm it behaves the same as the sandbox.
-6. Optional stretch: the worker-process profiler injection for full symbol sync (limitation above).
+6. **Install the packaged zip into the real Rider** and confirm it behaves the same as the sandbox.
+7. Optional stretch: make the UI-reload port session-specific; this needs a matching way to tell the
+   already-built in-app agent which port to dial.
+8. Optional stretch: worker-process profiler injection for full symbol sync (limitation above).

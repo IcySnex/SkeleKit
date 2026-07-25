@@ -16,6 +16,9 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(_SkeleHotReload)' == 'true' ">
+		<!-- Keep SkeleKit.iOS metadata stable so Rider can baseline and hot reload library methods.
+		     Other framework/runtime assemblies still use the normal iOS Debug trim mode. -->
+		<TrimmerRootAssembly Include="SkeleKit.iOS" />
 		<!-- Trim="true" is load-bearing: without it the linker bakes IsSupported to a constant false -->
 		<RuntimeHostConfigurationOption Include="System.Reflection.Metadata.MetadataUpdater.IsSupported" Value="true" Trim="true" />
 		<RuntimeEnvironmentVariable Include="DOTNET_MODIFIABLE_ASSEMBLIES" Value="debug" />
