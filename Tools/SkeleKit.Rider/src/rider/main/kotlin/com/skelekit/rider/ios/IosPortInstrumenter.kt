@@ -9,9 +9,9 @@ import net.bytebuddy.asm.Advice
 import net.bytebuddy.matcher.ElementMatchers.named
 import java.util.concurrent.atomic.AtomicBoolean
 
-// Installs a self-attached ByteBuddy agent and instruments Rider's iOS transport selection and port
-// preparation. The concrete session handlers are final and off our classpath, but the shared logic
-// lives on these base types. Retransformation covers the already-loaded case.
+// Installs a self-attached ByteBuddy agent and instruments Rider's iOS port preparation. The
+// concrete session handlers are final and off our classpath, but the shared logic lives on this
+// base type. Retransformation covers the already-loaded case.
 class IosPortInstrumenter : ProjectActivity {
     override suspend fun execute(project: Project) {
         if (!installed.compareAndSet(false, true))
@@ -29,13 +29,9 @@ class IosPortInstrumenter : ProjectActivity {
                 .transform { builder, _, _, _, _ ->
                     builder.visit(Advice.to(PreparePortsAdvice::class.java).on(named("preparePortsForDebugging")))
                 }
-                .type(named("com.jetbrains.rider.run.multiPlatform.ios.IOSProfileState\$IOSAppInfo"))
-                .transform { builder, _, _, _, _ ->
-                    builder.visit(Advice.to(WifiModeAdvice::class.java).on(named("isWiFiMode")))
-                }
                 .installOn(instrumentation)
 
-            LOG.info("[SkeleKit] iOS transport instrumenter installed")
+            LOG.info("[SkeleKit] iOS port instrumenter installed")
         } catch (throwable: Throwable) {
             LOG.warn("[SkeleKit] iOS port instrumentation failed", throwable)
         }

@@ -1,8 +1,15 @@
 <Project>
 
-	<!-- Turns on SkeleKit hot reload for a Debug simulator build when the app sets
-	     <EnableHotReload>true</EnableHotReload>. Configures the runtime so MetadataUpdater works, then
-	     auto-starts the delta host in the background after the build. No effect otherwise. -->
+	<!-- SkeleKit's debugger bridge is a TCP proxy. Make the app and Rider both select the network
+	     debugger transport for hot-reload sessions. This is harmless for simulator builds and avoids
+	     Rider misclassifying a network-paired physical device as USB-connected. -->
+	<PropertyGroup Condition=" '$(EnableHotReload)' == 'true' And '$(Configuration)' == 'Debug' ">
+		<IOSDebugOverWiFi>true</IOSDebugOverWiFi>
+		<IOSDebuggerConnectOverUsb>false</IOSDebuggerConnectOverUsb>
+	</PropertyGroup>
+
+	<!-- Configures MetadataUpdater for simulator hot reload. Physical-device interpreter support is
+	     handled separately; selecting the network debugger above still enables normal device debug. -->
 
 	<PropertyGroup Condition=" '$(EnableHotReload)' == 'true' And '$(Configuration)' == 'Debug' And $(RuntimeIdentifier.StartsWith('iossimulator')) ">
 		<_SkeleHotReload>true</_SkeleHotReload>
