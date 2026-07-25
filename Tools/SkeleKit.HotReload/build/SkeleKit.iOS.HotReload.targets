@@ -1,15 +1,11 @@
 <Project>
 
-	<!-- SkeleKit's debugger bridge is a TCP proxy. Make the app and Rider both select the network
-	     debugger transport for hot-reload sessions. This is harmless for simulator builds and avoids
-	     Rider misclassifying a network-paired physical device as USB-connected. -->
-	<PropertyGroup Condition=" '$(EnableHotReload)' == 'true' And '$(Configuration)' == 'Debug' ">
+	<!-- Configures MetadataUpdater for simulator hot reload. Device debugging keeps the transport
+	     selected by Rider/.NET: native USB by default, or TCP when IOSDebugOverWiFi is explicit. -->
+	<PropertyGroup Condition=" '$(EnableHotReload)' == 'true' And '$(Configuration)' == 'Debug' And '$(SkeleKitDebugOverWiFi)' == 'true' ">
 		<IOSDebugOverWiFi>true</IOSDebugOverWiFi>
 		<IOSDebuggerConnectOverUsb>false</IOSDebuggerConnectOverUsb>
 	</PropertyGroup>
-
-	<!-- Configures MetadataUpdater for simulator hot reload. Physical-device interpreter support is
-	     handled separately; selecting the network debugger above still enables normal device debug. -->
 
 	<PropertyGroup Condition=" '$(EnableHotReload)' == 'true' And '$(Configuration)' == 'Debug' And $(RuntimeIdentifier.StartsWith('iossimulator')) ">
 		<_SkeleHotReload>true</_SkeleHotReload>
