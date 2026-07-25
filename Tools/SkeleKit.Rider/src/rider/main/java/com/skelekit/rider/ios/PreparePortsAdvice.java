@@ -1,15 +1,18 @@
 package com.skelekit.rider.ios;
 
+import com.jetbrains.rider.run.multiPlatform.ios.IOSProfileState;
+import com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevice;
 import com.jetbrains.rider.run.multiPlatform.ios.sessions.IOSSessionHandler;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 // Injected into IOSSessionHandler.preparePortsForDebugging. Rewrites the debug ports so the app
 // connects to our bridge (portForDevice) while Rider listens on a port the bridge forwards to
-// (portForDebugger).
+// (portForDebugger). Rider's local USB worker connects directly to a device port instead of
+// listening on the Mac, so those sessions must keep Rider's original single-port topology.
 //
-// The advice body is inlined into a class we do not own, so it may only touch types that class can
-// already see: IOSDebuggingPorts and the JDK. The backend therefore hands the ports over as system
+// The advice body is inlined into a class we do not own, so it may only touch Rider argument/return
+// types already visible there and the JDK. The backend therefore hands the ports over as system
 // properties rather than through a plugin class. Both unset means no bridge is listening (no
 // hot-reloadable iOS project in this solution, or the bridge failed to bind), and the session is
 // left completely alone.
@@ -21,9 +24,19 @@ public class PreparePortsAdvice {
 
     @Advice.OnMethodExit
     public static void exit(
+        @Advice.Argument(0) IOSDevice device,
+        @Advice.Argument(1) IOSProfileState.IOSAppInfo appInfo,
         @Advice.Return(readOnly = false, typing = Assigner.Typing.DYNAMIC) Object ret) {
         if (!(ret instanceof IOSSessionHandler.IOSDebuggingPorts))
             return;
+
+        // Match IOSSessionHandler.createModelStartInfo: false selects XamarinIOSLocalUsbStartInfo.
+        // Splitting that port makes the app and USB worker wait on different device ports, causing
+        // a 120-second attach timeout and leaving breakpoints and output unbound.
+        if (!appInfo.isWiFiMode(device)) {
+            System.out.println("[SkeleKit] local USB debug: keeping native Rider ports " + ret);
+            return;
+        }
 
         int appPort = Integer.getInteger(APP_PORT_PROPERTY, 0);
         int riderPort = Integer.getInteger(RIDER_PORT_PROPERTY, 0);
