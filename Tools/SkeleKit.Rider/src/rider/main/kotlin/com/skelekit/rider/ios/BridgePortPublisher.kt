@@ -11,29 +11,23 @@ import com.jetbrains.rider.projectView.solution
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-// Mirrors the backend bridge's ports into system properties, which is how PreparePortsAdvice reads
-// them (its inlined body cannot see plugin classes). Null ports means the solution has nothing to hot
-// reload, and the properties are cleared so iOS debug sessions run untouched.
+// Mirrors the backend bridge's ports into a system property. The advice is inlined into a Rider class
+// that cannot see plugin classes, so a JVM property is the narrow handoff between the two classloaders.
 //
-// The properties are JVM-global, so with several solutions open in one Rider the last one loaded owns
-// them. That only costs the other solution its hot reload: its debug session still relays through the
+// The property is JVM-global, so with several solutions open in one Rider the last one loaded owns
+// it. That only costs the other solution its hot reload: its debug session still relays through the
 // bridge untouched, and the engine declines to apply deltas to an assembly it does not know.
 class BridgePortPublisher : ProjectActivity {
     override suspend fun execute(project: Project) {
         if (!project.hasSolution)
             return
 
-        var publishedAppPort: String? = null
-        var publishedRiderPort: String? = null
+        var published: String? = null
 
         fun clearPublished(message: String) {
-            // Properties outlive projects. Clear only this project's values: another open solution
-            // may have published its own pair after us.
-            if (publishedAppPort != null && publishedRiderPort != null &&
-                System.getProperty(PreparePortsAdvice.APP_PORT_PROPERTY) == publishedAppPort &&
-                System.getProperty(PreparePortsAdvice.RIDER_PORT_PROPERTY) == publishedRiderPort) {
-                System.clearProperty(PreparePortsAdvice.APP_PORT_PROPERTY)
-                System.clearProperty(PreparePortsAdvice.RIDER_PORT_PROPERTY)
+            if (published != null &&
+                System.getProperty(PreparePortsAdvice.BRIDGE_PORTS_PROPERTY) == published) {
+                System.clearProperty(PreparePortsAdvice.BRIDGE_PORTS_PROPERTY)
                 LOG.info(message)
             }
         }
@@ -48,20 +42,15 @@ class BridgePortPublisher : ProjectActivity {
         withContext(Dispatchers.EDT) {
             val model = project.solution.skeleKitModel
 
-            model.bridgePorts.advise(project.lifetime) { ports ->
-                if (ports == null) {
+            model.bridgePorts.advise(project.lifetime) { value ->
+                if (value == null) {
                     clearPublished("[SkeleKit] bridge down; iOS debug ports left alone")
                 } else {
-                    val appPort = ports.appPort.toString()
-                    val riderPort = ports.riderPort.toString()
-                    publishedAppPort = appPort
-                    publishedRiderPort = riderPort
-                    System.setProperty(PreparePortsAdvice.APP_PORT_PROPERTY, appPort)
-                    System.setProperty(PreparePortsAdvice.RIDER_PORT_PROPERTY, riderPort)
-                    LOG.info("[SkeleKit] bridge ports: app=${ports.appPort} rider=${ports.riderPort}")
+                    published = value
+                    System.setProperty(PreparePortsAdvice.BRIDGE_PORTS_PROPERTY, value)
+                    LOG.info("[SkeleKit] bridge ports: $value")
                 }
             }
-
         }
     }
 

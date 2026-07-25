@@ -6,7 +6,7 @@
 
   <description>
 <![CDATA[
-<p>Hot reload and breakpoints together for SkeleKit.iOS apps: pick a device, press Run for a plain launch or Debug for live C# hot reload with breakpoints.</p>
+<p>Hot reload and breakpoints together for SkeleKit.iOS apps running in the iOS simulator.</p>
 ]]>
   </description>
 

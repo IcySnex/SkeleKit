@@ -11,9 +11,8 @@
       <EnableHotReload>true</EnableHotReload>
     </PropertyGroup>
 
-    <!-- Hot reload: set -p:EnableHotReload=true to turn it on. The imported targets (which the
-         SkeleKit.iOS.HotReload NuGet ships) configure the runtime and auto-start the delta host. -->
-    <Import Project="..\..\Tools\SkeleKit.HotReload\build\SkeleKit.iOS.HotReload.targets" />
+    <!-- Project references do not import NuGet buildTransitive assets, so use the source target in-repo. -->
+    <Import Project="..\..\SkeleKit.iOS\build\SkeleKit.iOS.targets" />
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <CodesignKey>iPhone Developer</CodesignKey>
       <MtouchLink>Full</MtouchLink>

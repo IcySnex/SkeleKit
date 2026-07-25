@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using JetBrains.Lifetimes;
 
@@ -36,6 +35,7 @@ sealed class NativeBridge
 
 	List<AppProject> watched = [];
 	Dictionary<string, ReloadEngine?> engines = new(StringComparer.OrdinalIgnoreCase);
+	DebuggerWorkerSync? debuggerWorker;
 
 	public int AppPort { get; private set; }
 	public int RiderPort { get; private set; }
@@ -63,11 +63,13 @@ sealed class NativeBridge
 
 		Socket appListener = Bind(0);
 		AppPort = ((IPEndPoint)appListener.LocalEndPoint).Port;
-		RiderPort = FreePort();
 
 		Socket? reloadListener = TryBind(ReloadPort);
 		if (reloadListener is null)
 			log($"port {ReloadPort} is taken, so the app cannot be asked to rebuild its UI after a reload");
+
+		RiderPort = FreePort();
+		debuggerWorker = new(RiderPort);
 
 		lifetime.OnTermination(() =>
 		{
@@ -383,7 +385,12 @@ sealed class NativeBridge
 				return;
 			}
 
-			if (engine.Apply(path, connection, log, message => Notice(message, connection)) == ReloadEngine.Outcome.Applied)
+			if (engine.Apply(
+					path,
+					connection,
+					debuggerWorker!,
+					log,
+					message => Notice(message, connection)) == ReloadEngine.Outcome.Applied)
 				SignalReload(version);
 		}
 		catch (Exception exception)
@@ -428,7 +435,7 @@ sealed class NativeBridge
 		try
 		{
 			if (client is not null)
-				SendAll(client, new byte[28]);
+				SendAll(client, [0]);
 		}
 		catch
 		{
@@ -459,15 +466,16 @@ sealed class NativeBridge
 	{
 		for (int attempt = 0; attempt < 100; attempt++)
 		{
+			Socket socket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 			try
 			{
-				Socket socket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 				socket.Connect(new IPEndPoint(IPAddress.Loopback, RiderPort));
 
 				return socket;
 			}
 			catch
 			{
+				Close(socket);
 				Thread.Sleep(50);
 			}
 		}
@@ -502,30 +510,13 @@ sealed class NativeBridge
 		thread.Start();
 	}
 
-	// A port for Rider's debugger worker to listen on. We cannot hold it ourselves, so pick one nothing
-	// is using and hand it over.
+	// Rider needs to bind this port itself, so reserve an ephemeral port only long enough to learn its
+	// number. The handoff has an unavoidable race, but a failed Rider bind simply fails the session.
 	static int FreePort()
 	{
-		HashSet<int> taken = [.. IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Select(endpoint => endpoint.Port)];
+		using Socket probe = Bind(0);
 
-		for (int attempt = 0; attempt < 64; attempt++)
-		{
-			Socket probe = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-			try
-			{
-				probe.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-				int port = ((IPEndPoint)probe.LocalEndPoint).Port;
-
-				if (!taken.Contains(port))
-					return port;
-			}
-			finally
-			{
-				Close(probe);
-			}
-		}
-
-		return 10099;
+		return ((IPEndPoint)probe.LocalEndPoint).Port;
 	}
 
 	static Socket Bind(

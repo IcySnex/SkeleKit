@@ -25,10 +25,10 @@ exclusive — unacceptable.
 
 ## Dead ends (and why)
 
-- **A Rider plugin that calls `ApplyChanges` on the session.** Rider runs the debug session in an
-  isolated worker process (`JetBrains.Debugger.Worker`); the `ApplyChanges` primitive exists in
-  `debugger-libs` but lives in that worker, and Rider exposes no Mono-EnC operation. A plugin can't
-  reach into the worker or add protocol operations. Not an effort problem — the operation isn't wired.
+- **A normal Rider backend call to `ApplyChanges`.** Rider runs the debug session in an isolated
+  `JetBrains.Debugger.Worker` process, and its public plugin model exposes no Mono-EnC operation.
+  SkeleKit therefore still applies the runtime delta through the wire proxy. A small debugger-worker
+  plugin is used only to keep Rider's PDB/sequence-point state synchronized.
 - **A standalone client / proxy via Rider's generic "Mono Remote".** Microsoft.iOS apps don't speak
   raw soft-debugger on connect; they use a proprietary control protocol first. Generic Mono Remote
   connecting straight to the app **deadlocks** (both sides wait) — confirmed on the wire: Rider sent 0
@@ -74,29 +74,39 @@ MODULE APPLY_CHANGES (module id, dmeta_id, dil_id, dpdb_id) → err 0
 we tell the app to rebuild its live pages (`PageHost.ReloadLive`). Proven on the sim: the page title
 changed **while a debugger was attached**.
 
-## Production architecture — the unified bridge
+## Production architecture — Rider simulator bridge
 
-`EnableHotReload` builds bake the app's debug endpoint (`__XAMARIN_DEBUG_HOSTS__/PORT`) at our bridge
-and auto-start it. The bridge:
+For a local simulator only, the Rider plugin changes the two ports in Rider's normal iOS debug start
+info. The app connects to the SkeleKit bridge and the bridge connects to the port already owned by
+Rider's debugger worker:
 
 ```
-app  ⟷  SkeleKit bridge  ⟷  IDE (Rider "Mono Remote" attach)
-              │
-   • relays all sdb traffic  → breakpoints/stepping/inspection just work
-   • on save: Roslyn EmitDifference → CREATE_BYTE_ARRAY ×3 + APPLY_CHANGES → ReloadLive
-   • if no IDE attaches: the bridge is the debugger itself → hot reload only
+simulator app  ⟷  SkeleKit bridge  ⟷  Rider debugger worker
+                        │
+             Roslyn EmitDifference
+                        │
+      stage PDB delta in Rider's worker
+                        │
+       CREATE_BYTE_ARRAY ×3 + APPLY_CHANGES
+                        │
+                    ReloadLive
 ```
 
-Unified by design: opting into hot reload means running under the bridge, so you get breakpoints for
-free; opting out (a plain build) is the performance path with neither.
+Rider still owns the session, breakpoints, stepping, inspection, output, and lifecycle. Physical
+devices are not rerouted; USB and Wi-Fi behavior remains Rider's stock behavior and SkeleKit hot
+reload is off.
 
 The one non-obvious engineering piece is **command-id multiplexing**: the IDE and our injector both
 send commands on the one connection, so the bridge parses the sdb packet stream, gives injected
-commands a reserved high id range, and swallows their replies (and the resulting `ENC_UPDATE` event)
-so the IDE never sees them.
+commands a reserved high id range, and consumes only their replies. Every real runtime event
+continues to Rider.
 
-IDE-agnostic on purpose: anything that attaches to a Mono soft-debugger by host/port (Rider today; a
-VS Code mono-attach or plain `dotnet` later) rides the same bridge.
+Before `APPLY_CHANGES`, the backend sends the matching metadata/IL/PDB delta and line mappings to the
+plugin assembly loaded inside `JetBrains.Debugger.Worker`. Mono accepts the injected delta but does
+not emit `ENC_UPDATE`, so after a successful apply the bridge sends that standard event to Rider.
+Rider's existing EnC event processor consumes the staged delta, updates its symbol reader, and
+rebinds the module's breakpoints. This is what keeps newly inserted lines and **Step Over** aligned
+with the running method.
 
 ## Key references
 

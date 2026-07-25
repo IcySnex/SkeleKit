@@ -1,14 +1,20 @@
 # Plan: SkeleKit Rider Plugin — Hot Reload + Breakpoints, "Just Works"
 
+> Historical design record. The production implementation is documented in
+> [`Rider-Plugin.md`](Rider-Plugin.md). Phase 2 is now implemented by staging SkeleKit's PDB delta in
+> a Rider debugger-worker component and explicitly notifying Rider after Mono accepts it. The
+> standalone host described below was removed after its implementation had been ported into the
+> plugin; the old probe and symbol-spoofing proposals are retained only as investigation history.
+
 Sibling to [`hot-reload-debugging.md`](hot-reload-debugging.md), which explains the working proxy this
 plan builds a first-class Rider UI on top of. Read that first for the wire-level mechanism.
 
 ## Context
 
-SkeleKit already has C# hot reload **and** breakpoints working together on the iOS simulator via a
-Mono soft-debugger proxy (`Tools/SkeleKit.HotReload/Sdb/DebugBridge.cs` + `SdbConnection.cs`). But the
-UX is a shell script (`skele-debug.sh`) plus a hand-configured Rider "Mono Remote" run config the user
-attaches manually. Rider, VS, and `dotnet watch` do none of this for non-MAUI .NET iOS.
+SkeleKit originally proved C# hot reload **and** breakpoints together on the iOS simulator with a
+standalone Mono soft-debugger proxy. Its UX was a shell script plus a hand-configured Rider
+"Mono Remote" run configuration. That prototype has since been removed; this plan records how its
+working wire logic moved into the Rider plugin.
 
 Goal: replace the script/manual-config workflow with a first-class **Rider plugin** using official
 frontend/backend APIs. Experience target:
@@ -129,13 +135,13 @@ symbol spoofing. Investigate before the Phase 2 probe.
 4. **Debug action.**
    - Build `-p:EnableHotReload=true` (+ debug bridge flag) — same MSBuild gates that make
      `MetadataUpdater.IsSupported` true (`UseInterpreter`, runtime option w/ `Trim="true"`,
-     `DOTNET_MODIFIABLE_ASSEMBLIES=debug`), already in the `SkeleKit.iOS.HotReload` targets.
+     `DOTNET_MODIFIABLE_ASSEMBLIES=debug`), now shipped in the `SkeleKit.iOS` targets.
    - Backend starts the in-process sdb proxy on a free port.
    - Launch the app with `__XAMARIN_DEBUG_*` env pointing at the proxy.
    - Auto-start the Mono Remote attach to the proxy's IDE port (per Spike A).
    - Backend watches source; on save → `EmitDifference` → `ApplyChanges` over sdb → reload signal.
-5. **Port the proxy.** Lift `DebugBridge`/`SdbConnection` logic into the backend. **Keep**
-   `Tools/SkeleKit.HotReload` console host for CI / `--self-drive` / no-IDE use and the packaged NuGet.
+5. **Port the proxy.** Lift `DebugBridge`/`SdbConnection` logic into the backend. The original plan
+   kept the standalone host as a fallback; it was retired once the plugin path was verified.
 
 End state: one Debug button gives breakpoints + hot reload, no scripts. Known limit: symbol drift on
 edited methods until restart (Phase 2 closes it).
@@ -161,15 +167,17 @@ Replace the event-swallowing in the ported `Read`/`IsEncEvent` with a symbol-ser
 - **Phase 2 feasibility is genuinely unknown**, gated on Rider-internal caching we don't control. The
   probe fails cheap and early by design.
 - **JetBrains SDK is new to this repo** (Gradle + Kotlin + rd). Budget toolchain ramp into Phase 1.
-- Do not regress the headless host — CI and the NuGet depend on it.
+- The simulator build gates must remain available independently of the deleted prototype host.
 
 ## Files
 
 - **New:** `Tools/SkeleKit.Rider/` — plugin frontend (Kotlin/Gradle) + backend (C#/rd).
-- **Ported:** `Tools/SkeleKit.HotReload/Sdb/{DebugBridge,SdbConnection}.cs`, `Differ.cs`,
-  `Baseline.cs`, `Project.cs`, `CscInvocation.cs` → logic lifted into the backend (originals kept).
-- **Reused as-is:** app-side reload signaling (`SkeleKit.iOS/App/HotReload.cs`, `PageHost.ReloadLive`),
-  the `EnableHotReload` MSBuild gates in `build/`.
+- **Ported:** the prototype's bridge, debugger connection, Roslyn differ, baseline, project, and
+  compiler-invocation logic → `Tools/SkeleKit.Rider/src/dotnet/SkeleKit.Rider.Backend/HotReload/`.
+  The originals were deleted after the port was verified.
+- **Retained:** the minimal app-side reload signal (`SkeleKit.iOS/App/HotReload.cs`,
+  `PageHost.ReloadLive`) and the `EnableHotReload` MSBuild gates, now in
+  `SkeleKit.iOS/build/SkeleKit.iOS.targets`.
 
 ## Verification
 
@@ -180,4 +188,5 @@ Replace the event-swallowing in the ported `Read`/`IsEncEvent` with a symbol-ser
   Press Run → plain launch, no bridge. Zero scripts, no manual Mono Remote config.
 - **Phase 2 end-to-end:** breakpoint on a method, edit that method's body (shift its lines), save →
   breakpoint follows the new line and hits without restart.
-- **No regression:** `Tools/SkeleKit.HotReload` `--self-drive` + packaged NuGet still work headless.
+- **Cleanup:** the standalone host is absent; the `SkeleKit.iOS` package still carries the simulator
+  build prerequisites used by the plugin.

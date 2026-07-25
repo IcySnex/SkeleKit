@@ -238,8 +238,8 @@ sealed class AppProject
 
 	// The dll Rider just deployed. Picking the newest match instead of composing the path from
 	// Configuration/TargetFramework/RuntimeIdentifier means we never have to guess which of those the
-	// run configuration used, and a device build works the same as a simulator one. A multi-targeting
-	// library has one output per framework, so the app's own framework decides which is the deployed one.
+	// run configuration used. A multi-targeting library has one output per framework, so the app's own
+	// framework decides which is the deployed one.
 	static string? NewestBuildOutput(
 		string projectDir,
 		string assemblyName,

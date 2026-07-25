@@ -1,4 +1,5 @@
 using System.Text;
+using System.Reflection.Metadata.Ecma335;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
@@ -132,6 +133,7 @@ sealed class ReloadEngine
 	public Outcome Apply(
 		string path,
 		SdbConnection connection,
+		DebuggerWorkerSync debuggerWorker,
 		Action<string> log,
 		Action<string> notice)
 	{
@@ -206,15 +208,43 @@ sealed class ReloadEngine
 			return Outcome.Failed;
 		}
 
-		int error = connection.ApplyChanges(domain, module, metadataBytes, il.ToArray(), pdb.ToArray());
+		byte[] ilBytes = il.ToArray();
+		byte[] pdbBytes = pdb.ToArray();
+		int[] updatedMethods = result.UpdatedMethods
+			.Select(handle => MetadataTokens.GetToken(handle))
+			.ToArray();
+		int[] updatedTypes = result.ChangedTypes
+			.Select(handle => MetadataTokens.GetToken(handle))
+			.ToArray();
+		LineMapping[] lineMappings = LineMappings(path, oldTree.GetText(), newTree.GetText());
+
+		bool symbolsStaged = debuggerWorker.Stage(
+			project.AssemblyName,
+			baseline.Mvid,
+			ilBytes,
+			metadataBytes,
+			pdbBytes,
+			updatedMethods,
+			updatedTypes,
+			lineMappings,
+			out string syncReason);
+		if (!symbolsStaged)
+			log($"  {name}: Rider symbol sync unavailable ({syncReason})");
+
+		int error = connection.ApplyChanges(domain, module, metadataBytes, ilBytes, pdbBytes);
 		if (error != 0)
 		{
 			log($"  {name}: APPLY_CHANGES error {error}");
-			notice($"Hot reload failed for {name}: apply error {error}.");
+			notice(error == SdbConnection.InvalidObjectError
+				? $"Hot reload did not apply to {name}. If Rider is paused, resume and save again."
+				: $"Hot reload failed for {name}: apply error {error}.");
 			module = 0;
 
 			return Outcome.Failed;
 		}
+
+		if (symbolsStaged)
+			connection.NotifyEnCUpdate(module);
 
 		if (result.Baseline is EmitBaseline next)
 			baseline.Emit = next;
@@ -222,9 +252,47 @@ sealed class ReloadEngine
 		Accept(path, newTree, updated);
 
 		log($"  {name}: {edits.Count} edit(s), reloaded");
-		notice($"Hot reloaded {name}.");
+		notice(symbolsStaged
+			? $"Hot reloaded {name}; Rider symbols updated."
+			: $"Hot reloaded {name}, but Rider symbols did not update — breakpoints may drift.");
 
 		return Outcome.Applied;
+	}
+
+	// Rider also shifts sequence points in unchanged methods below an insertion/deletion. Roslyn's PDB
+	// delta covers the changed methods; these cumulative line mappings cover the rest of the file.
+	static LineMapping[] LineMappings(
+		string path,
+		SourceText oldText,
+		SourceText newText)
+	{
+		IReadOnlyList<TextChangeRange> ranges = newText.GetChangeRanges(oldText);
+		if (ranges.Count == 0)
+			return [];
+
+		List<(int OldLine, int NewLine)> changes = [];
+		int characterDelta = 0;
+
+		foreach (TextChangeRange range in ranges)
+		{
+			int oldPosition = Math.Min(range.Span.End, oldText.Length);
+			int newPosition = Math.Min(range.Span.Start + characterDelta + range.NewLength, newText.Length);
+			int oldLine = oldText.Lines.GetLinePosition(oldPosition).Line + 1;
+			int newLine = newText.Lines.GetLinePosition(newPosition).Line + 1;
+
+			if (oldLine != newLine)
+			{
+				int last = changes.Count - 1;
+				if (last >= 0 && changes[last].OldLine == oldLine)
+					changes[last] = (oldLine, newLine);
+				else
+					changes.Add((oldLine, newLine));
+			}
+
+			characterDelta += range.NewLength - range.Span.Length;
+		}
+
+		return changes.Count == 0 ? [] : [new(path, changes)];
 	}
 
 	void Accept(

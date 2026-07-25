@@ -125,21 +125,15 @@ Shape:
   `ContentView<TVm>` takes its ViewModel by constructor; `PageHost` is the hidden
   `UIViewController`. `INavigator` is ViewModel-first push/pop/present + alert/confirm/sheet.
   `UsePages` uses factory lambdas — reflection-free page construction.
-- **Hot reload** (sim-verified, IDE-free): `SkeleKit.iOS/App/HotReload.cs` is a dev-only TCP client
-  that receives metadata/IL deltas from the `Tools/SkeleKit.HotReload` host, applies them with
-  `MetadataUpdater.ApplyUpdate`, then calls `PageHost.ReloadLive` to rebuild every live page from its
-  registry factory reusing the same ViewModel (`ViewRegistry.RecreatePage`) — a changed ctor / method
-  body shows live, VM state kept. Mono does **not** invoke `[MetadataUpdateHandler]`s, so the rebuild
-  is driven straight from the receiver. The host reconstructs the app's Roslyn `Compilation` from its
-  csc command line (refs + defines + source generators), baselines off the deployed dll, and
-  `EmitDifference`s each save. Everything gates on `MetadataUpdater.IsSupported`, so it trims away in
-  Release: zero cost. **Making `IsSupported` true on the iOS sim** (Gallery gates it behind
-  `-p:EnableHotReload=true`): `UseInterpreter=true` (ships `libmono-component-hot_reload.dylib`) + a
-  `MetadataUpdater.IsSupported=true` `RuntimeHostConfigurationOption` with **`Trim="true"`** (else the
-  linker bakes it to `false`) + launch env `DOTNET_MODIFIABLE_ASSEMBLIES=debug`. Run it with
-  `Tools/SkeleKit.HotReload/run.sh <udid>`. **`dotnet watch` can't drive the sim** (its named-pipe
-  delta applier SIGABRTs at launch), and Rider/VS don't wire code hot reload for non-MAUI .NET iOS —
-  hence the custom TCP pipeline.
+- **Hot reload** (simulator, Rider plugin): the Rider backend reconstructs each deployed assembly's
+  Roslyn compilation from its captured csc arguments, emits EnC deltas on save, applies them through
+  its Mono soft-debugger bridge, and synchronizes Rider's PDB/line mappings. The tiny
+  `SkeleKit.iOS/App/HotReload.cs` listener receives only a UI-refresh signal and calls
+  `PageHost.ReloadLive`, rebuilding live pages from their registry factories while retaining view
+  models. It never transports or applies deltas. `SkeleKit.iOS/build/SkeleKit.iOS.targets` gates the
+  simulator prerequisites behind `EnableHotReload=true`: `UseInterpreter=true`, a
+  `MetadataUpdater.IsSupported=true` runtime option with **`Trim="true"`**, and
+  `DOTNET_MODIFIABLE_ASSEMBLIES=debug`. Physical-device builds and Release builds stay untouched.
 - **Styling** (neutral, unit-tested): `Style<T>` (+`BasedOn`) applies in `View.Style`'s setter;
   `Theme` (`UseTheme`) applies in the `View` base ctor. Precedence is C# construction order (field
   inits → theme → `Style` → local). Plain statics, no `ResourceDictionary` (ADR-008).

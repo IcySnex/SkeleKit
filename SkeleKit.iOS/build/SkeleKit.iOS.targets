@@ -1,12 +1,6 @@
 <Project>
 
-	<!-- Configures MetadataUpdater for simulator hot reload. Device debugging keeps the transport
-	     selected by Rider/.NET: native USB by default, or TCP when IOSDebugOverWiFi is explicit. -->
-	<PropertyGroup Condition=" '$(EnableHotReload)' == 'true' And '$(Configuration)' == 'Debug' And '$(SkeleKitDebugOverWiFi)' == 'true' ">
-		<IOSDebugOverWiFi>true</IOSDebugOverWiFi>
-		<IOSDebuggerConnectOverUsb>false</IOSDebuggerConnectOverUsb>
-	</PropertyGroup>
-
+	<!-- Hot reload is simulator-only. Physical-device debugging keeps the native .NET/Rider transport. -->
 	<PropertyGroup Condition=" '$(EnableHotReload)' == 'true' And '$(Configuration)' == 'Debug' And $(RuntimeIdentifier.StartsWith('iossimulator')) ">
 		<_SkeleHotReload>true</_SkeleHotReload>
 	</PropertyGroup>
@@ -27,16 +21,7 @@
 		<RuntimeEnvironmentVariable Include="DOTNET_MODIFIABLE_ASSEMBLIES" Value="debug" />
 	</ItemGroup>
 
-	<!-- the packed host (tools/) in a real package; the repo build output when developing SkeleKit -->
-	<PropertyGroup Condition=" '$(SkeleHotReloadHost)' == '' And Exists('$(MSBuildThisFileDirectory)../tools/hotreload/skele-hotreload.dll') ">
-		<SkeleHotReloadHost>$(MSBuildThisFileDirectory)../tools/hotreload/skele-hotreload.dll</SkeleHotReloadHost>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(SkeleHotReloadHost)' == '' ">
-		<SkeleHotReloadHost>$(MSBuildThisFileDirectory)../bin/Release/net10.0/skele-hotreload.dll</SkeleHotReloadHost>
-	</PropertyGroup>
-
-	<!-- Records the compiler inputs the bridge needs (references, defines, source generators). The
-	     bridge itself is started by skele-debug.sh, not here, so a build-only leaves nothing running. -->
+	<!-- Rider reconstructs the deployed compilation from these exact compiler inputs. -->
 	<Target Name="SkeleWriteHotReloadArgs" AfterTargets="Build" Condition=" '$(_SkeleHotReload)' == 'true' ">
 		<!-- only when CoreCompile actually ran; an up-to-date build reuses the previous args file -->
 		<WriteLinesToFile

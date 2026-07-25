@@ -57,7 +57,9 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "261"
-            untilBuild = provider { null }
+            // The port advice and debugger-worker bridge intentionally use Rider internals. Keep the
+            // compatibility claim to the build line we test; validate and bump this for each Rider line.
+            untilBuild = "261.*"
         }
     }
 }
@@ -96,14 +98,24 @@ tasks.prepareSandbox {
     dependsOn(compileDotNet)
 
     val outputFolder = "${rootDir}/src/dotnet/${DotnetPluginId}/bin/${DotnetPluginId}/${BuildConfiguration}"
+    val debuggerWorkerId = "SkeleKit.Rider.DebuggerWorker"
+    val debuggerWorkerOutput = "${rootDir}/src/dotnet/${debuggerWorkerId}/bin/${debuggerWorkerId}/${BuildConfiguration}"
 
     // only our dll — the host provides Roslyn + BCL (we compile against its bundled Microsoft.CodeAnalysis)
     val dllFiles = listOf("$outputFolder/${DotnetPluginId}.dll", "$outputFolder/${DotnetPluginId}.pdb")
     dllFiles.forEach { f -> from(file(f)) { into("${rootProject.name}/dotnet") } }
 
+    val debuggerWorkerFiles = listOf(
+        "$debuggerWorkerOutput/${debuggerWorkerId}.dll",
+        "$debuggerWorkerOutput/${debuggerWorkerId}.pdb",
+    )
+    debuggerWorkerFiles.forEach { f -> from(file(f)) { into("${rootProject.name}/dotnetDebuggerWorker") } }
+
     doLast {
         if (!file("$outputFolder/${DotnetPluginId}.dll").exists())
             throw RuntimeException("backend dll missing at $outputFolder")
+        if (!file("$debuggerWorkerOutput/${debuggerWorkerId}.dll").exists())
+            throw RuntimeException("debugger worker dll missing at $debuggerWorkerOutput")
     }
 }
 

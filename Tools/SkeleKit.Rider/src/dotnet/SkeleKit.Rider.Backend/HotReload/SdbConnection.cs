@@ -21,6 +21,7 @@ sealed class SdbConnection
 	const byte CmdSetModule = 24;
 
 	const int InjectedIdBase = 0x40000000;
+	public const int InvalidObjectError = 20;
 
 	static readonly byte[] Handshake = "DWP-Handshake"u8.ToArray();
 	static readonly TimeSpan CommandTimeout = TimeSpan.FromSeconds(10);
@@ -141,7 +142,8 @@ sealed class SdbConnection
 				continue;
 			}
 
-			// forward everything, including the ENC/METHOD_UPDATE events our apply triggers
+			// Forward every real runtime event. APPLY_CHANGES does not emit ENC_UPDATE on this Mono
+			// runtime, so ReloadEngine sends that standard event explicitly after staging Rider's delta.
 			SendToIde([.. header, .. payload]);
 		}
 	}
@@ -317,6 +319,17 @@ sealed class SdbConnection
 		return error;
 	}
 
+	// Mono applies deltas injected through MODULE/APPLY_CHANGES but does not publish the ENC_UPDATE
+	// event that Rider's own hot-reload path relies on. The delta is already staged in Rider's
+	// debugger worker; this event tells its built-in processor to consume it, update the PDB reader,
+	// and rebind breakpoints. The event's metadata/PDB fields are intentionally empty because Rider
+	// reads the complete EnCDelta from that staged storage.
+	public void NotifyEnCUpdate(
+		int module)
+	{
+		SendToIde(EnCUpdateEvent(module));
+	}
+
 	int CreateByteArray(
 		int domain,
 		byte[] bytes)
@@ -356,6 +369,22 @@ sealed class SdbConnection
 		category.CopyTo(packet.AsSpan(33));
 		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(33 + category.Length), text.Length);
 		text.CopyTo(packet.AsSpan(37 + category.Length));
+
+		return packet;
+	}
+
+	// ENC_UPDATE is event kind 18. Its payload is thread id, module id, metadata delta and PDB delta;
+	// ids are four bytes in the protocol negotiated by this iOS runtime.
+	static byte[] EnCUpdateEvent(
+		int module)
+	{
+		byte[] packet = new byte[37];
+
+		CompositeHeader(packet, 0x12);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(21), 0);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(25), module);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(29), 0);
+		BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(33), 0);
 
 		return packet;
 	}
