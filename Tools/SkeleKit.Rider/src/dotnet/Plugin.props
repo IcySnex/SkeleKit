@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <!-- https://www.nuget.org/packages/JetBrains.Rider.SDK — keep in sync with ProductVersion in gradle.properties. -->
-    <!-- If restore fails, set this to the exact JetBrains.Rider.SDK version matching Rider 2026.1.x. -->
-    <SdkVersion>2026.1.4</SdkVersion>
+    <SdkVersion>2026.2.0</SdkVersion>
 
     <Title>SkeleKit</Title>
     <Description>Hot reload and breakpoints together for SkeleKit.iOS apps on the iOS simulator.</Description>

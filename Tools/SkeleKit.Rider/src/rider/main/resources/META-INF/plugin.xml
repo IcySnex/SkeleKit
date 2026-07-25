@@ -1,13 +1,13 @@
 <idea-plugin require-restart="true">
     <id>com.skelekit.rider</id>
     <name>SkeleKit Hot Reload</name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <vendor url="https://github.com/IcySnex/SkeleKit">IcySnex</vendor>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.rider</depends>
 
-    <idea-version since-build="261" until-build="262.*"/>
+    <idea-version since-build="262" until-build="262.*"/>
 
     <description><![CDATA[
     <p>Provides hot reload capabilities and simultaneous breakpoint debugging for <b>SkeleKit.iOS</b> apps running in the iOS simulator.</p>
@@ -15,7 +15,7 @@
 
     <change-notes><![CDATA[
     <ul>
-      <li>Initial release of SkeleKit Hot Reload for Rider.</li>
+      <li>Restore hot reload on Rider 2026.2.</li>
     </ul>
   ]]></change-notes>
 

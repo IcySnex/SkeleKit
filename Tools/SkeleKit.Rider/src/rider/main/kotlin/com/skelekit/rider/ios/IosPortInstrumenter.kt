@@ -6,7 +6,10 @@ import com.intellij.openapi.startup.ProjectActivity
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.agent.builder.AgentBuilder
 import net.bytebuddy.asm.Advice
+import net.bytebuddy.description.type.TypeDescription
+import net.bytebuddy.dynamic.DynamicType
 import net.bytebuddy.matcher.ElementMatchers.named
+import net.bytebuddy.utility.JavaModule
 import java.util.concurrent.atomic.AtomicBoolean
 
 class IosPortInstrumenter : ProjectActivity {
@@ -18,11 +21,12 @@ class IosPortInstrumenter : ProjectActivity {
             val instrumentation = ByteBuddyAgent.install()
 
             AgentBuilder.Default()
+                .with(TRANSFORMATION_LISTENER)
                 .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
                 .with(AgentBuilder.InitializationStrategy.NoOp.INSTANCE)
                 .with(AgentBuilder.TypeStrategy.Default.REDEFINE)
                 .disableClassFormatChanges()
-                .type(named("com.jetbrains.rider.run.multiPlatform.ios.sessions.IOSSessionHandler"))
+                .type(named(IOS_SESSION_HANDLER))
                 .transform { builder, _, _, _, _ ->
                     builder.visit(Advice.to(PreparePortsAdvice::class.java).on(named("preparePortsForDebugging")))
                 }
@@ -35,7 +39,33 @@ class IosPortInstrumenter : ProjectActivity {
     }
 
     companion object {
+        private const val IOS_SESSION_HANDLER =
+            "com.jetbrains.rider.run.multiPlatform.ios.sessions.IOSSessionHandler"
+
         private val installed = AtomicBoolean(false)
         private val LOG = logger<IosPortInstrumenter>()
+        private val TRANSFORMATION_LISTENER = object : AgentBuilder.Listener.Adapter() {
+            override fun onTransformation(
+                typeDescription: TypeDescription,
+                classLoader: ClassLoader?,
+                module: JavaModule?,
+                loaded: Boolean,
+                dynamicType: DynamicType,
+            ) {
+                if (typeDescription.name == IOS_SESSION_HANDLER)
+                    LOG.info("[SkeleKit] iOS debug-port hook applied")
+            }
+
+            override fun onError(
+                typeName: String,
+                classLoader: ClassLoader?,
+                module: JavaModule?,
+                loaded: Boolean,
+                throwable: Throwable,
+            ) {
+                if (typeName == IOS_SESSION_HANDLER)
+                    LOG.warn("[SkeleKit] iOS debug-port hook failed", throwable)
+            }
+        }
     }
 }

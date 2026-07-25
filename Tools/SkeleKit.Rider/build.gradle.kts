@@ -1,5 +1,6 @@
 import com.jetbrains.plugin.structure.base.utils.isFile
 import org.jetbrains.intellij.platform.gradle.Constants
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
 plugins {
     id("java")
@@ -40,13 +41,15 @@ dependencies {
         rider(ProductVersion) {
             useInstaller = false
         }
+        // Rider 262 moved the solution host extensions out of the default compile classpath.
+        bundledModule("intellij.rider.rdclient.dotnet")
         jetbrainsRuntime()
     }
 
     // bundled with the plugin: bytecode instrumentation to reroute the iOS debug ports through our bridge
     // -> the session handlers are final + in an off-classpath module, so we patch the base method
-    implementation("net.bytebuddy:byte-buddy:1.15.11")
-    implementation("net.bytebuddy:byte-buddy-agent:1.15.11")
+    implementation("net.bytebuddy:byte-buddy:1.18.7")
+    implementation("net.bytebuddy:byte-buddy-agent:1.18.7")
 }
 
 intellijPlatform {
@@ -54,8 +57,16 @@ intellijPlatform {
 
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "261"
+            sinceBuild = "262"
             untilBuild = "262.*"
+        }
+    }
+
+    pluginVerification {
+        // This is the existing published ID; renaming it would create a different plugin.
+        freeArgs = listOf("-mute", "TemplateWordInPluginId")
+        ides {
+            create(IntelliJPlatformType.Rider, ProductVersion)
         }
     }
 }
