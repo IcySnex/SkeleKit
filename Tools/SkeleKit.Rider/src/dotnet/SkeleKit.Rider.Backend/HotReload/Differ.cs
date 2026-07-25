@@ -1,3 +1,4 @@
+using JetBrains.Collections;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -5,64 +6,46 @@ using Microsoft.CodeAnalysis.Emit;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
-static class Differ
+internal static class Differ
 {
-	public static List<SemanticEdit> Edits(
-		Compilation oldCompilation,
-		Compilation newCompilation,
-		SyntaxTree oldTree,
-		SyntaxTree newTree,
-		out List<string> rude)
+	sealed class BodyStripper : CSharpSyntaxRewriter
 	{
-		rude = [];
-		List<SemanticEdit> edits = [];
+		public static readonly BodyStripper Instance = new();
 
-		SemanticModel oldModel = oldCompilation.GetSemanticModel(oldTree);
-		SemanticModel newModel = newCompilation.GetSemanticModel(newTree);
 
-		// Anything outside the body shapes this deliberately-small engine understands is structural or
-		// unsupported. Never silently accept it into the snapshot: the runtime would still be executing
-		// the old declaration while later deltas were built from the new one.
-		SyntaxNode oldShape = BodyStripper.Instance.Visit(oldTree.GetRoot())!;
-		SyntaxNode newShape = BodyStripper.Instance.Visit(newTree.GetRoot())!;
-		if (!TokensEquivalent(oldShape, newShape))
-			rude.Add("structural or unsupported edit (needs restart)");
+		public override SyntaxNode? VisitMethodDeclaration(
+			MethodDeclarationSyntax node) =>
+			base.VisitMethodDeclaration(node
+				.WithBody(null)
+				.WithExpressionBody(null)
+				.WithSemicolonToken(default));
 
-		Dictionary<string, SyntaxNode> oldBodies = Bodies(oldTree, oldModel);
-		Dictionary<string, SyntaxNode> newBodies = Bodies(newTree, newModel);
+		public override SyntaxNode? VisitConstructorDeclaration(
+			ConstructorDeclarationSyntax node) =>
+			base.VisitConstructorDeclaration(node
+				.WithBody(null)
+				.WithExpressionBody(null)
+				.WithInitializer(null)
+				.WithSemicolonToken(default));
 
-		foreach (KeyValuePair<string, SyntaxNode> pair in newBodies)
+		public override SyntaxNode? VisitPropertyDeclaration(
+			PropertyDeclarationSyntax node)
 		{
-			string key = pair.Key;
-			SyntaxNode newNode = pair.Value;
+			AccessorListSyntax? accessors = node.AccessorList;
+			accessors = accessors?.WithAccessors(new(
+				accessors.Accessors.Select(accessor => accessor
+					.WithBody(null)
+					.WithExpressionBody(null)
+					.WithSemicolonToken(default))));
 
-			if (!oldBodies.TryGetValue(key, out SyntaxNode? oldNode))
-			{
-				rude.Add($"added member (needs restart): {key}");
-				continue;
-			}
-
-			if (oldNode.IsEquivalentTo(newNode))
-				continue;
-
-			if (oldModel.GetDeclaredSymbol(oldNode) is not ISymbol oldSymbol
-				|| newModel.GetDeclaredSymbol(newNode) is not ISymbol newSymbol)
-				continue;
-
-			edits.Add(new(SemanticEditKind.Update, oldSymbol, newSymbol));
+			return base.VisitPropertyDeclaration(node
+				.WithAccessorList(accessors)
+				.WithExpressionBody(null)
+				.WithSemicolonToken(default));
 		}
-
-		foreach (string key in oldBodies.Keys)
-			if (!newBodies.ContainsKey(key))
-				rude.Add($"removed member (needs restart): {key}");
-
-		return edits;
 	}
 
-	// SyntaxNode.IsEquivalentTo can still distinguish trivia attached to nodes removed by BodyStripper
-	// (for example the blank line left behind after an added method is deleted). Declaration tokens are
-	// the actual structural contract; comparing them ignores whitespace/comments without weakening the
-	// member/signature guard.
+
 	static bool TokensEquivalent(
 		SyntaxNode oldShape,
 		SyntaxNode newShape)
@@ -105,40 +88,52 @@ static class Differ
 		return map;
 	}
 
-	sealed class BodyStripper : CSharpSyntaxRewriter
+
+	public static List<SemanticEdit> Edits(
+		Compilation oldCompilation,
+		Compilation newCompilation,
+		SyntaxTree oldTree,
+		SyntaxTree newTree,
+		out List<string> rude)
 	{
-		public static readonly BodyStripper Instance = new();
+		rude = [];
+		List<SemanticEdit> edits = [];
 
-		public override SyntaxNode? VisitMethodDeclaration(
-			MethodDeclarationSyntax node) =>
-			base.VisitMethodDeclaration(node
-				.WithBody(null)
-				.WithExpressionBody(null)
-				.WithSemicolonToken(default));
+		SemanticModel oldModel = oldCompilation.GetSemanticModel(oldTree);
+		SemanticModel newModel = newCompilation.GetSemanticModel(newTree);
 
-		public override SyntaxNode? VisitConstructorDeclaration(
-			ConstructorDeclarationSyntax node) =>
-			base.VisitConstructorDeclaration(node
-				.WithBody(null)
-				.WithExpressionBody(null)
-				.WithInitializer(null)
-				.WithSemicolonToken(default));
+		SyntaxNode oldShape = BodyStripper.Instance.Visit(oldTree.GetRoot());
+		SyntaxNode newShape = BodyStripper.Instance.Visit(newTree.GetRoot());
+		if (!TokensEquivalent(oldShape, newShape))
+			rude.Add("structural or unsupported edit (needs restart)");
 
-		public override SyntaxNode? VisitPropertyDeclaration(
-			PropertyDeclarationSyntax node)
+		Dictionary<string, SyntaxNode> oldBodies = Bodies(oldTree, oldModel);
+		Dictionary<string, SyntaxNode> newBodies = Bodies(newTree, newModel);
+
+		foreach ((string? key, SyntaxNode? newNode) in newBodies)
 		{
-			AccessorListSyntax? accessors = node.AccessorList;
-			if (accessors is not null)
-				accessors = accessors.WithAccessors(new SyntaxList<AccessorDeclarationSyntax>(
-					accessors.Accessors.Select(accessor => accessor
-						.WithBody(null)
-						.WithExpressionBody(null)
-						.WithSemicolonToken(default))));
+			if (!oldBodies.TryGetValue(key, out SyntaxNode? oldNode))
+			{
+				rude.Add($"added member (needs restart): {key}");
+				continue;
+			}
 
-			return base.VisitPropertyDeclaration(node
-				.WithAccessorList(accessors)
-				.WithExpressionBody(null)
-				.WithSemicolonToken(default));
+			if (oldNode.IsEquivalentTo(newNode))
+				continue;
+
+			if (oldModel.GetDeclaredSymbol(oldNode) is not ISymbol oldSymbol
+				|| newModel.GetDeclaredSymbol(newNode) is not ISymbol newSymbol)
+				continue;
+
+			edits.Add(new(SemanticEditKind.Update, oldSymbol, newSymbol));
 		}
+
+		foreach (string key in oldBodies.Keys)
+		{
+			if (!newBodies.ContainsKey(key))
+				rude.Add($"removed member (needs restart): {key}");
+		}
+
+		return edits;
 	}
 }

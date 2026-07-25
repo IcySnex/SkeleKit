@@ -3,20 +3,70 @@ using System.Net.Sockets;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
-// Sends a freshly emitted delta to the debugger worker before Mono applies it. The worker then lets
-// Rider's built-in EnC event processor update its symbol reader and rebind breakpoints.
-sealed class DebuggerWorkerSync
+internal sealed class DebuggerWorkerSync(
+	int debuggerPort)
 {
 	const int Magic = 0x534B454C; // SKEL
 	const int ProtocolVersion = 1;
 
-	readonly int debuggerPort;
 
-	public DebuggerWorkerSync(
-		int debuggerPort)
+	static bool TryReadEndpoint(
+		string file,
+		out int port,
+		out string secret)
 	{
-		this.debuggerPort = debuggerPort;
+		port = 0;
+		secret = "";
+
+		if (!File.Exists(file))
+			return false;
+
+		string[] parts = File.ReadAllText(file).Trim().Split(':');
+		return parts.Length == 3
+			&& parts[0] == ProtocolVersion.ToString()
+			&& int.TryParse(parts[1], out port)
+			&& port is > IPEndPoint.MinPort and <= IPEndPoint.MaxPort
+			&& !string.IsNullOrWhiteSpace(secret = parts[2]);
 	}
+
+	static void WriteBlob(
+		BinaryWriter writer,
+		byte[] bytes)
+	{
+		writer.Write(bytes.Length);
+		writer.Write(bytes);
+	}
+
+	static void WriteInts(
+		BinaryWriter writer,
+		int[] values)
+	{
+		writer.Write(values.Length);
+		foreach (int value in values)
+			writer.Write(value);
+	}
+
+	static void WriteLineMappings(
+		BinaryWriter writer,
+		IReadOnlyList<LineMapping> mappings)
+	{
+		writer.Write(mappings.Count);
+		foreach (LineMapping mapping in mappings)
+		{
+			writer.Write(mapping.Path);
+			writer.Write(mapping.Changes.Count);
+			foreach ((int oldLine, int newLine) in mapping.Changes)
+			{
+				writer.Write(oldLine);
+				writer.Write(newLine);
+			}
+		}
+	}
+
+	static string DiscoveryFile(
+		int debuggerPort) =>
+		Path.Combine(Path.GetTempPath(), "skelekit-rider", $"enc-{debuggerPort}.endpoint");
+
 
 	public bool Stage(
 		string projectName,
@@ -83,64 +133,8 @@ sealed class DebuggerWorkerSync
 		return false;
 	}
 
-	static bool TryReadEndpoint(
-		string file,
-		out int port,
-		out string secret)
-	{
-		port = 0;
-		secret = "";
-
-		if (!File.Exists(file))
-			return false;
-
-		string[] parts = File.ReadAllText(file).Trim().Split(':');
-		return parts.Length == 3
-			&& parts[0] == ProtocolVersion.ToString()
-			&& int.TryParse(parts[1], out port)
-			&& port is > IPEndPoint.MinPort and <= IPEndPoint.MaxPort
-			&& !string.IsNullOrWhiteSpace(secret = parts[2]);
-	}
-
-	static void WriteBlob(
-		BinaryWriter writer,
-		byte[] bytes)
-	{
-		writer.Write(bytes.Length);
-		writer.Write(bytes);
-	}
-
-	static void WriteInts(
-		BinaryWriter writer,
-		int[] values)
-	{
-		writer.Write(values.Length);
-		foreach (int value in values)
-			writer.Write(value);
-	}
-
-	static void WriteLineMappings(
-		BinaryWriter writer,
-		IReadOnlyList<LineMapping> mappings)
-	{
-		writer.Write(mappings.Count);
-		foreach (LineMapping mapping in mappings)
-		{
-			writer.Write(mapping.Path);
-			writer.Write(mapping.Changes.Count);
-			foreach ((int oldLine, int newLine) in mapping.Changes)
-			{
-				writer.Write(oldLine);
-				writer.Write(newLine);
-			}
-		}
-	}
-
-	static string DiscoveryFile(
-		int debuggerPort) =>
-		Path.Combine(Path.GetTempPath(), "skelekit-rider", $"enc-{debuggerPort}.endpoint");
 }
 
-readonly record struct LineMapping(
+internal readonly record struct LineMapping(
 	string Path,
 	IReadOnlyList<(int OldLine, int NewLine)> Changes);

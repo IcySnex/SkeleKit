@@ -9,6 +9,7 @@ internal static class HotReload
 	const int Port = 9988;
 
 
+	// ReSharper disable once FunctionNeverReturns
 	static void Listen()
 	{
 		while (true)
@@ -43,7 +44,7 @@ internal static class HotReload
 		Thread thread = new(Listen)
 		{
 			IsBackground = true,
-			Name = "skele-rider-refresh"
+			Name = "skele-hot-reload"
 		};
 		thread.Start();
 

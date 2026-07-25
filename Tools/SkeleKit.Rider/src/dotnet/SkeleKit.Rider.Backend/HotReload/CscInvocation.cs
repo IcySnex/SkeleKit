@@ -5,28 +5,94 @@ using Microsoft.CodeAnalysis;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
-// The C# compiler's command line for the app, split into the pieces needed to rebuild its Roslyn
-// compilation. Everything that changes what lands in metadata is carried across; anything that only
-// affects the PE file or diagnostics is ignored.
-sealed class CscInvocation
+internal sealed class CscInvocation
 {
-	public required string ProjectDir { get; init; }
-	public required string AssemblyName { get; init; }
-	public required List<string> Sources { get; init; }
-	public required List<string> References { get; init; }
-	public Dictionary<string, Version> ReferenceVersionOverrides { get; } = new(StringComparer.OrdinalIgnoreCase);
-	public required List<string> Analyzers { get; init; }
-	public required List<string> AnalyzerConfigs { get; init; }
-	public required List<string> AdditionalFiles { get; init; }
-	public required List<string> Defines { get; init; }
-	public required Dictionary<string, string> Features { get; init; }
-	public required string LangVersion { get; init; }
-	public required bool AllowUnsafe { get; init; }
-	public required bool CheckOverflow { get; init; }
-	public required bool Optimize { get; init; }
-	public required OutputKind OutputKind { get; init; }
-	public required NullableContextOptions Nullable { get; init; }
-	public required string? MainTypeName { get; init; }
+	static Dictionary<string, Version> AssemblyReferences(
+		string path)
+	{
+		Dictionary<string, Version> references = new(StringComparer.OrdinalIgnoreCase);
+
+		try
+		{
+			using FileStream stream = File.OpenRead(path);
+			using PEReader pe = new(stream);
+			MetadataReader metadata = pe.GetMetadataReader();
+
+			foreach (AssemblyReferenceHandle handle in metadata.AssemblyReferences)
+			{
+				AssemblyReference reference = metadata.GetAssemblyReference(handle);
+				references[metadata.GetString(reference.Name)] = reference.Version;
+			}
+		}
+		catch
+		{
+			// ignoreeee :3
+		}
+
+		return references;
+	}
+
+	static AssemblyName? AssemblyIdentity(
+		string path)
+	{
+		if (!File.Exists(path))
+			return null;
+
+		try
+		{
+			return System.Reflection.AssemblyName.GetAssemblyName(path);
+		}
+		catch
+		{
+			return null;
+		}
+	}
+
+	static void AddFeature(
+		Dictionary<string, string> features,
+		string feature)
+	{
+		int separator = feature.IndexOf('=');
+
+		features[separator < 0 ? feature : feature.Substring(0, separator)] =
+			separator < 0 ? "true" : feature.Substring(separator + 1);
+	}
+
+	static OutputKind Kind(
+		string target) =>
+		target.ToLowerInvariant() switch
+		{
+			"library" => OutputKind.DynamicallyLinkedLibrary,
+			"module" => OutputKind.NetModule,
+			"winexe" => OutputKind.WindowsApplication,
+			"winmdobj" => OutputKind.WindowsRuntimeMetadata,
+			_ => OutputKind.ConsoleApplication
+		};
+
+	static NullableContextOptions Nullability(
+		string mode) =>
+		mode.ToLowerInvariant() switch
+		{
+			"enable" => NullableContextOptions.Enable,
+			"warnings" => NullableContextOptions.Warnings,
+			"annotations" => NullableContextOptions.Annotations,
+			_ => NullableContextOptions.Disable
+		};
+
+	static string? Value(
+		string arg,
+		string prefix) =>
+		arg.StartsWith(prefix, StringComparison.Ordinal) ? Unquote(arg.Substring(prefix.Length)) : null;
+
+	static string Unquote(
+		string value) =>
+		value.Trim('"');
+
+	static string Rooted(
+		string projectDir,
+		string path) =>
+		Path.IsPathRooted(path) ? path : Path.GetFullPath(Path.Combine(projectDir, path));
+
 
 	public static CscInvocation Parse(
 		IEnumerable<string> commandLine,
@@ -78,16 +144,30 @@ sealed class CscInvocation
 				outputKind = Kind(target);
 			else if (Value(arg, "/nullable:") is string nullableMode)
 				nullable = Nullability(nullableMode);
-			else if (arg is "/nullable" or "/nullable+")
-				nullable = NullableContextOptions.Enable;
-			else if (arg is "/unsafe" or "/unsafe+")
-				allowUnsafe = true;
-			else if (arg is "/checked" or "/checked+")
-				checkOverflow = true;
-			else if (arg is "/optimize" or "/optimize+" or "/o" or "/o+")
-				optimize = true;
-			else if (!arg.StartsWith("/") && arg.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-				sources.Add(Rooted(projectDir, Unquote(arg)));
+			else
+			{
+				switch (arg)
+				{
+					case "/nullable" or "/nullable+":
+						nullable = NullableContextOptions.Enable;
+						break;
+					case "/unsafe" or "/unsafe+":
+						allowUnsafe = true;
+						break;
+					case "/checked" or "/checked+":
+						checkOverflow = true;
+						break;
+					case "/optimize" or "/optimize+" or "/o" or "/o+":
+						optimize = true;
+						break;
+					default:
+						{
+							if (!arg.StartsWith("/") && arg.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+								sources.Add(Rooted(projectDir, Unquote(arg)));
+							break;
+						}
+				}
+			}
 		}
 
 		return new()
@@ -111,10 +191,26 @@ sealed class CscInvocation
 		};
 	}
 
-	// Linking can retarget an assembly reference to the runtime-pack version. The compiler command line
-	// still points at the targeting-pack facade, and Roslyn refuses to emit an EnC delta when that
-	// facade's identity differs from the deployed module's AssemblyRef. Record only identities the
-	// linker changed; Project retargets those facades in memory while preserving their full API surface.
+
+	public required string ProjectDir { get; init; }
+	public required string AssemblyName { get; init; }
+	public required List<string> Sources { get; init; }
+	public required List<string> References { get; init; }
+	public Dictionary<string, Version> ReferenceVersionOverrides { get; } = new(StringComparer.OrdinalIgnoreCase);
+	public required List<string> Analyzers { get; init; }
+	public required List<string> AnalyzerConfigs { get; init; }
+	public required List<string> AdditionalFiles { get; init; }
+	public required List<string> Defines { get; init; }
+	public required Dictionary<string, string> Features { get; init; }
+	public required string LangVersion { get; init; }
+	public required bool AllowUnsafe { get; init; }
+	public required bool CheckOverflow { get; init; }
+	public required bool Optimize { get; init; }
+	public required OutputKind OutputKind { get; init; }
+	public required NullableContextOptions Nullable { get; init; }
+	public required string? MainTypeName { get; init; }
+
+
 	public void AlignReferencesWithDeployment(
 		string deployedDll,
 		Action<string> log)
@@ -122,106 +218,22 @@ sealed class CscInvocation
 		Dictionary<string, Version> expected = AssemblyReferences(deployedDll);
 		string deployedDirectory = Path.GetDirectoryName(deployedDll)!;
 
-		for (int index = 0; index < References.Count; index++)
+		foreach (string t in References)
 		{
-			AssemblyName? current = AssemblyIdentity(References[index]);
+			AssemblyName? current = AssemblyIdentity(t);
 			if (current?.Name is not string name
 				|| current.Version is not Version currentVersion
 				|| !expected.TryGetValue(name, out Version? expectedVersion)
 				|| currentVersion == expectedVersion)
 				continue;
 
-			string candidate = Path.Combine(deployedDirectory, Path.GetFileName(References[index]));
+			string candidate = Path.Combine(deployedDirectory, Path.GetFileName(t));
 			AssemblyName? deployed = AssemblyIdentity(candidate);
 			if (deployed?.Name != name || deployed.Version != expectedVersion)
 				continue;
 
-			ReferenceVersionOverrides[References[index]] = expectedVersion;
+			ReferenceVersionOverrides[t] = expectedVersion;
 			log($"  retargeting {name} reference {currentVersion} to deployed {expectedVersion}");
 		}
 	}
-
-	static Dictionary<string, Version> AssemblyReferences(
-		string path)
-	{
-		Dictionary<string, Version> references = new(StringComparer.OrdinalIgnoreCase);
-
-		try
-		{
-			using FileStream stream = File.OpenRead(path);
-			using PEReader pe = new(stream);
-			MetadataReader metadata = pe.GetMetadataReader();
-
-			foreach (AssemblyReferenceHandle handle in metadata.AssemblyReferences)
-			{
-				AssemblyReference reference = metadata.GetAssemblyReference(handle);
-				references[metadata.GetString(reference.Name)] = reference.Version;
-			}
-		}
-		catch { }
-
-		return references;
-	}
-
-	static AssemblyName? AssemblyIdentity(
-		string path)
-	{
-		if (!File.Exists(path))
-			return null;
-
-		try
-		{
-			return System.Reflection.AssemblyName.GetAssemblyName(path);
-		}
-		catch
-		{
-			return null;
-		}
-	}
-
-	// a feature is name=value, and the value may itself contain the separators we split other options on
-	static void AddFeature(
-		Dictionary<string, string> features,
-		string feature)
-	{
-		int separator = feature.IndexOf('=');
-
-		features[separator < 0 ? feature : feature.Substring(0, separator)] =
-			separator < 0 ? "true" : feature.Substring(separator + 1);
-	}
-
-	static OutputKind Kind(
-		string target) =>
-		target.ToLowerInvariant() switch
-		{
-			"library" => OutputKind.DynamicallyLinkedLibrary,
-			"module" => OutputKind.NetModule,
-			"winexe" => OutputKind.WindowsApplication,
-			"winmdobj" => OutputKind.WindowsRuntimeMetadata,
-			_ => OutputKind.ConsoleApplication
-		};
-
-	static NullableContextOptions Nullability(
-		string mode) =>
-		mode.ToLowerInvariant() switch
-		{
-			"enable" => NullableContextOptions.Enable,
-			"warnings" => NullableContextOptions.Warnings,
-			"annotations" => NullableContextOptions.Annotations,
-			_ => NullableContextOptions.Disable
-		};
-
-	static string? Value(
-		string arg,
-		string prefix) =>
-		arg.StartsWith(prefix, StringComparison.Ordinal) ? Unquote(arg.Substring(prefix.Length)) : null;
-
-	static string Unquote(
-		string value) =>
-		value.Trim('"');
-
-	static string Rooted(
-		string projectDir,
-		string path) =>
-		Path.IsPathRooted(path) ? path : Path.GetFullPath(Path.Combine(projectDir, path));
 }

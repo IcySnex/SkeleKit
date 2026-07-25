@@ -3,15 +3,7 @@ using System.Text;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
-// Asks MSBuild for the exact command line the C# compiler was invoked with, which is what the engine
-// rebuilds the app's Roslyn compilation from.
-//
-// This is what makes the plugin work on any .NET iOS project instead of only ones that opted into
-// SkeleKit's MSBuild targets: `ProvideCommandLineArgs` is a stock Roslyn property, and the dump target
-// rides in through `CustomAfterMicrosoftCommonTargets` so nothing in the user's project changes.
-// `SkipCompilerExecution` keeps csc from running, so the build output the app was deployed from is
-// left exactly as it is.
-static class MsBuild
+internal static class MsBuild
 {
 	const string DumpTargets = """
 		<Project>
@@ -21,9 +13,105 @@ static class MsBuild
 		</Project>
 		""";
 
+
 	static readonly TimeSpan Timeout = TimeSpan.FromMinutes(3);
 
 	static string? dotnetPath;
+
+
+	static (int ExitCode, string Diagnostics) Run(
+		string executable,
+		string arguments,
+		string workingDirectory)
+	{
+		ProcessStartInfo start = new(executable, arguments)
+		{
+			WorkingDirectory = workingDirectory,
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			CreateNoWindow = true,
+			EnvironmentVariables =
+			{
+				// a build server left over from another SDK can answer with stale evaluation
+				["MSBUILDDISABLENODEREUSE"] = "1",
+				["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1"
+			}
+		};
+
+		using Process process = new();
+		process.StartInfo = start;
+
+		StringBuilder diagnostics = new();
+
+		process.OutputDataReceived += (_, line) => Append(diagnostics, line.Data);
+		process.ErrorDataReceived += (_, line) => Append(diagnostics, line.Data);
+
+		process.Start();
+		process.BeginOutputReadLine();
+		process.BeginErrorReadLine();
+
+		if (!process.WaitForExit((int)Timeout.TotalMilliseconds))
+		{
+			try
+			{
+				process.Kill();
+			}
+			catch
+			{
+				// ignored
+			}
+
+			return (-1, "timed out");
+		}
+
+		return (process.ExitCode, diagnostics.ToString());
+	}
+
+	static void Append(
+		StringBuilder diagnostics,
+		string? line)
+	{
+		if (line is null)
+			return;
+
+		lock (diagnostics)
+		{
+			if (diagnostics.Length < 8192)
+				diagnostics.Append(line).Append('\n');
+		}
+	}
+
+	static string? ResolveDotnet()
+	{
+		if (dotnetPath is not null)
+			return dotnetPath.Length > 0 ? dotnetPath : null;
+
+		dotnetPath = Candidates().FirstOrDefault(File.Exists) ?? "";
+
+		return dotnetPath.Length > 0 ? dotnetPath : null;
+	}
+
+	static IEnumerable<string> Candidates()
+	{
+		if (Environment.GetEnvironmentVariable("SKELEKIT_DOTNET") is string configured && configured.Length > 0)
+			yield return configured;
+
+		// the host that started this backend, when it is a .NET one
+		if (Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") is string host && host.Length > 0)
+			yield return host;
+
+		foreach (string directory in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
+		{
+			if (directory.Length > 0)
+				yield return Path.Combine(directory, "dotnet");
+		}
+
+		yield return "/usr/local/share/dotnet/dotnet";
+		yield return "/opt/homebrew/bin/dotnet";
+		yield return "/usr/bin/dotnet";
+	}
+
 
 	public static List<string>? CscCommandLineArgs(
 		AppProject project,
@@ -73,84 +161,14 @@ static class MsBuild
 		}
 		finally
 		{
-			try { File.Delete(output); } catch { }
+			try
+			{
+				File.Delete(output);
+			}
+			catch
+			{
+				// ignore grr :3
+			}
 		}
-	}
-
-	static (int ExitCode, string Diagnostics) Run(
-		string executable,
-		string arguments,
-		string workingDirectory)
-	{
-		ProcessStartInfo start = new(executable, arguments)
-		{
-			WorkingDirectory = workingDirectory,
-			UseShellExecute = false,
-			RedirectStandardOutput = true,
-			RedirectStandardError = true,
-			CreateNoWindow = true
-		};
-		// a build server left over from another SDK can answer with stale evaluation
-		start.EnvironmentVariables["MSBUILDDISABLENODEREUSE"] = "1";
-		start.EnvironmentVariables["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
-
-		using Process process = new() { StartInfo = start };
-		StringBuilder diagnostics = new();
-
-		process.OutputDataReceived += (_, line) => Append(diagnostics, line.Data);
-		process.ErrorDataReceived += (_, line) => Append(diagnostics, line.Data);
-
-		process.Start();
-		process.BeginOutputReadLine();
-		process.BeginErrorReadLine();
-
-		if (!process.WaitForExit((int)Timeout.TotalMilliseconds))
-		{
-			try { process.Kill(); } catch { }
-
-			return (-1, "timed out");
-		}
-
-		return (process.ExitCode, diagnostics.ToString());
-	}
-
-	static void Append(
-		StringBuilder diagnostics,
-		string? line)
-	{
-		if (line is null)
-			return;
-
-		lock (diagnostics)
-			if (diagnostics.Length < 8192)
-				diagnostics.Append(line).Append('\n');
-	}
-
-	static string? ResolveDotnet()
-	{
-		if (dotnetPath is not null)
-			return dotnetPath.Length > 0 ? dotnetPath : null;
-
-		dotnetPath = Candidates().FirstOrDefault(File.Exists) ?? "";
-
-		return dotnetPath.Length > 0 ? dotnetPath : null;
-	}
-
-	static IEnumerable<string> Candidates()
-	{
-		if (Environment.GetEnvironmentVariable("SKELEKIT_DOTNET") is string configured && configured.Length > 0)
-			yield return configured;
-
-		// the host that started this backend, when it is a .NET one
-		if (Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") is string host && host.Length > 0)
-			yield return host;
-
-		foreach (string directory in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
-			if (directory.Length > 0)
-				yield return Path.Combine(directory, "dotnet");
-
-		yield return "/usr/local/share/dotnet/dotnet";
-		yield return "/opt/homebrew/bin/dotnet";
-		yield return "/usr/bin/dotnet";
 	}
 }

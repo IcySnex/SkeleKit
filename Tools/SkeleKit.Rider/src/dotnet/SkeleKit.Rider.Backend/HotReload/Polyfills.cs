@@ -1,6 +1,4 @@
 // net472 lacks the compiler-recognized attributes for `init`, `required`, and `[SetsRequiredMembers]`.
-// These marker types let the ported hot-reload code compile unchanged. All internal, so they never
-// clash with another assembly's copies.
 
 namespace System.Runtime.CompilerServices
 {
@@ -19,6 +17,6 @@ namespace System.Runtime.CompilerServices
 
 namespace System.Diagnostics.CodeAnalysis
 {
-	[AttributeUsage(AttributeTargets.Constructor, Inherited = false)]
+	[AttributeUsage(AttributeTargets.Constructor)]
 	internal sealed class SetsRequiredMembersAttribute : Attribute;
 }

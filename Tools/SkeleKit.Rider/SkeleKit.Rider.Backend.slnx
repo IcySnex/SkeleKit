@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/misc/">
+    <File Path="build.gradle.kts" />
+    <File Path="gradle.properties" />
+    <File Path="src/dotnet/Plugin.props" />
+    <File Path="src/rider/main/resources/META-INF/plugin.xml" />
+  </Folder>
+  <Project Path="src/dotnet/SkeleKit.Rider.Backend/SkeleKit.Rider.Backend.csproj" />
+  <Project Path="src/dotnet/SkeleKit.Rider.DebuggerWorker/SkeleKit.Rider.DebuggerWorker.csproj" />
+</Solution>

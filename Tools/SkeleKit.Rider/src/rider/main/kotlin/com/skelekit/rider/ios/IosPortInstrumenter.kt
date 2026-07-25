@@ -9,9 +9,6 @@ import net.bytebuddy.asm.Advice
 import net.bytebuddy.matcher.ElementMatchers.named
 import java.util.concurrent.atomic.AtomicBoolean
 
-// Installs a self-attached ByteBuddy agent and instruments Rider's iOS port preparation. The
-// concrete session handlers are final and off our classpath, but the shared logic lives on this
-// base type. Retransformation covers the already-loaded case.
 class IosPortInstrumenter : ProjectActivity {
     override suspend fun execute(project: Project) {
         if (!installed.compareAndSet(false, true))

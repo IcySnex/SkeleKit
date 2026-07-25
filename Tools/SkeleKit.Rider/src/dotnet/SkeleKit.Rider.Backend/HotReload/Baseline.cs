@@ -6,29 +6,16 @@ using Microsoft.CodeAnalysis.Emit;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
-// The deployed assembly, as the starting point every delta is generated against.
-//
-// The dll and pdb are read into memory rather than mapped, so a rebuild can replace them while a
-// session is running without us holding the old files open.
-sealed class Baseline
+internal sealed class Baseline
 {
 	static readonly Guid EncLocalSlotMap = new("755F52A8-91C5-45BE-B4B8-209571E552BD");
 	static readonly Guid EncLambdaAndClosureMap = new("A643004C-0240-496F-A783-30D64F4979DE");
+
 
 	readonly PEReader pe;
 	readonly MetadataReader metadata;
 	readonly MetadataReader? pdb;
 	readonly HashSet<string> referencedTypes = new(StringComparer.Ordinal);
-
-	public EmitBaseline Emit { get; set; }
-	public Guid Mvid { get; }
-
-	// Mono can resolve a runtime type in an edited body only if the deployed module already had a
-	// TypeRef for it. Scope is deliberately ignored: compiler facades and type forwarding can make
-	// Roslyn name System.Runtime while the deployed row names the implementation assembly.
-	public bool ContainsType(
-		string metadataName) =>
-		referencedTypes.Contains(metadataName);
 
 	public Baseline(
 		string dllPath,
@@ -53,6 +40,11 @@ sealed class Baseline
 			LocalSignature,
 			hasPortableDebugInformation: pdb is not null);
 	}
+
+
+	public EmitBaseline Emit { get; set; }
+	public Guid Mvid { get; }
+
 
 	string TypeReferenceName(
 		TypeReferenceHandle handle)
@@ -99,4 +91,12 @@ sealed class Baseline
 
 		return pe.GetMethodBody(method.RelativeVirtualAddress).LocalSignature;
 	}
+
+
+	// Mono can resolve a runtime type in an edited body only if the deployed module already had a
+	// TypeRef for it. Scope is deliberately ignored: compiler facades and type forwarding can make
+	// Roslyn name System.Runtime while the deployed row names the implementation assembly.
+	public bool ContainsType(
+		string metadataName) =>
+		referencedTypes.Contains(metadataName);
 }

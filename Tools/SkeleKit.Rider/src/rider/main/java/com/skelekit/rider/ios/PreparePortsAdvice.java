@@ -29,6 +29,7 @@ public class PreparePortsAdvice {
             int appPort = Integer.parseInt(ports.substring(0, separator));
             int riderPort = Integer.parseInt(ports.substring(separator + 1));
             if (appPort > 0 && riderPort > 0)
+                //noinspection ReassignedVariable
                 ret = new IOSSessionHandler.IOSDebuggingPorts(riderPort, appPort);
         } catch (NumberFormatException ignored) {
         }

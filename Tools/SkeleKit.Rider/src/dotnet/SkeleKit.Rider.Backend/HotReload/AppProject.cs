@@ -2,20 +2,14 @@ using System.Text.RegularExpressions;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
-// A .NET iOS app in the solution that hot reload can target, plus where its last build landed.
-//
-// Discovery reads the solution and project files as text rather than going through Rider's project
-// model. The model would need the solution to be fully loaded, a read lock, and API that shifts
-// between Rider releases; the files give the same two answers (which projects exist, which ones
-// target iOS) with none of that, and they are readable the moment the component starts.
-sealed class AppProject
+internal sealed class AppProject
 {
 	static readonly Regex TargetFrameworkPattern = new(
-		@"<TargetFrameworks?>([^<]*)</TargetFrameworks?>",
+		"<TargetFrameworks?>([^<]*)</TargetFrameworks?>",
 		RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 	static readonly Regex AssemblyNamePattern = new(
-		@"<AssemblyName>([^<]*)</AssemblyName>",
+		"<AssemblyName>([^<]*)</AssemblyName>",
 		RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 	static readonly Regex OutputTypePattern = new(
@@ -38,85 +32,7 @@ sealed class AppProject
 		"\\bReferenceOutputAssembly\\s*=\\s*\"false\"",
 		RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-	public required string ProjectFile { get; init; }
-	public required string ProjectDir { get; init; }
-	public required string AssemblyName { get; init; }
-	public required string DeployedDll { get; init; }
-	public required string Configuration { get; init; }
-	public required string TargetFramework { get; init; }
-	public required string RuntimeIdentifier { get; init; }
-	public required bool IsExecutable { get; init; }
 
-	public override string ToString() =>
-		$"{AssemblyName} ({Configuration}/{TargetFramework}/{RuntimeIdentifier})";
-
-	// Every .NET iOS project in the solution that has a build we could hot reload. A project with no
-	// build output yet is left out; it comes back on the next pass, after the user builds.
-	public static List<AppProject> Discover(
-		string solutionFile)
-	{
-		List<AppProject> found = [];
-
-		foreach (string projectFile in ProjectFiles(solutionFile))
-		{
-			AppProject? project = TryLoad(projectFile, requireIos: true, preferTargetFramework: null);
-			if (project is AppProject candidate)
-				found.Add(candidate);
-		}
-
-		return found;
-	}
-
-	// Whether the solution has a .NET iOS project at all, regardless of whether it has been built. This
-	// is the gate for taking over the debug ports, so a freshly cloned solution is ready on its first
-	// Debug rather than only after a build and a restart.
-	public static bool AnyIosProject(
-		string solutionFile)
-	{
-		foreach (string projectFile in ProjectFiles(solutionFile))
-		{
-			try
-			{
-				if (TargetsIos(File.ReadAllText(projectFile)))
-					return true;
-			}
-			catch { }
-		}
-
-		return false;
-	}
-
-	// The app plus every project it references, transitively. An edit in a referenced library reloads
-	// the same way an edit in the app does, since each assembly carries its own baseline and module.
-	public static List<AppProject> WithReferences(
-		AppProject app)
-	{
-		List<AppProject> projects = [app];
-		HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase) { app.ProjectFile };
-		Queue<string> queue = new();
-		queue.Enqueue(app.ProjectFile);
-
-		while (queue.Count > 0)
-		{
-			foreach (string reference in ProjectReferences(queue.Dequeue()))
-			{
-				if (!seen.Add(reference))
-					continue;
-
-				queue.Enqueue(reference);
-
-				AppProject? project = TryLoad(reference, requireIos: false, preferTargetFramework: app.TargetFramework);
-				if (project is AppProject candidate)
-					projects.Add(UseAppDeployment(candidate, app));
-			}
-		}
-
-		return projects;
-	}
-
-	// Referenced projects are linked into the deployed app and can have a different MVID from their
-	// loose bin output. Baseline against the exact copy the runtime loaded; otherwise every library edit
-	// is rejected as a build mismatch even though app-project edits work.
 	static AppProject UseAppDeployment(
 		AppProject project,
 		AppProject app)
@@ -175,7 +91,10 @@ sealed class AppProject
 				if (File.Exists(full))
 					references.Add(full);
 			}
-			catch { }
+			catch
+			{
+				// ignore :3
+			}
 		}
 
 		return references;
@@ -229,17 +148,17 @@ sealed class AppProject
 		string projectText)
 	{
 		foreach (Match match in TargetFrameworkPattern.Matches(projectText))
+		{
 			foreach (string framework in match.Groups[1].Value.Split(';'))
+			{
 				if (framework.Trim().IndexOf("-ios", StringComparison.OrdinalIgnoreCase) >= 0)
 					return true;
+			}
+		}
 
 		return false;
 	}
 
-	// The dll Rider just deployed. Picking the newest match instead of composing the path from
-	// Configuration/TargetFramework/RuntimeIdentifier means we never have to guess which of those the
-	// run configuration used. A multi-targeting library has one output per framework, so the app's own
-	// framework decides which is the deployed one.
 	static string? NewestBuildOutput(
 		string projectDir,
 		string assemblyName,
@@ -259,9 +178,9 @@ sealed class AppProject
 			return null;
 		}
 
-		if (preferTargetFramework is string framework && framework.Length > 0)
+		if (!string.IsNullOrEmpty(preferTargetFramework))
 		{
-			string segment = Path.DirectorySeparatorChar + framework + Path.DirectorySeparatorChar;
+			string segment = Path.DirectorySeparatorChar + preferTargetFramework + Path.DirectorySeparatorChar;
 			List<string> matching = [.. candidates.Where(path => path.IndexOf(segment, StringComparison.OrdinalIgnoreCase) >= 0)];
 
 			if (matching.Count > 0)
@@ -284,7 +203,6 @@ sealed class AppProject
 		return newest;
 	}
 
-	// bin/<Configuration>/<TargetFramework>/<RuntimeIdentifier>/<App>.dll, with the last two optional.
 	static (string Configuration, string TargetFramework, string RuntimeIdentifier) SplitOutputPath(
 		string projectDir,
 		string dll)
@@ -348,4 +266,78 @@ sealed class AppProject
 			return [];
 		}
 	}
+
+
+	public static List<AppProject> Discover(
+		string solutionFile)
+	{
+		List<AppProject> found = [];
+
+		foreach (string projectFile in ProjectFiles(solutionFile))
+		{
+			AppProject? project = TryLoad(projectFile, requireIos: true, preferTargetFramework: null);
+			if (project is not null)
+				found.Add(project);
+		}
+
+		return found;
+	}
+
+	public static bool AnyIosProject(
+		string solutionFile)
+	{
+		foreach (string projectFile in ProjectFiles(solutionFile))
+		{
+			try
+			{
+				if (TargetsIos(File.ReadAllText(projectFile)))
+					return true;
+			}
+			catch
+			{
+				// ignore :3
+			}
+		}
+
+		return false;
+	}
+
+	public static List<AppProject> WithReferences(
+		AppProject app)
+	{
+		List<AppProject> projects = [app];
+		HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase) { app.ProjectFile };
+		Queue<string> queue = new();
+		queue.Enqueue(app.ProjectFile);
+
+		while (queue.Count > 0)
+		{
+			foreach (string reference in ProjectReferences(queue.Dequeue()))
+			{
+				if (!seen.Add(reference))
+					continue;
+
+				queue.Enqueue(reference);
+
+				AppProject? project = TryLoad(reference, requireIos: false, preferTargetFramework: app.TargetFramework);
+				if (project is not null)
+					projects.Add(UseAppDeployment(project, app));
+			}
+		}
+
+		return projects;
+	}
+
+
+	public required string ProjectFile { get; init; }
+	public required string ProjectDir { get; init; }
+	public required string AssemblyName { get; init; }
+	public required string DeployedDll { get; init; }
+	public required string Configuration { get; init; }
+	public required string TargetFramework { get; init; }
+	public required string RuntimeIdentifier { get; init; }
+	public required bool IsExecutable { get; init; }
+
+	public override string ToString() =>
+		$"{AssemblyName} ({Configuration}/{TargetFramework}/{RuntimeIdentifier})";
 }

@@ -11,12 +11,6 @@ import com.jetbrains.rider.projectView.solution
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-// Mirrors the backend bridge's ports into a system property. The advice is inlined into a Rider class
-// that cannot see plugin classes, so a JVM property is the narrow handoff between the two classloaders.
-//
-// The property is JVM-global, so with several solutions open in one Rider the last one loaded owns
-// it. That only costs the other solution its hot reload: its debug session still relays through the
-// bridge untouched, and the engine declines to apply deltas to an assembly it does not know.
 class BridgePortPublisher : ProjectActivity {
     override suspend fun execute(project: Project) {
         if (!project.hasSolution)
@@ -36,9 +30,6 @@ class BridgePortPublisher : ProjectActivity {
             clearPublished("[SkeleKit] bridge project closed; iOS debug ports left alone")
         }
 
-        // ProjectActivity runs on a coroutine worker. RD model subscriptions must instead be made
-        // on the IDE thread (or through the protocol dispatcher), otherwise Rider rejects them with
-        // "Wrong thread RdProperty" before the bridge can publish its ports.
         withContext(Dispatchers.EDT) {
             val model = project.solution.skeleKitModel
 

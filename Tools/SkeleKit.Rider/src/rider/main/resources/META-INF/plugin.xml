@@ -1,18 +1,26 @@
 <idea-plugin require-restart="true">
-  <id>com.skelekit.rider</id>
-  <name>SkeleKit</name>
-  <vendor url="https://github.com/IcySnex/SkeleKit">SkeleKit</vendor>
-  <depends>com.intellij.modules.rider</depends>
+    <id>com.skelekit.rider</id>
+    <name>SkeleKit Hot Reload</name>
+    <version>1.0.0</version>
+    <vendor url="https://github.com/IcySnex/SkeleKit">IcySnex</vendor>
 
-  <description>
-<![CDATA[
-<p>Hot reload and breakpoints together for SkeleKit.iOS apps running in the iOS simulator.</p>
-]]>
-  </description>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.rider</depends>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <postStartupActivity implementation="com.skelekit.rider.ios.IosPortInstrumenter"/>
-    <postStartupActivity implementation="com.skelekit.rider.ios.BridgePortPublisher"/>
-  </extensions>
+    <idea-version since-build="261" until-build="262.*"/>
 
+    <description><![CDATA[
+    <p>Provides hot reload capabilities and simultaneous breakpoint debugging for <b>SkeleKit.iOS</b> apps running in the iOS simulator.</p>
+  ]]></description>
+
+    <change-notes><![CDATA[
+    <ul>
+      <li>Initial release of SkeleKit Hot Reload for Rider.</li>
+    </ul>
+  ]]></change-notes>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="com.skelekit.rider.ios.IosPortInstrumenter"/>
+        <postStartupActivity implementation="com.skelekit.rider.ios.BridgePortPublisher"/>
+    </extensions>
 </idea-plugin>

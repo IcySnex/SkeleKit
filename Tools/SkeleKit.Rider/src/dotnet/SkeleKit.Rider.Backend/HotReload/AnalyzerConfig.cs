@@ -5,16 +5,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace SkeleKit.Rider.Backend.HotReload;
 
-// The `/analyzerconfig:` files csc was given, in the shape a generator driver wants them.
-//
-// Source generators read MSBuild properties (RootNamespace, ProjectDir, feature switches) out of the
-// SDK's generated global config, and emit different code without them. Since the delta engine's
-// compilation has to match the deployed assembly bit for bit, feeding the generators the same options
-// the real build did is a correctness requirement, not a nicety.
-//
-// Only global configs are read. Per-file sections in a plain .editorconfig carry style and diagnostic
-// severity rules, which change no emitted metadata.
-sealed class AnalyzerConfig : AnalyzerConfigOptionsProvider
+internal sealed class AnalyzerConfig : AnalyzerConfigOptionsProvider
 {
 	sealed class Options(
 		Dictionary<string, string> values) : AnalyzerConfigOptions
@@ -46,55 +37,6 @@ sealed class AnalyzerConfig : AnalyzerConfigOptionsProvider
 		}
 	}
 
-	static readonly Options None = new([]);
-
-	readonly Options global;
-	readonly Dictionary<string, Options> perFile;
-
-	AnalyzerConfig(
-		Options global,
-		Dictionary<string, Options> perFile)
-	{
-		this.global = global;
-		this.perFile = perFile;
-	}
-
-	public override AnalyzerConfigOptions GlobalOptions => global;
-
-	public override AnalyzerConfigOptions GetOptions(
-		SyntaxTree tree) =>
-		Lookup(tree.FilePath);
-
-	public override AnalyzerConfigOptions GetOptions(
-		AdditionalText textFile) =>
-		Lookup(textFile.Path);
-
-	public static AdditionalText[] AdditionalTexts(
-		IEnumerable<string> paths) =>
-		[.. paths.Where(File.Exists).Select(path => (AdditionalText)new Text(path))];
-
-	public static AnalyzerConfig Load(
-		IEnumerable<string> configPaths)
-	{
-		Dictionary<string, string> global = new(AnalyzerConfigOptions.KeyComparer);
-		Dictionary<string, Dictionary<string, string>> perFile = new(StringComparer.OrdinalIgnoreCase);
-
-		foreach (string path in configPaths.Where(File.Exists))
-			Read(path, global, perFile);
-
-		return new(
-			new(global),
-			perFile.ToDictionary(entry => entry.Key, entry => new Options(entry.Value), StringComparer.OrdinalIgnoreCase));
-	}
-
-	Options Lookup(
-		string path)
-	{
-		if (path.Length == 0)
-			return None;
-
-		return perFile.TryGetValue(Normalize(path), out Options? options) ? options : None;
-	}
 
 	static void Read(
 		string path,
@@ -139,9 +81,12 @@ sealed class AnalyzerConfig : AnalyzerConfigOptionsProvider
 			return;
 
 		foreach (KeyValuePair<string, string> entry in preamble)
-			if (!string.Equals(entry.Key, "is_global", StringComparison.OrdinalIgnoreCase)
-				&& !string.Equals(entry.Key, "global_level", StringComparison.OrdinalIgnoreCase))
-				global[entry.Key] = entry.Value;
+		{
+			if (string.Equals(entry.Key, "is_global", StringComparison.OrdinalIgnoreCase) || string.Equals(entry.Key, "global_level", StringComparison.OrdinalIgnoreCase))
+				continue;
+
+			global[entry.Key] = entry.Value;
+		}
 
 		// in a global config a section header is a full file path, not a glob
 		foreach ((string section, Dictionary<string, string> values) in sections)
@@ -167,4 +112,58 @@ sealed class AnalyzerConfig : AnalyzerConfigOptionsProvider
 			return path;
 		}
 	}
+
+
+	public static AdditionalText[] AdditionalTexts(
+		IEnumerable<string> paths) =>
+		[.. paths.Where(File.Exists).Select(AdditionalText (path) => new Text(path))];
+
+	public static AnalyzerConfig Load(
+		IEnumerable<string> configPaths)
+	{
+		Dictionary<string, string> global = new(AnalyzerConfigOptions.KeyComparer);
+		Dictionary<string, Dictionary<string, string>> perFile = new(StringComparer.OrdinalIgnoreCase);
+
+		foreach (string path in configPaths.Where(File.Exists))
+			Read(path, global, perFile);
+
+		return new(
+			new(global),
+			perFile.ToDictionary(entry => entry.Key, entry => new Options(entry.Value), StringComparer.OrdinalIgnoreCase));
+	}
+
+
+	static readonly Options None = new([]);
+
+	readonly Options global;
+	readonly Dictionary<string, Options> perFile;
+
+	AnalyzerConfig(
+		Options global,
+		Dictionary<string, Options> perFile)
+	{
+		this.global = global;
+		this.perFile = perFile;
+	}
+
+
+	Options Lookup(
+		string path)
+	{
+		if (path.Length == 0)
+			return None;
+
+		return perFile.TryGetValue(Normalize(path), out Options? options) ? options : None;
+	}
+
+
+	public override AnalyzerConfigOptions GlobalOptions => global;
+
+	public override AnalyzerConfigOptions GetOptions(
+		SyntaxTree tree) =>
+		Lookup(tree.FilePath);
+
+	public override AnalyzerConfigOptions GetOptions(
+		AdditionalText textFile) =>
+		Lookup(textFile.Path);
 }

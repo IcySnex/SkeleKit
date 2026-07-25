@@ -43,23 +43,19 @@ dependencies {
         jetbrainsRuntime()
     }
 
-    // bundled with the plugin: bytecode instrumentation to reroute the iOS debug ports through our
-    // bridge (the session handlers are final + in an off-classpath module, so we patch the base method)
+    // bundled with the plugin: bytecode instrumentation to reroute the iOS debug ports through our bridge
+    // -> the session handlers are final + in an off-classpath module, so we patch the base method
     implementation("net.bytebuddy:byte-buddy:1.15.11")
     implementation("net.bytebuddy:byte-buddy-agent:1.15.11")
 }
 
 intellijPlatform {
-    // it starts a headless IDE to index settings pages, which fails while Rider is open and indexes
-    // nothing anyway: the plugin contributes no settings UI
     buildSearchableOptions = false
 
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "261"
-            // The port advice and debugger-worker bridge intentionally use Rider internals. Keep the
-            // compatibility claim to the build line we test; validate and bump this for each Rider line.
-            untilBuild = "261.*"
+            untilBuild = "262.*"
         }
     }
 }
@@ -68,7 +64,6 @@ tasks.processResources {
     from("dependencies.json") { into("META-INF") }
 }
 
-// Gradle (launched from Rider or a non-login shell) may not have brew's dotnet on PATH.
 fun dotnetExecutable(): String {
     providers.environmentVariable("DOTNET_PATH").orNull?.let { if (file(it).exists()) return it }
     return listOf(
@@ -77,7 +72,6 @@ fun dotnetExecutable(): String {
     ).firstOrNull { file(it).exists() } ?: "dotnet"
 }
 
-// Build the .NET backend (uses the generated model, so it needs rdgen first).
 val compileDotNet by tasks.registering {
     dependsOn(":protocol:rdgen")
     doLast {
@@ -89,7 +83,6 @@ val compileDotNet by tasks.registering {
     }
 }
 
-// Frontend Kotlin consumes the generated model too.
 tasks.named("compileKotlin") {
     dependsOn(":protocol:rdgen")
 }
@@ -101,7 +94,6 @@ tasks.prepareSandbox {
     val debuggerWorkerId = "SkeleKit.Rider.DebuggerWorker"
     val debuggerWorkerOutput = "${rootDir}/src/dotnet/${debuggerWorkerId}/bin/${debuggerWorkerId}/${BuildConfiguration}"
 
-    // only our dll — the host provides Roslyn + BCL (we compile against its bundled Microsoft.CodeAnalysis)
     val dllFiles = listOf("$outputFolder/${DotnetPluginId}.dll", "$outputFolder/${DotnetPluginId}.pdb")
     dllFiles.forEach { f -> from(file(f)) { into("${rootProject.name}/dotnet") } }
 
@@ -121,11 +113,9 @@ tasks.prepareSandbox {
 
 tasks.runIde {
     maxHeapSize = "1500m"
-    // sandbox: auto-trust the opened solution so it loads without the "Trust Project?" dialog
     systemProperty("idea.trust.all.projects", "true")
 }
 
-// Expose rider-model.jar so :protocol can generate against the IDE model.
 val riderModel: Configuration by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = false

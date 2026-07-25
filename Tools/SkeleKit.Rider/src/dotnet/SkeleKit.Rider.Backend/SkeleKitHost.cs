@@ -17,14 +17,22 @@ public sealed class SkeleKitHost
 {
 	static readonly ILog OurLog = Log.GetLog<SkeleKitHost>();
 
+
+	static string SolutionFile(
+		ISolution solution)
+	{
+		string path = solution.SolutionFilePath.FullPath;
+
+		return string.IsNullOrEmpty(path) ? solution.SolutionDirectory.FullPath : path;
+	}
+
+
 	public SkeleKitHost(
 		Lifetime lifetime,
 		ISolution solution,
 		IShellLocks locks)
 	{
-		NativeBridge bridge = new(
-			SolutionFile(solution),
-			line => OurLog.Info($"[native] {line}"));
+		NativeBridge bridge = new(SolutionFile(solution), line => OurLog.Info($"[native] {line}"));
 
 		// discovery walks the solution's build outputs, which is too much to do on the way in
 		Thread start = new(() =>
@@ -51,13 +59,5 @@ public sealed class SkeleKitHost
 			Name = "skele-bridge-start"
 		};
 		start.Start();
-	}
-
-	static string SolutionFile(
-		ISolution solution)
-	{
-		string path = solution.SolutionFilePath.FullPath;
-
-		return string.IsNullOrEmpty(path) ? solution.SolutionDirectory.FullPath : path;
 	}
 }
