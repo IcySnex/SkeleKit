@@ -14,10 +14,15 @@ internal static class HotReload
 	{
 		while (true)
 		{
+			bool connected = false;
+
 			try
 			{
 				using TcpClient client = new();
 				client.Connect("127.0.0.1", Port);
+				connected = true;
+
+				Debug.WriteLine("[SkeleKit] Hot reload connected.");
 
 				using NetworkStream stream = client.GetStream();
 				while (stream.ReadByte() >= 0)
@@ -25,8 +30,13 @@ internal static class HotReload
 			}
 			catch
 			{
-				Thread.Sleep(1000);
+				// Rider may not be up yet, or may disappear with the debug session
 			}
+
+			if (connected)
+				Debug.WriteLine("[SkeleKit] Hot reload disconnected.");
+
+			Thread.Sleep(1000);
 		}
 	}
 
@@ -46,8 +56,8 @@ internal static class HotReload
 			IsBackground = true,
 			Name = "skele-hot-reload"
 		};
-		thread.Start();
 
 		Debug.WriteLine("[SkeleKit] Hot reload started.");
+		thread.Start();
 	}
 }

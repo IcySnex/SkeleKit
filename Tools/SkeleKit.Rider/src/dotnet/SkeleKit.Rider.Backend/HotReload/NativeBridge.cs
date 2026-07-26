@@ -100,6 +100,19 @@ internal sealed class NativeBridge(
 		}
 	}
 
+	static bool IsConnected(
+		Socket socket)
+	{
+		try
+		{
+			return !socket.Poll(0, SelectMode.SelectRead) || socket.Available != 0;
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
 
 	readonly object queueGate = new();
 	readonly HashSet<string> queued = new(StringComparer.OrdinalIgnoreCase);
@@ -114,6 +127,10 @@ internal sealed class NativeBridge(
 	List<AppProject> watched = [];
 	Dictionary<string, ReloadEngine?> engines = new(StringComparer.OrdinalIgnoreCase);
 	DebuggerWorkerSync? debuggerWorker;
+	bool buildReady;
+	bool watchersReady;
+	bool watcherFailed;
+	bool readyNoticeSent;
 
 
 	public int AppPort { get; private set; }
@@ -164,6 +181,10 @@ internal sealed class NativeBridge(
 			sessionDef = session = lifetime.CreateNested();
 			sessionVersion++;
 			engines = new(StringComparer.OrdinalIgnoreCase);
+			buildReady = false;
+			watchersReady = false;
+			watcherFailed = false;
+			readyNoticeSent = false;
 		}
 
 		long version;
@@ -191,6 +212,10 @@ internal sealed class NativeBridge(
 			sdb = null;
 			engines = new(StringComparer.OrdinalIgnoreCase);
 			watched = [];
+			buildReady = false;
+			watchersReady = false;
+			watcherFailed = false;
+			readyNoticeSent = false;
 		}
 
 		session.Terminate();
@@ -226,7 +251,7 @@ internal sealed class NativeBridge(
 
 			log($"debugging {app.AssemblyName}; watching {string.Join(", ", projects.Select(project => project.AssemblyName))}");
 
-			bool appReady = false;
+			ReloadEngine? appEngine = null;
 			foreach (AppProject project in projects)
 			{
 				if (!session.IsAlive)
@@ -234,21 +259,52 @@ internal sealed class NativeBridge(
 
 				ReloadEngine? engine = EngineFor(project, version);
 				if (string.Equals(project.ProjectFile, app.ProjectFile, StringComparison.OrdinalIgnoreCase))
-					appReady = engine is not null;
+					appEngine = engine;
 			}
-
-			Watch(session, projects);
-			Start(() => Drain(session, version), "skele-reload-worker");
 
 			SdbConnection? connection;
 			lock (sessionGate)
 				connection = version == sessionVersion ? sdb : null;
-			if (connection is not null)
-				Notice(
-					appReady
-						? "Hot reload ready."
-						: $"Hot reload is unavailable for {app.AssemblyName}; see the Rider log for the compilation error.",
-					connection);
+			if (connection is null)
+				return;
+
+			bool matches = false;
+			string? unavailable = null;
+			if (appEngine is null)
+				unavailable = $"could not compile {app.AssemblyName}; see the Rider log";
+			else
+			{
+				try
+				{
+					if (!appEngine.Matches(connection, out string reason))
+						unavailable = reason;
+					else
+						matches = true;
+				}
+				catch (Exception exception)
+				{
+					unavailable = exception.Message;
+					log($"could not verify the running build of {app.AssemblyName}: {exception.Message}");
+				}
+			}
+
+			Watch(session, projects, version);
+
+			lock (sessionGate)
+			{
+				if (!session.IsAlive || version != sessionVersion)
+					return;
+
+				buildReady = matches;
+				watchersReady = true;
+			}
+
+			Start(() => Drain(session, version), "skele-reload-worker");
+
+			if (unavailable is not null)
+				Notice($"Hot reload unavailable: {unavailable}.", connection);
+			else
+				TryNoticeReady(version);
 		}
 		catch (Exception exception)
 		{
@@ -295,7 +351,8 @@ internal sealed class NativeBridge(
 
 	void Watch(
 		Lifetime session,
-		List<AppProject> projects)
+		List<AppProject> projects,
+		long version)
 	{
 		foreach (AppProject project in projects)
 		{
@@ -310,7 +367,7 @@ internal sealed class NativeBridge(
 			watcher.Changed += OnChanged;
 			watcher.Created += OnChanged;
 			watcher.Renamed += OnChanged;
-			watcher.Error += (_, error) => log($"file watcher on {project.AssemblyName} failed: {error.GetException().Message}");
+			watcher.Error += (_, error) => OnWatcherFailed(project, error.GetException(), version);
 			watcher.EnableRaisingEvents = true;
 
 			session.OnTermination(() =>
@@ -319,6 +376,30 @@ internal sealed class NativeBridge(
 				watcher.Dispose();
 			});
 		}
+	}
+
+	void OnWatcherFailed(
+		AppProject project,
+		Exception exception,
+		long version)
+	{
+		SdbConnection? connection;
+		bool notify;
+
+		lock (sessionGate)
+		{
+			if (version != sessionVersion)
+				return;
+
+			connection = sdb;
+			notify = !watcherFailed;
+			watcherFailed = true;
+		}
+
+		log($"file watcher on {project.AssemblyName} failed: {exception.Message}");
+
+		if (notify)
+			Notice("Hot reload watcher failed; restart the debug session.", connection);
 	}
 
 	void OnChanged(
@@ -469,13 +550,52 @@ internal sealed class NativeBridge(
 		Socket socket)
 	{
 		Socket? previous;
+		long version;
 		lock (sessionGate)
 		{
 			previous = reloadClient;
 			reloadClient = socket;
+			version = sessionVersion;
 		}
 
 		Close(previous);
+		TryNoticeReady(version);
+	}
+
+	void TryNoticeReady(
+		long version)
+	{
+		SdbConnection? connection = null;
+		Socket? stale = null;
+
+		lock (sessionGate)
+		{
+			if (version != sessionVersion
+				|| !buildReady
+				|| !watchersReady
+				|| watcherFailed
+				|| readyNoticeSent)
+				return;
+
+			if (reloadClient is null)
+				return;
+
+			if (!IsConnected(reloadClient))
+			{
+				stale = reloadClient;
+				reloadClient = null;
+			}
+			else if (sdb is not null)
+			{
+				connection = sdb;
+				readyNoticeSent = true;
+			}
+		}
+
+		Close(stale);
+
+		if (connection is not null)
+			Notice("Hot reload ready.", connection);
 	}
 
 	Socket? ConnectRider()

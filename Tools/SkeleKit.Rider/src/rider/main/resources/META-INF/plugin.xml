@@ -1,7 +1,7 @@
 <idea-plugin require-restart="true">
     <id>com.skelekit.hotreload</id>
     <name>SkeleKit Hot Reload</name>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <vendor url="https://github.com/IcySnex/SkeleKit">IcySnex</vendor>
 
     <depends>com.intellij.modules.platform</depends>
@@ -15,7 +15,8 @@
 
     <change-notes><![CDATA[
     <ul>
-      <li>Restore hot reload on Rider 2026.2.</li>
+      <li>Support hot reload in projects using source generators.</li>
+      <li>Improve hot reload startup and connection diagnostics.</li>
     </ul>
   ]]></change-notes>
 
