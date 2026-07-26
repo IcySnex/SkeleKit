@@ -11,13 +11,19 @@ namespace SkeleKit.Rider.Backend.HotReload;
 
 internal sealed class Project
 {
+	sealed record GeneratorEntry(
+		long Length,
+		long LastWriteTicks,
+		ISourceGenerator[] Generators);
+
+
 	static readonly string[] Unified =
 	[
 		"Microsoft.CodeAnalysis",
 		"System.Collections.Immutable",
 		"System.Reflection.Metadata"
 	];
-	static readonly ConcurrentDictionary<string, ISourceGenerator[]> GeneratorCache = new(StringComparer.OrdinalIgnoreCase);
+	static readonly ConcurrentDictionary<string, GeneratorEntry> GeneratorCache = new(StringComparer.OrdinalIgnoreCase);
 
 	static int resolverInstalled;
 
@@ -78,8 +84,19 @@ internal sealed class Project
 
 		foreach (string path in analyzerPaths.Where(File.Exists).Distinct(StringComparer.OrdinalIgnoreCase))
 		{
-			ISourceGenerator[] loaded = GeneratorCache.GetOrAdd(path, key => Load(key, log));
-			generators.AddRange(loaded);
+			FileInfo file = new(path);
+			long length = file.Length;
+			long written = file.LastWriteTimeUtc.Ticks;
+
+			GeneratorEntry entry = GeneratorCache.AddOrUpdate(
+				path,
+				key => new(length, written, Load(key, log)),
+				(key, existing) =>
+					existing.Length == length && existing.LastWriteTicks == written
+						? existing
+						: new(length, written, Load(key, log)));
+
+			generators.AddRange(entry.Generators);
 		}
 
 		log($"  {generators.Count} source generator(s)");
@@ -94,7 +111,9 @@ internal sealed class Project
 		Assembly assembly;
 		try
 		{
-			assembly = Assembly.LoadFrom(path);
+			// LoadFrom returns the first assembly loaded with this identity even after the analyzer
+			// has been rebuilt in place. Loading its image gives a changed generator a fresh assembly.
+			assembly = Assembly.Load(File.ReadAllBytes(path));
 		}
 		catch (Exception exception)
 		{

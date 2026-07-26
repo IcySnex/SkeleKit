@@ -9,11 +9,14 @@ public class MainView : ContentView
 
 		Content = new ScrollView()
 		{
+			VerticalAlignment = VerticalAlignment.Center,
+			Height = 0,
+			Background = Color.FromHex(0x000000),
 			Children =
 			{
 				new Label()
 				{
-					Background = Colors.Blue,
+					Background = Colors.Red,
 					Text = "Hello World!"
 				}
 			}

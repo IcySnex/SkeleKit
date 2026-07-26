@@ -272,6 +272,11 @@ internal sealed class ReloadEngine
 			if (rebuilt is null)
 			{
 				log($"{project.AssemblyName}: the rebuilt compilation does not compile{(runGenerators ? ", retrying without source generators" : "")}");
+				foreach (Diagnostic diagnostic in compilation.GetDiagnostics()
+					.Where(entry => entry.Severity == DiagnosticSeverity.Error)
+					.Take(5))
+					log($"    {diagnostic}");
+
 				continue;
 			}
 

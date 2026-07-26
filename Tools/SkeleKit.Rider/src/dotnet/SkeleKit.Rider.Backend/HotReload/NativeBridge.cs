@@ -226,12 +226,15 @@ internal sealed class NativeBridge(
 
 			log($"debugging {app.AssemblyName}; watching {string.Join(", ", projects.Select(project => project.AssemblyName))}");
 
+			bool appReady = false;
 			foreach (AppProject project in projects)
 			{
 				if (!session.IsAlive)
 					return;
 
-				EngineFor(project, version);
+				ReloadEngine? engine = EngineFor(project, version);
+				if (string.Equals(project.ProjectFile, app.ProjectFile, StringComparison.OrdinalIgnoreCase))
+					appReady = engine is not null;
 			}
 
 			Watch(session, projects);
@@ -241,7 +244,11 @@ internal sealed class NativeBridge(
 			lock (sessionGate)
 				connection = version == sessionVersion ? sdb : null;
 			if (connection is not null)
-				Notice("Hot reload ready.", connection);
+				Notice(
+					appReady
+						? "Hot reload ready."
+						: $"Hot reload is unavailable for {app.AssemblyName}; see the Rider log for the compilation error.",
+					connection);
 		}
 		catch (Exception exception)
 		{

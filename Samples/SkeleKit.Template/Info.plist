@@ -8,6 +8,8 @@
 	<string>1.0</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+	<key>UILaunchScreen</key>
+	<dict/>
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
