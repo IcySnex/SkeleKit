@@ -5,15 +5,6 @@ namespace SkeleKit;
 /// </summary>
 public sealed class PadTabsBuilder
 {
-	readonly ViewRegistry registry;
-
-	internal PadTabsBuilder(
-		ViewRegistry registry)
-	{
-		this.registry = registry;
-	}
-
-	
 	internal bool UseSidebar { get; private set; }
 	internal Dictionary<Type, TabPlacement> Placements { get; } = [];
 	internal List<TabsBuilder.Node> Nodes { get; } = [];
@@ -40,7 +31,7 @@ public sealed class PadTabsBuilder
 	public PadTabsBuilder PlaceTab<TView>(
 		TabPlacement placement) where TView : ContentView
 	{
-		Placements[registry.ViewModelOf<TView>()] = placement;
+		Placements[typeof(TView)] = placement;
 
 		return this;
 	}
@@ -58,7 +49,7 @@ public sealed class PadTabsBuilder
 		string icon,
 		TabPlacement placement = TabPlacement.SidebarOnly) where TView : ContentView
 	{
-		Nodes.Add(new TabsBuilder.Leaf(registry.ViewModelOf<TView>(), title, icon, placement));
+		Nodes.Add(new TabsBuilder.Leaf(typeof(TView), title, icon, placement));
 
 		return this;
 	}
@@ -75,7 +66,7 @@ public sealed class PadTabsBuilder
 		string icon,
 		Action<GroupBuilder> children)
 	{
-		GroupBuilder group = new(registry);
+		GroupBuilder group = new();
 		children(group);
 
 		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes));

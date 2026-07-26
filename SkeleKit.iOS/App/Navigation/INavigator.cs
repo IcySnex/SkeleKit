@@ -37,14 +37,29 @@ public interface INavigator
 		object viewModel);
 
 	/// <summary>
-	/// Pushes a page instance directly, without a ViewModel or registration.
+	/// Pushes a registered view, resolving any associated ViewModel from the service container.
+	/// </summary>
+	/// <typeparam name="TView">The registered view type.</typeparam>
+	/// <returns>A task representing the async operation.</returns>
+	Task PushViewAsync<TView>() where TView : ContentView;
+
+	/// <summary>
+	/// Pushes a registered view by type, resolving any associated ViewModel from the service container.
+	/// </summary>
+	/// <param name="view">The registered view type.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PushViewAsync(
+		Type view);
+
+	/// <summary>
+	/// Pushes an existing page instance directly.
 	/// </summary>
 	/// <remarks>
 	/// Create a new instance per navigation.
 	/// </remarks>
 	/// <param name="page">The page to push.</param>
 	/// <returns>A task representing the async operation.</returns>
-	Task PushAsync(
+	Task PushViewAsync(
 		ContentView page);
 
 
@@ -91,7 +106,26 @@ public interface INavigator
 		ModalStyle style);
 
 	/// <summary>
-	/// Presents a page instance directly, without a ViewModel or registration.
+	/// Presents a registered view, resolving any associated ViewModel from the service container.
+	/// </summary>
+	/// <typeparam name="TView">The registered view type.</typeparam>
+	/// <param name="style">The modal style and presentation configuration.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PresentViewAsync<TView>(
+		ModalStyle style) where TView : ContentView;
+
+	/// <summary>
+	/// Presents a registered view by type, resolving any associated ViewModel from the service container.
+	/// </summary>
+	/// <param name="view">The registered view type.</param>
+	/// <param name="style">The modal style and presentation configuration.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PresentViewAsync(
+		Type view,
+		ModalStyle style);
+
+	/// <summary>
+	/// Presents an existing page instance directly.
 	/// </summary>
 	/// <remarks>
 	/// Create a new instance per navigation.
@@ -99,7 +133,7 @@ public interface INavigator
 	/// <param name="page">The page to present.</param>
 	/// <param name="style">The modal style and presentation configuration.</param>
 	/// <returns>A task representing the async operation.</returns>
-	Task PresentAsync(
+	Task PresentViewAsync(
 		ContentView page,
 		ModalStyle style);
 

@@ -7,56 +7,162 @@ using Microsoft.CodeAnalysis.Text;
 namespace SkeleKit.Generators;
 
 /// <summary>
-/// Emits a UsePages() builder extension registering every [Page] view with its ViewModel.
+/// Generates page registration and the application Build() entry point.
 /// </summary>
 [Generator]
 public sealed class PageGenerator : IIncrementalGenerator
 {
 	sealed record Page(
 		string View,
-		string ViewModel,
+		string? ViewModel,
 		bool Singleton);
+
+	sealed record Candidate(
+		Page? Page,
+		Diagnostic? Diagnostic);
+
+
+	static readonly DiagnosticDescriptor InvalidPage = new(
+		"SKEL001",
+		"Invalid page declaration",
+		"'{0}' is marked [Page] but does not inherit SkeleKit.ContentView",
+		"SkeleKit",
+		DiagnosticSeverity.Error,
+		isEnabledByDefault: true);
+
+	static readonly DiagnosticDescriptor AbstractPage = new(
+		"SKEL002",
+		"Page cannot be abstract",
+		"'{0}' is marked [Page] but is abstract",
+		"SkeleKit",
+		DiagnosticSeverity.Error,
+		isEnabledByDefault: true);
+
+	static readonly DiagnosticDescriptor MissingConstructor = new(
+		"SKEL003",
+		"Page constructor is missing",
+		"'{0}' must declare an accessible {1}",
+		"SkeleKit",
+		DiagnosticSeverity.Error,
+		isEnabledByDefault: true);
 
 
 	public void Initialize(
 		IncrementalGeneratorInitializationContext context)
 	{
-		IncrementalValuesProvider<Page?> pages = context.SyntaxProvider.ForAttributeWithMetadataName(
+		IncrementalValuesProvider<Candidate> candidates = context.SyntaxProvider.ForAttributeWithMetadataName(
 			"SkeleKit.PageAttribute",
 			static (node, _) => node is ClassDeclarationSyntax,
 			static (attribute, _) => Extract(attribute));
 
 		context.RegisterSourceOutput(
-			pages.Where(static page => page is not null).Collect(),
-			static (production, pages) => production.AddSource("GeneratedPages.g.cs", Emit(pages!)));
+			candidates.Collect(),
+			static (production, collected) =>
+			{
+				foreach (Diagnostic diagnostic in collected
+					.Select(static candidate => candidate.Diagnostic)
+					.OfType<Diagnostic>())
+					production.ReportDiagnostic(diagnostic);
+
+				production.AddSource(
+					"GeneratedPages.g.cs",
+					Emit(
+						collected
+							.Select(static candidate => candidate.Page)
+							.OfType<Page>()
+							.ToImmutableArray()));
+			});
 	}
 
 
-	static Page? Extract(
+	static bool IsAccessible(
+		IMethodSymbol constructor) =>
+		constructor.DeclaredAccessibility is
+			Accessibility.Public or
+			Accessibility.Internal or
+			Accessibility.ProtectedOrInternal;
+
+	static Location? LocationOf(
+		INamedTypeSymbol view) =>
+		view.Locations.FirstOrDefault();
+
+	static Candidate Extract(
 		GeneratorAttributeSyntaxContext context)
 	{
-		if (context.TargetSymbol is not INamedTypeSymbol view)
-			return null;
+		INamedTypeSymbol view = (INamedTypeSymbol)context.TargetSymbol;
+		string viewName = view.ToDisplayString();
+
+		if (view.IsAbstract)
+			return new(null, Diagnostic.Create(AbstractPage, LocationOf(view), viewName));
+
+		INamedTypeSymbol? viewModel = null;
+		bool contentView = false;
 
 		for (INamedTypeSymbol? baseType = view.BaseType; baseType is not null; baseType = baseType.BaseType)
 		{
-			if (baseType is not INamedTypeSymbol ||
-				baseType.Name != "ContentView" ||
-				!baseType.IsGenericType ||
-				baseType.TypeArguments.Length != 1 ||
-				baseType.ContainingNamespace.ToDisplayString() != "SkeleKit")
+			if (baseType.Name != "ContentView"
+				|| baseType.ContainingNamespace.ToDisplayString() != "SkeleKit")
 				continue;
 
-			bool singleton = context.Attributes[0].NamedArguments.Any(
-				static argument => argument.Key == "Singleton" && argument.Value.Value is true);
+			contentView = true;
 
-			return new(
-				view.ToDisplayString(),
-				baseType.TypeArguments[0].ToDisplayString(),
-				singleton);
+			if (baseType.IsGenericType && baseType.TypeArguments.Length == 1)
+				viewModel = baseType.TypeArguments[0] as INamedTypeSymbol;
+
+			break;
 		}
 
-		return null;
+		if (!contentView)
+			return new(null, Diagnostic.Create(InvalidPage, LocationOf(view), viewName));
+
+		bool singleton = context.Attributes[0].NamedArguments.Any(
+			static argument => argument.Key == "Singleton" && argument.Value.Value is true);
+
+		if (viewModel is null)
+		{
+			bool hasConstructor = view.InstanceConstructors.Any(
+				static constructor =>
+					IsAccessible(constructor)
+					&& constructor.Parameters.Length == 0);
+
+			if (!hasConstructor)
+			{
+				return new(
+					null,
+					Diagnostic.Create(
+						MissingConstructor,
+						LocationOf(view),
+						viewName,
+						"parameterless constructor or a manual UsePages(...) registration"));
+			}
+		}
+		else
+		{
+			bool hasConstructor = view.InstanceConstructors.Any(
+				constructor =>
+					IsAccessible(constructor)
+					&& constructor.Parameters.Length >= 1
+					&& SymbolEqualityComparer.Default.Equals(constructor.Parameters[0].Type, viewModel)
+					&& constructor.Parameters.Skip(1).All(static parameter => parameter.IsOptional));
+
+			if (!hasConstructor)
+			{
+				return new(
+					null,
+					Diagnostic.Create(
+						MissingConstructor,
+						LocationOf(view),
+						viewName,
+						$"constructor whose first parameter is {viewModel.ToDisplayString()}"));
+			}
+		}
+
+		return new(
+			new(
+				viewName,
+				viewModel?.ToDisplayString(),
+				singleton),
+			null);
 	}
 
 	static SourceText Emit(
@@ -75,7 +181,7 @@ public sealed class PageGenerator : IIncrementalGenerator
 		source.AppendLine("public static class GeneratedPages");
 		source.AppendLine("{");
 		source.AppendLine("\t/// <summary>");
-		source.AppendLine("\t/// Registers every [Page] view. ViewModels stay ordinary services.");
+		source.AppendLine("\t/// Registers every [Page] view as a default. Manual registrations take precedence.");
 		source.AppendLine("\t/// </summary>");
 		source.AppendLine("\tpublic static SkeleApplicationBuilder UsePages(");
 		source.AppendLine("\t\tthis SkeleApplicationBuilder builder) =>");
@@ -85,10 +191,20 @@ public sealed class PageGenerator : IIncrementalGenerator
 		foreach (Page page in pages)
 		{
 			string lifetime = page.Singleton ? "AddSingleton" : "AddTransient";
-			source.AppendLine($"\t\t\tpages.{lifetime}((global::{page.ViewModel} vm) => new global::{page.View}(vm));");
+
+			source.AppendLine(page.ViewModel is null
+				? $"\t\t\tpages.{lifetime}<global::{page.View}>(() => new global::{page.View}());"
+				: $"\t\t\tpages.{lifetime}((global::{page.ViewModel} viewModel) => new global::{page.View}(viewModel));");
 		}
 
-		source.AppendLine("\t\t});");
+		source.AppendLine("\t\t}, false);");
+		source.AppendLine();
+		source.AppendLine("\t/// <summary>");
+		source.AppendLine("\t/// Applies generated page registrations and builds the application.");
+		source.AppendLine("\t/// </summary>");
+		source.AppendLine("\tpublic static SkeleApplication Build(");
+		source.AppendLine("\t\tthis SkeleApplicationBuilder builder) =>");
+		source.AppendLine("\t\tbuilder.UsePages().BuildCore();");
 		source.AppendLine("}");
 
 		return SourceText.From(source.ToString(), Encoding.UTF8);

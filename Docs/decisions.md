@@ -46,11 +46,15 @@ inset-grouped), grid, carousel are layout modes, not separate controls.
 virtualization/diffing path. Template tree built once per recycled cell; only the item context swaps
 on reuse.
 
-## ADR-007: Explicit registration everywhere, no discovery
+## ADR-007: Generated page registration, no runtime discovery
 
-**Decision:** view↔ViewModel mapping (`UsePages(pages => pages.AddTransient(...))`, a view reports its
-own VM type), tabs, and services are all explicit startup calls — no scanning, no attribute discovery.
-**Why:** trim/AOT-safe and deterministic startup, for one extra line per screen.
+**Decision:** `[Page]` generates direct registration code for both view-only `ContentView` pages and
+ViewModel-backed `ContentView<TViewModel>` pages. The generated `Build()` extension applies those
+registrations automatically. `UsePages(pages => ...)` remains the explicit override/custom-factory
+path; manual registrations win over generated defaults. There is no assembly scanning or reflection.
+**Why:** registration stays deterministic and trim/AOT-safe while the attribute behaves as developers
+naturally expect. A page constructor error is reported at compile time instead of surfacing as a
+missing runtime registration.
 
 ## ADR-008: Styling — typed `Style<T>` actions, no setter/resource system
 
@@ -100,24 +104,23 @@ highlight free.
 **Decision:** discrete intents (tap, long-press, submit, selection, toolbar, swipe, menu) are plain
 `ICommand?` properties, never bindable; continuous signals (pan, pinch, scroll, text-as-you-type,
 value-during-drag) are past-tense `Action<T>` (no `On` prefix — `On…` is lifecycle only). A page's
-ViewModel arrives by constructor (`ContentView<TVm>` stores it, `UsePages` registers factory lambdas),
+ViewModel arrives by constructor (`ContentView<TVm>` stores it, `[Page]` generates factory lambdas),
 so commands are assigned directly (`Command = ViewModel.SaveCommand`); view-local handlers use
 `Command.From`.
 **Why:** commands never change after construction (nothing to bind), and `ICommand.Execute` boxes
 every tick at 60–120 Hz (streams stay Actions). Factory lambdas keep page construction
 reflection-free. Pull-to-refresh is `RefreshCommand` + a two-way `IsRefreshing`.
 
-## ADR-013: Slim pages — instance navigation beside VM-first
+## ADR-013: View-centric pages, ViewModel-first navigation
 
-**Decision:** a page is either MVVM (`ContentView<TVm>`, `[Page]`, navigated by ViewModel) or slim (a
-plain `ContentView` with no ViewModel/attribute/registration/DI, navigated as a living instance
-`Navigator.PushAsync(new MovieView(movie))`), mixed on one `INavigator` (which gains the instance
-overloads). Slim pages reach the navigator via protected `ContentView.Navigator` and update UI
-directly (`label.Text = …`).
-**Why:** the VM type is the navigation key, so a stateless page would otherwise need a marker VM +
-registration. Pushing instances keeps the compiler owning the payload (string routes / view-type keys
-rejected). An instance is pushed at most once (per-navigation `new`); ViewModels still navigate
-VM-first only.
+**Decision:** the page registry is keyed by view type and optionally indexes a ViewModel type.
+`[Page]` supports both MVVM pages (`ContentView<TVm>`) and view-only pages (`ContentView`). Shells and
+hot reload address views directly. Navigation remains ViewModel-first through `PushAsync<TVm>()`, with
+parallel registered-view methods (`PushViewAsync<TView>()`) and explicit instance methods
+(`PushViewAsync(new MovieView(movie))`).
+**Why:** static and starter pages should not need marker ViewModels, while existing ViewModel routes
+remain concise. A view key also gives shells and hot reload one model that works for both page forms.
+Direct instances still carry one-off constructor payloads without string routes or service registration.
 
 ## ADR-014: Shell vocabulary — universal tabs, one iPad scope, one bubble
 

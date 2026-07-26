@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace SkeleKit;
@@ -16,7 +17,7 @@ public sealed class SkeleApplicationBuilder
 	internal SkeleApplication.ShellKind Shell = SkeleApplication.ShellKind.None;
 	internal bool PreferLargeTitles;
 	internal TabsBuilder? TabsBuilder;
-	internal Type? RootViewModel;
+	internal Type? RootView;
 
 	internal Action? LifecycleBackground { get; private set; }
 	internal Action? LifecycleForeground { get; private set; }
@@ -89,17 +90,16 @@ public sealed class SkeleApplicationBuilder
 	}
 
 	/// <summary>
-	/// Registers pages by hand.
+	/// Registers or overrides pages by hand.
 	/// </summary>
-	/// <remarks>
-	/// Prefer the [Page] attribute, whose generated UsePages() calls this.
-	/// </remarks>
 	/// <param name="configure">Registers the pages.</param>
+	/// <param name="replace">Whether existing pages should be replaced.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public SkeleApplicationBuilder UsePages(
-		Action<PagesBuilder> configure)
+		Action<PagesBuilder> configure,
+		bool replace = true)
 	{
-		configure(new(Registry));
+		configure(new(Registry, replace));
 
 		return this;
 	}
@@ -111,7 +111,7 @@ public sealed class SkeleApplicationBuilder
 	/// <returns>The builder instance for chaining calls.</returns>
 	public SkeleApplicationBuilder SinglePage<TView>() where TView : ContentView
 	{
-		RootViewModel = Registry.ViewModelOf<TView>();
+		RootView = typeof(TView);
 		Shell = SkeleApplication.ShellKind.SinglePage;
 
 		return this;
@@ -128,7 +128,7 @@ public sealed class SkeleApplicationBuilder
 	{
 		PreferLargeTitles = preferLargeTitles;
 
-		RootViewModel = Registry.ViewModelOf<TView>();
+		RootView = typeof(TView);
 		Shell = SkeleApplication.ShellKind.Stack;
 
 		return this;
@@ -142,7 +142,7 @@ public sealed class SkeleApplicationBuilder
 	public SkeleApplicationBuilder Tabs(
 		Action<TabsBuilder> configure)
 	{
-		TabsBuilder = new(Registry);
+		TabsBuilder = new();
 		configure(TabsBuilder);
 
 		Shell = SkeleApplication.ShellKind.Tabs;
@@ -156,10 +156,16 @@ public sealed class SkeleApplicationBuilder
 	/// </summary>
 	/// <returns>The fully built application.</returns>
 	/// <exception cref="InvalidOperationException">Thrown if a shell layout style has not been configured.</exception>
-	public SkeleApplication Build()
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public SkeleApplication BuildCore()
 	{
 		if (Shell == SkeleApplication.ShellKind.None)
 			throw new InvalidOperationException("Call Tabs(), Stack<TView>() or SinglePage<TView>() before Build().");
+
+		if (RootView is Type root)
+			Registry.EnsureRegistered(root);
+
+		TabsBuilder?.Validate(Registry);
 
 		return new(this);
 	}

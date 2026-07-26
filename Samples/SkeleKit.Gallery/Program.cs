@@ -50,7 +50,6 @@ SkeleApplication.CreateBuilder()
 	.UseTheme(theme => theme
 		.Style(new Style<Label>(label => label.TextColor = Colors.Label))
 		.Style(new Style<Button>(button => button.Kind = ButtonStyle.Tinted)))
-	.UsePages()
 	.Tabs(tabs => tabs
 		.LargeTitles()
 		.Accessory<PlayerBar>()

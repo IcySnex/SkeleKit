@@ -3,6 +3,7 @@
         <TargetFrameworks>net10.0;net10.0-ios</TargetFrameworks>
         <RootNamespace>SkeleKit</RootNamespace>
         <IsAotCompatible>true</IsAotCompatible>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
         <PackageId>SkeleKit.iOS</PackageId>
         <Version>0.1.0</Version>
@@ -10,41 +11,26 @@
         <RepositoryUrl>https://github.com/IcySnex/SkeleKit</RepositoryUrl>
         <PackageReadmeFile>README.md</PackageReadmeFile>
 
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);CS1591</NoWarn>
+        <NoWarn>$(NoWarn);NU5128</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
         <None Include="../README.md" Pack="true" PackagePath="/" />
         <None Include="build/SkeleKit.iOS.targets" Pack="true" PackagePath="buildTransitive/SkeleKit.iOS.targets" />
+        <None Include="../SkeleKit.Generators/bin/$(Configuration)/netstandard2.0/SkeleKit.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+        <ProjectReference Include="../SkeleKit.Generators/SkeleKit.Generators.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     </ItemGroup>
 
     <PropertyGroup Condition=" '$(TargetFramework)' == 'net10.0-ios' ">
         <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
     </PropertyGroup>
 
-    <!-- The package ships iOS only. The net10.0 shim exists so the layout engine can be tested without a simulator. -->
     <PropertyGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
         <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <NoWarn>$(NoWarn);NU5128</NoWarn>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <InternalsVisibleTo Include="SkeleKit.Tests" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
-    </ItemGroup>
-
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
-        <Compile Remove="App/**" />
-    </ItemGroup>
-
-    <!-- net10.0 is a test shim, not a platform: UIKit-touching code is compiled out of it by file. -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
         <Compile Remove="Controls/**" />
         <Compile Remove="Animation/Animator.cs" />
@@ -54,5 +40,18 @@
         <Compile Remove="Primitives/Fonts.cs" />
         <Compile Remove="Primitives/Keyboards.cs" />
         <Compile Remove="Primitives/ItemKey.cs" />
+        <Compile Remove="App/**" />
+
+        <Compile Include="App/Builder/PagesBuilder.cs" />
+        <Compile Include="App/Navigation/PageAttribute.cs" />
+        <Compile Include="App/Navigation/ViewRegistry.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="SkeleKit.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     </ItemGroup>
 </Project>

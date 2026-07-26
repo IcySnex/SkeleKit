@@ -5,14 +5,6 @@ namespace SkeleKit;
 /// </summary>
 public sealed class GroupBuilder
 {
-	readonly ViewRegistry registry;
-
-	internal GroupBuilder(
-		ViewRegistry registry)
-	{
-		this.registry = registry;
-	}
-
 	internal List<TabsBuilder.Node> Nodes { get; } = [];
 
 
@@ -29,7 +21,7 @@ public sealed class GroupBuilder
 		string icon,
 		TabPlacement placement = TabPlacement.Automatic) where TView : ContentView
 	{
-		Nodes.Add(new TabsBuilder.Leaf(registry.ViewModelOf<TView>(), title, icon, placement));
+		Nodes.Add(new TabsBuilder.Leaf(typeof(TView), title, icon, placement));
 
 		return this;
 	}
@@ -46,7 +38,7 @@ public sealed class GroupBuilder
 		string icon,
 		Action<GroupBuilder> children)
 	{
-		GroupBuilder group = new(registry);
+		GroupBuilder group = new();
 		children(group);
 
 		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes));

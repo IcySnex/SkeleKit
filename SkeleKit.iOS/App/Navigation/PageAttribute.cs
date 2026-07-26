@@ -1,11 +1,8 @@
 namespace SkeleKit;
 
 /// <summary>
-/// Marks a view for generated page registration.
+/// Marks a view for automatic page registration.
 /// </summary>
-/// <remarks>
-/// The generator emits the UsePages() extension.
-/// </remarks>
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class PageAttribute : Attribute
 {

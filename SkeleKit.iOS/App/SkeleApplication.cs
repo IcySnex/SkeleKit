@@ -177,7 +177,7 @@ public class SkeleApplication
 	readonly ShellKind shell;
 	readonly bool preferLargeTitles;
 	readonly TabsBuilder? tabsBuilder;
-	readonly Type? rootViewModel;
+	readonly Type? rootView;
 
 	internal SkeleApplication(
 		SkeleApplicationBuilder builder)
@@ -186,7 +186,7 @@ public class SkeleApplication
 		shell = builder.Shell;
 		preferLargeTitles = builder.PreferLargeTitles;
 		tabsBuilder = builder.TabsBuilder;
-		rootViewModel = builder.RootViewModel;
+		rootView = builder.RootView;
 
 		Backgrounded = builder.LifecycleBackground;
 		Foregrounded = builder.LifecycleForeground;
@@ -236,8 +236,8 @@ public class SkeleApplication
 
 
 	internal ContentView RecreatePage(
-		object viewModel) =>
-		registry.RecreatePage(viewModel);
+		ContentView page) =>
+		registry.RecreatePage(page, Services);
 
 	internal void NotifyBackground() =>
 		Backgrounded?.Invoke();
@@ -273,12 +273,12 @@ public class SkeleApplication
 
 	internal UIViewController BuildShell()
 	{
-		PageHost Page(Type? viewModel) =>
-			new(registry.CreatePage(registry.CreateViewModel(viewModel!, Services)));
+		PageHost Page(Type? view) =>
+			new(registry.CreatePage(view!, Services));
 
-		UINavigationController Stack(Type? viewModel, bool prefersLargeTitles = false)
+		UINavigationController Stack(Type? view, bool prefersLargeTitles = false)
 		{
-			UINavigationController stack = new SkeleStack(Page(viewModel));
+			UINavigationController stack = new SkeleStack(Page(view));
 			stack.NavigationBar.PrefersLargeTitles = prefersLargeTitles;
 
 			return stack;
@@ -287,10 +287,10 @@ public class SkeleApplication
 		switch (shell)
 		{
 			case ShellKind.SinglePage:
-				return Page(rootViewModel);
+				return Page(rootView);
 
 			case ShellKind.Stack:
-				return Stack(rootViewModel, preferLargeTitles);
+				return Stack(rootView, preferLargeTitles);
 
 			case ShellKind.Tabs:
 				UITabBarController controller = new();
@@ -348,12 +348,12 @@ public class SkeleApplication
 
 					if (grouped)
 					{
-						root = Page(leaf.ViewModel);
+						root = Page(leaf.View);
 						provider = _ => root;
 					}
 					else
 					{
-						UINavigationController stack = Stack(leaf.ViewModel, tabsBuilder!.UseLargeTitles);
+						UINavigationController stack = Stack(leaf.View, tabsBuilder!.UseLargeTitles);
 						root = (PageHost)stack.ViewControllers![0];
 						provider = _ => stack;
 					}
@@ -361,10 +361,10 @@ public class SkeleApplication
 					UITab tab = new(
 						leaf.Title,
 						UIImage.GetSystemImage(leaf.Icon),
-						leaf.ViewModel.Name,
+						leaf.View.Name,
 						provider);
 
-					Place(tab, iPad?.Placements.GetValueOrDefault(leaf.ViewModel, leaf.Placement) ?? leaf.Placement);
+					Place(tab, iPad?.Placements.GetValueOrDefault(leaf.View, leaf.Placement) ?? leaf.Placement);
 
 					root.Tab = tab;
 					root.Page?.ApplyTabBadge();
@@ -377,21 +377,21 @@ public class SkeleApplication
 				if (iPad is not null)
 					tabs.AddRange(iPad.Nodes.Select(node => BuildTab(node, false)));
 
-				if (tabsBuilder is { SearchViewModel: not null } and ({ BubbleFactory: not null } or { BubbleViewModel: not null }))
+				if (tabsBuilder is { SearchView: not null } and ({ BubbleFactory: not null } or { BubbleView: not null }))
 					throw new InvalidOperationException("The bubble is single: declare Search or Bubble, not both.");
 
-				if (tabsBuilder?.SearchViewModel is Type searchViewModel)
+				if (tabsBuilder?.SearchView is Type searchView)
 				{
-					UINavigationController stack = Stack(searchViewModel, tabsBuilder.UseLargeTitles);
+					UINavigationController stack = Stack(searchView, tabsBuilder.UseLargeTitles);
 
 					UISearchTab search = new(_ => stack);
 					((PageHost)stack.ViewControllers![0]).Tab = search;
 
 					tabs.Add(search);
 				}
-				else if (tabsBuilder?.BubbleViewModel is Type bubbleViewModel && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
+				else if (tabsBuilder?.BubbleView is Type bubbleView && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
 				{
-					UINavigationController stack = Stack(bubbleViewModel, tabsBuilder.UseLargeTitles);
+					UINavigationController stack = Stack(bubbleView, tabsBuilder.UseLargeTitles);
 
 					UISearchTab bubble = new(_ => stack)
 					{

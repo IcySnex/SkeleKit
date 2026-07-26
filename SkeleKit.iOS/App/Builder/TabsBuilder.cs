@@ -11,7 +11,7 @@ public sealed class TabsBuilder
 	internal abstract record Node;
 
 	internal sealed record Leaf(
-		Type ViewModel,
+		Type View,
 		string Title,
 		string Icon,
 		TabPlacement Placement) : Node;
@@ -22,20 +22,11 @@ public sealed class TabsBuilder
 		List<Node> Children) : Node;
 
 
-	readonly ViewRegistry registry;
-
-	internal TabsBuilder(
-		ViewRegistry registry)
-	{
-		this.registry = registry;
-	}
-
-
 	internal List<Node> Nodes { get; } = [];
-	internal Type? SearchViewModel { get; private set; }
+	internal Type? SearchView { get; private set; }
 	internal string? BubbleIcon { get; private set; }
 	internal Func<IServiceProvider, Action>? BubbleFactory { get; private set; }
-	internal Type? BubbleViewModel { get; private set; }
+	internal Type? BubbleView { get; private set; }
 	internal string? BubbleTitle { get; private set; }
 	internal TabBarMinimize Minimize { get; private set; } = TabBarMinimize.Never;
 	internal Func<View>? AccessoryFactory { get; private set; }
@@ -65,7 +56,7 @@ public sealed class TabsBuilder
 		string title,
 		string icon) where TView : ContentView
 	{
-		Nodes.Add(new Leaf(registry.ViewModelOf<TView>(), title, icon, TabPlacement.Automatic));
+		Nodes.Add(new Leaf(typeof(TView), title, icon, TabPlacement.Automatic));
 
 		return this;
 	}
@@ -77,7 +68,7 @@ public sealed class TabsBuilder
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Search<TView>() where TView : ContentView
 	{
-		SearchViewModel = registry.ViewModelOf<TView>();
+		SearchView = typeof(TView);
 
 		return this;
 	}
@@ -95,7 +86,7 @@ public sealed class TabsBuilder
 	{
 		BubbleTitle = title;
 		BubbleIcon = icon;
-		BubbleViewModel = registry.ViewModelOf<TView>();
+		BubbleView = typeof(TView);
 
 		return this;
 	}
@@ -195,9 +186,37 @@ public sealed class TabsBuilder
 	public TabsBuilder OnPad(
 		Action<PadTabsBuilder> configure)
 	{
-		Pad = new(registry);
+		Pad = new();
 		configure(Pad);
 
 		return this;
+	}
+
+
+	static IEnumerable<Type> Views(
+		IEnumerable<Node> nodes)
+	{
+		foreach (Node node in nodes)
+		{
+			if (node is Leaf leaf)
+				yield return leaf.View;
+			else if (node is GroupNode group)
+			{
+				foreach (Type view in Views(group.Children))
+					yield return view;
+			}
+		}
+	}
+
+	internal void Validate(
+		ViewRegistry registry)
+	{
+		foreach (Type view in Views(Nodes)
+			.Concat(Pad is null ? [] : Views(Pad.Nodes))
+			.Append(SearchView)
+			.Append(BubbleView)
+			.OfType<Type>()
+			.Distinct())
+			registry.EnsureRegistered(view);
 	}
 }

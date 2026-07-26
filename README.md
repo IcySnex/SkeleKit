@@ -20,12 +20,12 @@ A WPF-inspired UI library for **.NET for iOS** — no MAUI, no XAML. Native UIKi
 // Program.cs
 SkeleApplication.CreateBuilder()
     .UseServices(services => services.AddTransient<CounterViewModel>())
-    .UsePages(pages => pages.AddSingleton((CounterViewModel vm) => new CounterView(vm)))
     .SinglePage<CounterView>()
     .Build()
     .Run(args);
 
 // CounterView.cs — a page composes its tree in the constructor
+[Page(Singleton = true)]
 public class CounterView : ContentView<CounterViewModel>
 {
     public CounterView(

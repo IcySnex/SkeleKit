@@ -14,10 +14,6 @@ SkeleApplication.CreateBuilder()
         services.AddSingleton<IMovieService, MovieService>();
         services.AddTransient<HomeViewModel>();
     })
-    .UsePages(pages => pages                                       // a factory lambda per page: reflection-free
-        .AddSingleton((HomeViewModel vm) => new HomeView(vm))      // keeps state across navigations
-        .AddSingleton((SearchViewModel vm) => new SearchView(vm))
-        .AddTransient((MovieInfoViewModel vm) => new MovieInfoView(vm)))  // fresh instance per push
     .Tabs(tabs => tabs
         .LargeTitles()
         .Tab<HomeView>("home_title", icon: "house")
@@ -27,9 +23,14 @@ SkeleApplication.CreateBuilder()
     .Run(args);
 ```
 
+`[Page]` on each `ContentView` generates reflection-free registration. `Build()` applies those
+registrations automatically; `UsePages(pages => ...)` remains available for manual factories and
+overrides.
+
 ## 2. A settings-style page
 
 ```csharp
+[Page]
 public class SettingsGroupView : ContentView<SettingsGroupViewModel>
 {
     public SettingsGroupView(

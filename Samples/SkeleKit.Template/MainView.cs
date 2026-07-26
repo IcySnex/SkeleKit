@@ -13,6 +13,7 @@ public class MainView : ContentView
 			{
 				new Label()
 				{
+					Background = Colors.Blue,
 					Text = "Hello World!"
 				}
 			}

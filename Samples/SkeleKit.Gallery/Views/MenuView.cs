@@ -23,7 +23,7 @@ public class MenuView : ContentView<MenuViewModel>
 					HapticEvent.Continuous(0.1, 0.3, intensity: 0.6, sharpness: 0.2),
 					HapticEvent.Tap(0.5));
 
-				Navigator.PushAsync(new AboutView("SkeleKit Gallery", "1.0"));
+				Navigator.PushViewAsync(new AboutView("SkeleKit Gallery", "1.0"));
 			})
 		});
 

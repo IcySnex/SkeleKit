@@ -36,7 +36,7 @@ public class AboutView : ContentView
 				{
 					Text = "Push another",
 					Kind = ButtonStyle.Gray,
-					Command = Command.From(() => Navigator.PushAsync(new AboutView(appName, version)))
+					Command = Command.From(() => Navigator.PushViewAsync(new AboutView(appName, version)))
 				}
 			}
 		};

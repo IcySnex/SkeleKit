@@ -22,7 +22,7 @@
 
     <Import Project="..\..\SkeleKit.iOS\build\SkeleKit.iOS.targets" />
     <ItemGroup>
-      <ProjectReference Include="..\..\SkeleKit.Generators\SkeleKit.Generators.csproj" />
+      <ProjectReference Include="..\..\SkeleKit.Generators\SkeleKit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
       <ProjectReference Include="..\..\SkeleKit.iOS\SkeleKit.iOS.csproj" />
     </ItemGroup>
 </Project>

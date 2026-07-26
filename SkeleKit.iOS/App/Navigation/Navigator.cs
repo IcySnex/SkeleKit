@@ -223,13 +223,28 @@ internal sealed class Navigator(
 		if (currentStack() is not UINavigationController stack)
 			throw new InvalidOperationException("There is no navigation stack to push onto.");
 
-		PageHost host = Track(registry.CreatePage(viewModel));
+		PageHost host = Track(registry.CreatePage(viewModel, services));
 		stack.PushViewController(host, true);
 
 		return Task.CompletedTask;
 	}
 
-	public Task PushAsync(
+	public Task PushViewAsync<TView>() where TView : ContentView =>
+		PushViewAsync(typeof(TView));
+
+	public Task PushViewAsync(
+		Type view)
+	{
+		if (currentStack() is not UINavigationController stack)
+			throw new InvalidOperationException("There is no navigation stack to push onto.");
+
+		PageHost host = Track(registry.CreatePage(view, services));
+		stack.PushViewController(host, true);
+
+		return Task.CompletedTask;
+	}
+
+	public Task PushViewAsync(
 		ContentView page)
 	{
 		if (currentStack() is not UINavigationController stack)
@@ -269,9 +284,18 @@ internal sealed class Navigator(
 	public Task PresentAsync(
 		object viewModel,
 		ModalStyle style) =>
-		PresentCore(Track(registry.CreatePage(viewModel)), style);
+		PresentCore(Track(registry.CreatePage(viewModel, services)), style);
 
-	public Task PresentAsync(
+	public Task PresentViewAsync<TView>(
+		ModalStyle style) where TView : ContentView =>
+		PresentViewAsync(typeof(TView), style);
+
+	public Task PresentViewAsync(
+		Type view,
+		ModalStyle style) =>
+		PresentCore(Track(registry.CreatePage(view, services)), style);
+
+	public Task PresentViewAsync(
 		ContentView page,
 		ModalStyle style) =>
 		PresentCore(Host(page), style);

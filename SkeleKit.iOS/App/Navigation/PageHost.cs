@@ -205,11 +205,10 @@ internal sealed class PageHost : UIViewController
 	{
 		if (Page is not ContentView old
 			|| !IsViewLoaded
-			|| old.BindingContext is not object viewModel
 			|| SkeleApplication.Current is not SkeleApplication app)
 			return;
 
-		ContentView fresh = app.RecreatePage(viewModel);
+		ContentView fresh = app.RecreatePage(old);
 		if (ReferenceEquals(fresh, old))
 			return;
 

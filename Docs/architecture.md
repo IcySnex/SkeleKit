@@ -137,14 +137,11 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
   `HidesNavigationBar`, `BackgroundStyle`, `SearchPlaceholder`/`SearchChanged`, `ScrollsUnderBars`.
 - A hidden `PageHost : UIViewController` hosts the page (`ContentView.Controller` escape hatch).
 
-### Navigation (ViewModel-first, AOT-safe)
+### Navigation (view-centric registration, ViewModel-first navigation)
 
 ```csharp
 SkeleApplication.CreateBuilder()
     .UseServices(s => s.AddSingleton<IMovieService, MovieService>())
-    .UsePages(pages => pages
-        .AddSingleton((HomeViewModel vm) => new HomeView(vm))
-        .AddTransient((MovieInfoViewModel vm) => new MovieInfoView(vm)))   // explicit, reflection-free
     .Tabs(t => t
         .Tab<HomeView>("Home", icon: "house")
         .Tab<SearchView>("Search", icon: "magnifyingglass")
@@ -153,9 +150,12 @@ SkeleApplication.CreateBuilder()
     .Run(args);
 ```
 
+- `[Page]` generates registration for both `ContentView` and `ContentView<TViewModel>`; `Build()`
+  applies it automatically without runtime scanning. `UsePages(...)` can override generated defaults.
 - `INavigator` (injectable, ViewModel-first): `PushAsync<TVm>()`/`PushAsync(vm)`/`PopAsync()`/
-  `PopToRootAsync()`; `PresentAsync<TVm>(ModalStyle)` (sheet with detents / full-screen / form sheet /
-  popover); `AlertAsync`/`ConfirmAsync`/`PromptAsync`/`SelectAsync`; `OpenUrlAsync`.
+  `PopToRootAsync()`; registered views use `PushViewAsync<TView>()`, and existing page instances use
+  `PushViewAsync(page)`. Modal equivalents are `PresentAsync<TVm>` and `PresentViewAsync<TView>`.
+  Dialogs include `AlertAsync`/`ConfirmAsync`/`PromptAsync`/`SelectAsync`; `OpenUrlAsync` opens URLs.
 - Shells: `Tabs(...)` (incl. iPad sidebar), `Stack<TView>()`, `SinglePage<TView>()`.
 - `SkeleApplication` hides `Main`/`AppDelegate`/scene wiring and hosts the DI `IServiceProvider`.
 
