@@ -6,6 +6,7 @@
   </Configurations>
   <Folder Name="/Samples/">
     <Project Path="Samples/SkeleKit.Gallery/SkeleKit.Gallery.csproj" />
+    <Project Path="Samples/SkeleKit.Template/SkeleKit.Template.csproj" />
   </Folder>
   <Project Path="SkeleKit.Generators/SkeleKit.Generators.csproj" />
   <Project Path="SkeleKit.iOS/SkeleKit.iOS.csproj" />
