@@ -93,6 +93,37 @@ public class PaddingTests
 	}
 
 	[Fact]
+	public void ScrollView_Padding_GrowsDesiredSize()
+	{
+		ScrollView scroll = new()
+		{
+			Padding = new Thickness(10),
+			Content = new StubLeaf(40, 20)
+		};
+
+		scroll.Measure(Size.Infinity);
+
+		Assert.Equal(new Size(60, 40), scroll.DesiredSize);
+	}
+
+	[Fact]
+	public void ContentView_Padding_GrowsAndOffsetsContent()
+	{
+		StubLeaf leaf = new(40, 20);
+		TestPage page = new()
+		{
+			Padding = new Thickness(10),
+			Content = leaf
+		};
+
+		page.Measure(Size.Infinity);
+		page.Arrange(new(0, 0, 60, 40));
+
+		Assert.Equal(new Size(60, 40), page.DesiredSize);
+		Assert.Equal(new Rect(10, 10, 40, 20), leaf.ArrangedBounds);
+	}
+
+	[Fact]
 	public void Padding_Zero_ChangesNothing()
 	{
 		StubLeaf leaf = new(40, 20);
@@ -104,4 +135,7 @@ public class PaddingTests
 		Assert.Equal(0, leaf.ArrangedBounds.X);
 		Assert.Equal(200, leaf.ArrangedBounds.Width);
 	}
+
+
+	sealed class TestPage : ContentView;
 }

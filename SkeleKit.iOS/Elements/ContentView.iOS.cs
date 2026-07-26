@@ -7,6 +7,8 @@ public abstract partial class ContentView
 	internal PageHost? Host { get; set; }
 	internal Thickness PageSafeArea { get; set; } = Thickness.Zero;
 
+	View? automaticScrollBleed;
+
 
 #pragma warning disable CA1822
 	/// <summary>
@@ -77,10 +79,8 @@ public abstract partial class ContentView
 
 	private protected override void OnRealized()
 	{
-		if (ScrollsUnderBars
-			&& Content is { IgnoresSafeArea: SafeAreaEdges.None } content
-			&& content.Scrolls)
-			content.IgnoresSafeArea = SafeAreaEdges.Top | SafeAreaEdges.Bottom;
+		if (Content is View content)
+			UpdateAutomaticScrollBleed(content);
 
 		base.OnRealized();
 
@@ -92,5 +92,34 @@ public abstract partial class ContentView
 		NotifyUnloaded();
 
 		base.OnUnrealized();
+	}
+
+	partial void PrepareContentLayoutCore(
+		View content) =>
+		UpdateAutomaticScrollBleed(content);
+
+	void UpdateAutomaticScrollBleed(
+		View content)
+	{
+		bool shouldBleed = ScrollsUnderBars
+			&& content.Scrolls
+			&& content.VerticalAlignment == VerticalAlignment.Stretch
+			&& double.IsNaN(content.Height)
+			&& double.IsPositiveInfinity(content.MaxHeight);
+
+		if (automaticScrollBleed is View previous
+			&& (!ReferenceEquals(previous, content) || !shouldBleed))
+		{
+			if (previous.IgnoresSafeArea == (SafeAreaEdges.Top | SafeAreaEdges.Bottom))
+				previous.IgnoresSafeArea = SafeAreaEdges.None;
+
+			automaticScrollBleed = null;
+		}
+
+		if (!shouldBleed || content.IgnoresSafeArea != SafeAreaEdges.None)
+			return;
+
+		content.IgnoresSafeArea = SafeAreaEdges.Top | SafeAreaEdges.Bottom;
+		automaticScrollBleed = content;
 	}
 }

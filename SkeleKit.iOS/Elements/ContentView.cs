@@ -26,7 +26,11 @@ public abstract partial class ContentView : Panel
 	/// <summary>
 	/// Whether scrolling content passes under the navigation bar so the bar blurs over it.
 	/// </summary>
-	public bool ScrollsUnderBars { get; set; } = true;
+	public bool ScrollsUnderBars
+	{
+		get;
+		set => Set(ref field, value);
+	} = true;
 
 	/// <summary>
 	/// Whether the title is shown large and collapses as the content scrolls.
@@ -283,21 +287,33 @@ public abstract partial class ContentView : Panel
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
+		Size inner = availableSize.Deflate(Padding);
+
 		if (Content is not View content)
-			return Size.Zero;
+			return new(Padding.Horizontal, Padding.Vertical);
 
-		content.Measure(availableSize);
+		content.Measure(inner);
 
-		return content.DesiredSize;
+		return content.DesiredSize.Inflate(Padding);
 	}
 
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
-		Content?.Arrange(new(Point.Zero, finalSize));
+		if (Content is View content)
+		{
+			PrepareContentLayoutCore(content);
+			content.Arrange(
+				new Rect(
+					new Point(Padding.Left, Padding.Top),
+					finalSize.Deflate(Padding)));
+		}
 
 		return finalSize;
 	}
+
+	partial void PrepareContentLayoutCore(
+		View content);
 }
 
 /// <summary>

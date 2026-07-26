@@ -21,7 +21,12 @@ public partial class ScrollView : Panel
 	/// <summary>
 	/// The scroll axis.
 	/// </summary>
-	public Orientation Orientation { get; set; } = Orientation.Vertical;
+	public Orientation Orientation
+	{
+		get => orientation;
+		set => Set(ref orientation, value, ApplyBehavior);
+	}
+	Orientation orientation = Orientation.Vertical;
 
 	/// <summary>
 	/// Whether the content is inset so the keyboard never covers the focused control.
@@ -142,27 +147,28 @@ public partial class ScrollView : Panel
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
+		Size inner = availableSize.Deflate(Padding);
 		View? content = Content;
 		if (content is null)
-			return Size.Zero;
+			return new(Padding.Horizontal, Padding.Vertical);
 
 		bool vertical = Orientation == Orientation.Vertical;
 		Size probe = vertical
-			? new(availableSize.Width, double.PositiveInfinity)
-			: new(double.PositiveInfinity, availableSize.Height);
+			? new(inner.Width, double.PositiveInfinity)
+			: new(double.PositiveInfinity, inner.Height);
 
 		content.Measure(probe);
 		Size desired = content.DesiredSize;
 
 		// fill finite dimension, else size to content
 		double width = vertical
-			? Fill(availableSize.Width, desired.Width)
+			? Fill(inner.Width, desired.Width)
 			: desired.Width;
 		double height = vertical
 			? desired.Height
-			: Fill(availableSize.Height, desired.Height);
+			: Fill(inner.Height, desired.Height);
 
-		return new(width, height);
+		return new Size(width, height).Inflate(Padding);
 	}
 
 	protected override Size ArrangeOverride(

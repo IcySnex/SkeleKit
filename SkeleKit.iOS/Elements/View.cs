@@ -458,6 +458,10 @@ public abstract partial class View
 	/// <summary>
 	/// Explicit height in points, or NaN to size to content.
 	/// </summary>
+	/// <remarks>
+	/// This constrains layout bounds but does not imply clipping. Set <see cref="ClipsToBounds"/>
+	/// when children should not draw beyond an explicitly constrained container.
+	/// </remarks>
 	public double Height
 	{
 		get => height;
@@ -619,6 +623,10 @@ public abstract partial class View
 	/// <summary>
 	/// When true, content is clipped to the bounds and corner radius.
 	/// </summary>
+	/// <remarks>
+	/// False by default so child shadows and effects can extend beyond layout bounds.
+	/// Scrolling views clip by default because their bounds are a viewport.
+	/// </remarks>
 	public bool ClipsToBounds
 	{
 		get;

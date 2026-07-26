@@ -9,7 +9,7 @@ public class Grid : Panel
 
 
 	static IReadOnlyList<GridLength> EffectiveTracks(
-		List<GridLength> declared) =>
+		IReadOnlyList<GridLength> declared) =>
 		declared.Count > 0 ? declared : SingleStar;
 
 	static (int Start, int Span) AxisPlacement(
@@ -86,6 +86,15 @@ public class Grid : Panel
 	double[] columnWidths = [];
 	double[] rowHeights = [];
 
+	/// <summary>
+	/// Creates an empty grid.
+	/// </summary>
+	public Grid()
+	{
+		Rows = new(InvalidateMeasure);
+		Columns = new(InvalidateMeasure);
+	}
+
 
 	/// <summary>
 	/// The row definitions, top to bottom.
@@ -93,7 +102,7 @@ public class Grid : Panel
 	/// <remarks>
 	/// Empty means a single star row.
 	/// </remarks>
-	public List<GridLength> Rows { get; } = [];
+	public GridLengthCollection Rows { get; }
 
 	/// <summary>
 	/// The column definitions, leading to trailing.
@@ -101,17 +110,25 @@ public class Grid : Panel
 	/// <remarks>
 	/// Empty means a single star column.
 	/// </remarks>
-	public List<GridLength> Columns { get; } = [];
+	public GridLengthCollection Columns { get; }
 
 	/// <summary>
 	/// The gap in points inserted between rows.
 	/// </summary>
-	public double RowSpacing { get; set; }
+	public double RowSpacing
+	{
+		get;
+		set => Set(ref field, value);
+	}
 
 	/// <summary>
 	/// The gap in points inserted between columns.
 	/// </summary>
-	public double ColumnSpacing { get; set; }
+	public double ColumnSpacing
+	{
+		get;
+		set => Set(ref field, value);
+	}
 
 
 	protected override Size MeasureOverride(
@@ -176,6 +193,7 @@ public class Grid : Panel
 		bool horizontal)
 	{
 		// one axis: absolute = value, auto = fit children, star = split rest
+		bool unconstrained = !double.IsFinite(available);
 
 		double[] sizes = new double[tracks.Count];
 		double used = 0;
@@ -193,10 +211,11 @@ public class Grid : Panel
 				totalStars += track.Value;
 		}
 
-		// auto: fit single-span children, unconstrained on this axis
+		// Auto tracks fit their content. Star tracks do the same on an unconstrained axis:
+		// there is no finite remainder to distribute (for example inside a ScrollView).
 		for (int i = 0; i < tracks.Count; i++)
 		{
-			if (!tracks[i].IsAuto)
+			if (!tracks[i].IsAuto && !(unconstrained && tracks[i].IsStar))
 				continue;
 
 			double max = 0;
@@ -221,7 +240,7 @@ public class Grid : Panel
 
 		// star: split remainder by weight
 		double remaining = Math.Max(0, available - used);
-		if (totalStars > 0)
+		if (!unconstrained && totalStars > 0)
 		{
 			for (int i = 0; i < tracks.Count; i++)
 			{

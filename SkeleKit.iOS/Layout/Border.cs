@@ -11,7 +11,11 @@ public partial class Border : Panel
 	/// <summary>
 	/// The stroke color, or null (default) for no stroke.
 	/// </summary>
-	public Color? Stroke { get; set; }
+	public Color? Stroke
+	{
+		get;
+		set => Set(ref field, value, ApplyStroke, affectsMeasure: false);
+	}
 
 	/// <summary>
 	/// The stroke width in points.
@@ -19,7 +23,11 @@ public partial class Border : Panel
 	/// <remarks>
 	/// Also insets the child so the stroke never overlaps content.
 	/// </remarks>
-	public double StrokeThickness { get; set; }
+	public double StrokeThickness
+	{
+		get;
+		set => Set(ref field, value, ApplyStroke);
+	}
 
 	/// <summary>
 	/// The single wrapped child.
@@ -34,6 +42,11 @@ public partial class Border : Panel
 				Children.Add(value);
 		}
 	}
+
+	void ApplyStroke() =>
+		ApplyStrokeCore();
+
+	partial void ApplyStrokeCore();
 
 
 	protected override Size MeasureOverride(

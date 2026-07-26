@@ -8,12 +8,21 @@ public class StackPanel : Panel
 	/// <summary>
 	/// The stacking axis.
 	/// </summary>
-	public Orientation Orientation { get; set; } = Orientation.Vertical;
+	public Orientation Orientation
+	{
+		get => orientation;
+		set => Set(ref orientation, value);
+	}
+	Orientation orientation = Orientation.Vertical;
 
 	/// <summary>
 	/// The gap in points inserted between consecutive visible children.
 	/// </summary>
-	public double Spacing { get; set; }
+	public double Spacing
+	{
+		get;
+		set => Set(ref field, value);
+	}
 
 
 	protected override Size MeasureOverride(

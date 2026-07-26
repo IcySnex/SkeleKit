@@ -15,6 +15,9 @@ public sealed class PageGenerator : IIncrementalGenerator
 {
 	const string HotReloadSymbol = "SKELEKIT_HOT_RELOAD";
 
+	static readonly SymbolDisplayFormat TypeReferenceFormat = SymbolDisplayFormat.FullyQualifiedFormat
+		.WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers);
+
 
 	sealed record Page(
 		string View,
@@ -126,15 +129,106 @@ public sealed class PageGenerator : IIncrementalGenerator
 
 		if (isPublic)
 		{
-			INamedTypeSymbol reference = type.IsGenericType
-				? type.ConstructUnboundGenericType()
-				: type;
-
-			types.Add(reference.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+			CollectReference(type, types);
+			CollectPublicSignatures(type, types);
 		}
 
 		foreach (INamedTypeSymbol nested in type.GetTypeMembers())
 			Collect(nested, isPublic, types);
+	}
+
+	static void CollectPublicSignatures(
+		INamedTypeSymbol type,
+		ImmutableArray<string>.Builder types)
+	{
+		CollectReference(type.BaseType, types);
+
+		foreach (INamedTypeSymbol @interface in type.Interfaces)
+			CollectReference(@interface, types);
+
+		foreach (ISymbol member in type.GetMembers())
+		{
+			if (member.DeclaredAccessibility is not (
+				Accessibility.Public or
+				Accessibility.Protected or
+				Accessibility.ProtectedOrInternal))
+				continue;
+
+			switch (member)
+			{
+				case IFieldSymbol field:
+					CollectReference(field.Type, types);
+					break;
+				case IPropertySymbol property:
+					CollectReference(property.Type, types);
+					foreach (IParameterSymbol parameter in property.Parameters)
+						CollectReference(parameter.Type, types);
+					break;
+				case IEventSymbol @event:
+					CollectReference(@event.Type, types);
+					break;
+				case IMethodSymbol method:
+					CollectReference(method.ReturnType, types);
+					foreach (IParameterSymbol parameter in method.Parameters)
+						CollectReference(parameter.Type, types);
+					break;
+			}
+		}
+	}
+
+	static void CollectReference(
+		ITypeSymbol? type,
+		ImmutableArray<string>.Builder types)
+	{
+		switch (type)
+		{
+			case null:
+			case ITypeParameterSymbol:
+			case IDynamicTypeSymbol:
+				return;
+			case IArrayTypeSymbol array:
+				CollectReference(array.ElementType, types);
+				return;
+			case IPointerTypeSymbol pointer:
+				CollectReference(pointer.PointedAtType, types);
+				return;
+			case IFunctionPointerTypeSymbol function:
+				CollectReference(function.Signature.ReturnType, types);
+				foreach (IParameterSymbol parameter in function.Signature.Parameters)
+					CollectReference(parameter.Type, types);
+				return;
+			case INamedTypeSymbol named:
+				foreach (ITypeSymbol argument in named.TypeArguments)
+					CollectReference(argument, types);
+
+				if (named.SpecialType != SpecialType.None
+					|| named.TypeKind == TypeKind.Error
+					|| named.IsAnonymousType
+					|| !IsPubliclyReferenceable(named))
+					return;
+
+				INamedTypeSymbol reference = named.IsGenericType
+					? named.ConstructUnboundGenericType()
+					: named;
+
+				types.Add(reference.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
+					? "global::System.Nullable<>"
+					: reference.ToDisplayString(TypeReferenceFormat));
+				return;
+		}
+	}
+
+	static bool IsPubliclyReferenceable(
+		INamedTypeSymbol type)
+	{
+		for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
+		{
+			if (current.DeclaredAccessibility != Accessibility.Public
+				|| !current.CanBeReferencedByName)
+				return false;
+		}
+
+		return true;
 	}
 
 	static bool IsAccessible(

@@ -174,11 +174,12 @@ public partial class ScrollView
 
 		bool vertical = Orientation == Orientation.Vertical;
 		Thickness bled = BledInsets;
+		Thickness padding = Padding;
 
-		double padLeft = vertical ? bled.Left : 0;
-		double padRight = vertical ? bled.Right : 0;
-		double padTop = vertical ? 0 : bled.Top;
-		double padBottom = vertical ? 0 : bled.Bottom;
+		double padLeft = padding.Left + (vertical ? bled.Left : 0);
+		double padRight = padding.Right + (vertical ? bled.Right : 0);
+		double padTop = padding.Top + (vertical ? 0 : bled.Top);
+		double padBottom = padding.Bottom + (vertical ? 0 : bled.Bottom);
 
 		viewport = new(
 			Math.Max(0, viewport.Width - padLeft - padRight),

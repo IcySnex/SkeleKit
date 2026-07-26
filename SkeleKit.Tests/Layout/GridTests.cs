@@ -96,4 +96,17 @@ public class GridTests
 		Assert.Equal(0, a.ArrangedBounds.X);
 		Assert.Equal(130, b.ArrangedBounds.X);
 	}
+
+	[Fact]
+	public void StarTracks_SizeToContentWhenAxisIsUnconstrained()
+	{
+		Grid grid = new()
+		{
+			Children = { new StubLeaf(40, 20) }
+		};
+
+		grid.Measure(Size.Infinity);
+
+		Assert.Equal(new Size(40, 20), grid.DesiredSize);
+	}
 }

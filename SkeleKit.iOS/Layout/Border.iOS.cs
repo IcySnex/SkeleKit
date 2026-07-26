@@ -2,13 +2,10 @@ namespace SkeleKit;
 
 public partial class Border
 {
-	void ApplyStroke()
+	partial void ApplyStrokeCore()
 	{
-		if (Stroke is Color stroke && StrokeThickness > 0)
-		{
-			Native.Layer.BorderWidth = (nfloat)StrokeThickness;
-			Native.Layer.BorderColor = stroke.ToUIColor().CGColor;
-		}
+		Native.Layer.BorderWidth = (nfloat)Math.Max(0, StrokeThickness);
+		Native.Layer.BorderColor = Stroke?.ToUIColor().CGColor;
 	}
 
 	
@@ -16,7 +13,7 @@ public partial class Border
 	{
 		base.OnRealized();
 
-		ApplyStroke();
+		ApplyStrokeCore();
 	}
 
 
@@ -26,6 +23,6 @@ public partial class Border
 
 		// CGColor is a snapshot, so a theme change re-resolves it here
 		if (IsRealized)
-			ApplyStroke();
+			ApplyStrokeCore();
 	}
 }
