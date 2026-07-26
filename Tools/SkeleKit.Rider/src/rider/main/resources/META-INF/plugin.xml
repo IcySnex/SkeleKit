@@ -1,5 +1,5 @@
 <idea-plugin require-restart="true">
-    <id>com.skelekit.rider</id>
+    <id>com.skelekit.hotreload</id>
     <name>SkeleKit Hot Reload</name>
     <version>1.0.1</version>
     <vendor url="https://github.com/IcySnex/SkeleKit">IcySnex</vendor>
@@ -10,7 +10,7 @@
     <idea-version since-build="262" until-build="262.*"/>
 
     <description><![CDATA[
-    <p>Provides hot reload capabilities and simultaneous breakpoint debugging for <b>SkeleKit.iOS</b> apps running in the iOS simulator.</p>
+    <p>Provides hot reload capabilities and simultaneous breakpoint debugging for <b>.NET for iOS</b> (SkeleKit) apps running in the simulator.</p>
   ]]></description>
 
     <change-notes><![CDATA[
