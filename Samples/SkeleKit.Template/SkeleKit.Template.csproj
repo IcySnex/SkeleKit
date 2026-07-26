@@ -19,4 +19,10 @@
         <MtouchLink>Full</MtouchLink>
         <DeviceSpecificBuild>true</DeviceSpecificBuild>
     </PropertyGroup>
+
+    <Import Project="..\..\SkeleKit.iOS\build\SkeleKit.iOS.targets" />
+    <ItemGroup>
+      <ProjectReference Include="..\..\SkeleKit.Generators\SkeleKit.Generators.csproj" />
+      <ProjectReference Include="..\..\SkeleKit.iOS\SkeleKit.iOS.csproj" />
+    </ItemGroup>
 </Project>
