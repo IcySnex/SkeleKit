@@ -10,6 +10,8 @@
 		<UseInterpreter>true</UseInterpreter>
 		<!-- so the after-build target can read @(CscCommandLineArgs) -->
 		<ProvideCommandLineArgs>true</ProvideCommandLineArgs>
+		<!-- asks the page generator to seed the app module with SkeleKit TypeRefs for future deltas -->
+		<DefineConstants>$(DefineConstants);SKELEKIT_HOT_RELOAD</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(_SkeleHotReload)' == 'true' ">

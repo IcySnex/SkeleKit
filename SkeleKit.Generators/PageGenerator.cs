@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
@@ -12,6 +13,9 @@ namespace SkeleKit.Generators;
 [Generator]
 public sealed class PageGenerator : IIncrementalGenerator
 {
+	const string HotReloadSymbol = "SKELEKIT_HOT_RELOAD";
+
+
 	sealed record Page(
 		string View,
 		string? ViewModel,
@@ -55,11 +59,14 @@ public sealed class PageGenerator : IIncrementalGenerator
 			static (node, _) => node is ClassDeclarationSyntax,
 			static (attribute, _) => Extract(attribute));
 
+		IncrementalValueProvider<ImmutableArray<string>> hotReloadTypes = context.CompilationProvider.Select(
+			static (compilation, _) => HotReloadTypes(compilation));
+
 		context.RegisterSourceOutput(
-			candidates.Collect(),
-			static (production, collected) =>
+			candidates.Collect().Combine(hotReloadTypes),
+			static (production, input) =>
 			{
-				foreach (Diagnostic diagnostic in collected
+				foreach (Diagnostic diagnostic in input.Left
 					.Select(static candidate => candidate.Diagnostic)
 					.OfType<Diagnostic>())
 					production.ReportDiagnostic(diagnostic);
@@ -67,13 +74,68 @@ public sealed class PageGenerator : IIncrementalGenerator
 				production.AddSource(
 					"GeneratedPages.g.cs",
 					Emit(
-						collected
+						input.Left
 							.Select(static candidate => candidate.Page)
 							.OfType<Page>()
-							.ToImmutableArray()));
+							.ToImmutableArray(),
+						input.Right));
 			});
 	}
 
+
+	static ImmutableArray<string> HotReloadTypes(
+		Compilation compilation)
+	{
+		bool enabled = compilation.SyntaxTrees
+			.Select(static tree => tree.Options)
+			.OfType<CSharpParseOptions>()
+			.Any(static options => options.PreprocessorSymbolNames.Contains(HotReloadSymbol));
+
+		if (!enabled
+			|| compilation.GetTypeByMetadataName("SkeleKit.ContentView") is not INamedTypeSymbol marker)
+			return ImmutableArray<string>.Empty;
+
+		ImmutableArray<string>.Builder types = ImmutableArray.CreateBuilder<string>();
+		Collect(marker.ContainingAssembly.GlobalNamespace, types);
+
+		return types
+			.Distinct(StringComparer.Ordinal)
+			.OrderBy(static type => type, StringComparer.Ordinal)
+			.ToImmutableArray();
+	}
+
+	static void Collect(
+		INamespaceSymbol @namespace,
+		ImmutableArray<string>.Builder types)
+	{
+		foreach (INamespaceSymbol child in @namespace.GetNamespaceMembers())
+			Collect(child, types);
+
+		foreach (INamedTypeSymbol type in @namespace.GetTypeMembers())
+			Collect(type, containingTypeIsPublic: true, types);
+	}
+
+	static void Collect(
+		INamedTypeSymbol type,
+		bool containingTypeIsPublic,
+		ImmutableArray<string>.Builder types)
+	{
+		bool isPublic = containingTypeIsPublic
+			&& type.DeclaredAccessibility == Accessibility.Public
+			&& type.CanBeReferencedByName;
+
+		if (isPublic)
+		{
+			INamedTypeSymbol reference = type.IsGenericType
+				? type.ConstructUnboundGenericType()
+				: type;
+
+			types.Add(reference.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+		}
+
+		foreach (INamedTypeSymbol nested in type.GetTypeMembers())
+			Collect(nested, isPublic, types);
+	}
 
 	static bool IsAccessible(
 		IMethodSymbol constructor) =>
@@ -166,7 +228,8 @@ public sealed class PageGenerator : IIncrementalGenerator
 	}
 
 	static SourceText Emit(
-		ImmutableArray<Page> pages)
+		ImmutableArray<Page> pages,
+		ImmutableArray<string> hotReloadTypes)
 	{
 		StringBuilder source = new();
 
@@ -202,9 +265,26 @@ public sealed class PageGenerator : IIncrementalGenerator
 		source.AppendLine("\t/// <summary>");
 		source.AppendLine("\t/// Applies generated page registrations and builds the application.");
 		source.AppendLine("\t/// </summary>");
+		if (hotReloadTypes.Length > 0)
+			source.AppendLine("\t[global::System.Diagnostics.CodeAnalysis.DynamicDependency(nameof(SeedHotReloadTypeReferences))]");
 		source.AppendLine("\tpublic static SkeleApplication Build(");
 		source.AppendLine("\t\tthis SkeleApplicationBuilder builder) =>");
 		source.AppendLine("\t\tbuilder.UsePages().BuildCore();");
+
+		if (hotReloadTypes.Length > 0)
+		{
+			source.AppendLine();
+			source.AppendLine("\t// Retained by DynamicDependency but never called. Returning the Type array prevents");
+			source.AppendLine("\t// the linker from replacing its TypeRefs with no-ops while adding no startup work.");
+			source.AppendLine("\tprivate static global::System.Type[] SeedHotReloadTypeReferences() =>");
+			source.AppendLine("\t[");
+
+			foreach (string type in hotReloadTypes)
+				source.AppendLine($"\t\ttypeof({type}),");
+
+			source.AppendLine("\t];");
+		}
+
 		source.AppendLine("}");
 
 		return SourceText.From(source.ToString(), Encoding.UTF8);
