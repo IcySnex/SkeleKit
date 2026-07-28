@@ -7,6 +7,9 @@ namespace SkeleKit;
 /// </summary>
 public class SkeleApplication
 {
+	const double AccentTransitionDuration = 0.2;
+
+
 	internal enum ShellKind
 	{
 		None,
@@ -226,6 +229,9 @@ public class SkeleApplication
 	/// <summary>
 	/// The app-wide accent inherited by windows, chrome and views, or null for the system default.
 	/// </summary>
+	/// <remarks>
+	/// Runtime changes cross-dissolve unless Reduce Motion is enabled.
+	/// </remarks>
 	public Color? Accent
 	{
 		get => accent;
@@ -248,15 +254,59 @@ public class SkeleApplication
 
 	void ApplyAccent()
 	{
-		foreach (UIWindow window in UIApplication.SharedApplication
-			.ConnectedScenes
-			.OfType<UIWindowScene>()
-			.SelectMany(scene => scene.Windows))
-			ApplyAccent(window);
+		UIWindowScene[] scenes =
+		[
+			.. UIApplication.SharedApplication
+				.ConnectedScenes
+				.OfType<UIWindowScene>()
+		];
 
-		PageHost.AccentChanged();
-		accessoryContent?.AppAccentChanged();
-		footerContent?.AppAccentChanged();
+		UIWindow[] windows =
+		[
+			.. scenes.SelectMany(scene => scene.Windows)
+		];
+
+		void Apply()
+		{
+			foreach (UIWindow window in windows)
+				ApplyAccent(window);
+
+			PageHost.AccentChanged();
+			accessoryContent?.AppAccentChanged();
+			footerContent?.AppAccentChanged();
+		}
+
+		UIWindow[] visible = UIAccessibility.IsReduceMotionEnabled
+			? []
+			: [
+				.. scenes
+					.Where(scene => scene.ActivationState == UISceneActivationState.ForegroundActive)
+					.SelectMany(scene => scene.Windows)
+					.Where(window => !window.Hidden && window.Alpha > 0)
+			];
+
+		TransitionAccent(visible, 0, Apply);
+	}
+
+	static void TransitionAccent(
+		IReadOnlyList<UIWindow> windows,
+		int index,
+		Action changes)
+	{
+		if (index >= windows.Count)
+		{
+			changes();
+			return;
+		}
+
+		UIView.Transition(
+			windows[index],
+			AccentTransitionDuration,
+			UIViewAnimationOptions.TransitionCrossDissolve
+				| UIViewAnimationOptions.AllowUserInteraction
+				| UIViewAnimationOptions.BeginFromCurrentState,
+			() => TransitionAccent(windows, index + 1, changes),
+			static () => { });
 	}
 
 
