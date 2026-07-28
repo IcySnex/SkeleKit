@@ -282,95 +282,14 @@ public class SkeleApplication
 			return;
 		}
 
-		UIWindowScene? transitionScene = PageHost.AccentTransitionScene;
-		HashSet<UIView> views = [];
-
-		foreach (UIWindow window in scenes
-			.Where(scene => scene.ActivationState == UISceneActivationState.ForegroundActive)
-			.SelectMany(scene => scene.Windows)
-			.Where(window => !window.Hidden && window.Alpha > 0))
-			CollectAccentViews(window.RootViewController, transitionScene, views);
-
-		if (accessoryContent is { IsRealized: true })
-			views.Add(accessoryContent.Native);
-
-		if (footerContent is { IsRealized: true })
-			views.Add(footerContent.Native);
-
-		UIView[] roots =
-		[
-			.. views.Where(view =>
-				view.Window is not null
-				&& !view.Hidden
-				&& view.Alpha > 0
-				&& !HasAccentAncestor(view, views))
-		];
-
-		TransitionAccent(roots, 0, Apply);
-	}
-
-	static void CollectAccentViews(
-		UIViewController? controller,
-		UIWindowScene? transitionScene,
-		HashSet<UIView> views)
-	{
-		if (controller is null)
-			return;
-
-		switch (controller)
-		{
-			case UITabBarController tabs:
-				views.Add(tabs.TabBar);
-				CollectAccentViews(tabs.SelectedViewController, transitionScene, views);
-				break;
-
-			case UINavigationController navigation:
-				views.Add(navigation.NavigationBar);
-				views.Add(navigation.Toolbar);
-				CollectAccentViews(navigation.VisibleViewController, transitionScene, views);
-				break;
-
-			case PageHost { Page: { IsRealized: true } page } host:
-				if (host.View?.Window?.WindowScene != transitionScene)
-					views.Add(page.Native);
-				break;
-		}
-
-		CollectAccentViews(controller.PresentedViewController, transitionScene, views);
-	}
-
-	static bool HasAccentAncestor(
-		UIView view,
-		HashSet<UIView> views)
-	{
-		for (UIView? parent = view.Superview; parent is not null; parent = parent.Superview)
-		{
-			if (views.Contains(parent))
-				return true;
-		}
-
-		return false;
-	}
-
-	static void TransitionAccent(
-		IReadOnlyList<UIView> views,
-		int index,
-		Action changes)
-	{
-		if (index >= views.Count)
-		{
-			changes();
-			return;
-		}
-
-		UIView.Transition(
-			views[index],
+		UIView.AnimateNotify(
 			AccentTransitionDuration,
-			UIViewAnimationOptions.TransitionCrossDissolve
+			0,
+			UIViewAnimationOptions.CurveEaseInOut
 				| UIViewAnimationOptions.AllowUserInteraction
 				| UIViewAnimationOptions.BeginFromCurrentState,
-			() => TransitionAccent(views, index + 1, changes),
-			static () => { });
+			Apply,
+			static _ => { });
 	}
 
 

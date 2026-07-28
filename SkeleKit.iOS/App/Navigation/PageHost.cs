@@ -45,13 +45,6 @@ internal sealed class PageHost : UIViewController
 	static readonly List<WeakReference<PageHost>> Live = [];
 	static readonly UIImage TransparentScopeBackground = new();
 
-	static PageHost? appearing;
-	static bool appearingAnimated;
-
-
-	internal static UIWindowScene? AccentTransitionScene =>
-		appearingAnimated ? appearing?.View?.Window?.WindowScene : null;
-
 
 	static UIView? FirstResponder(
 		UIView view)
@@ -673,21 +666,7 @@ internal sealed class PageHost : UIViewController
 			return;
 
 		// before the transition: a lit row fades out with the pop, not after it
-		PageHost? previous = appearing;
-		bool previousAnimated = appearingAnimated;
-
-		appearing = this;
-		appearingAnimated = animated;
-
-		try
-		{
-			Page.NotifyAppearing();
-		}
-		finally
-		{
-			appearing = previous;
-			appearingAnimated = previousAnimated;
-		}
+		Page.NotifyAppearing();
 
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
 
