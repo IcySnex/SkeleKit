@@ -5,10 +5,10 @@ using SkeleKit.Gallery.Views.Cells;
 namespace SkeleKit.Gallery.Views.Pages;
 
 [Page]
-internal sealed class SearchView : ContentView<SearchViewModel>
+internal sealed class SearchView : GalleryPage<SearchViewModel>
 {
 	public SearchView(
-		SearchViewModel viewModel) : base(viewModel)
+		SearchViewModel viewModel) : base(viewModel, Colors.White)
 	{
 		Title = "Search";
 		BackgroundStyle = PageBackground.Grouped;
@@ -52,7 +52,7 @@ internal sealed class SearchView : ContentView<SearchViewModel>
 						Width = 68,
 						Height = 68,
 						CornerRadius = 20,
-						Background = Colors.Indigo.WithAlpha(0.12),
+						Background = Colors.White.WithAlpha(0.12),
 
 						Child = new Image
 						{
@@ -61,7 +61,7 @@ internal sealed class SearchView : ContentView<SearchViewModel>
 							Source = ImageSource.Symbol("magnifyingglass"),
 							SymbolSize = 28,
 							SymbolWeight = FontWeight.Semibold,
-							Tint = Colors.Indigo
+							Tint = Colors.White
 						}
 					},
 

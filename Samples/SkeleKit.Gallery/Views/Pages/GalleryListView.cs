@@ -4,13 +4,13 @@ using SkeleKit.Gallery.Views.Cells;
 
 namespace SkeleKit.Gallery.Views.Pages;
 
-internal abstract class GalleryListView<TViewModel> : ContentView<TViewModel>
+internal abstract class GalleryListView<TViewModel> : GalleryPage<TViewModel>
 	where TViewModel : GalleryListViewModel
 {
 	protected GalleryListView(
 		TViewModel viewModel,
 		string title,
-		Color accent) : base(viewModel)
+		Color accent) : base(viewModel, accent)
 	{
 		Title = title;
 		TitleStyle = TitleStyle.Large;

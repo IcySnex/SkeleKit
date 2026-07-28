@@ -3,10 +3,10 @@ using SkeleKit.Gallery.Models;
 namespace SkeleKit.Gallery.Views.Pages;
 
 [Page]
-internal sealed class TopicView : ContentView<GalleryTopic>
+internal sealed class TopicView : GalleryPage<GalleryTopic>
 {
 	public TopicView(
-		GalleryTopic topic) : base(topic)
+		GalleryTopic topic) : base(topic, topic.Accent)
 	{
 		Title = topic.Title;
 		BackgroundStyle = PageBackground.Grouped;

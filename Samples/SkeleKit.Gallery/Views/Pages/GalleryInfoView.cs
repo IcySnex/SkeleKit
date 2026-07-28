@@ -3,10 +3,10 @@ using SkeleKit.Gallery.ViewModels;
 namespace SkeleKit.Gallery.Views.Pages;
 
 [Page]
-internal sealed class GalleryInfoView : ContentView<GalleryInfoViewModel>
+internal sealed class GalleryInfoView : GalleryPage<GalleryInfoViewModel>
 {
 	public GalleryInfoView(
-		GalleryInfoViewModel viewModel) : base(viewModel)
+		GalleryInfoViewModel viewModel) : base(viewModel, Colors.Indigo)
 	{
 		Title = "SkeleKit";
 		BackgroundStyle = PageBackground.Grouped;
