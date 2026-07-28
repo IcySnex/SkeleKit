@@ -21,21 +21,21 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Actions & Selection",
-				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Orange, GalleryArea.Controls),
-				Topic("Picker", "Wheel-based selection from deterministic values.", "dial.medium", Colors.Orange, GalleryArea.Controls),
-				Topic("SegmentedControl", "Compact mutually exclusive choices.", "rectangle.split.3x1", Colors.Orange, GalleryArea.Controls),
-				Topic("DatePicker", "Dates, times, ranges and presentation styles.", "calendar", Colors.Orange, GalleryArea.Controls),
-				Topic("ColorWell", "System color selection with alpha support.", "paintpalette.fill", Colors.Orange, GalleryArea.Controls)),
+				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Pink, GalleryArea.Controls),
+				Topic("Picker", "Wheel-based selection from deterministic values.", "dial.medium", Colors.Pink, GalleryArea.Controls),
+				Topic("SegmentedControl", "Compact mutually exclusive choices.", "rectangle.split.3x1", Colors.Pink, GalleryArea.Controls),
+				Topic("DatePicker", "Dates, times, ranges and presentation styles.", "calendar", Colors.Pink, GalleryArea.Controls),
+				Topic("ColorWell", "System color selection with alpha support.", "paintpalette.fill", Colors.Pink, GalleryArea.Controls)),
 
 			Section(
 				"Values & Status",
-				Topic("Switch", "A native binary setting with two-way state.", "switch.2", Colors.Green, GalleryArea.Controls),
-				Topic("Slider", "Continuous values, ranges and custom tinting.", "slider.horizontal.3", Colors.Green, GalleryArea.Controls),
-				Topic("Stepper", "Increment and decrement bounded values.", "plusminus", Colors.Green, GalleryArea.Controls),
-				Topic("ProgressBar", "Determinate task progress and tinting.", "chart.bar.fill", Colors.Green, GalleryArea.Controls),
-				Topic("ActivityIndicator", "Indeterminate work and visibility states.", "progress.indicator", Colors.Green, GalleryArea.Controls),
-				Topic("PageControl", "Page position, direction and interaction.", "ellipsis", Colors.Green, GalleryArea.Controls),
-				Topic("Divider", "Native-scale separators and semantic colors.", "minus", Colors.Green, GalleryArea.Controls)),
+				Topic("Switch", "A native binary setting with two-way state.", "switch.2", Colors.Red, GalleryArea.Controls),
+				Topic("Slider", "Continuous values, ranges and custom tinting.", "slider.horizontal.3", Colors.Red, GalleryArea.Controls),
+				Topic("Stepper", "Increment and decrement bounded values.", "plusminus", Colors.Red, GalleryArea.Controls),
+				Topic("ProgressBar", "Determinate task progress and tinting.", "chart.bar.fill", Colors.Red, GalleryArea.Controls),
+				Topic("ActivityIndicator", "Indeterminate work and visibility states.", "progress.indicator", Colors.Red, GalleryArea.Controls),
+				Topic("PageControl", "Page position, direction and interaction.", "ellipsis", Colors.Red, GalleryArea.Controls),
+				Topic("Divider", "Native-scale separators and semantic colors.", "minus", Colors.Red, GalleryArea.Controls)),
 
 			Section(
 				"Media & Content",
@@ -97,10 +97,10 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Device",
-				Topic("Haptics", "Impact, selection, notification and custom patterns.", "waveform", Colors.Mint, GalleryArea.Platform),
-				Topic("Image Loading", "Remote loading, cancellation and custom loaders.", "arrow.down.circle.fill", Colors.Mint, GalleryArea.Platform),
-				Topic("Accessibility", "VoiceOver labels, traits, values and focus.", "accessibility", Colors.Mint, GalleryArea.Platform),
-				Topic("Native Access", "UIKit views, controllers and gesture escape hatches.", "apple.terminal.fill", Colors.Mint, GalleryArea.Platform))
+				Topic("Haptics", "Impact, selection, notification and custom patterns.", "waveform", Colors.Pink, GalleryArea.Platform),
+				Topic("Image Loading", "Remote loading, cancellation and custom loaders.", "arrow.down.circle.fill", Colors.Pink, GalleryArea.Platform),
+				Topic("Accessibility", "VoiceOver labels, traits, values and focus.", "accessibility", Colors.Pink, GalleryArea.Platform),
+				Topic("Native Access", "UIKit views, controllers and gesture escape hatches.", "apple.terminal.fill", Colors.Pink, GalleryArea.Platform))
 		];
 
 		topics =

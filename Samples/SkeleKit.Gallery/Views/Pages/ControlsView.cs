@@ -6,6 +6,6 @@ namespace SkeleKit.Gallery.Views.Pages;
 internal sealed class ControlsView : GalleryListView<ControlsViewModel>
 {
 	public ControlsView(
-		ControlsViewModel viewModel) : base(viewModel, "Controls", Colors.Purple)
+		ControlsViewModel viewModel) : base(viewModel, "Controls", Colors.Pink)
 	{ }
 }
