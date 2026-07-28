@@ -184,6 +184,11 @@ public abstract partial class ContentView : Panel
 	public IList<string> SearchScopes { get; } = [];
 
 	/// <summary>
+	/// Whether search scopes stay hidden until the search field contains text.
+	/// </summary>
+	public bool HidesSearchScopesWhenEmpty { get; set; }
+
+	/// <summary>
 	/// Invoked as the user types in the search field.
 	/// </summary>
 	public Action<string>? SearchChanged { get; set; }

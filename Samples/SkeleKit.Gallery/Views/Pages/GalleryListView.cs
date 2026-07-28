@@ -15,7 +15,6 @@ internal abstract class GalleryListView<TViewModel> : ContentView<TViewModel>
 		Title = title;
 		TitleStyle = TitleStyle.Large;
 		BackgroundStyle = PageBackground.Grouped;
-		BarAccent = accent;
 
 		ToolbarItems.Add(new()
 		{
@@ -23,15 +22,35 @@ internal abstract class GalleryListView<TViewModel> : ContentView<TViewModel>
 			Command = viewModel.ShowInfoCommand
 		});
 
-		Content = new CollectionView<GalleryTopic, GallerySection>
+		Border glow = new()
+		{
+			VerticalAlignment = VerticalAlignment.Start,
+			Height = 260,
+			IgnoresSafeArea = SafeAreaEdges.Top,
+			Background = LinearGradient.Vertical(
+				accent.WithAlpha(0.2),
+				accent.WithAlpha(0))
+		};
+
+		CollectionView<GalleryTopic, GallerySection> collection = new()
 		{
 			GroupedItemsSource = Bind(model => model.Sections),
-			ItemTemplate = () => new TopicCell(accent),
-			HeaderTemplate = () => new SectionHeaderView(accent),
+			ItemTemplate = static () => new TopicCell(),
+			HeaderTemplate = static () => new SectionHeaderView(),
 			Layout = CollectionLayout.List(grouped: true),
 			SelectionCommand = viewModel.OpenTopicCommand,
 			HighlightsSelection = true,
-			Tint = accent
+			IgnoresSafeArea = SafeAreaEdges.Top | SafeAreaEdges.Bottom,
+			Scrolled = offset => glow.Opacity = Math.Clamp(1 - Math.Max(0, offset) / 120, 0, 1)
+		};
+
+		Content = new Overlay
+		{
+			Children =
+			{
+				glow,
+				collection
+			}
 		};
 	}
 }

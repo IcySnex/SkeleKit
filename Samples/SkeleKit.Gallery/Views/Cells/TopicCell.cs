@@ -4,10 +4,32 @@ namespace SkeleKit.Gallery.Views.Cells;
 
 internal sealed class TopicCell : ItemView<GalleryTopic>
 {
+	readonly Border iconBackground;
+	readonly Image icon;
+
+
 	public TopicCell(
-		Color accent,
 		bool showsArea = false)
 	{
+		icon = new()
+		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Source = Bind(topic => topic.Symbol, symbol => (ImageSource?)ImageSource.Symbol(symbol)),
+			SymbolSize = 19,
+			SymbolWeight = FontWeight.Semibold
+		};
+
+		iconBackground = new()
+		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Width = 38,
+			Height = 38,
+			CornerRadius = 10,
+			Child = icon
+		};
+
 		Content = new Grid
 		{
 			Padding = new(16, 11),
@@ -22,25 +44,7 @@ internal sealed class TopicCell : ItemView<GalleryTopic>
 
 			Children =
 			{
-				new Border
-				{
-					HorizontalAlignment = HorizontalAlignment.Center,
-					VerticalAlignment = VerticalAlignment.Center,
-					Width = 38,
-					Height = 38,
-					CornerRadius = 10,
-					Background = accent.WithAlpha(0.14),
-
-					Child = new Image
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						VerticalAlignment = VerticalAlignment.Center,
-						Source = Bind(topic => topic.Symbol, symbol => (ImageSource?)ImageSource.Symbol(symbol)),
-						SymbolSize = 19,
-						SymbolWeight = FontWeight.Semibold,
-						Tint = accent
-					}
-				}.Column(0),
+				iconBackground.Column(0),
 
 				new StackPanel
 				{
@@ -79,5 +83,16 @@ internal sealed class TopicCell : ItemView<GalleryTopic>
 				}.Column(2)
 			}
 		};
+	}
+
+
+	protected override void OnItemChanged(
+		GalleryTopic? item)
+	{
+		if (item is not GalleryTopic topic)
+			return;
+
+		icon.Tint = topic.Accent;
+		iconBackground.Background = topic.Accent.WithAlpha(0.14);
 	}
 }

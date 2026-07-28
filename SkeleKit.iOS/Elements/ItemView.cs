@@ -15,7 +15,14 @@ public abstract class ItemView<TItem> : Panel
 	public TItem? Item
 	{
 		get => BindingContext as TItem;
-		set => BindingContext = value;
+		set
+		{
+			if (ReferenceEquals(Item, value))
+				return;
+
+			BindingContext = value;
+			OnItemChanged(value);
+		}
 	}
 
 	/// <summary>
@@ -32,6 +39,15 @@ public abstract class ItemView<TItem> : Panel
 				Children.Add(value);
 		}
 	}
+
+
+	/// <summary>
+	/// Raised whenever this recycled view receives a different item.
+	/// </summary>
+	/// <param name="item">The item now represented by the view, or null when it is cleared.</param>
+	protected virtual void OnItemChanged(
+		TItem? item)
+	{ }
 
 
 	protected override Size MeasureOverride(

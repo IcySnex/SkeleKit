@@ -13,6 +13,7 @@ internal sealed class SearchView : ContentView<SearchViewModel>
 		Title = "Search";
 		BackgroundStyle = PageBackground.Grouped;
 		SearchPlaceholder = "Search SkeleKit";
+		HidesSearchScopesWhenEmpty = true;
 		SearchChanged = viewModel.Search;
 		SearchScopeChanged = viewModel.SelectScope;
 		SearchCanceled = () => viewModel.Search("");
@@ -31,7 +32,7 @@ internal sealed class SearchView : ContentView<SearchViewModel>
 		Content = new CollectionView<GalleryTopic>
 		{
 			ItemsSource = Bind(model => model.Results),
-			ItemTemplate = static () => new TopicCell(Colors.Indigo, showsArea: true),
+			ItemTemplate = static () => new TopicCell(showsArea: true),
 			Layout = CollectionLayout.List(grouped: true),
 			SelectionCommand = viewModel.OpenTopicCommand,
 			HighlightsSelection = true,

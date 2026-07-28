@@ -13,7 +13,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Text & Input",
-				"textformat",
 				Topic("Label", "Plain and attributed text with Dynamic Type.", "textformat", Colors.Purple, GalleryArea.Controls),
 				Topic("TextView", "Selectable rich text with links and menus.", "doc.richtext", Colors.Purple, GalleryArea.Controls),
 				Topic("TextField", "Single-line text entry and keyboard behavior.", "character.cursor.ibeam", Colors.Purple, GalleryArea.Controls),
@@ -22,7 +21,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Actions & Selection",
-				"hand.tap.fill",
 				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Orange, GalleryArea.Controls),
 				Topic("Picker", "Wheel-based selection from deterministic values.", "dial.medium", Colors.Orange, GalleryArea.Controls),
 				Topic("SegmentedControl", "Compact mutually exclusive choices.", "rectangle.split.3x1", Colors.Orange, GalleryArea.Controls),
@@ -31,7 +29,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Values & Status",
-				"slider.horizontal.3",
 				Topic("Switch", "A native binary setting with two-way state.", "switch.2", Colors.Green, GalleryArea.Controls),
 				Topic("Slider", "Continuous values, ranges and custom tinting.", "slider.horizontal.3", Colors.Green, GalleryArea.Controls),
 				Topic("Stepper", "Increment and decrement bounded values.", "plusminus", Colors.Green, GalleryArea.Controls),
@@ -42,7 +39,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Media & Content",
-				"photo.fill",
 				Topic("Image", "Symbols, bundle assets, remote images and effects.", "photo.fill", Colors.Pink, GalleryArea.Controls),
 				Topic("WebView", "Web navigation, loading and failure states.", "globe", Colors.Pink, GalleryArea.Controls),
 				Topic("MapView", "Regions, pins, overlays and user location.", "map.fill", Colors.Pink, GalleryArea.Controls),
@@ -53,7 +49,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Foundations",
-				"square.stack.3d.up.fill",
 				Topic("View", "Layout, visibility, styling and interaction shared by every element.", "square.dashed", Colors.Indigo, GalleryArea.Framework),
 				Topic("ContentView", "Page composition, chrome, search and lifecycle.", "rectangle.portrait", Colors.Indigo, GalleryArea.Framework),
 				Topic("Panels", "Child collections, padding and binding inheritance.", "square.stack.3d.up.fill", Colors.Indigo, GalleryArea.Framework),
@@ -61,7 +56,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Layout",
-				"grid",
 				Topic("Border", "Padding, strokes and single-child composition.", "square", Colors.Blue, GalleryArea.Framework),
 				Topic("Grid", "Auto, pixel and star tracks with spans.", "grid", Colors.Blue, GalleryArea.Framework),
 				Topic("Overlay", "Layered children aligned in one shared space.", "square.3.layers.3d", Colors.Blue, GalleryArea.Framework),
@@ -70,7 +64,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Collections",
-				"list.bullet.rectangle",
 				Topic("Lists", "Native lists with diffable updates and selection.", "list.bullet", Colors.Teal, GalleryArea.Framework),
 				Topic("Grids", "Adaptive multi-column collection layouts.", "square.grid.2x2", Colors.Teal, GalleryArea.Framework),
 				Topic("Carousels", "Horizontal snapping and peeking content.", "rectangle.on.rectangle.angled", Colors.Teal, GalleryArea.Framework),
@@ -79,7 +72,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Styling & Motion",
-				"paintbrush.fill",
 				Topic("Colors & Brushes", "Semantic colors, gradients and interpolation.", "paintbrush.fill", Colors.Cyan, GalleryArea.Framework),
 				Topic("Materials & Shadows", "Native blur materials, clipping and depth.", "circle.lefthalf.filled", Colors.Cyan, GalleryArea.Framework),
 				Topic("Styles & Themes", "Reusable setters and implicit application themes.", "swatchpalette.fill", Colors.Cyan, GalleryArea.Framework),
@@ -91,7 +83,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Application",
-				"app.fill",
 				Topic("Navigation", "ViewModel-first push, pop and tab selection.", "arrow.left.arrow.right", Colors.Red, GalleryArea.Platform),
 				Topic("Page Chrome", "Titles, search, toolbars, badges and status bars.", "platter.filled.top.iphone", Colors.Red, GalleryArea.Platform),
 				Topic("Tabs & iPad", "Bottom tabs, search bubbles and sidebar arrangements.", "sidebar.left", Colors.Red, GalleryArea.Platform),
@@ -99,7 +90,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Presentation",
-				"rectangle.portrait.bottomhalf.filled",
 				Topic("Modals", "Sheets, detents, popovers and guarded dismissal.", "rectangle.portrait.bottomhalf.filled", Colors.Orange, GalleryArea.Platform),
 				Topic("Dialogs", "Alerts, confirmations, prompts and selections.", "exclamationmark.bubble.fill", Colors.Orange, GalleryArea.Platform),
 				Topic("Sharing", "Text, links and images through the share sheet.", "square.and.arrow.up", Colors.Orange, GalleryArea.Platform),
@@ -107,7 +97,6 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Device",
-				"iphone",
 				Topic("Haptics", "Impact, selection, notification and custom patterns.", "waveform", Colors.Mint, GalleryArea.Platform),
 				Topic("Image Loading", "Remote loading, cancellation and custom loaders.", "arrow.down.circle.fill", Colors.Mint, GalleryArea.Platform),
 				Topic("Accessibility", "VoiceOver labels, traits, values and focus.", "accessibility", Colors.Mint, GalleryArea.Platform),
@@ -148,9 +137,8 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 	static GallerySection Section(
 		string title,
-		string symbol,
 		params GalleryTopic[] topics) =>
-		new(title, symbol, topics);
+		new(title, topics);
 
 	static GalleryTopic Topic(
 		string title,

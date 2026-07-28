@@ -485,13 +485,31 @@ internal sealed class PageHost : UIViewController
 		};
 
 		search.SearchBar.Placeholder = placeholder;
-		search.SearchBar.TextChanged += (_, e) => page.NotifySearch(e.SearchText);
-		search.SearchBar.CancelButtonClicked += (_, _) => page.NotifySearchCanceled();
+		search.SearchBar.TextChanged += (_, e) =>
+		{
+			if (page.HidesSearchScopesWhenEmpty)
+				search.SearchBar.SetShowsScopeBar(!string.IsNullOrEmpty(e.SearchText), true);
+
+			page.NotifySearch(e.SearchText);
+		};
+		search.SearchBar.CancelButtonClicked += (_, _) =>
+		{
+			if (page.HidesSearchScopesWhenEmpty)
+				search.SearchBar.SetShowsScopeBar(false, true);
+
+			page.NotifySearchCanceled();
+		};
 
 		if (page.SearchScopes.Count > 0)
 		{
 			search.SearchBar.ScopeButtonTitles = [.. page.SearchScopes];
 			search.SearchBar.SelectedScopeButtonIndexChanged += (_, e) => page.NotifySearchScope((int)e.SelectedScope);
+
+			if (page.HidesSearchScopesWhenEmpty)
+			{
+				search.SearchBar.ShowsScopeBar = false;
+				search.ScopeBarActivation = UISearchControllerScopeBarActivation.Manual;
+			}
 		}
 
 		NavigationItem.SearchController = search;
