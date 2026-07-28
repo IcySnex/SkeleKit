@@ -14,8 +14,10 @@ This is the canonical declaration inventory for the types below. Inherited `View
 | Haptics | `Haptics`, `HapticEvent`, `HapticStyle`, `HapticsNotification` | Trigger impact strengths, selection, notification outcomes, and a short custom pattern on a physical device. | Each action is perceivable without changing layout; simulator limitations are called out. |
 | Navigation | `Push*`, `Pop*`, `Present*`, `DismissAsync`, `SelectTabAsync`, `OpenUrlAsync` | Exercise ViewModel-first and view-first overload families, cancellation/guard paths, tab selection, and an invalid URL fallback. | Stack/modal state and awaited completion match the call; overloads remain code-reference entries rather than fake visual controls. |
 | Shell/page chrome | builders plus `ContentView` chrome properties | Build single-page, stack, tabs, iPad sidebar, search, toolbar, badge, status-bar, and bottom-accessory states. | iPhone/iPad arrangements, large-title collapse, search callbacks, badges, and bar coloring match the page configuration. |
+| App accent | `UseAccent`, `SkeleApplication.Accent`, `View.Tint`, `ContentView.BarAccent` | Start with a configured accent, change and clear it at runtime, navigate between differently accented pages, and cancel an interactive back gesture. | Inheriting views, windows, navigation chrome, tab chrome, and accessories update together; local overrides remain local; completed navigation adopts the destination accent while canceled navigation keeps the source accent; Reduce Motion updates immediately. |
 
 Networking, Photos/files permissions, share extensions, haptics, URL opening, lifecycle events, and iPad popovers must use a real device/service path where required. Provide a visible unavailable/denied result beside the trigger.
+
 ## GroupBuilder
 
 Declares the tabs inside a group.
@@ -97,7 +99,7 @@ A builder used to configure and construct a `SkeleApplication`.
 | --- | --- | --- | --- | --- | --- | --- |
 | Method | `SkeleKit.SkeleApplicationBuilder.UseServices(System.Action{Microsoft.Extensions.DependencyInjection.IServiceCollection})` | public | n/a | n/a | n/a | Registers core dependencies and application services into the container. |
 | Method | `SkeleKit.SkeleApplicationBuilder.UseImageLoader(SkeleKit.IImageLoader)` | public | n/a | n/a | n/a | Sets how `Image` loads remote URLs. Plug in a caching loader here. |
-| Method | `SkeleKit.SkeleApplicationBuilder.UseAccent(SkeleKit.Color)` | public | n/a | n/a | n/a | Sets the app-wide accent color every control tints with. |
+| Method | `SkeleKit.SkeleApplicationBuilder.UseAccent(SkeleKit.Color)` | public | n/a | n/a | n/a | Sets the initial app-wide accent color inherited by windows, chrome, and views. |
 | Method | `SkeleKit.SkeleApplicationBuilder.UseLifecycle(System.Action,System.Action)` | public | n/a | n/a | n/a | Registers app lifecycle hooks, invoked as the app leaves for and returns from the background. |
 | Method | `SkeleKit.SkeleApplicationBuilder.UseTheme(System.Action{SkeleKit.Theme})` | public | n/a | n/a | n/a | Registers implicit styles applied to every view of a type as it is built. |
 | Method | `SkeleKit.SkeleApplicationBuilder.UsePages(System.Action{SkeleKit.PagesBuilder},System.Boolean)` | public | n/a | n/a | n/a | Registers or overrides pages by hand. |
@@ -447,16 +449,16 @@ The core application instance that handles DI, navigation setup, and the app lif
 - Source: `SkeleKit.iOS/App/SkeleApplication.cs`
 - Inheritance/shape: `class SkeleApplication`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Code-only/non-gallery reference
+- Gallery role: Interactive lab + code-only reference
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
 | Property | `SkeleKit.SkeleApplication.Current` | public static get/private set | null | No | No automatic invalidation | The currently running application instance. |
 | Method | `SkeleKit.SkeleApplication.CreateBuilder` | public static | n/a | n/a | n/a | Creates a new builder to configure services and the layout shell. |
 | Property | `SkeleKit.SkeleApplication.Services` | public get | C# default | No | No automatic invalidation | The built-in service provider for resolving dependencies. |
+| Property | `SkeleKit.SkeleApplication.Accent` | public get/set | Initial builder accent; null uses the system default | No | Visual/interaction only | The app-wide accent inherited by windows, chrome, and views. Runtime changes animate together unless Reduce Motion is enabled. |
 | Method | `SkeleKit.SkeleApplication.Run(System.String[])` | public | n/a | n/a | n/a | Starts the native iOS main loop. |
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
-
+Use the app-accent lab above for the observable property. Keep application construction, service resolution, and startup as code-only reference entries.

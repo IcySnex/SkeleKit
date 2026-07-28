@@ -230,7 +230,7 @@ public class SkeleApplication
 	/// The app-wide accent inherited by windows, chrome and views, or null for the system default.
 	/// </summary>
 	/// <remarks>
-	/// Runtime changes cross-dissolve unless Reduce Motion is enabled.
+	/// Runtime changes animate unless Reduce Motion is enabled.
 	/// </remarks>
 	public Color? Accent
 	{

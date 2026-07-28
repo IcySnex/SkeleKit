@@ -55,7 +55,7 @@ A full screen: compose its tree into `ContentView.Content` in the constructor.
 | Property | `SkeleKit.ContentView.BackButtonStyle` | public/protected as emitted | implementation-defined; inspect source | No | n/a | How the next pushed page's back button represents this page. |
 | Property | `SkeleKit.ContentView.Prompt` | public/protected as emitted | implementation-defined; inspect source | No | n/a | The small line of text above the navigation title, or null for none. |
 | Property | `SkeleKit.ContentView.StatusBar` | public/protected as emitted | implementation-defined; inspect source | No | n/a | The status bar look for this page. |
-| Property | `SkeleKit.ContentView.BarAccent` | public/protected as emitted | implementation-defined; inspect source | No | n/a | The accent for this page's bar buttons and back button, or null for the app accent. |
+| Property | `SkeleKit.ContentView.BarAccent` | public get/set | null; inherits the app accent | No | Visual/interaction only | The accent for this page's bar buttons and back button. |
 | Property | `SkeleKit.ContentView.TitleColor` | public/protected as emitted | implementation-defined; inspect source | No | n/a | The navigation title's color, or null for the system default. |
 | Property | `SkeleKit.ContentView.LargeTitleColor` | public/protected as emitted | implementation-defined; inspect source | No | n/a | The expanded large title's color, or null for the system default. |
 | Property | `SkeleKit.ContentView.ConfirmLeave` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Asked before the page is left, so unsaved changes can veto leaving. Fires for the back button, a sheet swipe or a popover tap-out; return `false` to stay. Leave it null while nothing needs guarding, which also disables the interactive pop-back swipe. |
@@ -73,10 +73,12 @@ A full screen: compose its tree into `ContentView.Content` in the constructor.
 | Property | `SkeleKit.ContentView.SearchScopeChanged` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Invoked with the selected index when the user switches search scope. |
 | Property | `SkeleKit.ContentView.SearchCanceled` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Invoked when the user cancels out of the search field. |
 | Property | `SkeleKit.ContentView.Content` | public/protected as emitted | implementation-defined; inspect source | No | n/a | The page's element tree. |
-| Method | `SkeleKit.ContentView.OnLoaded` | public (compiled) | n/a | n/a | n/a | Raised once, the first time the page is realized. |
-| Method | `SkeleKit.ContentView.OnUnloaded` | public (compiled) | n/a | n/a | n/a | Raised when the page's tree is torn down. |
-| Method | `SkeleKit.ContentView.OnAppearing` | public (compiled) | n/a | n/a | n/a | Raised after the page appears on screen. |
-| Method | `SkeleKit.ContentView.OnDisappearing` | public (compiled) | n/a | n/a | n/a | Raised as the page leaves the screen. |
+| Method | `SkeleKit.ContentView.OnLoaded` | protected virtual | n/a | n/a | n/a | Raised once, the first time the page is realized. |
+| Method | `SkeleKit.ContentView.OnUnloaded` | protected virtual | n/a | n/a | n/a | Raised when the page's tree is torn down. |
+| Method | `SkeleKit.ContentView.OnAppearing` | protected virtual | n/a | n/a | n/a | Raised before the page appears on screen. |
+| Method | `SkeleKit.ContentView.OnAppeared` | protected virtual | n/a | n/a | n/a | Raised after the page appears on screen. |
+| Method | `SkeleKit.ContentView.OnDisappearing` | protected virtual | n/a | n/a | n/a | Raised before the page leaves the screen. |
+| Method | `SkeleKit.ContentView.OnDisappeared` | protected virtual | n/a | n/a | n/a | Raised after the page leaves the screen. |
 | Property | `SkeleKit.ContentView.Navigator` | protected get | C# default | No | No automatic invalidation | The application's navigator, for navigation from page code. ViewModels take `INavigator` by constructor instead. |
 | Property | `SkeleKit.ContentView.Sharer` | protected get | C# default | No | No automatic invalidation | The application's share sheet, for sharing from page code. ViewModels take `ISharer` by constructor instead. |
 | Property | `SkeleKit.ContentView.SystemPicker` | protected get | C# default | No | No automatic invalidation | The application's photo and document pickers, for picking from page code. ViewModels take `ISystemPicker` by constructor instead. |
@@ -90,6 +92,7 @@ A full screen: compose its tree into `ContentView.Content` in the constructor.
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
 | Deliberate property/state matrix | `Title`, `SafeAreaEdges`, `ScrollsUnderBars`, `TitleStyle`, `HidesNavigationBar`, `BackgroundStyle`, `BackButtonTitle`, `BackButtonStyle`, `Prompt`, `StatusBar`, `BarAccent`, `TitleColor`, `LargeTitleColor`, `ConfirmLeave`, `HidesTabBar`, `TabReselected`, `TabBadge`, `TabBadgeColor`, `ToolbarItems`, `BottomToolbarItems`, `SearchPlaceholder`, `HidesSearchBarWhenScrolling`, `SearchObscuresBackground`, `SearchScopes`, `SearchChanged`, `SearchScopeChanged`, `SearchCanceled`, `Content`, `Navigator`, `Sharer`, `SystemPicker`, `Controller` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Page lifecycle | `OnLoaded`, `OnUnloaded`, `OnAppearing`, `OnAppeared`, `OnDisappearing`, `OnDisappeared` | Record each callback while pushing, covering, uncovering, popping, and reloading a page. Loading occurs once per realization; appearing/disappearing callbacks bracket each native transition in order; appeared/disappeared callbacks run after it completes. |
 
 ```csharp
 // Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
@@ -229,4 +232,3 @@ static void Showcase(ViewCollection specimen)
 	_ = specimen; // configure the documented properties for the selected matrix row
 }
 ```
-

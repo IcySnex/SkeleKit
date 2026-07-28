@@ -33,7 +33,7 @@ Every documented exported type in the compiled iOS XML baseline appears exactly 
 | `ColorWell` | [controls/actions-selection/actions-selection.md](controls/actions-selection/actions-selection.md) | Lab | 5 |
 | `Command` | [primitives/gestures-menus-actions.md](primitives/gestures-menus-actions.md) | Non-gallery | 2 |
 | `ContentKind` | [primitives/typography-text.md](primitives/typography-text.md) | Visual | 11 |
-| `ContentView` | [shared/panels-pages-items.md](shared/panels-pages-items.md) | Visual | 39 |
+| `ContentView` | [shared/panels-pages-items.md](shared/panels-pages-items.md) | Visual | 41 |
 | `ContentView<T>` | [shared/panels-pages-items.md](shared/panels-pages-items.md) | Visual | 8 |
 | `Control` | [shared/panels-pages-items.md](shared/panels-pages-items.md) | Visual | 2 |
 | `Coordinate` | [primitives/page-tabs.md](primitives/page-tabs.md) | Non-gallery | 10 |
@@ -123,7 +123,7 @@ Every documented exported type in the compiled iOS XML baseline appears exactly 
 | `Shadow` | [primitives/colors-brushes.md](primitives/colors-brushes.md) | Visual | 14 |
 | `ShareContent` | [application/application.md](application/application.md) | Non-gallery | 10 |
 | `Size` | [primitives/geometry-layout.md](primitives/geometry-layout.md) | Visual | 15 |
-| `SkeleApplication` | [application/application.md](application/application.md) | Non-gallery | 4 |
+| `SkeleApplication` | [application/application.md](application/application.md) | Lab | 5 |
 | `SkeleApplicationBuilder` | [application/application.md](application/application.md) | Non-gallery | 10 |
 | `SkeleApplicationDelegate` | [appendix/implementation-surface.md](appendix/implementation-surface.md) | Non-gallery | 2 |
 | `SkeleWindowSceneDelegate` | [appendix/implementation-surface.md](appendix/implementation-surface.md) | Non-gallery | 5 |
