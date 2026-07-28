@@ -208,7 +208,7 @@ public abstract partial class View
 	internal virtual void ReapplyVisuals() =>
 		ApplyVisualState();
 
-	internal virtual void PageAppeared()
+	internal virtual void PageWillAppear()
 	{ }
 
 	private protected void ApplyInteraction() =>

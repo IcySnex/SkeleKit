@@ -489,7 +489,7 @@ public partial class CollectionView<TItem, TSection>
 	}
 
 	// the row tapped on the way out un-highlights on the way back; edit-mode checkmarks stay
-	internal override void PageAppeared()
+	internal override void PageWillAppear()
 	{
 		if (!IsRealized || isEditing)
 			return;
@@ -1117,7 +1117,7 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 	where TItem : class
 	where TSection : class, ISection<TItem>
 {
-	// PageAppeared releases it, so it stays lit under a pushed page
+	// PageWillAppear releases it, so it stays lit under a pushed page
 	public override void ItemSelected(
 		UICollectionView collectionView,
 		NSIndexPath indexPath)

@@ -56,10 +56,10 @@ public abstract partial class Panel : View
 			child.ReapplyVisuals();
 	}
 
-	internal override void PageAppeared()
+	internal override void PageWillAppear()
 	{
 		foreach (View child in Children)
-			child.PageAppeared();
+			child.PageWillAppear();
 	}
 
 	internal override void TintChanged()

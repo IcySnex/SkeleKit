@@ -666,7 +666,7 @@ internal sealed class PageHost : UIViewController
 			return;
 
 		// before the transition: a lit row fades out with the pop, not after it
-		Page.NotifyWillAppear();
+		Page.NotifyAppearing();
 
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
 
@@ -700,7 +700,15 @@ internal sealed class PageHost : UIViewController
 		// after the transition: flipping the gestures mid-pop would kill an in-flight swipe
 		ApplyPopGestures();
 
-		Page?.NotifyAppearing();
+		Page?.NotifyAppeared();
+	}
+
+	public override void ViewWillDisappear(
+		bool animated)
+	{
+		base.ViewWillDisappear(animated);
+
+		Page?.NotifyDisappearing();
 	}
 
 	public override void ViewSafeAreaInsetsDidChange()
@@ -757,7 +765,7 @@ internal sealed class PageHost : UIViewController
 	{
 		base.ViewDidDisappear(animated);
 
-		Page?.NotifyDisappearing();
+		Page?.NotifyDisappeared();
 
 		if (IsMovingFromParentViewController)
 			Page?.Unrealize();

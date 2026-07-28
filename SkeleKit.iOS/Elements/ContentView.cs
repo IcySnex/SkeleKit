@@ -247,15 +247,27 @@ public abstract partial class ContentView : Panel
 	{ }
 
 	/// <summary>
-	/// Raised after the page appears on screen.
+	/// Raised before the page appears on screen.
 	/// </summary>
 	protected virtual void OnAppearing()
 	{ }
 
 	/// <summary>
-	/// Raised as the page leaves the screen.
+	/// Raised after the page appears on screen.
+	/// </summary>
+	protected virtual void OnAppeared()
+	{ }
+
+	/// <summary>
+	/// Raised before the page leaves the screen.
 	/// </summary>
 	protected virtual void OnDisappearing()
+	{ }
+
+	/// <summary>
+	/// Raised after the page leaves the screen.
+	/// </summary>
+	protected virtual void OnDisappeared()
 	{ }
 
 
@@ -276,14 +288,20 @@ public abstract partial class ContentView : Panel
 	internal void NotifyUnloaded() =>
 		OnUnloaded();
 
-	internal void NotifyWillAppear() =>
-		PageAppeared();
-
-	internal void NotifyAppearing() =>
+	internal void NotifyAppearing()
+	{
+		PageWillAppear();
 		OnAppearing();
+	}
+
+	internal void NotifyAppeared() =>
+		OnAppeared();
 
 	internal void NotifyDisappearing() =>
 		OnDisappearing();
+
+	internal void NotifyDisappeared() =>
+		OnDisappeared();
 
 	internal void ApplyTabBadge() =>
 		ApplyTabBadgeCore();
