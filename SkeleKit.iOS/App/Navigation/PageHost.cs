@@ -86,14 +86,33 @@ internal sealed class PageHost : UIViewController
 
 		UIApplication.SharedApplication.InvokeOnMainThread(() =>
 		{
-			for (int index = Live.Count - 1; index >= 0; index--)
-			{
-				if (Live[index].TryGetTarget(out PageHost? host))
-					host.Reload();
-				else
-					Live.RemoveAt(index);
-			}
+			ForEachLive(host => host.Reload());
 		});
+	}
+
+	internal static void AccentChanged() =>
+		ForEachLive(host => host.Page?.AppAccentChanged());
+
+	static void ForEachLive(
+		Action<PageHost> action)
+	{
+		for (int index = Live.Count - 1; index >= 0; index--)
+		{
+			if (Live[index].TryGetTarget(out PageHost? host))
+				action(host);
+			else
+				Live.RemoveAt(index);
+		}
+	}
+
+	static void RemoveLive(
+		PageHost target)
+	{
+		for (int index = Live.Count - 1; index >= 0; index--)
+		{
+			if (!Live[index].TryGetTarget(out PageHost? host) || ReferenceEquals(host, target))
+				Live.RemoveAt(index);
+		}
 	}
 
 	internal static View? FindScrolling(
@@ -151,8 +170,7 @@ internal sealed class PageHost : UIViewController
 			UIApplication.ContentSizeCategoryChangedNotification,
 			null);
 
-		if (MetadataUpdater.IsSupported)
-			Live.Add(new(this));
+		Live.Add(new(this));
 	}
 
 	public PageHost(
@@ -590,6 +608,7 @@ internal sealed class PageHost : UIViewController
 	{
 		if (disposing)
 		{
+			RemoveLive(this);
 			menuActions.Clear();
 			themeChange?.Dispose();
 			themeChange = null;

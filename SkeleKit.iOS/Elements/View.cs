@@ -564,13 +564,21 @@ public abstract partial class View
 	/// </remarks>
 	public Color? Tint
 	{
-		get => tint ?? (Parent ?? TintHost)?.Tint ?? AppAccent;
+		get => tint ?? (Parent ?? TintHost)?.Tint ?? ApplicationAccent();
 		set => Set(ref tint, value, ApplyTint, affectsMeasure: false);
 	}
 	Color? tint;
 
-	// UseAccent's app-wide fallback
-	internal static Color? AppAccent;
+	static Color? ApplicationAccent()
+	{
+		Color? accent = null;
+		GetApplicationAccent(ref accent);
+
+		return accent;
+	}
+
+	static partial void GetApplicationAccent(
+		ref Color? accent);
 
 	// bridges inheritance into hosted trees (collection cells), where Parent is null
 	internal View? TintHost;
@@ -587,6 +595,12 @@ public abstract partial class View
 
 	internal virtual void TintChanged()
 	{ }
+
+	internal void AppAccentChanged()
+	{
+		if (LocalTint is null)
+			TintChanged();
+	}
 
 	/// <summary>
 	/// Opacity from 0 (transparent) to 1 (opaque).

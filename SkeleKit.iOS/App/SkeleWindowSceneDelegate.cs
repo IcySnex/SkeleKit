@@ -22,8 +22,7 @@ public class SkeleWindowSceneDelegate : UIWindowSceneDelegate
 			RootViewController = app.BuildShell()
 		};
 
-		if (View.AppAccent is Color accent)
-			Window.TintColor = accent.ToUIColor();
+		app.ApplyAccent(Window);
 
 		Window.MakeKeyAndVisible();
 	}

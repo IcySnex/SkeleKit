@@ -6,6 +6,11 @@ namespace SkeleKit;
 
 public abstract partial class View
 {
+	static partial void GetApplicationAccent(
+		ref Color? accent) =>
+		accent = SkeleApplication.Current?.Accent;
+
+
 	static void Run(
 		ICommand? command,
 		object? parameter)

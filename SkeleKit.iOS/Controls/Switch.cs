@@ -51,11 +51,8 @@ public class Switch : Control
 	void ApplyColors()
 	{
 		// ignores the view tint, needs its own colors
-		if ((onColor ?? Tint) is Color on)
-			Ui.OnTintColor = on.ToUIColor();
-
-		if (thumbColor is Color thumb)
-			Ui.ThumbTintColor = thumb.ToUIColor();
+		Ui.OnTintColor = (onColor ?? Tint)?.ToUIColor();
+		Ui.ThumbTintColor = thumbColor?.ToUIColor();
 	}
 
 	void OnToggled()

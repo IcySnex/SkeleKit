@@ -178,6 +178,7 @@ public class SkeleApplication
 	readonly bool preferLargeTitles;
 	readonly TabsBuilder? tabsBuilder;
 	readonly Type? rootView;
+	Color? accent;
 
 	internal SkeleApplication(
 		SkeleApplicationBuilder builder)
@@ -187,6 +188,7 @@ public class SkeleApplication
 		preferLargeTitles = builder.PreferLargeTitles;
 		tabsBuilder = builder.TabsBuilder;
 		rootView = builder.RootView;
+		accent = builder.Accent;
 
 		Backgrounded = builder.LifecycleBackground;
 		Foregrounded = builder.LifecycleForeground;
@@ -220,6 +222,42 @@ public class SkeleApplication
 	/// The built-in service provider for resolving dependencies.
 	/// </summary>
 	public IServiceProvider Services { get; }
+
+	/// <summary>
+	/// The app-wide accent inherited by windows, chrome and views, or null for the system default.
+	/// </summary>
+	public Color? Accent
+	{
+		get => accent;
+		set
+		{
+			if (accent == value)
+				return;
+
+			accent = value;
+
+			if (ReferenceEquals(Current, this))
+				ApplyAccent();
+		}
+	}
+
+
+	internal void ApplyAccent(
+		UIWindow window) =>
+		window.TintColor = accent?.ToUIColor();
+
+	void ApplyAccent()
+	{
+		foreach (UIWindow window in UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows))
+			ApplyAccent(window);
+
+		PageHost.AccentChanged();
+		accessoryContent?.AppAccentChanged();
+		footerContent?.AppAccentChanged();
+	}
 
 
 	void SyncAccessory()

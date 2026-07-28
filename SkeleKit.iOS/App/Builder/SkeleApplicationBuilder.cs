@@ -18,6 +18,7 @@ public sealed class SkeleApplicationBuilder
 	internal bool PreferLargeTitles;
 	internal TabsBuilder? TabsBuilder;
 	internal Type? RootView;
+	internal Color? Accent;
 
 	internal Action? LifecycleBackground { get; private set; }
 	internal Action? LifecycleForeground { get; private set; }
@@ -51,14 +52,14 @@ public sealed class SkeleApplicationBuilder
 	}
 
 	/// <summary>
-	/// Sets the app-wide accent color every control tints with.
+	/// Sets the initial app-wide accent color every control tints with.
 	/// </summary>
 	/// <param name="accent">The accent color.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public SkeleApplicationBuilder UseAccent(
 		Color accent)
 	{
-		View.AppAccent = accent;
+		Accent = accent;
 		return this;
 	}
 

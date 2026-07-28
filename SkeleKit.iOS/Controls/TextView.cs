@@ -363,6 +363,13 @@ public class TextView : Control
 		UnhookSpans();
 
 
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			ApplyText();
+	}
+
+
 	internal UIAction? PrimaryAction(
 		UITextItem item,
 		UIAction fallback)

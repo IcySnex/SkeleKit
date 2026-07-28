@@ -63,6 +63,47 @@ public class ViewPropertyTests
 	}
 
 	[Fact]
+	public void Tint_InheritsFromParent()
+	{
+		StubLeaf child = new(10, 10);
+		_ = new StackPanel
+		{
+			Tint = Colors.Indigo,
+			Children = { child }
+		};
+
+		Assert.Equal(Colors.Indigo, child.Tint);
+	}
+
+	[Fact]
+	public void Tint_LocalValueOverridesParent()
+	{
+		StubLeaf child = new(10, 10) { Tint = Colors.Pink };
+		_ = new StackPanel
+		{
+			Tint = Colors.Indigo,
+			Children = { child }
+		};
+
+		Assert.Equal(Colors.Pink, child.Tint);
+	}
+
+	[Fact]
+	public void Tint_NullRestoresInheritance()
+	{
+		StubLeaf child = new(10, 10) { Tint = Colors.Pink };
+		_ = new StackPanel
+		{
+			Tint = Colors.Indigo,
+			Children = { child }
+		};
+
+		child.Tint = null;
+
+		Assert.Equal(Colors.Indigo, child.Tint);
+	}
+
+	[Fact]
 	public void InvalidateMeasure_OnUnrealizedTree_DoesNotThrow()
 	{
 		StubLeaf leaf = new(10, 10);

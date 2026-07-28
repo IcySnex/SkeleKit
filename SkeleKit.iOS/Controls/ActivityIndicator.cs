@@ -47,8 +47,7 @@ public class ActivityIndicator : Control
 	void ApplyColor()
 	{
 		// ignores the view tint, needs its own Color
-		if ((color ?? Tint) is Color value)
-			Ui.Color = value.ToUIColor();
+		Ui.Color = (color ?? Tint)?.ToUIColor();
 	}
 
 
