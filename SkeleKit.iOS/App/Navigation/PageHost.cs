@@ -43,6 +43,7 @@ internal sealed class PageHost : UIViewController
 
 
 	static readonly List<WeakReference<PageHost>> Live = [];
+	static readonly UIImage TransparentScopeBackground = new();
 
 
 	static UIView? FirstResponder(
@@ -503,6 +504,7 @@ internal sealed class PageHost : UIViewController
 		if (page.SearchScopes.Count > 0)
 		{
 			search.SearchBar.ScopeButtonTitles = [.. page.SearchScopes];
+			search.SearchBar.ScopeBarBackgroundImage = TransparentScopeBackground;
 			search.SearchBar.SelectedScopeButtonIndexChanged += (_, e) => page.NotifySearchScope((int)e.SelectedScope);
 
 			if (page.HidesSearchScopesWhenEmpty)
