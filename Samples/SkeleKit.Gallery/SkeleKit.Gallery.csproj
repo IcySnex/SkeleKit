@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0-ios</TargetFramework>
+        <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
+        <OutputType>Exe</OutputType>
+        <ApplicationId>com.skelekit.gallery</ApplicationId>
+
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>true</ImplicitUsings>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <CodesignKey>iPhone Developer</CodesignKey>
+        <EnableHotReload>true</EnableHotReload>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <CodesignKey>iPhone Developer</CodesignKey>
+        <MtouchLink>Full</MtouchLink>
+        <DeviceSpecificBuild>true</DeviceSpecificBuild>
+    </PropertyGroup>
+
+    <Import Project="..\..\SkeleKit.iOS\build\SkeleKit.iOS.targets" />
+    <ItemGroup>
+      <ProjectReference Include="..\..\SkeleKit.Generators\SkeleKit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+      <ProjectReference Include="..\..\SkeleKit.iOS\SkeleKit.iOS.csproj" />
+    </ItemGroup>
+</Project>
