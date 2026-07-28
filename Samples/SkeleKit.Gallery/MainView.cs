@@ -1,52 +1,132 @@
 namespace SkeleKit.Gallery;
 
 [Page]
-public class MainView : ContentView
+internal sealed class MainView : ContentView<MainViewModel>
 {
-	int count = 1;
+	readonly List<CategoryCard> categoryCards = [];
 
-	public MainView()
+
+	public MainView(
+		MainViewModel viewModel) : base(viewModel)
 	{
-		Title = "SkeleKit Gallery";
+		Title = "SkeleKit";
+		TitleStyle = TitleStyle.Large;
+		BackgroundStyle = PageBackground.Grouped;
+		SearchPlaceholder = "Search components";
+		HidesSearchBarWhenScrolling = true;
+		SearchObscuresBackground = false;
+		SearchChanged = Filter;
+		SearchCanceled = () => Filter("");
 
-		Label counterLabel;
-
-		Content = new Grid()
+		StackPanel categories = new()
 		{
-			VerticalAlignment = VerticalAlignment.Center,
+			Spacing = 10
+		};
 
-			Rows =
-			{
-				GridLength.Auto,
-				GridLength.Auto
-			},
-			RowSpacing = 4,
+		foreach (GalleryCategory category in viewModel.Categories)
+		{
+			CategoryCard card = new(category, viewModel.OpenCategoryCommand);
+			categoryCards.Add(card);
+			categories.Children.Add(card);
+		}
 
-			Children =
+		Content = new ScrollView
+		{
+			Content = new StackPanel
 			{
-				(counterLabel = new Label
+				Padding = new(16, 12, 16, 32),
+				Spacing = 20,
+
+				Children =
 				{
-					HorizontalAlignment = HorizontalAlignment.Center,
+					BuildHero(),
 
-					Text = "Count: 0",
-
-					Shadow = new(1, 4, 2)
+					new Label
 					{
-						Color = Colors.Blue
+						Text = "Explore",
+						TextStyle = TextStyle.Title2,
+						FontWeight = FontWeight.Bold
+					},
+
+					categories,
+
+					new Label
+					{
+						HorizontalAlignment = HorizontalAlignment.Center,
+						Margin = new(0, 8, 0, 0),
+						Text = "Native iOS controls, composed with C#",
+						TextStyle = TextStyle.Footnote,
+						TextColor = Colors.SecondaryLabel
 					}
-				}).Row(0),
-
-				new Button
-				{
-					HorizontalAlignment = HorizontalAlignment.Center,
-					Padding = new Thickness(24, 8),
-
-					Text = "Click me",
-					Kind = ButtonStyle.ProminentGlass,
-
-					Command = Command.From(() => counterLabel.Text = $"Count: {count++}")
-				}.Row(1)
+				}
 			}
 		};
+	}
+
+
+	static Border BuildHero() =>
+		new()
+		{
+			Background = LinearGradient.Horizontal(
+				Color.FromHex(0x5856D6),
+				Color.FromHex(0x007AFF)),
+			CornerRadius = 22,
+			Padding = 20,
+
+			Child = new Grid
+			{
+				ColumnSpacing = 16,
+
+				Columns =
+				{
+					GridLength.Star,
+					56
+				},
+
+				Children =
+				{
+					new StackPanel
+					{
+						VerticalAlignment = VerticalAlignment.Center,
+						Spacing = 6,
+
+						Children =
+						{
+							new Label
+							{
+								Text = "Build native iOS interfaces",
+								TextStyle = TextStyle.Title2,
+								FontWeight = FontWeight.Bold,
+								TextColor = Colors.White,
+								MaxLines = 2
+							},
+
+							new Label
+							{
+								Text = "Browse every SkeleKit component, pattern and platform integration.",
+								TextStyle = TextStyle.Subheadline,
+								TextColor = Colors.White.WithAlpha(0.82),
+								MaxLines = 3
+							}
+						}
+					}.Column(0),
+
+					new Image
+					{
+						HorizontalAlignment = HorizontalAlignment.Center,
+						VerticalAlignment = VerticalAlignment.Center,
+						Source = ImageSource.Symbol("square.grid.2x2.fill"),
+						SymbolSize = 42,
+						Tint = Colors.White
+					}.Column(1)
+				}
+			}
+		};
+
+	void Filter(
+		string query)
+	{
+		foreach (CategoryCard card in categoryCards)
+			card.IsVisible = card.Category.Matches(query);
 	}
 }
