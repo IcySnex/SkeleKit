@@ -1,10 +1,26 @@
 using Microsoft.Extensions.DependencyInjection;
 using SkeleKit;
-using SkeleKit.Gallery;
+using SkeleKit.Gallery.Services;
+using SkeleKit.Gallery.ViewModels;
+using SkeleKit.Gallery.Views.Pages;
 
 SkeleApplication.CreateBuilder()
-	.UseServices(services => services.AddTransient<MainViewModel>())
+	.UseServices(services =>
+	{
+		services.AddSingleton<IGalleryCatalog, GalleryCatalog>();
+		services.AddTransient<ControlsViewModel>();
+		services.AddTransient<FrameworkViewModel>();
+		services.AddTransient<PlatformViewModel>();
+		services.AddTransient<SearchViewModel>();
+	})
 	.UseAccent(Colors.Indigo)
-	.Stack<MainView>(preferLargeTitles: true)
+	.Tabs(tabs => tabs
+		.LargeTitles()
+		.Tab<ControlsView>("Controls", "switch.2")
+		.Tab<FrameworkView>("Framework", "square.stack.3d.up")
+		.Tab<PlatformView>("Platform", "iphone")
+		.Search<SearchView>()
+		.Minimizes()
+		.OnPad(pad => pad.Sidebar()))
 	.Build()
 	.Run(args);
