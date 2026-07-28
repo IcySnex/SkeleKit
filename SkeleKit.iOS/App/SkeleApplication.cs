@@ -240,6 +240,19 @@ public class SkeleApplication
 			if (accent == value)
 				return;
 
+			// an interactive transition can cancel, so only recolor once UIKit commits it
+			if (ReferenceEquals(Current, this)
+				&& PageHost.InteractiveAccentTransition is IUIViewControllerTransitionCoordinator transition)
+			{
+				transition.NotifyWhenInteractionChanges(context =>
+				{
+					if (!context.IsCancelled)
+						Accent = value;
+				});
+
+				return;
+			}
+
 			accent = value;
 
 			if (ReferenceEquals(Current, this))

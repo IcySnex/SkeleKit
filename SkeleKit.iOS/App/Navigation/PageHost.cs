@@ -45,6 +45,12 @@ internal sealed class PageHost : UIViewController
 	static readonly List<WeakReference<PageHost>> Live = [];
 	static readonly UIImage TransparentScopeBackground = new();
 
+	static IUIViewControllerTransitionCoordinator? appearingTransition;
+
+
+	internal static IUIViewControllerTransitionCoordinator? InteractiveAccentTransition =>
+		appearingTransition is { InitiallyInteractive: true } ? appearingTransition : null;
+
 
 	static UIView? FirstResponder(
 		UIView view)
@@ -666,7 +672,17 @@ internal sealed class PageHost : UIViewController
 			return;
 
 		// before the transition: a lit row fades out with the pop, not after it
-		Page.NotifyAppearing();
+		IUIViewControllerTransitionCoordinator? previous = appearingTransition;
+		appearingTransition = animated ? this.GetTransitionCoordinator() : null;
+
+		try
+		{
+			Page.NotifyAppearing();
+		}
+		finally
+		{
+			appearingTransition = previous;
+		}
 
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
 
