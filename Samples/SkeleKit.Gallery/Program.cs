@@ -12,6 +12,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<FrameworkViewModel>();
 		services.AddTransient<PlatformViewModel>();
 		services.AddTransient<SearchViewModel>();
+		services.AddTransient<GalleryInfoViewModel>();
 	})
 	.UseAccent(Colors.Indigo)
 	.Tabs(tabs => tabs

@@ -13,15 +13,25 @@ internal sealed class SearchView : ContentView<SearchViewModel>
 		Title = "Search";
 		BackgroundStyle = PageBackground.Grouped;
 		SearchPlaceholder = "Search SkeleKit";
-		HidesSearchBarWhenScrolling = false;
-		SearchObscuresBackground = false;
 		SearchChanged = viewModel.Search;
+		SearchScopeChanged = viewModel.SelectScope;
 		SearchCanceled = () => viewModel.Search("");
+
+		SearchScopes.Add("All");
+		SearchScopes.Add("Controls");
+		SearchScopes.Add("Framework");
+		SearchScopes.Add("Platform");
+
+		ToolbarItems.Add(new()
+		{
+			Icon = "info.circle",
+			Command = viewModel.ShowInfoCommand
+		});
 
 		Content = new CollectionView<GalleryTopic>
 		{
 			ItemsSource = Bind(model => model.Results),
-			ItemTemplate = static () => new TopicCell(),
+			ItemTemplate = static () => new TopicCell(Colors.Indigo, showsArea: true),
 			Layout = CollectionLayout.List(grouped: true),
 			SelectionCommand = viewModel.OpenTopicCommand,
 			HighlightsSelection = true,
@@ -30,25 +40,45 @@ internal sealed class SearchView : ContentView<SearchViewModel>
 			{
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
-				Spacing = 10,
+				MaxWidth = 310,
+				Spacing = 8,
 
 				Children =
 				{
-					new Image
+					new Border
 					{
 						HorizontalAlignment = HorizontalAlignment.Center,
-						Source = ImageSource.Symbol("magnifyingglass"),
-						SymbolSize = 34,
-						Tint = Colors.SecondaryLabel
+						Width = 68,
+						Height = 68,
+						CornerRadius = 20,
+						Background = Colors.Indigo.WithAlpha(0.12),
+
+						Child = new Image
+						{
+							HorizontalAlignment = HorizontalAlignment.Center,
+							VerticalAlignment = VerticalAlignment.Center,
+							Source = ImageSource.Symbol("magnifyingglass"),
+							SymbolSize = 28,
+							SymbolWeight = FontWeight.Semibold,
+							Tint = Colors.Indigo
+						}
 					},
 
 					new Label
 					{
-						Text = "Search every component and platform API",
-						TextStyle = TextStyle.Body,
+						Text = Bind(model => model.EmptyTitle),
+						TextStyle = TextStyle.Headline,
+						FontWeight = FontWeight.Semibold,
+						TextAlignment = TextAlignment.Center
+					},
+
+					new Label
+					{
+						Text = Bind(model => model.EmptySummary),
+						TextStyle = TextStyle.Subheadline,
 						TextColor = Colors.SecondaryLabel,
 						TextAlignment = TextAlignment.Center,
-						MaxLines = 2
+						MaxLines = 3
 					}
 				}
 			}

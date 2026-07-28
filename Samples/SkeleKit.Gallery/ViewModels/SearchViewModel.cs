@@ -7,15 +7,18 @@ using SkeleKit.Gallery.Views.Pages;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed class SearchViewModel : INotifyPropertyChanged
+internal sealed class SearchViewModel : GalleryViewModel, INotifyPropertyChanged
 {
 	readonly IGalleryCatalog catalog;
 	readonly INavigator navigator;
 
+	string query = "";
+	GalleryArea? area;
+
 
 	public SearchViewModel(
 		IGalleryCatalog catalog,
-		INavigator navigator)
+		INavigator navigator) : base(navigator)
 	{
 		this.catalog = catalog;
 		this.navigator = navigator;
@@ -42,10 +45,35 @@ internal sealed class SearchViewModel : INotifyPropertyChanged
 
 	public ICommand OpenTopicCommand { get; }
 
+	public string EmptyTitle => string.IsNullOrWhiteSpace(query)
+		? "Find anything in SkeleKit"
+		: "No matching APIs";
+
+	public string EmptySummary => string.IsNullOrWhiteSpace(query)
+		? "Search controls, framework features and native platform integrations."
+		: "Try another term or broaden the selected category.";
+
 
 	public void Search(
-		string query) =>
-		Results = catalog.Search(query);
+		string value)
+	{
+		query = value;
+		Refresh();
+	}
+
+	public void SelectScope(
+		int index)
+	{
+		area = index switch
+		{
+			1 => GalleryArea.Controls,
+			2 => GalleryArea.Framework,
+			3 => GalleryArea.Platform,
+			_ => null
+		};
+
+		Refresh();
+	}
 
 
 	void OpenTopic(
@@ -53,6 +81,13 @@ internal sealed class SearchViewModel : INotifyPropertyChanged
 	{
 		if (topic is not null)
 			_ = navigator.PushViewAsync(new TopicView(topic));
+	}
+
+	void Refresh()
+	{
+		Results = catalog.Search(query, area);
+		OnPropertyChanged(nameof(EmptyTitle));
+		OnPropertyChanged(nameof(EmptySummary));
 	}
 
 	void OnPropertyChanged(

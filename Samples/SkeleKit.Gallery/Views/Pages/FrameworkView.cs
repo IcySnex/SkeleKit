@@ -6,6 +6,6 @@ namespace SkeleKit.Gallery.Views.Pages;
 internal sealed class FrameworkView : GalleryListView<FrameworkViewModel>
 {
 	public FrameworkView(
-		FrameworkViewModel viewModel) : base(viewModel, "Framework")
+		FrameworkViewModel viewModel) : base(viewModel, "Framework", Colors.Blue)
 	{ }
 }

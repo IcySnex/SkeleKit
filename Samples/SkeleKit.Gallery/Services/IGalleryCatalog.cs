@@ -9,5 +9,6 @@ internal interface IGalleryCatalog
 	List<GallerySection> Platform { get; }
 
 	List<GalleryTopic> Search(
-		string query);
+		string query,
+		GalleryArea? area);
 }

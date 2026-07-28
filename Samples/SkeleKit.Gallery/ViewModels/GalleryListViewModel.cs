@@ -4,14 +4,14 @@ using SkeleKit.Gallery.Views.Pages;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal abstract class GalleryListViewModel
+internal abstract class GalleryListViewModel : GalleryViewModel
 {
 	readonly INavigator navigator;
 
 
 	protected GalleryListViewModel(
 		INavigator navigator,
-		List<GallerySection> sections)
+		List<GallerySection> sections) : base(navigator)
 	{
 		this.navigator = navigator;
 

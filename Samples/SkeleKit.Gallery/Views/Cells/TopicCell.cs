@@ -4,7 +4,9 @@ namespace SkeleKit.Gallery.Views.Cells;
 
 internal sealed class TopicCell : ItemView<GalleryTopic>
 {
-	public TopicCell()
+	public TopicCell(
+		Color accent,
+		bool showsArea = false)
 	{
 		Content = new Grid
 		{
@@ -13,19 +15,31 @@ internal sealed class TopicCell : ItemView<GalleryTopic>
 
 			Columns =
 			{
-				32,
+				40,
 				GridLength.Star,
 				16
 			},
 
 			Children =
 			{
-				new Image
+				new Border
 				{
 					HorizontalAlignment = HorizontalAlignment.Center,
 					VerticalAlignment = VerticalAlignment.Center,
-					Source = Bind(topic => topic.Symbol, symbol => (ImageSource?)ImageSource.Symbol(symbol)),
-					SymbolSize = 20
+					Width = 38,
+					Height = 38,
+					CornerRadius = 10,
+					Background = accent.WithAlpha(0.14),
+
+					Child = new Image
+					{
+						HorizontalAlignment = HorizontalAlignment.Center,
+						VerticalAlignment = VerticalAlignment.Center,
+						Source = Bind(topic => topic.Symbol, symbol => (ImageSource?)ImageSource.Symbol(symbol)),
+						SymbolSize = 19,
+						SymbolWeight = FontWeight.Semibold,
+						Tint = accent
+					}
 				}.Column(0),
 
 				new StackPanel
@@ -44,7 +58,9 @@ internal sealed class TopicCell : ItemView<GalleryTopic>
 
 						new Label
 						{
-							Text = Bind(topic => topic.Summary),
+							Text = showsArea
+								? Bind(topic => topic.SearchSummary)
+								: Bind(topic => topic.Summary),
 							TextStyle = TextStyle.Footnote,
 							TextColor = Colors.SecondaryLabel,
 							MaxLines = 2
