@@ -3,22 +3,47 @@ namespace SkeleKit.Template;
 [Page]
 public class MainView : ContentView
 {
+	int count = 1;
+
 	public MainView()
 	{
-		Title = "SkeleKit Template";
+		Label counterLabel;
 
-		Content = new ScrollView()
+		Content = new Grid()
 		{
 			VerticalAlignment = VerticalAlignment.Center,
-			Height = 0,
-			Background = Color.FromHex(0x000000),
+
+			Rows =
+			{
+				GridLength.Auto,
+				GridLength.Auto
+			},
+			RowSpacing = 4,
+
 			Children =
 			{
-				new Label()
+				(counterLabel = new Label
 				{
-					Background = Colors.Red,
-					Text = "Hello World!"
-				}
+					HorizontalAlignment = HorizontalAlignment.Center,
+
+					Text = "Count: 0",
+
+					Shadow = new(1, 4, 2)
+					{
+						Color = Colors.Blue
+					}
+				}).Row(0),
+
+				new Button
+				{
+					HorizontalAlignment = HorizontalAlignment.Center,
+					Padding = new Thickness(24, 8),
+
+					Text = "Click me",
+					Kind = ButtonStyle.ProminentGlass,
+
+					Command = Command.From(() => counterLabel.Text = $"Count: {count++}")
+				}.Row(1)
 			}
 		};
 	}
