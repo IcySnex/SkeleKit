@@ -15,8 +15,10 @@ public partial class CollectionView<TItem, TSection>
 
 	CollectionSource? data;
 	CollectionDelegate<TItem, TSection>? selection;
+	EmptyCollectionHost? emptyHost;
 
 	bool snapshotQueued;
+	nfloat keyboardCover;
 
 	private protected override UIView CreateNative()
 	{
@@ -94,6 +96,28 @@ public partial class CollectionView<TItem, TSection>
 		}
 
 		EndNativeRefresh();
+	}
+
+	partial void ApplyKeyboardAvoidanceCore()
+	{
+		if (AvoidsKeyboard || !IsRealized)
+			return;
+
+		keyboardCover = 0;
+		ApplyKeyboardLayout();
+	}
+
+	partial void ApplyKeyboardDismissCore()
+	{
+		if (!IsRealized)
+			return;
+
+		Ui.KeyboardDismissMode = KeyboardDismiss switch
+		{
+			KeyboardDismiss.OnDrag => UIScrollViewKeyboardDismissMode.OnDrag,
+			KeyboardDismiss.Interactive => UIScrollViewKeyboardDismissMode.Interactive,
+			_ => UIScrollViewKeyboardDismissMode.None
+		};
 	}
 
 	bool endsAfterDrag;
@@ -412,11 +436,13 @@ public partial class CollectionView<TItem, TSection>
 		HookSources();
 		ReloadItems();
 		ApplyEditingCore();
+		ApplyKeyboardDismissCore();
 	}
 
 	private protected override void OnUnrealized()
 	{
 		UnhookSources();
+		ClearEmptyHost();
 
 		if (reorderRecognizer is UILongPressGestureRecognizer recognizer && IsRealized)
 		{
@@ -681,6 +707,12 @@ public partial class CollectionView<TItem, TSection>
 	void ICollectionHost.SyncInsets() =>
 		SyncInsets();
 
+	void ICollectionHost.KeyboardChanged(
+		Rect keyboard,
+		bool hiding,
+		double duration) =>
+		OnKeyboardChanged(keyboard, hiding, duration);
+
 	bool ICollectionHost.CanMove(
 		int section,
 		int index) =>
@@ -745,8 +777,8 @@ public partial class CollectionView<TItem, TSection>
 		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
 
 		UIEdgeInsets insets = horizontal
-			? new(0, (nfloat)bled.Left, 0, (nfloat)bled.Right)
-			: new((nfloat)bled.Top, 0, (nfloat)bled.Bottom, 0);
+			? new(0, (nfloat)bled.Left, keyboardCover, (nfloat)bled.Right)
+			: new((nfloat)bled.Top, 0, (nfloat)bled.Bottom + keyboardCover, 0);
 
 		if (Ui.ContentInset == insets)
 			return;
@@ -758,16 +790,84 @@ public partial class CollectionView<TItem, TSection>
 
 	void SyncEmptyState()
 	{
-		if (EmptyView is not View empty || !IsRealized)
+		if (!IsRealized)
 			return;
 
+		if (EmptyView is not View empty)
+		{
+			ClearEmptyHost();
+			return;
+		}
+
 		empty.TintHost = this;
-		UIView native = empty.Realize();
 
-		if (!ReferenceEquals(Ui.BackgroundView, native))
-			Ui.BackgroundView = native;
+		if (emptyHost is not EmptyCollectionHost host || !ReferenceEquals(host.Content, empty))
+		{
+			ClearEmptyHost();
 
-		native.Hidden = !IsEmpty;
+			empty.SetParent(this);
+			host = new(empty);
+			emptyHost = host;
+			Ui.BackgroundView = host;
+		}
+
+		host.KeyboardCover = keyboardCover;
+		host.Hidden = !IsEmpty;
+	}
+
+	void ClearEmptyHost()
+	{
+		if (emptyHost is not EmptyCollectionHost host)
+			return;
+
+		Ui.BackgroundView = null;
+		host.Content?.SetParent(null);
+		host.Content?.Unrealize();
+		host.Dispose();
+		emptyHost = null;
+	}
+
+	void ApplyKeyboardLayout()
+	{
+		SyncInsets();
+
+		if (emptyHost is EmptyCollectionHost host)
+		{
+			host.KeyboardCover = keyboardCover;
+			host.LayoutIfNeeded();
+		}
+	}
+
+	void OnKeyboardChanged(
+		Rect keyboard,
+		bool hiding,
+		double duration)
+	{
+		if (!AvoidsKeyboard || !IsRealized)
+			return;
+
+		UICollectionView host = Ui;
+		if (host.Window is null)
+			return;
+
+		nfloat covered = 0;
+
+		if (!hiding)
+		{
+			CGRect frame = host.ConvertRectToView(host.Bounds, null);
+			bool intersects = keyboard.Right > frame.GetMinX() && keyboard.Left < frame.GetMaxX();
+
+			if (intersects)
+			{
+				covered = (nfloat)Math.Max(
+					0,
+					frame.GetMaxY() - keyboard.Top - host.SafeAreaInsets.Bottom);
+			}
+		}
+
+		keyboardCover = covered;
+
+		UIView.Animate(duration, ApplyKeyboardLayout);
 	}
 
 	internal ItemView<TItem> CreateItemView() =>
@@ -1150,12 +1250,39 @@ internal sealed class CollectionHost : UICollectionView
 		UICollectionViewLayout layout) : base(CGRect.Empty, layout)
 	{
 		this.element = element;
+
+		NSNotificationCenter.DefaultCenter.AddObserver(this, new("keyboardFrameChanged:"), UIKeyboard.WillChangeFrameNotification, null);
+		NSNotificationCenter.DefaultCenter.AddObserver(this, new("keyboardHidden:"), UIKeyboard.WillHideNotification, null);
 	}
 
 	// ReSharper disable once UnusedMember.Local
 	public CollectionHost(
 		NativeHandle handle) : base(handle)
 	{ }
+
+
+	// ReSharper disable once UnusedMember.Local
+	[Export("keyboardFrameChanged:")]
+	void KeyboardFrameChanged(
+		NSNotification notification)
+	{
+		CGRect frame = UIKeyboard.FrameEndFromNotification(notification);
+
+		element?.KeyboardChanged(
+			new(frame.X, frame.Y, frame.Width, frame.Height),
+			hiding: false,
+			UIKeyboard.AnimationDurationFromNotification(notification));
+	}
+
+	// ReSharper disable once UnusedMember.Local
+	[Export("keyboardHidden:")]
+	void KeyboardHidden(
+		NSNotification notification) =>
+		element?.KeyboardChanged(
+			Rect.Zero,
+			hiding: true,
+			UIKeyboard.AnimationDurationFromNotification(notification));
+
 
 	public override void LayoutSubviews()
 	{
@@ -1164,6 +1291,63 @@ internal sealed class CollectionHost : UICollectionView
 		base.LayoutSubviews();
 
 		element?.SyncEmptyState();
+	}
+
+
+	protected override void Dispose(
+		bool disposing)
+	{
+		if (disposing)
+			NSNotificationCenter.DefaultCenter.RemoveObserver(this);
+
+		base.Dispose(disposing);
+	}
+}
+
+internal sealed class EmptyCollectionHost : UIView
+{
+	nfloat keyboardCover;
+
+
+	public EmptyCollectionHost(
+		View content)
+	{
+		Content = content;
+		AddSubview(content.Realize());
+	}
+
+	// ReSharper disable once UnusedMember.Local
+	public EmptyCollectionHost(
+		NativeHandle handle) : base(handle)
+	{ }
+
+
+	internal View? Content { get; }
+
+	internal nfloat KeyboardCover
+	{
+		get => keyboardCover;
+		set
+		{
+			if (keyboardCover == value)
+				return;
+
+			keyboardCover = value;
+			SetNeedsLayout();
+		}
+	}
+
+
+	public override void LayoutSubviews()
+	{
+		base.LayoutSubviews();
+
+		if (Content is not View content)
+			return;
+
+		nfloat height = (nfloat)Math.Max(0, (double)(Bounds.Height - keyboardCover));
+		content.Measure(new(Bounds.Width, height));
+		content.Arrange(new(0, 0, Bounds.Width, height));
 	}
 }
 

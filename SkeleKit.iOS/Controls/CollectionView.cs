@@ -292,6 +292,24 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	/// </summary>
 	public Action<double>? Scrolled { get; set; }
 
+	/// <summary>
+	/// Whether the collection is inset so the keyboard never covers its content.
+	/// </summary>
+	public bool AvoidsKeyboard
+	{
+		get;
+		set => Set(ref field, value, ApplyKeyboardAvoidance, affectsMeasure: false);
+	} = true;
+
+	/// <summary>
+	/// How dragging the collection dismisses the keyboard.
+	/// </summary>
+	public KeyboardDismiss KeyboardDismiss
+	{
+		get;
+		set => Set(ref field, value, ApplyKeyboardDismiss, affectsMeasure: false);
+	} = KeyboardDismiss.OnDrag;
+
 
 	void SetItemsSource(
 		IReadOnlyList<TItem>? value)
@@ -469,6 +487,12 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	void ApplySelection() =>
 		ApplySelectionCore();
 
+	void ApplyKeyboardAvoidance() =>
+		ApplyKeyboardAvoidanceCore();
+
+	void ApplyKeyboardDismiss() =>
+		ApplyKeyboardDismissCore();
+
 	// needs a writable list; an array throws on RemoveAt
 	IList<TItem>? WritableIn(
 		int section)
@@ -485,6 +509,10 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	partial void ApplyEditingCore();
 
 	partial void ApplySelectionCore();
+
+	partial void ApplyKeyboardAvoidanceCore();
+
+	partial void ApplyKeyboardDismissCore();
 
 	partial void ReloadItems();
 
@@ -661,6 +689,11 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 internal interface ICollectionHost
 {
+	void KeyboardChanged(
+		Rect keyboard,
+		bool hiding,
+		double duration);
+
 	void SyncEmptyState();
 
 	void SyncInsets();
