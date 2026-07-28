@@ -13,19 +13,19 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Text & Input",
-				Topic("Label", "Plain and attributed text with Dynamic Type.", "textformat", Colors.Purple, GalleryArea.Controls),
-				Topic("TextView", "Selectable rich text with links and menus.", "doc.richtext", Colors.Purple, GalleryArea.Controls),
-				Topic("TextField", "Single-line text entry and keyboard behavior.", "character.cursor.ibeam", Colors.Purple, GalleryArea.Controls),
-				Topic("SecureField", "Password entry with reveal and validation states.", "lock.fill", Colors.Purple, GalleryArea.Controls),
-				Topic("TextEditor", "Multi-line editing, selection and formatting.", "square.and.pencil", Colors.Purple, GalleryArea.Controls)),
+				Topic("Label", "Plain and attributed text with Dynamic Type.", "textformat", Colors.Pink, GalleryArea.Controls),
+				Topic("TextView", "Selectable rich text with links and menus.", "doc.richtext", Colors.Pink, GalleryArea.Controls),
+				Topic("TextField", "Single-line text entry and keyboard behavior.", "character.cursor.ibeam", Colors.Pink, GalleryArea.Controls),
+				Topic("SecureField", "Password entry with reveal and validation states.", "lock.fill", Colors.Pink, GalleryArea.Controls),
+				Topic("TextEditor", "Multi-line editing, selection and formatting.", "square.and.pencil", Colors.Pink, GalleryArea.Controls)),
 
 			Section(
 				"Actions & Selection",
-				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Pink, GalleryArea.Controls),
-				Topic("Picker", "Wheel-based selection from deterministic values.", "dial.medium", Colors.Pink, GalleryArea.Controls),
-				Topic("SegmentedControl", "Compact mutually exclusive choices.", "rectangle.split.3x1", Colors.Pink, GalleryArea.Controls),
-				Topic("DatePicker", "Dates, times, ranges and presentation styles.", "calendar", Colors.Pink, GalleryArea.Controls),
-				Topic("ColorWell", "System color selection with alpha support.", "paintpalette.fill", Colors.Pink, GalleryArea.Controls)),
+				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Purple, GalleryArea.Controls),
+				Topic("Picker", "Wheel-based selection from deterministic values.", "dial.medium", Colors.Purple, GalleryArea.Controls),
+				Topic("SegmentedControl", "Compact mutually exclusive choices.", "rectangle.split.3x1", Colors.Purple, GalleryArea.Controls),
+				Topic("DatePicker", "Dates, times, ranges and presentation styles.", "calendar", Colors.Purple, GalleryArea.Controls),
+				Topic("ColorWell", "System color selection with alpha support.", "paintpalette.fill", Colors.Purple, GalleryArea.Controls)),
 
 			Section(
 				"Values & Status",
@@ -39,10 +39,10 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Media & Content",
-				Topic("Image", "Symbols, bundle assets, remote images and effects.", "photo.fill", Colors.Pink, GalleryArea.Controls),
-				Topic("WebView", "Web navigation, loading and failure states.", "globe", Colors.Pink, GalleryArea.Controls),
-				Topic("MapView", "Regions, pins, overlays and user location.", "map.fill", Colors.Pink, GalleryArea.Controls),
-				Topic("NativeView", "Host a custom UIKit view when needed.", "shippingbox.fill", Colors.Pink, GalleryArea.Controls))
+				Topic("Image", "Symbols, bundle assets, remote images and effects.", "photo.fill", Colors.Orange, GalleryArea.Controls),
+				Topic("WebView", "Web navigation, loading and failure states.", "globe", Colors.Orange, GalleryArea.Controls),
+				Topic("MapView", "Regions, pins, overlays and user location.", "map.fill", Colors.Orange, GalleryArea.Controls),
+				Topic("NativeView", "Host a custom UIKit view when needed.", "shippingbox.fill", Colors.Orange, GalleryArea.Controls))
 		];
 
 		Framework =
@@ -83,24 +83,24 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Application",
-				Topic("Navigation", "ViewModel-first push, pop and tab selection.", "arrow.left.arrow.right", Colors.Red, GalleryArea.Platform),
-				Topic("Page Chrome", "Titles, search, toolbars, badges and status bars.", "platter.filled.top.iphone", Colors.Red, GalleryArea.Platform),
-				Topic("Tabs & iPad", "Bottom tabs, search bubbles and sidebar arrangements.", "sidebar.left", Colors.Red, GalleryArea.Platform),
-				Topic("Lifecycle & DI", "Application services and foreground transitions.", "app.badge.checkmark", Colors.Red, GalleryArea.Platform)),
+				Topic("Navigation", "ViewModel-first push, pop and tab selection.", "arrow.left.arrow.right", Colors.Green, GalleryArea.Platform),
+				Topic("Page Chrome", "Titles, search, toolbars, badges and status bars.", "platter.filled.top.iphone", Colors.Green, GalleryArea.Platform),
+				Topic("Tabs & iPad", "Bottom tabs, search bubbles and sidebar arrangements.", "sidebar.left", Colors.Green, GalleryArea.Platform),
+				Topic("Lifecycle & DI", "Application services and foreground transitions.", "app.badge.checkmark", Colors.Green, GalleryArea.Platform)),
 
 			Section(
 				"Presentation",
-				Topic("Modals", "Sheets, detents, popovers and guarded dismissal.", "rectangle.portrait.bottomhalf.filled", Colors.Orange, GalleryArea.Platform),
-				Topic("Dialogs", "Alerts, confirmations, prompts and selections.", "exclamationmark.bubble.fill", Colors.Orange, GalleryArea.Platform),
-				Topic("Sharing", "Text, links and images through the share sheet.", "square.and.arrow.up", Colors.Orange, GalleryArea.Platform),
-				Topic("System Picking", "Photos and files with cancel and permission states.", "photo.badge.plus", Colors.Orange, GalleryArea.Platform)),
+				Topic("Modals", "Sheets, detents, popovers and guarded dismissal.", "rectangle.portrait.bottomhalf.filled", Colors.Mint, GalleryArea.Platform),
+				Topic("Dialogs", "Alerts, confirmations, prompts and selections.", "exclamationmark.bubble.fill", Colors.Mint, GalleryArea.Platform),
+				Topic("Sharing", "Text, links and images through the share sheet.", "square.and.arrow.up", Colors.Mint, GalleryArea.Platform),
+				Topic("System Picking", "Photos and files with cancel and permission states.", "photo.badge.plus", Colors.Mint, GalleryArea.Platform)),
 
 			Section(
 				"Device",
-				Topic("Haptics", "Impact, selection, notification and custom patterns.", "waveform", Colors.Pink, GalleryArea.Platform),
-				Topic("Image Loading", "Remote loading, cancellation and custom loaders.", "arrow.down.circle.fill", Colors.Pink, GalleryArea.Platform),
-				Topic("Accessibility", "VoiceOver labels, traits, values and focus.", "accessibility", Colors.Pink, GalleryArea.Platform),
-				Topic("Native Access", "UIKit views, controllers and gesture escape hatches.", "apple.terminal.fill", Colors.Pink, GalleryArea.Platform))
+				Topic("Haptics", "Impact, selection, notification and custom patterns.", "waveform", Colors.Teal, GalleryArea.Platform),
+				Topic("Image Loading", "Remote loading, cancellation and custom loaders.", "arrow.down.circle.fill", Colors.Teal, GalleryArea.Platform),
+				Topic("Accessibility", "VoiceOver labels, traits, values and focus.", "accessibility", Colors.Teal, GalleryArea.Platform),
+				Topic("Native Access", "UIKit views, controllers and gesture escape hatches.", "apple.terminal.fill", Colors.Teal, GalleryArea.Platform))
 		];
 
 		topics =

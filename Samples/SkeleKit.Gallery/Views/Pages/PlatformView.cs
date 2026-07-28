@@ -6,6 +6,6 @@ namespace SkeleKit.Gallery.Views.Pages;
 internal sealed class PlatformView : GalleryListView<PlatformViewModel>
 {
 	public PlatformView(
-		PlatformViewModel viewModel) : base(viewModel, "Platform", Colors.Orange)
+		PlatformViewModel viewModel) : base(viewModel, "Platform", Colors.Green)
 	{ }
 }

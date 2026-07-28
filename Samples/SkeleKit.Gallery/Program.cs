@@ -17,11 +17,10 @@ SkeleApplication.CreateBuilder()
 	.UseAccent(Colors.Indigo)
 	.Tabs(tabs => tabs
 		.LargeTitles()
-		.Tab<ControlsView>("Controls", "switch.2")
 		.Tab<FrameworkView>("Framework", "square.stack.3d.up")
+		.Tab<ControlsView>("Controls", "switch.2")
 		.Tab<PlatformView>("Platform", "iphone")
 		.Search<SearchView>()
-		.Minimizes()
 		.OnPad(pad => pad.Sidebar()))
 	.Build()
 	.Run(args);
