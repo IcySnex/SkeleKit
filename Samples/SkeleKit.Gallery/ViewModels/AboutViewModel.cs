@@ -2,14 +2,14 @@ using System.Windows.Input;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed class GalleryInfoViewModel
+internal sealed class AboutViewModel
 {
 	const string RepositoryUrl = "https://github.com/IcySnex/SkeleKit";
 
 	readonly INavigator navigator;
 
 
-	public GalleryInfoViewModel(
+	public AboutViewModel(
 		INavigator navigator)
 	{
 		this.navigator = navigator;

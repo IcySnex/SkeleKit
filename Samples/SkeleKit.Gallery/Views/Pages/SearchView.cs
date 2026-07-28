@@ -1,11 +1,12 @@
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.ViewModels;
 using SkeleKit.Gallery.Views.Cells;
+using SkeleKit.Gallery.Views.Shared;
 
 namespace SkeleKit.Gallery.Views.Pages;
 
 [Page]
-internal sealed class SearchView : GalleryPage<SearchViewModel>
+internal sealed class SearchView : AccentView<SearchViewModel>
 {
 	public SearchView(
 		SearchViewModel viewModel) : base(viewModel, Colors.White)

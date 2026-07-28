@@ -2,7 +2,7 @@ using SkeleKit.Gallery.Services;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed class ControlsViewModel : GalleryListViewModel
+internal sealed class ControlsViewModel : CatalogViewModel
 {
 	public ControlsViewModel(
 		IGalleryCatalog catalog,

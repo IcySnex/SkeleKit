@@ -1,12 +1,12 @@
-namespace SkeleKit.Gallery.Views.Pages;
+namespace SkeleKit.Gallery.Views.Shared;
 
-internal abstract class GalleryPage<TViewModel> : ContentView<TViewModel>
+internal abstract class AccentView<TViewModel> : ContentView<TViewModel>
 	where TViewModel : class
 {
 	readonly Color accent;
 
 
-	protected GalleryPage(
+	protected AccentView(
 		TViewModel viewModel,
 		Color accent) : base(viewModel)
 	{

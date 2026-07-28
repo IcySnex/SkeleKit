@@ -1,12 +1,13 @@
 using SkeleKit.Gallery.ViewModels;
+using SkeleKit.Gallery.Views.Shared;
 
 namespace SkeleKit.Gallery.Views.Pages;
 
 [Page]
-internal sealed class GalleryInfoView : GalleryPage<GalleryInfoViewModel>
+internal sealed class AboutView : AccentView<AboutViewModel>
 {
-	public GalleryInfoView(
-		GalleryInfoViewModel viewModel) : base(viewModel, Colors.Indigo)
+	public AboutView(
+		AboutViewModel viewModel) : base(viewModel, Colors.Indigo)
 	{
 		Title = "SkeleKit";
 		BackgroundStyle = PageBackground.Grouped;

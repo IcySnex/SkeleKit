@@ -2,12 +2,12 @@ using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.ViewModels;
 using SkeleKit.Gallery.Views.Cells;
 
-namespace SkeleKit.Gallery.Views.Pages;
+namespace SkeleKit.Gallery.Views.Shared;
 
-internal abstract class GalleryListView<TViewModel> : GalleryPage<TViewModel>
-	where TViewModel : GalleryListViewModel
+internal abstract class CatalogView<TViewModel> : AccentView<TViewModel>
+	where TViewModel : CatalogViewModel
 {
-	protected GalleryListView(
+	protected CatalogView(
 		TViewModel viewModel,
 		string title,
 		Color accent) : base(viewModel, accent)

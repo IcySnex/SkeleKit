@@ -3,12 +3,12 @@ using SkeleKit.Gallery.Models;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal abstract class GalleryListViewModel : GalleryViewModel
+internal abstract class CatalogViewModel : GalleryViewModel
 {
 	readonly INavigator navigator;
 
 
-	protected GalleryListViewModel(
+	protected CatalogViewModel(
 		INavigator navigator,
 		List<GallerySection> sections) : base(navigator)
 	{
