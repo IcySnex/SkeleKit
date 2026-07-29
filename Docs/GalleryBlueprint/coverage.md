@@ -8,6 +8,7 @@ Every documented exported type in the compiled iOS XML baseline appears exactly 
 | `ActivityIndicator` | [controls/values-status/values-status.md](controls/values-status/values-status.md) | Visual | 4 |
 | `Animation` | [shared/styling-animation.md](shared/styling-animation.md) | Non-gallery | 15 |
 | `Animator` | [shared/styling-animation.md](shared/styling-animation.md) | Non-gallery | 11 |
+| `Appearance` | [application/application.md](application/application.md) | Lab | 4 |
 | `BackButtonStyle` | [primitives/page-tabs.md](primitives/page-tabs.md) | Non-gallery | 4 |
 | `Bindable` | [shared/binding.md](shared/binding.md) | Non-gallery | 1 |
 | `Bindable<T>` | [shared/binding.md](shared/binding.md) | Non-gallery | 6 |
@@ -123,8 +124,8 @@ Every documented exported type in the compiled iOS XML baseline appears exactly 
 | `Shadow` | [primitives/colors-brushes.md](primitives/colors-brushes.md) | Visual | 14 |
 | `ShareContent` | [application/application.md](application/application.md) | Non-gallery | 10 |
 | `Size` | [primitives/geometry-layout.md](primitives/geometry-layout.md) | Visual | 15 |
-| `SkeleApplication` | [application/application.md](application/application.md) | Lab | 5 |
-| `SkeleApplicationBuilder` | [application/application.md](application/application.md) | Non-gallery | 10 |
+| `SkeleApplication` | [application/application.md](application/application.md) | Lab | 6 |
+| `SkeleApplicationBuilder` | [application/application.md](application/application.md) | Non-gallery | 11 |
 | `SkeleApplicationDelegate` | [appendix/implementation-surface.md](appendix/implementation-surface.md) | Non-gallery | 2 |
 | `SkeleWindowSceneDelegate` | [appendix/implementation-surface.md](appendix/implementation-surface.md) | Non-gallery | 5 |
 | `Slider` | [controls/values-status/values-status.md](controls/values-status/values-status.md) | Lab | 12 |

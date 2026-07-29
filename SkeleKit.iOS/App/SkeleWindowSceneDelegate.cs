@@ -20,7 +20,8 @@ public class SkeleWindowSceneDelegate : UIWindowSceneDelegate
 		Window = new(windowScene)
 		{
 			RootViewController = app.BuildShell(),
-			TintColor = app.Tint?.ToUIColor()
+			TintColor = app.Tint?.ToUIColor(),
+			OverrideUserInterfaceStyle = app.UserInterfaceStyle
 		};
 
 		Window.MakeKeyAndVisible();

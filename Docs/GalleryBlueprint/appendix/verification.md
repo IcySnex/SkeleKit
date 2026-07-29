@@ -13,10 +13,10 @@
 
 | Surface | Types | Declared members |
 | --- | ---: | ---: |
-| XML documented baseline | 154 | 938 |
-| Compiled accessible metadata (includes implementation-shaped/compiler-generated exports) | 155 | 1180 |
-| Reconciled canonical tables | 155 | 1196 |
-| Source type-name index (public and nonpublic; partial declarations coalesced by name) | 208 | n/a |
+| XML documented baseline | 155 | 943 |
+| Compiled accessible metadata (includes implementation-shaped/compiler-generated exports) | 156 | 1186 |
+| Reconciled canonical tables | 156 | 1202 |
+| Source type-name index (public and nonpublic; partial declarations coalesced by name) | 209 | n/a |
 
 Metadata member counting includes visible fields, properties, events, constructors, methods, operators, and conversions and excludes property/event accessors. The XML count is the canonical documented consumer inventory; discrepancies are routed to `api-findings.md` and `implementation-surface.md`.
 
@@ -42,6 +42,6 @@ Metadata member counting includes visible fields, properties, events, constructo
 
 - Extracted **90** `csharp` fences into isolated wrappers in a temporary `net10.0-ios` project, referenced the framework and page generator, and built for `iossimulator-arm64`: **0 errors, 0 warnings**.
 - Resolved every relative Markdown link in all **32** blueprint files: **0 broken links**.
-- Parsed `coverage.md`: **155 rows, 155 unique reconciled types**, each with one canonical path.
-- Counted canonical API rows: **1,196**, matching the reconciled XML/metadata union used by these pages.
+- Parsed `coverage.md`: **156 rows, 156 unique reconciled types**, each with one canonical path.
+- Counted canonical API rows: **1,202**, matching the reconciled XML/metadata union used by these pages.
 - Ran `dotnet test SkeleKit.Tests/SkeleKit.Tests.csproj -c Debug`: **188 passed**.

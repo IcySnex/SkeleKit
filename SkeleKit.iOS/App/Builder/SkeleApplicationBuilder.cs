@@ -19,6 +19,7 @@ public sealed class SkeleApplicationBuilder
 	internal TabsBuilder? TabsBuilder;
 	internal Type? RootView;
 	internal Color? Tint;
+	internal Appearance Appearance;
 
 	internal Action? LifecycleBackground { get; private set; }
 	internal Action? LifecycleForeground { get; private set; }
@@ -60,6 +61,18 @@ public sealed class SkeleApplicationBuilder
 		Color tint)
 	{
 		Tint = tint;
+		return this;
+	}
+
+	/// <summary>
+	/// Sets the initial app-wide light or dark appearance.
+	/// </summary>
+	/// <param name="appearance">The initial appearance.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder UseAppearance(
+		Appearance appearance)
+	{
+		Appearance = appearance;
 		return this;
 	}
 

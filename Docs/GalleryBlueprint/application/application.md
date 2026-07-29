@@ -15,8 +15,29 @@ This is the canonical declaration inventory for the types below. Inherited `View
 | Navigation | `Push*`, `Pop*`, `Present*`, `DismissAsync`, `SelectTabAsync`, `OpenUrlAsync` | Exercise ViewModel-first and view-first overload families, cancellation/guard paths, tab selection, and an invalid URL fallback. | Stack/modal state and awaited completion match the call; overloads remain code-reference entries rather than fake visual controls. |
 | Shell/page chrome | builders plus `ContentView` chrome properties | Build single-page, stack, tabs, iPad sidebar, search, toolbar, badge, status-bar, and bottom-accessory states. | iPhone/iPad arrangements, large-title collapse, search callbacks, badges, and bar coloring match the page configuration. |
 | App tint | `UseTint`, `SkeleApplication.Tint`, `View.Tint`, `ContentView.BarTint` | Start with a configured tint, change and clear it at runtime, navigate between differently tinted pages, and cancel an interactive back gesture. | Inheriting views, windows, navigation chrome, tab chrome, and accessories update together; local overrides remain local; completed navigation adopts the destination tint while canceled navigation keeps the source tint; Reduce Motion updates immediately. |
+| App appearance | `Appearance`, `UseAppearance`, `SkeleApplication.Appearance` | Start in system mode, then switch between system, light, and dark while each tab, modal style, and control family is visible. | Every app window, native control, bar, material, semantic color, and SkeleKit-drawn visual adopts the selected appearance; system mode resumes following iOS. |
 
 Networking, Photos/files permissions, share extensions, haptics, URL opening, lifecycle events, and iPad popovers must use a real device/service path where required. Provide a visible unavailable/denied result beside the trigger.
+
+## Appearance
+
+The app's light or dark appearance.
+
+- Source: `SkeleKit.iOS/App/Appearance.cs`
+- Inheritance/shape: `enum`
+- Native counterpart: `UIUserInterfaceStyle`
+- Gallery role: Interactive lab
+
+| Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
+| --- | --- | --- | --- | --- | --- | --- |
+| Field/value | `SkeleKit.Appearance.System` | public | n/a | n/a | n/a | Follows the system setting. |
+| Field/value | `SkeleKit.Appearance.Light` | public | n/a | n/a | n/a | Always uses the light appearance. |
+| Field/value | `SkeleKit.Appearance.Dark` | public | n/a | n/a | n/a | Always uses the dark appearance. |
+| Field/value | `SkeleKit.Appearance.value__` | public | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+
+### Gallery treatment
+
+Use the app-appearance lab above. Switch the complete Gallery between system, light, and dark from native page chrome rather than simulating appearance inside individual specimens.
 
 ## GroupBuilder
 
@@ -100,6 +121,7 @@ A builder used to configure and construct a `SkeleApplication`.
 | Method | `SkeleKit.SkeleApplicationBuilder.UseServices(System.Action{Microsoft.Extensions.DependencyInjection.IServiceCollection})` | public | n/a | n/a | n/a | Registers core dependencies and application services into the container. |
 | Method | `SkeleKit.SkeleApplicationBuilder.UseImageLoader(SkeleKit.IImageLoader)` | public | n/a | n/a | n/a | Sets how `Image` loads remote URLs. Plug in a caching loader here. |
 | Method | `SkeleKit.SkeleApplicationBuilder.UseTint(SkeleKit.Color)` | public | n/a | n/a | n/a | Sets the initial app-wide tint inherited by windows, chrome, and views. |
+| Method | `SkeleKit.SkeleApplicationBuilder.UseAppearance(SkeleKit.Appearance)` | public | n/a | n/a | n/a | Sets the initial app-wide light or dark appearance. |
 | Method | `SkeleKit.SkeleApplicationBuilder.UseLifecycle(System.Action,System.Action)` | public | n/a | n/a | n/a | Registers app lifecycle hooks, invoked as the app leaves for and returns from the background. |
 | Method | `SkeleKit.SkeleApplicationBuilder.UseTheme(System.Action{SkeleKit.Theme})` | public | n/a | n/a | n/a | Registers implicit styles applied to every view of a type as it is built. |
 | Method | `SkeleKit.SkeleApplicationBuilder.UsePages(System.Action{SkeleKit.PagesBuilder},System.Boolean)` | public | n/a | n/a | n/a | Registers or overrides pages by hand. |
@@ -465,8 +487,9 @@ The core application instance that handles DI, navigation setup, and the app lif
 | Method | `SkeleKit.SkeleApplication.CreateBuilder` | public static | n/a | n/a | n/a | Creates a new builder to configure services and the layout shell. |
 | Property | `SkeleKit.SkeleApplication.Services` | public get | C# default | No | No automatic invalidation | The built-in service provider for resolving dependencies. |
 | Property | `SkeleKit.SkeleApplication.Tint` | public get/set | Initial builder tint; null uses the system default | No | Visual/interaction only | The app-wide tint inherited by windows, chrome, and views. Runtime changes animate together unless Reduce Motion is enabled. |
+| Property | `SkeleKit.SkeleApplication.Appearance` | public get/set | Initial builder appearance; `Appearance.System` by default | No | Visual/interaction only | The app-wide light or dark appearance. Runtime changes update every app window; system resumes following iOS. |
 | Method | `SkeleKit.SkeleApplication.Run(System.String[])` | public | n/a | n/a | n/a | Starts the native iOS main loop. |
 
 ### Gallery treatment
 
-Use the app-tint lab above for the observable property. Keep application construction, service resolution, and startup as code-only reference entries.
+Use the app-tint and app-appearance labs above for the observable properties. Keep application construction, service resolution, and startup as code-only reference entries.

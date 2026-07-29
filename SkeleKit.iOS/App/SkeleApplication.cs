@@ -182,6 +182,7 @@ public class SkeleApplication
 	readonly TabsBuilder? tabsBuilder;
 	readonly Type? rootView;
 	Color? tint;
+	Appearance appearance;
 
 	internal SkeleApplication(
 		SkeleApplicationBuilder builder)
@@ -192,6 +193,7 @@ public class SkeleApplication
 		tabsBuilder = builder.TabsBuilder;
 		rootView = builder.RootView;
 		tint = builder.Tint;
+		appearance = builder.Appearance;
 
 		Backgrounded = builder.LifecycleBackground;
 		Foregrounded = builder.LifecycleForeground;
@@ -219,6 +221,14 @@ public class SkeleApplication
 
 	internal Action? Backgrounded { get; set; }
 	internal Action? Foregrounded { get; set; }
+
+	internal UIUserInterfaceStyle UserInterfaceStyle =>
+		appearance switch
+		{
+			Appearance.Light => UIUserInterfaceStyle.Light,
+			Appearance.Dark => UIUserInterfaceStyle.Dark,
+			_ => UIUserInterfaceStyle.Unspecified
+		};
 
 
 	/// <summary>
@@ -254,6 +264,24 @@ public class SkeleApplication
 
 			if (Current == this)
 				ApplyTint();
+		}
+	}
+
+	/// <summary>
+	/// The app-wide light or dark appearance.
+	/// </summary>
+	public Appearance Appearance
+	{
+		get => appearance;
+		set
+		{
+			if (appearance == value)
+				return;
+
+			appearance = value;
+
+			if (Current == this)
+				ApplyAppearance();
 		}
 	}
 
@@ -295,6 +323,15 @@ public class SkeleApplication
 				| UIViewAnimationOptions.BeginFromCurrentState,
 			Apply,
 			static _ => { });
+	}
+
+	void ApplyAppearance()
+	{
+		foreach (UIWindow window in UIApplication.SharedApplication
+			.ConnectedScenes
+			.OfType<UIWindowScene>()
+			.SelectMany(scene => scene.Windows))
+			window.OverrideUserInterfaceStyle = UserInterfaceStyle;
 	}
 
 	void SyncAccessory()

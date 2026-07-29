@@ -336,6 +336,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~★ **Global tint**~~ — **done** (`UseTint`: window `TintColor` for the controls UIKit
   reaches, plus the `View.Tint` root fallback for the self-painting ones — switch fills, spinners,
   button configurations — which UIKit's inheritance never touches).
+- ~~★ **Global appearance override**~~ — **done** (`UseAppearance` sets the initial
+  `System`/`Light`/`Dark` appearance; `SkeleApplication.Current.Appearance` changes every app
+  window live, and `System` resumes following iOS).
 - ~~★ **Scene lifecycle**~~ — **done** (`UseLifecycle(background, foreground)`).
 - ◆ ~~**System pickers via navigator** — photo (`PHPickerViewController`), document
   (`UIDocumentPickerViewController`); both are present-and-await wrappers, AOT-safe.~~
