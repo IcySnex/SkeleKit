@@ -32,6 +32,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 
 		Picker<ShowcaseOption<ButtonStyle>> style = new()
 		{
+			MinWidth = 180,
 			ItemsSource = viewModel.Styles,
 			SelectedItem = viewModel.SelectedStyle,
 			SelectionChanged = option =>
@@ -85,6 +86,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 
 		Picker<ShowcaseOption<IconPlacement>> placement = new()
 		{
+			MinWidth = 150,
 			ItemsSource = viewModel.Placements,
 			SelectedItem = viewModel.SelectedPlacement,
 			SelectionChanged = option =>
@@ -240,20 +242,23 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		{
 			Text = "Share",
 			Icon = "square.and.arrow.up",
-			Command = viewModel.ShareCommand
+			Command = viewModel.SelectMenuCommand,
+			CommandParameter = "Share"
 		});
 		actions.Menu.Add(new()
 		{
 			Text = "Favorite",
 			Icon = "star",
-			Command = viewModel.FavoriteCommand
+			Command = viewModel.SelectMenuCommand,
+			CommandParameter = "Favorite"
 		});
 		actions.Menu.Add(new()
 		{
 			Text = "Delete",
 			Icon = "trash",
 			IsDestructive = true,
-			Command = viewModel.DeleteCommand
+			Command = viewModel.SelectMenuCommand,
+			CommandParameter = "Delete"
 		});
 
 		Button density = new()
@@ -267,17 +272,20 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		density.Menu.Add(new()
 		{
 			Text = "Compact",
-			Command = viewModel.CompactCommand
+			Command = viewModel.SelectMenuCommand,
+			CommandParameter = "Compact"
 		});
 		density.Menu.Add(new()
 		{
 			Text = "Comfortable",
-			Command = viewModel.ComfortableCommand
+			Command = viewModel.SelectMenuCommand,
+			CommandParameter = "Comfortable"
 		});
 		density.Menu.Add(new()
 		{
 			Text = "Spacious",
-			Command = viewModel.SpaciousCommand
+			Command = viewModel.SelectMenuCommand,
+			CommandParameter = "Spacious"
 		});
 
 		AddShowcase(
@@ -327,7 +335,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		StackPanel configuration = new()
 		{
 			Padding = 16,
-			Spacing = 14
+			Spacing = 16
 		};
 
 		foreach (View setting in settings)
@@ -350,6 +358,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		new Grid
 		{
 			ColumnSpacing = 12,
+			MinHeight = 34,
 
 			Columns =
 			{
@@ -359,12 +368,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 
 			Children =
 			{
-				new Label
-				{
-					VerticalAlignment = VerticalAlignment.Center,
-					Text = title,
-					TextStyle = TextStyle.Body
-				},
+				SettingLabel(title),
 
 				control.Column(1)
 			}
@@ -375,17 +379,11 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		View control) =>
 		new StackPanel
 		{
-			Spacing = 7,
+			Spacing = 8,
 
 			Children =
 			{
-				new Label
-				{
-					Text = title,
-					TextStyle = TextStyle.Footnote,
-					FontWeight = FontWeight.Medium,
-					TextColor = Colors.SecondaryLabel
-				},
+				SettingLabel(title),
 
 				control
 			}
@@ -397,7 +395,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		Slider slider) =>
 		new StackPanel
 		{
-			Spacing = 7,
+			Spacing = 8,
 
 			Children =
 			{
@@ -411,18 +409,13 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 
 					Children =
 					{
-						new Label
-						{
-							Text = title,
-							TextStyle = TextStyle.Footnote,
-							FontWeight = FontWeight.Medium,
-							TextColor = Colors.SecondaryLabel
-						},
+						SettingLabel(title),
 
 						new Label
 						{
+							VerticalAlignment = VerticalAlignment.Center,
 							Text = value,
-							TextStyle = TextStyle.Footnote,
+							TextStyle = TextStyle.Subheadline,
 							TextColor = Colors.SecondaryLabel
 						}.Column(1)
 					}
@@ -430,6 +423,16 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 
 				slider
 			}
+		};
+
+	static Label SettingLabel(
+		string title) =>
+		new()
+		{
+			VerticalAlignment = VerticalAlignment.Center,
+			Text = title,
+			TextStyle = TextStyle.Subheadline,
+			FontWeight = FontWeight.Medium
 		};
 
 	static View CodeView(

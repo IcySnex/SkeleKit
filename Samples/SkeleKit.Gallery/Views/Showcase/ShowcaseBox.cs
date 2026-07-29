@@ -2,8 +2,13 @@ namespace SkeleKit.Gallery.Views.Showcase;
 
 internal sealed class ShowcaseBox : Border
 {
+	static readonly Color CanvasBackground = Color.Dynamic(
+		Color.FromHex(0xF6F4FA),
+		Color.FromHex(0x2C2C2E));
+
+
 	readonly View code;
-	readonly Overlay content;
+	readonly ShowcaseContent content;
 	readonly View preview;
 
 	int transition;
@@ -17,17 +22,9 @@ internal sealed class ShowcaseBox : Border
 		this.code = code;
 
 		code.IsEnabled = false;
-		code.IsVisible = false;
 		code.Opacity = 0;
 
-		content = new()
-		{
-			Children =
-			{
-				preview,
-				code
-			}
-		};
+		content = new(preview, code);
 
 		SegmentedControl mode = new()
 		{
@@ -66,7 +63,7 @@ internal sealed class ShowcaseBox : Border
 		new Border
 		{
 			Height = height,
-			Background = Colors.TertiaryGroupedBackground,
+			Background = CanvasBackground,
 
 			Child = new Overlay
 			{
@@ -91,13 +88,17 @@ internal sealed class ShowcaseBox : Border
 		View incoming = showsCode ? code : preview;
 		View outgoing = showsCode ? preview : code;
 		int currentTransition = ++transition;
+		double currentHeight = content.ArrangedBounds.Height > 0
+			? content.ArrangedBounds.Height
+			: outgoing.DesiredSize.Height;
+		double incomingHeight = incoming.DesiredSize.Height;
 
 		outgoing.IsEnabled = false;
 		incoming.IsEnabled = true;
-		incoming.IsVisible = true;
 		incoming.Opacity = 0;
 
-		content.Height = outgoing.DesiredSize.Height;
+		content.Height = currentHeight;
+		content.Select(incoming);
 
 		View.Animate(
 			Animation.Ease(0.2, Easing.EaseInOut),
@@ -105,14 +106,13 @@ internal sealed class ShowcaseBox : Border
 			{
 				outgoing.Opacity = 0;
 				incoming.Opacity = 1;
-				content.Height = incoming.DesiredSize.Height;
+				content.Height = incomingHeight;
 			},
 			_ =>
 			{
 				if (transition != currentTransition)
 					return;
 
-				outgoing.IsVisible = false;
 				content.Height = double.NaN;
 			});
 	}

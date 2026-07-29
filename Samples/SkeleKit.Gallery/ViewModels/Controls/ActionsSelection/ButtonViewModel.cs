@@ -162,7 +162,8 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 			{
 				Text = "Share",
 				Icon = "square.and.arrow.up",
-				Command = viewModel.ShareCommand
+				Command = viewModel.SelectMenuCommand,
+				CommandParameter = "Share"
 			});
 
 			Button density = new()
@@ -173,7 +174,8 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 			density.Menu.Add(new()
 			{
 				Text = "Comfortable",
-				Command = viewModel.ComfortableCommand
+				Command = viewModel.SelectMenuCommand,
+				CommandParameter = "Comfortable"
 			});
 			""");
 
@@ -191,28 +193,9 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 		IsButtonEnabled;
 
 	[RelayCommand]
-	void Share() =>
-		MenuStatus = "Share selected";
-
-	[RelayCommand]
-	void Favorite() =>
-		MenuStatus = "Favorite selected";
-
-	[RelayCommand]
-	void Delete() =>
-		MenuStatus = "Delete selected";
-
-	[RelayCommand]
-	void Compact() =>
-		MenuStatus = "Compact density selected";
-
-	[RelayCommand]
-	void Comfortable() =>
-		MenuStatus = "Comfortable density selected";
-
-	[RelayCommand]
-	void Spacious() =>
-		MenuStatus = "Spacious density selected";
+	void SelectMenu(
+		string? value) =>
+		MenuStatus = $"{value} selected";
 
 
 	static IReadOnlyList<Span> Code(
