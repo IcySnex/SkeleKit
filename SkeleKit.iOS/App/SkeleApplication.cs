@@ -46,7 +46,12 @@ public class SkeleApplication
 			}
 
 			if (tabBarController.SelectedTab?.Identifier == tab.Identifier)
+			{
 				HandleReselect(tabBarController);
+				return true;
+			}
+
+			app?.BeginTabSelection();
 
 			return true;
 		}
@@ -182,7 +187,10 @@ public class SkeleApplication
 	readonly TabsBuilder? tabsBuilder;
 	readonly Type? rootView;
 	Color? tint;
+	Color? pendingTabTint;
 	Appearance appearance;
+	bool hasPendingTabTint;
+	bool switchingTabs;
 
 	internal SkeleApplication(
 		SkeleApplicationBuilder builder)
@@ -218,6 +226,7 @@ public class SkeleApplication
 	AccessoryHost? footerHost;
 
 	internal bool AccessoryWanted => accessoryContent?.IsVisible.Value is true;
+	internal bool IsSwitchingTabs => switchingTabs;
 
 	internal Action? Backgrounded { get; set; }
 	internal Action? Foregrounded { get; set; }
@@ -246,6 +255,13 @@ public class SkeleApplication
 		{
 			if (tint == value)
 				return;
+
+			if (Current == this && switchingTabs)
+			{
+				pendingTabTint = value;
+				hasPendingTabTint = true;
+				return;
+			}
 
 			if (Current == this && PageHost.InteractiveTintTransition is IUIViewControllerTransitionCoordinator transition)
 			{
@@ -334,6 +350,13 @@ public class SkeleApplication
 			window.OverrideUserInterfaceStyle = UserInterfaceStyle;
 	}
 
+	void BeginTabSelection()
+	{
+		switchingTabs = true;
+		hasPendingTabTint = false;
+		pendingTabTint = null;
+	}
+
 	void SyncAccessory()
 	{
 		if (Accessory is null
@@ -350,6 +373,24 @@ public class SkeleApplication
 	internal ContentView RecreatePage(
 		ContentView page) =>
 		registry.RecreatePage(page, Services);
+
+	internal void CompleteTabSelection(
+		PageHost host)
+	{
+		if (!switchingTabs || !ReferenceEquals(CurrentStack()?.TopViewController, host))
+			return;
+
+		switchingTabs = false;
+
+		if (!hasPendingTabTint)
+			return;
+
+		Color? value = pendingTabTint;
+		hasPendingTabTint = false;
+		pendingTabTint = null;
+
+		Tint = value;
+	}
 
 	internal void NotifyBackground() =>
 		Backgrounded?.Invoke();

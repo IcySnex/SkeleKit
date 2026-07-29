@@ -155,6 +155,9 @@ internal sealed class PageHost : UIViewController
 	bool contentDetentPending;
 	nfloat contentWidth;
 	nfloat contentChrome;
+	UINavigationBarAppearance? savedScrollEdgeAppearance;
+	UINavigationBarAppearance? savedCompactScrollEdgeAppearance;
+	bool preservesNavigationBarAppearance;
 
 	public PageHost(
 		ContentView page)
@@ -651,6 +654,35 @@ internal sealed class PageHost : UIViewController
 			contentSwipe.Enabled = free;
 	}
 
+	void PreserveNavigationBarAppearance()
+	{
+		if (SkeleApplication.Current?.IsSwitchingTabs is not true
+			|| Page is not ContentView page
+			|| FindScrolling(page)?.Native is not UIScrollView scroll
+			|| scroll.ContentOffset.Y + scroll.AdjustedContentInset.Top <= 0.5
+			|| NavigationController?.NavigationBar is not UINavigationBar bar)
+			return;
+
+		savedScrollEdgeAppearance = NavigationItem.ScrollEdgeAppearance;
+		savedCompactScrollEdgeAppearance = NavigationItem.CompactScrollEdgeAppearance;
+		preservesNavigationBarAppearance = true;
+
+		NavigationItem.ScrollEdgeAppearance = bar.StandardAppearance;
+		NavigationItem.CompactScrollEdgeAppearance = bar.CompactAppearance ?? bar.StandardAppearance;
+	}
+
+	void RestoreNavigationBarAppearance()
+	{
+		if (!preservesNavigationBarAppearance)
+			return;
+
+		NavigationItem.ScrollEdgeAppearance = savedScrollEdgeAppearance;
+		NavigationItem.CompactScrollEdgeAppearance = savedCompactScrollEdgeAppearance;
+		savedScrollEdgeAppearance = null;
+		savedCompactScrollEdgeAppearance = null;
+		preservesNavigationBarAppearance = false;
+	}
+
 	// ReSharper disable once AsyncVoidMethod
 	async void ConfirmBack()
 	{
@@ -731,6 +763,7 @@ internal sealed class PageHost : UIViewController
 		bool animated)
 	{
 		base.ViewWillAppear(animated);
+		RestoreNavigationBarAppearance();
 
 		if (Page is null)
 			return;
@@ -780,6 +813,7 @@ internal sealed class PageHost : UIViewController
 		// after the transition: flipping the gestures mid-pop would kill an in-flight swipe
 		ApplyPopGestures();
 
+		SkeleApplication.Current?.CompleteTabSelection(this);
 		Page?.NotifyAppeared();
 	}
 
@@ -788,6 +822,7 @@ internal sealed class PageHost : UIViewController
 	{
 		base.ViewWillDisappear(animated);
 
+		PreserveNavigationBarAppearance();
 		Page?.NotifyDisappearing();
 	}
 
@@ -852,6 +887,7 @@ internal sealed class PageHost : UIViewController
 	{
 		base.ViewDidDisappear(animated);
 
+		RestoreNavigationBarAppearance();
 		Page?.NotifyDisappeared();
 
 		if (IsMovingFromParentViewController)
