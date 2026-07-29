@@ -187,9 +187,7 @@ public class SkeleApplication
 	readonly TabsBuilder? tabsBuilder;
 	readonly Type? rootView;
 	Color? tint;
-	Color? pendingTabTint;
 	Appearance appearance;
-	bool hasPendingTabTint;
 	bool switchingTabs;
 
 	internal SkeleApplication(
@@ -255,13 +253,6 @@ public class SkeleApplication
 		{
 			if (tint == value)
 				return;
-
-			if (Current == this && switchingTabs)
-			{
-				pendingTabTint = value;
-				hasPendingTabTint = true;
-				return;
-			}
 
 			if (Current == this && PageHost.InteractiveTintTransition is IUIViewControllerTransitionCoordinator transition)
 			{
@@ -350,12 +341,8 @@ public class SkeleApplication
 			window.OverrideUserInterfaceStyle = UserInterfaceStyle;
 	}
 
-	void BeginTabSelection()
-	{
+	void BeginTabSelection() =>
 		switchingTabs = true;
-		hasPendingTabTint = false;
-		pendingTabTint = null;
-	}
 
 	void SyncAccessory()
 	{
@@ -381,15 +368,6 @@ public class SkeleApplication
 			return;
 
 		switchingTabs = false;
-
-		if (!hasPendingTabTint)
-			return;
-
-		Color? value = pendingTabTint;
-		hasPendingTabTint = false;
-		pendingTabTint = null;
-
-		Tint = value;
 	}
 
 	internal void NotifyBackground() =>

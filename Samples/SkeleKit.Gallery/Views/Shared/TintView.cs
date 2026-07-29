@@ -11,6 +11,7 @@ internal abstract class TintView<TViewModel> : ContentView<TViewModel>
 		Color tint) : base(viewModel)
 	{
 		this.tint = tint;
+		Tint = tint;
 	}
 
 
