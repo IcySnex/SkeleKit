@@ -43,6 +43,7 @@
         <Compile Remove="App/**" />
 
         <Compile Include="App/Builder/PagesBuilder.cs" />
+        <Compile Include="App/Navigation/Detent.cs" />
         <Compile Include="App/Navigation/PageAttribute.cs" />
         <Compile Include="App/Navigation/ViewRegistry.cs" />
     </ItemGroup>

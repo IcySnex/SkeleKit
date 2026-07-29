@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 | Lab | APIs | Action | Expected observable behavior |
 | --- | --- | --- | --- |
-| Modal presentations | `INavigator.Present*`, `ModalStyle`, `ModalPresentation`, `Detent`, `PopoverArrow` | Present automatic, full-screen, sheet, and anchored popover variants; drag sheet detents and attempt guarded dismissal. | Correct iPhone/iPad presentation, detents, arrow selection, anchor behavior, and `ConfirmLeave` veto. |
+| Modal presentations | `INavigator.Present*`, `ModalStyle`, `ModalPresentation`, `Detent`, `PopoverArrow` | Present automatic, full-screen, sheet, and anchored popover variants; exercise system, fixed-height, and fractional detents; rotate while a fractional sheet is visible; drag between detents and attempt guarded dismissal. | Correct iPhone/iPad presentation, fixed heights clamp to available space, fractional heights adapt to the new maximum, arrow selection and anchor behavior remain correct, and `ConfirmLeave` can veto dismissal. |
 | Dialogs | `AlertAsync`, `ConfirmAsync`, `PromptAsync`, `SelectAsync` | Trigger success, cancel, destructive, empty-input, and long-option states. | Awaited result matches the chosen action; iPad presentation remains anchored and keyboard/focus behavior is stable. |
 | Sharing and picking | `ISharer`, `ShareContent`, `ISystemPicker`, `PickedAsset` | Share text/URL/image and pick image/file; cancel each picker once. | Share sheet contains only supplied content; pickers return deterministic name/data or null on cancel. Permission denial is explained, never represented as an empty successful result. |
 | Haptics | `Haptics`, `HapticEvent`, `HapticStyle`, `HapticsNotification` | Trigger impact strengths, selection, notification outcomes, and a short custom pattern on a physical device. | Each action is perceivable without changing layout; simulator limitations are called out. |
@@ -238,22 +238,29 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 ## Detent
 
-How a modal sheet's height is restricted.
+A height where a modal sheet may rest.
 
 - Source: `SkeleKit.iOS/App/Navigation/Detent.cs`
-- Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Code-only/non-gallery reference
+- Inheritance/shape: `readonly record struct Detent`
+- Native counterpart: `UISheetPresentationControllerDetent`
+- Gallery role: Interactive lab
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
-| Field/value | `SkeleKit.Detent.Medium` | public | n/a | n/a | n/a | Half height. |
-| Field/value | `SkeleKit.Detent.Large` | public | n/a | n/a | n/a | Full height. |
-| Field/value | `SkeleKit.Detent.value__` | public | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Field/value | `SkeleKit.Detent.Medium` | public static readonly | n/a | n/a | n/a | The system medium height. |
+| Field/value | `SkeleKit.Detent.Large` | public static readonly | n/a | n/a | n/a | The system full height. |
+| Method | `SkeleKit.Detent.Height(System.Double)` | public static | n/a | n/a | n/a | Creates a fixed height in points, clamped to the sheet's available height. Rejects non-finite and non-positive values. |
+| Method | `SkeleKit.Detent.Fraction(System.Double)` | public static | n/a | n/a | n/a | Creates a fraction of the sheet's available height. Accepts finite values greater than 0 and no greater than 1. |
+| Method | `SkeleKit.Detent.ToString` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.Detent.op_Inequality(SkeleKit.Detent,SkeleKit.Detent)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.Detent.op_Equality(SkeleKit.Detent,SkeleKit.Detent)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.Detent.GetHashCode` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.Detent.Equals(System.Object)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.Detent.Equals(SkeleKit.Detent)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+Use the modal-presentation lab above. Show fixed and fractional sheets alone and alongside `Medium` and `Large`, with detents ordered from smallest to largest.
 
 ## INavigator
 
@@ -335,9 +342,9 @@ The presentation style of a modal page.
 | Property | `SkeleKit.ModalStyle.OverFullScreen` | public static get | C# default | No | No automatic invalidation | Covers the whole screen but keeps the background loaded. |
 | Property | `SkeleKit.ModalStyle.OverCurrentContext` | public static get | C# default | No | No automatic invalidation | Presents inside the parent bounds while keeping the background loaded. |
 | Method | `SkeleKit.ModalStyle.Popover(SkeleKit.View,SkeleKit.PopoverArrow)` | public static | n/a | n/a | n/a | A contextual floating bubble anchored to a view on large displays. |
-| Method | `SkeleKit.ModalStyle.Sheet(SkeleKit.Detent[])` | public static | n/a | n/a | n/a | An interactive, swipe-to-dismiss sheet. Pass more than one height to let the user drag between them, opening at the first. |
+| Method | `SkeleKit.ModalStyle.Sheet(SkeleKit.Detent[])` | public static | n/a | n/a | n/a | An interactive, swipe-to-dismiss sheet. Pass heights from smallest to largest; more than one lets the user drag between them, opening at the first. |
 | Property | `SkeleKit.ModalStyle.Presentation` | public get | C# default | No | No automatic invalidation | How the modal is presented. |
-| Property | `SkeleKit.ModalStyle.Detents` | public get | C# default | No | No automatic invalidation | The heights a sheet may rest at. It opens at the first and can be dragged between them; ignored for other presentations. |
+| Property | `SkeleKit.ModalStyle.Detents` | public get | C# default | No | No automatic invalidation | The heights a sheet may rest at, ordered from smallest to largest. It opens at the first and can be dragged between them; ignored for other presentations. |
 | Property | `SkeleKit.ModalStyle.Anchor` | public get | null | No | No automatic invalidation | The view a popover points at, or null. Ignored for other presentations. |
 | Property | `SkeleKit.ModalStyle.Arrows` | public get | C# default | No | No automatic invalidation | The directions a popover's arrow may point. |
 

@@ -1,3 +1,4 @@
+using System.Globalization;
 using ObjCRuntime;
 using SafariServices;
 
@@ -88,8 +89,8 @@ internal sealed class Navigator(
 		{
 			sheet.Detents = [.. style.Detents.Select(NativeDetent)];
 
-			// the sheet rests at the first of them; UIKit would otherwise pick the smallest
-			sheet.SelectedDetentIdentifier = Identifier(style.Detents[0]);
+			if (Identifier(style.Detents[0]) is UISheetPresentationControllerDetentIdentifier identifier)
+				sheet.SelectedDetentIdentifier = identifier;
 
 			// the handle is the affordance for dragging, so it only earns its place on a sheet that resizes
 			sheet.PrefersGrabberVisible = style.Detents.Count > 1;
@@ -114,15 +115,30 @@ internal sealed class Navigator(
 
 	static UISheetPresentationControllerDetent NativeDetent(
 		Detent detent) =>
-		detent is Detent.Medium
-			? UISheetPresentationControllerDetent.CreateMediumDetent()
-			: UISheetPresentationControllerDetent.CreateLargeDetent();
+		detent.Kind switch
+		{
+			DetentKind.Medium => UISheetPresentationControllerDetent.CreateMediumDetent(),
+			DetentKind.Large => UISheetPresentationControllerDetent.CreateLargeDetent(),
+			DetentKind.Height => UISheetPresentationControllerDetent.Create(
+				CustomIdentifier(detent),
+				context => (nfloat)Math.Min(detent.Value, (double)context.MaximumDetentValue)),
+			_ => UISheetPresentationControllerDetent.Create(
+				CustomIdentifier(detent),
+				context => context.MaximumDetentValue * (nfloat)detent.Value)
+		};
 
-	static UISheetPresentationControllerDetentIdentifier Identifier(
+	static string CustomIdentifier(
 		Detent detent) =>
-		detent is Detent.Medium
-			? UISheetPresentationControllerDetentIdentifier.Medium
-			: UISheetPresentationControllerDetentIdentifier.Large;
+		$"SkeleKit.{detent.Kind}.{detent.Value.ToString("R", CultureInfo.InvariantCulture)}";
+
+	static UISheetPresentationControllerDetentIdentifier? Identifier(
+		Detent detent) =>
+		detent.Kind switch
+		{
+			DetentKind.Medium => UISheetPresentationControllerDetentIdentifier.Medium,
+			DetentKind.Large => UISheetPresentationControllerDetentIdentifier.Large,
+			_ => null
+		};
 
 	static UIPopoverArrowDirection Directions(
 		PopoverArrow arrows)

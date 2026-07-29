@@ -50,9 +50,9 @@ public readonly struct ModalStyle
 	/// An interactive, swipe-to-dismiss sheet.
 	/// </summary>
 	/// <remarks>
-	/// Pass more than one height to let the user drag between them, opening at the first.
+	/// Pass heights from smallest to largest. More than one lets the user drag between them, opening at the first.
 	/// </remarks>
-	/// <param name="detents">The heights the sheet may rest at, the first being the one it opens at. Defaults to full height.</param>
+	/// <param name="detents">The heights the sheet may rest at, from smallest to largest. Defaults to full height.</param>
 	/// <returns>The sheet presentation style.</returns>
 	public static ModalStyle Sheet(
 		params Detent[] detents) =>

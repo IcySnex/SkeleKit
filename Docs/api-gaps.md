@@ -60,9 +60,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `PrefersScrollingExpandsWhenScrolledToEdge` are **declined** as API for a screenshot. Dismiss
   prevention already exists — `ContentView.ConfirmLeave` funnels the sheet's swipe-down through the
   same guard as the back button.
-- ★ (skip) **Custom detent heights** — `UISheetPresentationControllerDetent.Create(id, resolver)`
-  takes any height (a mini-player peek, a Maps-style three-stop sheet). Declined: `Detent` would have
-  to stop being an enum, and the resolver is another NSObject peer to root — too niche for the cost.
+- ~~★ **Custom detent heights**~~ — **done** (`Detent.Height` for fixed points and
+  `Detent.Fraction` for a share of the sheet's available height).
 - ~~◆ **Popover anchoring**~~ — **done** (`ModalStyle.Popover(anchor, arrows)` — the static
   property became a method; the anchor is a `View`, so a popover from a toolbar *item* still has
   no spelling. The style carries the anchor through the ViewModel's `PresentAsync` untouched).
