@@ -1,10 +1,11 @@
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.Services;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed class SearchViewModel : GalleryViewModel
+internal sealed partial class SearchViewModel : GalleryViewModel
 {
 	readonly IGalleryCatalog catalog;
 	readonly INavigator navigator;
@@ -19,25 +20,11 @@ internal sealed class SearchViewModel : GalleryViewModel
 	{
 		this.catalog = catalog;
 		this.navigator = navigator;
-
-		OpenTopicCommand = Command.From<GalleryTopic>(OpenTopic);
 	}
 
 
-	public List<GalleryTopic> Results
-	{
-		get;
-		private set
-		{
-			if (ReferenceEquals(field, value))
-				return;
-
-			field = value;
-			OnPropertyChanged();
-		}
-	} = [];
-
-	public ICommand OpenTopicCommand { get; }
+	[ObservableProperty]
+	List<GalleryTopic> results = [];
 
 	public string EmptyTitle => string.IsNullOrWhiteSpace(query)
 		? "Find anything in SkeleKit"
@@ -70,12 +57,10 @@ internal sealed class SearchViewModel : GalleryViewModel
 	}
 
 
-	void OpenTopic(
-		GalleryTopic? topic)
-	{
-		if (topic is not null)
-			_ = navigator.PushAsync(topic);
-	}
+	[RelayCommand]
+	Task OpenTopicAsync(
+		GalleryTopic? topic) =>
+		topic is null ? Task.CompletedTask : navigator.PushAsync(topic);
 
 	void Refresh()
 	{

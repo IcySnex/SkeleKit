@@ -1,9 +1,9 @@
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 using SkeleKit.Gallery.Models;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal abstract class CatalogViewModel : GalleryViewModel
+internal abstract partial class CatalogViewModel : GalleryViewModel
 {
 	readonly INavigator navigator;
 
@@ -15,18 +15,14 @@ internal abstract class CatalogViewModel : GalleryViewModel
 		this.navigator = navigator;
 
 		Sections = sections;
-		OpenTopicCommand = Command.From<GalleryTopic>(OpenTopic);
 	}
 
 
 	public List<GallerySection> Sections { get; }
-	public ICommand OpenTopicCommand { get; }
 
 
-	void OpenTopic(
-		GalleryTopic? topic)
-	{
-		if (topic is not null)
-			_ = navigator.PushAsync(topic);
-	}
+	[RelayCommand]
+	Task OpenTopicAsync(
+		GalleryTopic? topic) =>
+		topic is null ? Task.CompletedTask : navigator.PushAsync(topic);
 }

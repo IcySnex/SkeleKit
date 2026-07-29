@@ -1,8 +1,9 @@
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed class AboutViewModel
+internal sealed partial class AboutViewModel : ObservableObject
 {
 	const string RepositoryUrl = "https://github.com/IcySnex/SkeleKit";
 
@@ -13,26 +14,21 @@ internal sealed class AboutViewModel
 		INavigator navigator)
 	{
 		this.navigator = navigator;
-
-		DismissCommand = Command.From(Dismiss);
-		OpenGitHubCommand = Command.From(OpenGitHub);
-		ShowLicensesCommand = Command.From(ShowLicenses);
 	}
 
 
-	public ICommand DismissCommand { get; }
-	public ICommand OpenGitHubCommand { get; }
-	public ICommand ShowLicensesCommand { get; }
+	[RelayCommand]
+	Task DismissAsync() =>
+		navigator.DismissAsync();
 
+	[RelayCommand]
+	Task OpenGitHubAsync() =>
+		navigator.OpenUrlAsync(RepositoryUrl);
 
-	void Dismiss() =>
-		_ = navigator.DismissAsync();
-
-	void OpenGitHub() =>
-		_ = navigator.OpenUrlAsync(RepositoryUrl);
-
-	void ShowLicenses() =>
-		_ = navigator.AlertAsync(
+	[RelayCommand]
+	Task ShowLicensesAsync() =>
+		navigator.AlertAsync(
 			"Open-Source Licenses",
-			"Microsoft.Extensions.DependencyInjection\nMIT License\n© Microsoft Corporation");
+			"CommunityToolkit.Mvvm\nMIT License\n© .NET Foundation and Contributors\n\n"
+			+ "Microsoft.Extensions.DependencyInjection\nMIT License\n© Microsoft Corporation");
 }
