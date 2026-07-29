@@ -376,6 +376,7 @@ public partial class CollectionView<TItem, TSection>
 				for (int index = 0; index < ItemContextMenu.Count; index++)
 				{
 					MenuAction entry = ItemContextMenu[index];
+					object parameter = entry.CommandParameter ?? item;
 
 					entries[index] = UIAction.Create(
 						entry.Text,
@@ -383,8 +384,8 @@ public partial class CollectionView<TItem, TSection>
 						null,
 						_ =>
 						{
-							if (entry.Command is ICommand command && command.CanExecute(item))
-								command.Execute(item);
+							if (entry.Command is ICommand command && command.CanExecute(parameter))
+								command.Execute(parameter);
 						});
 
 					if (entry.IsDestructive)

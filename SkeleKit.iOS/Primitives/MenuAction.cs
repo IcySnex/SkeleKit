@@ -3,7 +3,7 @@ using System.Windows.Input;
 namespace SkeleKit;
 
 /// <summary>
-/// An entry in a row's long-press context menu.
+/// An action shown in a button, toolbar or context menu.
 /// </summary>
 public sealed class MenuAction
 {
@@ -23,7 +23,15 @@ public sealed class MenuAction
 	public bool IsDestructive { get; set; }
 
 	/// <summary>
-	/// Invoked with the row's item.
+	/// Command invoked when the action is chosen.
 	/// </summary>
 	public ICommand? Command { get; set; }
+
+	/// <summary>
+	/// The parameter passed to <see cref="Command"/>.
+	/// </summary>
+	/// <remarks>
+	/// A collection item menu uses its current item while this is null.
+	/// </remarks>
+	public object? CommandParameter { get; set; }
 }

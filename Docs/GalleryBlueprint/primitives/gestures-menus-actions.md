@@ -126,24 +126,25 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 ## MenuAction
 
-An entry in a row's long-press context menu.
+An action shown in a button, toolbar or context menu.
 
 - Source: `SkeleKit.iOS/Primitives/MenuAction.cs`
 - Inheritance/shape: `class MenuAction`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Code-only/non-gallery reference
+- Gallery role: Visual showcase through button and context-menu scenarios
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
 | Property | `SkeleKit.MenuAction.Text` | public get/set | "" | No | No automatic invalidation | The entry's title. |
 | Property | `SkeleKit.MenuAction.Icon` | public get/set | null | No | No automatic invalidation | An SF Symbol name shown beside the title. |
 | Property | `SkeleKit.MenuAction.IsDestructive` | public get/set | false | No | No automatic invalidation | Whether the entry is styled as destructive. |
-| Property | `SkeleKit.MenuAction.Command` | public get/set | null | No | No automatic invalidation | Invoked with the row's item. |
+| Property | `SkeleKit.MenuAction.Command` | public get/set | null | No | No automatic invalidation | Command invoked when the action is chosen. |
+| Property | `SkeleKit.MenuAction.CommandParameter` | public get/set | null | No | No automatic invalidation | Passed to `Command`; a collection item menu uses its current item while this remains null. |
 | Method | `SkeleKit.MenuAction.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+The Button showcase compares action and selection menus. Each action uses a shared command with a distinct `CommandParameter`; include destructive styling and verify the chosen parameter in the visible result.
 
 ## PointerEffect
 
@@ -234,4 +235,3 @@ An action revealed by swiping a row.
 ### Gallery treatment
 
 Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
-

@@ -92,7 +92,7 @@ Every documented exported type in the compiled iOS XML baseline appears exactly 
 | `MapView` | [controls/media-content/media-content.md](controls/media-content/media-content.md) | Lab | 19 |
 | `Material` | [primitives/colors-brushes.md](primitives/colors-brushes.md) | Visual | 2 |
 | `MaterialKind` | [primitives/colors-brushes.md](primitives/colors-brushes.md) | Visual | 7 |
-| `MenuAction` | [primitives/gestures-menus-actions.md](primitives/gestures-menus-actions.md) | Non-gallery | 5 |
+| `MenuAction` | [primitives/gestures-menus-actions.md](primitives/gestures-menus-actions.md) | Visual | 6 |
 | `ModalPresentation` | [application/application.md](application/application.md) | Non-gallery | 9 |
 | `ModalStyle` | [application/application.md](application/application.md) | Non-gallery | 12 |
 | `NativeView` | [controls/media-content/media-content.md](controls/media-content/media-content.md) | Escape hatch | 1 |

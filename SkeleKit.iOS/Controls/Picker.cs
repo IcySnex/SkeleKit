@@ -75,7 +75,7 @@ public class Picker<TItem> : Control
 	void OnSelected(
 		TItem item)
 	{
-		Set(ref selected, item, ApplyMenu, affectsMeasure: false);
+		Set(ref selected, item, ApplyMenu);
 
 		selectedBinding?.PushToSource(item);
 		SelectionChanged?.Invoke(item);

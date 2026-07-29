@@ -360,8 +360,8 @@ internal sealed class PageHost : UIViewController
 				null,
 				_ =>
 				{
-					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(null))
-						entryCommand.Execute(null);
+					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(entry.CommandParameter))
+						entryCommand.Execute(entry.CommandParameter);
 				});
 
 			if (entry.IsDestructive)

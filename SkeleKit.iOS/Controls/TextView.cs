@@ -404,8 +404,8 @@ public class TextView : Control
 				null,
 				_ =>
 				{
-					if (entry.Command is ICommand command && command.CanExecute(null))
-						command.Execute(null);
+					if (entry.Command is ICommand command && command.CanExecute(entry.CommandParameter))
+						command.Execute(entry.CommandParameter);
 				});
 
 			if (entry.IsDestructive)

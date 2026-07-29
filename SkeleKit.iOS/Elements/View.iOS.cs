@@ -685,7 +685,7 @@ public abstract partial class View
 						entry.Text,
 						entry.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
 						null,
-						_ => Run(entry.Command, null));
+						_ => Run(entry.Command, entry.CommandParameter));
 
 					if (entry.IsDestructive)
 						contextMenuActions[index].Attributes = UIMenuElementAttributes.Destructive;

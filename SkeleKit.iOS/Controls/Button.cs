@@ -188,7 +188,9 @@ public class Button : Control
 			ButtonStyle.Tinted => UIButtonConfiguration.TintedButtonConfiguration,
 			ButtonStyle.Filled or ButtonStyle.FilledCapsule => UIButtonConfiguration.FilledButtonConfiguration,
 			ButtonStyle.Glass when glassy => UIButtonConfiguration.GlassButtonConfiguration,
-			ButtonStyle.ProminentGlass when glassy => UIButtonConfiguration.ProminentGlassButtonConfiguration,
+			ButtonStyle.ProminentGlass => glassy
+				? UIButtonConfiguration.ProminentGlassButtonConfiguration
+				: UIButtonConfiguration.FilledButtonConfiguration,
 			ButtonStyle.ClearGlass when glassy => UIButtonConfiguration.ClearGlassButtonConfiguration,
 			_ => UIButtonConfiguration.PlainButtonConfiguration
 		};
@@ -247,7 +249,7 @@ public class Button : Control
 				(nfloat)insets.Right);
 		}
 
-		bool filled = kind is ButtonStyle.Filled or ButtonStyle.FilledCapsule;
+		bool filled = kind is ButtonStyle.Filled or ButtonStyle.FilledCapsule or ButtonStyle.ProminentGlass;
 
 		if (isDestructive)
 		{
@@ -291,8 +293,8 @@ public class Button : Control
 				null,
 				_ =>
 				{
-					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(null))
-						entryCommand.Execute(null);
+					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(entry.CommandParameter))
+						entryCommand.Execute(entry.CommandParameter);
 				});
 
 			if (entry.IsDestructive)
