@@ -1,12 +1,10 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.Services;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed class SearchViewModel : GalleryViewModel, INotifyPropertyChanged
+internal sealed class SearchViewModel : GalleryViewModel
 {
 	readonly IGalleryCatalog catalog;
 	readonly INavigator navigator;
@@ -24,9 +22,6 @@ internal sealed class SearchViewModel : GalleryViewModel, INotifyPropertyChanged
 
 		OpenTopicCommand = Command.From<GalleryTopic>(OpenTopic);
 	}
-
-
-	public event PropertyChangedEventHandler? PropertyChanged;
 
 
 	public List<GalleryTopic> Results
@@ -88,8 +83,4 @@ internal sealed class SearchViewModel : GalleryViewModel, INotifyPropertyChanged
 		OnPropertyChanged(nameof(EmptyTitle));
 		OnPropertyChanged(nameof(EmptySummary));
 	}
-
-	void OnPropertyChanged(
-		[CallerMemberName] string? name = null) =>
-		PropertyChanged?.Invoke(this, new(name));
 }
