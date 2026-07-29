@@ -16,7 +16,7 @@ A tappable button.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
-| Property | `SkeleKit.Button.Text` | public get/set | C# default | Yes | Invalidates measure | The button's title text. |
+| Property | `SkeleKit.Button.Text` | public get/set | C# default | Yes | Invalidates measure | The button's single-line title text. |
 | Property | `SkeleKit.Button.Icon` | public get/set | C# default | Yes | Invalidates measure | An SF Symbol name shown alongside the text, or null for none. |
 | Property | `SkeleKit.Button.Subtitle` | public get/set | C# default | Yes | Invalidates measure | Smaller text shown under the title, or null for none. |
 | Property | `SkeleKit.Button.Kind` | public get/set | ButtonStyle.Plain | No | Invalidates measure | The button's native style: plain, gray, tinted or filled. |
@@ -28,7 +28,7 @@ A tappable button.
 | Property | `SkeleKit.Button.IsDestructive` | public get/set | C# default | No | Invalidates measure | Styles the button red, for destructive actions. |
 | Property | `SkeleKit.Button.IsLoading` | public get/set | C# default | Yes | Visual/interaction only | Shows a spinner in place of the icon while true. Bind it to a command's running state. |
 | Property | `SkeleKit.Button.Menu` | public get | [] | No | No automatic invalidation | Menu entries shown on tap instead of invoking `Button.Command`. Empty for a plain button. |
-| Property | `SkeleKit.Button.SelectsFromMenu` | public get/set | false | No | Visual/interaction only | When true the `Button.Menu` acts as a popup picker: choosing an entry shows it as the button's title and fires its command. |
+| Property | `SkeleKit.Button.SelectsFromMenu` | public get/set | false | No | Visual/interaction only | When true the `Button.Menu` acts as a popup picker: choosing an entry shows it as the button's title, fires its command, and remeasures for the selected title. |
 | Property | `SkeleKit.Button.Command` | public get/set | C# default | No | No automatic invalidation | Command invoked on tap; its CanExecute drives the enabled state. |
 | Property | `SkeleKit.Button.CommandParameter` | public get/set | C# default | No | Visual/interaction only | The parameter passed to `Button.Command`. |
 | Method | `SkeleKit.Button.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
@@ -176,4 +176,3 @@ static void Showcase(SegmentedControl specimen)
 	_ = specimen; // configure the documented properties for the selected matrix row
 }
 ```
-

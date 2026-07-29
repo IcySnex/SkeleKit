@@ -200,6 +200,8 @@ public class Button : Control
 
 		configuration.Title = text;
 		configuration.Subtitle = subtitle;
+		configuration.TitleLineBreakMode = UILineBreakMode.TailTruncation;
+		configuration.SubtitleLineBreakMode = UILineBreakMode.TailTruncation;
 		configuration.ButtonSize = size switch
 		{
 			ButtonSize.Mini => UIButtonConfigurationSize.Mini,
@@ -274,6 +276,7 @@ public class Button : Control
 		}
 
 		Ui.Configuration = configuration;
+		RefreshConfigurationLayout();
 	}
 
 	void ApplyMenu()
@@ -295,6 +298,9 @@ public class Button : Control
 				{
 					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(entry.CommandParameter))
 						entryCommand.Execute(entry.CommandParameter);
+
+					if (SelectsFromMenu)
+						CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(RefreshSelectedMenuLayout);
 				});
 
 			if (entry.IsDestructive)
@@ -304,6 +310,22 @@ public class Button : Control
 		Ui.Menu = UIMenu.Create(menuActions);
 		Ui.ShowsMenuAsPrimaryAction = true;
 		Ui.ChangesSelectionAsPrimaryAction = SelectsFromMenu;
+	}
+
+	void RefreshConfigurationLayout()
+	{
+		Ui.InvalidateIntrinsicContentSize();
+		Ui.SetNeedsLayout();
+		Ui.LayoutIfNeeded();
+	}
+
+	void RefreshSelectedMenuLayout()
+	{
+		if (!IsRealized)
+			return;
+
+		RefreshConfigurationLayout();
+		InvalidateMeasure();
 	}
 
 	void ApplyIsEnabled()
