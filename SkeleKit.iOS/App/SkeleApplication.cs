@@ -7,7 +7,7 @@ namespace SkeleKit;
 /// </summary>
 public class SkeleApplication
 {
-	const double AccentTransitionDuration = 0.2;
+	const double TintTransitionDuration = 0.2;
 
 
 	internal enum ShellKind
@@ -181,7 +181,7 @@ public class SkeleApplication
 	readonly bool preferLargeTitles;
 	readonly TabsBuilder? tabsBuilder;
 	readonly Type? rootView;
-	Color? accent;
+	Color? tint;
 
 	internal SkeleApplication(
 		SkeleApplicationBuilder builder)
@@ -191,7 +191,7 @@ public class SkeleApplication
 		preferLargeTitles = builder.PreferLargeTitles;
 		tabsBuilder = builder.TabsBuilder;
 		rootView = builder.RootView;
-		accent = builder.Accent;
+		tint = builder.Tint;
 
 		Backgrounded = builder.LifecycleBackground;
 		Foregrounded = builder.LifecycleForeground;
@@ -227,45 +227,38 @@ public class SkeleApplication
 	public IServiceProvider Services { get; }
 
 	/// <summary>
-	/// The app-wide accent inherited by windows, chrome and views, or null for the system default.
+	/// The app-wide tint inherited by windows, chrome and views, or null for the system default.
 	/// </summary>
-	/// <remarks>
-	/// Runtime changes animate unless Reduce Motion is enabled.
-	/// </remarks>
-	public Color? Accent
+	public Color? Tint
 	{
-		get => accent;
+		get => tint;
 		set
 		{
-			if (accent == value)
+			if (tint == value)
 				return;
 
-			// an interactive transition can cancel, so only recolor once UIKit commits it
-			if (ReferenceEquals(Current, this)
-				&& PageHost.InteractiveAccentTransition is IUIViewControllerTransitionCoordinator transition)
+			if (Current == this && PageHost.InteractiveTintTransition is IUIViewControllerTransitionCoordinator transition)
 			{
 				transition.NotifyWhenInteractionChanges(context =>
 				{
+#pragma warning disable CA2011
 					if (!context.IsCancelled)
-						Accent = value;
+						Tint = value;
+#pragma warning restore CA2011
 				});
 
 				return;
 			}
 
-			accent = value;
+			tint = value;
 
-			if (ReferenceEquals(Current, this))
-				ApplyAccent();
+			if (Current == this)
+				ApplyTint();
 		}
 	}
 
 
-	internal void ApplyAccent(
-		UIWindow window) =>
-		window.TintColor = accent?.ToUIColor();
-
-	void ApplyAccent()
+	void ApplyTint()
 	{
 		UIWindowScene[] scenes =
 		[
@@ -273,7 +266,6 @@ public class SkeleApplication
 				.ConnectedScenes
 				.OfType<UIWindowScene>()
 		];
-
 		UIWindow[] windows =
 		[
 			.. scenes.SelectMany(scene => scene.Windows)
@@ -282,11 +274,11 @@ public class SkeleApplication
 		void Apply()
 		{
 			foreach (UIWindow window in windows)
-				ApplyAccent(window);
+				window.TintColor = tint?.ToUIColor();
 
-			PageHost.AccentChanged();
-			accessoryContent?.AppAccentChanged();
-			footerContent?.AppAccentChanged();
+			PageHost.TintChanged();
+			accessoryContent?.AppTintChanged();
+			footerContent?.AppTintChanged();
 		}
 
 		if (UIAccessibility.IsReduceMotionEnabled)
@@ -296,7 +288,7 @@ public class SkeleApplication
 		}
 
 		UIView.AnimateNotify(
-			AccentTransitionDuration,
+			TintTransitionDuration,
 			0,
 			UIViewAnimationOptions.CurveEaseInOut
 				| UIViewAnimationOptions.AllowUserInteraction
@@ -304,7 +296,6 @@ public class SkeleApplication
 			Apply,
 			static _ => { });
 	}
-
 
 	void SyncAccessory()
 	{

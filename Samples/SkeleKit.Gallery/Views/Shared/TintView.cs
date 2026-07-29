@@ -1,16 +1,16 @@
 namespace SkeleKit.Gallery.Views.Shared;
 
-internal abstract class AccentView<TViewModel> : ContentView<TViewModel>
+internal abstract class TintView<TViewModel> : ContentView<TViewModel>
 	where TViewModel : class
 {
-	readonly Color accent;
+	readonly Color tint;
 
 
-	protected AccentView(
+	protected TintView(
 		TViewModel viewModel,
-		Color accent) : base(viewModel)
+		Color tint) : base(viewModel)
 	{
-		this.accent = accent;
+		this.tint = tint;
 	}
 
 
@@ -19,6 +19,6 @@ internal abstract class AccentView<TViewModel> : ContentView<TViewModel>
 		base.OnAppearing();
 
 		if (SkeleApplication.Current is SkeleApplication app)
-			app.Accent = accent;
+			app.Tint = tint;
 	}
 }

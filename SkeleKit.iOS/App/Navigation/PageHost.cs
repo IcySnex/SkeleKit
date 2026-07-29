@@ -48,7 +48,7 @@ internal sealed class PageHost : UIViewController
 	static IUIViewControllerTransitionCoordinator? appearingTransition;
 
 
-	internal static IUIViewControllerTransitionCoordinator? InteractiveAccentTransition =>
+	internal static IUIViewControllerTransitionCoordinator? InteractiveTintTransition =>
 		appearingTransition is { InitiallyInteractive: true } ? appearingTransition : null;
 
 
@@ -96,8 +96,8 @@ internal sealed class PageHost : UIViewController
 		});
 	}
 
-	internal static void AccentChanged() =>
-		ForEachLive(host => host.Page?.AppAccentChanged());
+	internal static void TintChanged() =>
+		ForEachLive(host => host.Page?.AppTintChanged());
 
 	static void ForEachLive(
 		Action<PageHost> action)
@@ -275,8 +275,8 @@ internal sealed class PageHost : UIViewController
 			native.Style = UIBarButtonItemStyle.Done;
 
 		// item-level tint: iOS 26 glass buttons do not always follow the bar's TintColor
-		if (Page?.BarAccent is Color accent)
-			native.TintColor = accent.ToUIColor();
+		if (Page?.BarTint is Color tint)
+			native.TintColor = tint.ToUIColor();
 
 		return native;
 	}
@@ -321,8 +321,8 @@ internal sealed class PageHost : UIViewController
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
-		if (Page?.BarAccent is Color accent)
-			native.TintColor = accent.ToUIColor();
+		if (Page?.BarTint is Color tint)
+			native.TintColor = tint.ToUIColor();
 
 		return native;
 	}
@@ -699,9 +699,9 @@ internal sealed class PageHost : UIViewController
 			&& SkeleApplication.Current is { Accessory: { } accessory } app)
 			tabs.SetBottomAccessory(app.AccessoryWanted && !HidesBottomBarWhenPushed ? accessory : null, animated);
 
-		// bar-wide, so every page restores it; null falls back to the app accent
-		NavigationController?.NavigationBar.TintColor = Page.BarAccent?.ToUIColor();
-		NavigationController?.Toolbar.TintColor = Page.BarAccent?.ToUIColor();
+		// bar-wide, so every page restores it; null falls back to the app tint
+		NavigationController?.NavigationBar.TintColor = Page.BarTint?.ToUIColor();
+		NavigationController?.Toolbar.TintColor = Page.BarTint?.ToUIColor();
 
 		// here and not ViewDidLoad: whether back has anywhere to go needs the containment settled
 		ApplyBackGuard();

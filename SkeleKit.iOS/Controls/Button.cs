@@ -260,9 +260,9 @@ public class Button : Control
 			}
 		}
 		// a configuration paints from its own colors, not the view tint
-		else if (Tint is Color accent)
+		else if (Tint is Color tint)
 		{
-			UIColor color = accent.ToUIColor();
+			UIColor color = tint.ToUIColor();
 
 			if (filled || kind is ButtonStyle.Tinted)
 				configuration.BaseBackgroundColor = color;

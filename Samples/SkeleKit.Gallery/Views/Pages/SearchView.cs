@@ -6,7 +6,7 @@ using SkeleKit.Gallery.Views.Shared;
 namespace SkeleKit.Gallery.Views.Pages;
 
 [Page]
-internal sealed class SearchView : AccentView<SearchViewModel>
+internal sealed class SearchView : TintView<SearchViewModel>
 {
 	public SearchView(
 		SearchViewModel viewModel) : base(viewModel, Colors.White)

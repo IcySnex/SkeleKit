@@ -4,7 +4,7 @@ using SkeleKit.Gallery.Views.Cells;
 
 namespace SkeleKit.Gallery.Views.Shared;
 
-internal abstract class CatalogView<TViewModel> : AccentView<TViewModel>
+internal abstract class CatalogView<TViewModel> : TintView<TViewModel>
 	where TViewModel : CatalogViewModel
 {
 	protected CatalogView(

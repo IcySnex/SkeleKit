@@ -19,7 +19,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   confirm. The property is live: set it null while nothing needs guarding and the swipe returns;
   a modal root's synthesized back button dismisses).
 - ~~★ **Toolbar item pull-down menus**~~ — **done** (`ToolbarItem.Menu`, `MenuAction` list).
-- ~~★ **Nav bar tint & title attributes**~~ — **done** (`BarAccent`, `TitleColor`,
+- ~~★ **Nav bar tint & title attributes**~~ — **done** (`BarTint`, `TitleColor`,
   `LargeTitleColor`; per-item appearances copied from the live bar, item-level tints for iOS 26
   glass buttons).
 - ~~★ **`NavigationItem.Prompt`**~~ — **done** (`ContentView.Prompt`).
@@ -90,7 +90,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `CornerCurve = .continuous` (the Apple squircle — today's radius is the "cheap" circular look).
 - ~~★ **TintColor**~~ — **done** (`View.Tint`, an *inherited* property in the WPF sense: the getter
   walks up to the parent unless set locally, the way SwiftUI's `.tint()` environment value does,
-  ending at the `UseAccent` color). UIKit's own `tintColor` inheritance only reaches the controls
+  ending at the `UseTint` color). UIKit's own `tintColor` inheritance only reaches the controls
   that read it — a `UISwitch` fill, a `UIActivityIndicatorView` and a `UIButton` configuration each
   paint from their own color and never see it, so they fall back to `Tint` when the app sets none
   of their own. A tint change walks the subtree (a plain virtual-method walk, no events; `Panel`
@@ -233,7 +233,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   (`Min/MaxIcon`, `TrackColor`/`EmptyTrackColor`/`ThumbColor`, `Step`, `Continuous`).
 - ~~★ **Switch**: `OnTintColor`, `ThumbTintColor`~~ — **done** (`OnColor`, `ThumbColor`).
 - ~~★ **ProgressBar**: `TrackTintColor`~~ — **done** (`TrackColor`, and the filled part is
-  `FillColor` — renamed off `Tint`, which now means the inherited accent on every `View`).
+  `FillColor` — renamed off `Tint`, which now means the inherited tint on every `View`).
 - ~~★ **ActivityIndicator**: `Color`~~ — already existed; nothing to do.
 
 ## ScrollView
@@ -333,7 +333,7 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 - ~~◆ **Action bubble**~~ — **done** (`Tabs.Action(icon, ...)`: the separated bubble as a FAB, a
   repurposed `UISearchTab` with vetoed selection. Search XOR Action, enforced at build).
 
-- ~~★ **Global accent**~~ — **done** (`UseAccent`: window `TintColor` for the controls UIKit
+- ~~★ **Global tint**~~ — **done** (`UseTint`: window `TintColor` for the controls UIKit
   reaches, plus the `View.Tint` root fallback for the self-painting ones — switch fills, spinners,
   button configurations — which UIKit's inheritance never touches).
 - ~~★ **Scene lifecycle**~~ — **done** (`UseLifecycle(background, foreground)`).

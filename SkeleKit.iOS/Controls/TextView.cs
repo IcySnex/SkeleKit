@@ -137,7 +137,7 @@ public class TextView : Control
 	Binding<Color?>? textColorBinding;
 
 	/// <summary>
-	/// Color the links paint in, or null for the app accent.
+	/// Color the links paint in, or null for the app tint.
 	/// </summary>
 	public Color? LinkColor
 	{

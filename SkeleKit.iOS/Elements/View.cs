@@ -557,35 +557,31 @@ public abstract partial class View
 	Brush? background;
 
 	/// <summary>
-	/// The accent color for this view and everything under it.
+	/// The tint color for this view and everything under it.
 	/// </summary>
 	/// <remarks>
-	/// Inherited from the parent unless set here, falling back to the app accent.
+	/// Inherited from the parent unless set here, falling back to the app tint.
 	/// </remarks>
 	public Color? Tint
 	{
-		get => tint ?? (Parent ?? TintHost)?.Tint ?? ApplicationAccent();
+		get => tint ?? (Parent ?? TintHost)?.Tint ?? ApplicationTint();
 		set => Set(ref tint, value, ApplyTint, affectsMeasure: false);
 	}
 	Color? tint;
 
-	static Color? ApplicationAccent()
+	static Color? ApplicationTint()
 	{
-		Color? accent = null;
-		GetApplicationAccent(ref accent);
+		Color? tint = null;
+		GetApplicationTint(ref tint);
 
-		return accent;
+		return tint;
 	}
 
-	static partial void GetApplicationAccent(
-		ref Color? accent);
+	static partial void GetApplicationTint(
+		ref Color? tint);
 
-	// bridges inheritance into hosted trees (collection cells), where Parent is null
 	internal View? TintHost;
-
-	// set on this view itself, not inherited
-	internal Color? LocalTint =>
-		tint;
+	internal Color? LocalTint => tint;
 
 	void ApplyTint()
 	{
@@ -596,7 +592,7 @@ public abstract partial class View
 	internal virtual void TintChanged()
 	{ }
 
-	internal void AppAccentChanged()
+	internal void AppTintChanged()
 	{
 		if (LocalTint is null)
 			TintChanged();
@@ -647,9 +643,6 @@ public abstract partial class View
 		set => Set(ref field, value, ApplyVisualState, affectsMeasure: false);
 	}
 
-
-	// Transform: drawn-only, so it never disturbs layout. This is what a gesture drags and an animation moves.
-
 	/// <summary>
 	/// Shifts the view from where layout put it, in points. Does not affect layout.
 	/// </summary>
@@ -692,18 +685,14 @@ public abstract partial class View
 		set => Set(ref field, value, ApplyAnchor, affectsMeasure: false);
 	} = new(0.5, 0.5);
 
-	// the pivot lives in the transform matrix (baked around the center), so a change re-derives it
 	void ApplyAnchor() =>
 		ApplyTransform();
 
-	// a transformed view must be positioned by bounds+center: setting Frame under a transform is undefined
 	private protected bool HasTransform => translation != Point.Zero || Math.Abs(scale - 1) > 0.00001 || Math.Abs(rotation) > 0.00001;
 
 	internal ViewState Capture() =>
 		new(translation, scale, rotation, opacity, cornerRadius, background, width, height, margin);
 
-	// unconditional, past Set's equality check: an animation block must write natively even when the
-	// model already holds these values, or the animation would capture nothing
 	internal void Apply(
 		ViewState state)
 	{
@@ -733,11 +722,8 @@ public abstract partial class View
 	partial void ApplyTransformCore();
 
 
-	// per-child data written by a parent panel (a Grid stores row/column here)
 	internal object? LayoutParams { get; set; }
 
-
-	// Layout results
 
 	/// <summary>
 	/// Size requested by the last measure pass, including <see cref="Margin"/>.
@@ -754,8 +740,6 @@ public abstract partial class View
 	Size lastAvailable;
 	Size lastDesired;
 
-	// a second slot: Grid measures an auto child unconstrained and then again at the resolved cell
-	// size, so a single-slot cache would thrash on every pass
 	bool previousValid;
 	Size previousAvailable;
 	Size previousDesired;
@@ -873,8 +857,6 @@ public abstract partial class View
 		finalSize;
 
 
-	// LayoutHost drives these
-
 	internal Size HostMeasure(
 		Size available) =>
 		MeasureOverride(available);
@@ -893,7 +875,6 @@ public abstract partial class View
 		double max) =>
 		Math.Max(min, Math.Min(value, max));
 
-	// fold explicit length into min/max (WPF)
 	static (double Min, double Max) MinMax(
 		double explicitLength,
 		double min,

@@ -4,14 +4,14 @@ using SkeleKit.Gallery.Views.Shared;
 namespace SkeleKit.Gallery.Views.Pages;
 
 [Page]
-internal sealed class AboutView : AccentView<AboutViewModel>
+internal sealed class AboutView : TintView<AboutViewModel>
 {
 	public AboutView(
 		AboutViewModel viewModel) : base(viewModel, Colors.Indigo)
 	{
 		Title = "SkeleKit";
 		BackgroundStyle = PageBackground.Grouped;
-		BarAccent = Colors.Indigo;
+		BarTint = Colors.Indigo;
 
 		ToolbarItems.Add(new()
 		{

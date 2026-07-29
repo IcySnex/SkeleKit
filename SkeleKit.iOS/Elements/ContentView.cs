@@ -74,9 +74,9 @@ public abstract partial class ContentView : Panel
 	public StatusBarStyle StatusBar { get; set; }
 
 	/// <summary>
-	/// The accent for this page's bar buttons and back button, or null for the app accent.
+	/// The tint for this page's bar buttons and back button, or null for the app tint.
 	/// </summary>
-	public Color? BarAccent { get; set; }
+	public Color? BarTint { get; set; }
 
 	/// <summary>
 	/// The navigation title's color, or null for the system default.

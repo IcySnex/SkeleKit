@@ -23,7 +23,7 @@ Read-only rich text that can be selected, with tappable `Link` runs.
 | Property | `SkeleKit.TextView.FontWeight` | public get/set | FontWeight.Regular | No | Invalidates measure | The base font weight the runs build on. |
 | Property | `SkeleKit.TextView.FontDesign` | public get/set | FontDesign.Default | No | Invalidates measure | The base font design: system, rounded, serif or monospaced. |
 | Property | `SkeleKit.TextView.TextColor` | public get/set | C# default | Yes | Visual/interaction only | Base text color, or null for the system label color. |
-| Property | `SkeleKit.TextView.LinkColor` | public get/set | C# default | No | Visual/interaction only | Color the links paint in, or null for the app accent. |
+| Property | `SkeleKit.TextView.LinkColor` | public get/set | C# default | No | Visual/interaction only | Color the links paint in, or null for the app tint. |
 | Property | `SkeleKit.TextView.MaxLines` | public get/set | C# default | No | Invalidates measure | Maximum number of lines, or 0 for unlimited (wraps freely). |
 | Property | `SkeleKit.TextView.TextAlignment` | public get/set | Leading | No | Invalidates measure | Horizontal alignment of the text. |
 | Property | `SkeleKit.TextView.LineSpacing` | public get/set | C# default | No | Invalidates measure | Extra points between lines. |
@@ -43,4 +43,3 @@ static void Showcase(TextView specimen)
 	_ = specimen; // configure the documented properties for the selected matrix row
 }
 ```
-

@@ -14,7 +14,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<SearchViewModel>();
 		services.AddTransient<AboutViewModel>();
 	})
-	.UseAccent(Colors.Indigo)
+	.UseTint(Colors.Indigo)
 	.Tabs(tabs => tabs
 		.LargeTitles()
 		.Tab<FrameworkView>("Framework", "square.stack.3d.up")

@@ -19,10 +19,9 @@ public class SkeleWindowSceneDelegate : UIWindowSceneDelegate
 
 		Window = new(windowScene)
 		{
-			RootViewController = app.BuildShell()
+			RootViewController = app.BuildShell(),
+			TintColor = app.Tint?.ToUIColor()
 		};
-
-		app.ApplyAccent(Window);
 
 		Window.MakeKeyAndVisible();
 	}

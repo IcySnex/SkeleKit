@@ -6,9 +6,9 @@ namespace SkeleKit;
 
 public abstract partial class View
 {
-	static partial void GetApplicationAccent(
-		ref Color? accent) =>
-		accent = SkeleApplication.Current?.Accent;
+	static partial void GetApplicationTint(
+		ref Color? tint) =>
+		tint = SkeleApplication.Current?.Tint;
 
 
 	static void Run(

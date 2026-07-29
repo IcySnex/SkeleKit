@@ -4,7 +4,7 @@ using SkeleKit.Gallery.Views.Shared;
 namespace SkeleKit.Gallery.Views.Pages;
 
 [Page]
-internal sealed class TopicView : AccentView<GalleryTopic>
+internal sealed class TopicView : TintView<GalleryTopic>
 {
 	public TopicView(
 		GalleryTopic topic) : base(topic, topic.Accent)

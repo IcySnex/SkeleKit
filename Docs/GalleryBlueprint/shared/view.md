@@ -56,7 +56,7 @@ Base of every SkeleKit element: owns one lazily-created native view and takes pa
 | Property | `SkeleKit.View.VerticalAlignment` | public get/set | VerticalAlignment.Stretch | No | Invalidates measure | How the view is placed within the vertical space its parent gives it. |
 | Property | `SkeleKit.View.IsVisible` | public get/set | true | Yes | Invalidates measure | When false the view takes no space and is hidden natively. |
 | Property | `SkeleKit.View.Background` | public get/set | C# default | No | Visual/interaction only | The background fill — a color, a gradient or a material — or null for transparent. |
-| Property | `SkeleKit.View.Tint` | public get/set | Inherited; app accent at the root; null uses the system default | No | Visual/interaction only | The accent color for this view and everything under it. A local value overrides the inherited accent for that subtree. |
+| Property | `SkeleKit.View.Tint` | public get/set | Inherited; app tint at the root; null uses the system default | No | Visual/interaction only | The tint color for this view and everything under it. A local value overrides the inherited tint for that subtree. |
 | Property | `SkeleKit.View.Opacity` | public get/set | 1.0 | No | Visual/interaction only | Opacity from 0 (transparent) to 1 (opaque). |
 | Property | `SkeleKit.View.CornerRadius` | public get/set | C# default | No | Visual/interaction only | Corner radius in points applied to the layer. |
 | Property | `SkeleKit.View.Shadow` | public get/set | null | No | Visual/interaction only | A drop shadow behind the view, or null for none. A shadow needs unclipped bounds: it stops a corner radius from clipping the content, and an explicit `View.ClipsToBounds` hides it. |
