@@ -17,12 +17,21 @@ public class DetentTests
 	}
 
 	[Fact]
+	public void Content_UsesMeasuredHeight()
+	{
+		Assert.Equal(DetentKind.Content, Detent.Content.Kind);
+		Assert.Equal(280, Detent.Content.Resolve(600, 280));
+		Assert.Equal(600, Detent.Content.Resolve(600, 800));
+	}
+
+	[Fact]
 	public void Height_KeepsPoints()
 	{
 		Detent detent = Detent.Height(320);
 
 		Assert.Equal(DetentKind.Height, detent.Kind);
 		Assert.Equal(320, detent.Value);
+		Assert.Equal(300, detent.Resolve(300));
 	}
 
 	[Fact]
@@ -32,6 +41,7 @@ public class DetentTests
 
 		Assert.Equal(DetentKind.Fraction, detent.Kind);
 		Assert.Equal(0.35, detent.Value);
+		Assert.Equal(210, detent.Resolve(600));
 	}
 
 	[Theory]

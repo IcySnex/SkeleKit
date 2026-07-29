@@ -151,6 +151,10 @@ internal sealed class PageHost : UIViewController
 	UISearchController? search;
 	UIAction? backAction;
 	SheetGuard? dismissGuard;
+	bool hasContentDetent;
+	bool contentDetentPending;
+	nfloat contentWidth;
+	nfloat contentChrome;
 
 	public PageHost(
 		ContentView page)
@@ -188,6 +192,66 @@ internal sealed class PageHost : UIViewController
 
 
 	public ContentView? Page { get; private set; }
+
+
+	internal void AttachContentDetent() =>
+		hasContentDetent = true;
+
+	internal void ContentMeasureInvalidated()
+	{
+		if (contentDetentPending || !hasContentDetent)
+			return;
+
+		contentDetentPending = true;
+
+		CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() =>
+		{
+			contentDetentPending = false;
+
+			if (NavigationController?.SheetPresentationController is not UISheetPresentationController sheet)
+				return;
+
+			if (UIAccessibility.IsReduceMotionEnabled)
+				sheet.InvalidateDetents();
+			else
+				sheet.AnimateChanges(sheet.InvalidateDetents);
+		});
+	}
+
+	internal double MeasureContent(
+		double maximum)
+	{
+		if (Page is not ContentView page || View is not UIView view)
+			return maximum;
+
+		UIEdgeInsets safe = view.SafeAreaInsets;
+		double width = view.Bounds.Width;
+
+		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Leading))
+			width -= safe.Left;
+		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Trailing))
+			width -= safe.Right;
+
+		Size desired = page.HostMeasure(new(Math.Max(0, width), maximum));
+
+		return desired.Height + ChromeHeight(page);
+	}
+
+	double ChromeHeight(
+		ContentView page)
+	{
+		if (NavigationController is not UINavigationController navigation)
+			return 0;
+
+		double height = 0;
+
+		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Top) && !navigation.NavigationBarHidden)
+			height += Math.Max(View?.SafeAreaInsets.Top ?? 0, navigation.NavigationBar.Bounds.Height);
+		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Bottom) && !navigation.ToolbarHidden)
+			height += navigation.Toolbar.Bounds.Height;
+
+		return height;
+	}
 
 
 	// ReSharper disable once UnusedMember.Local
@@ -745,9 +809,16 @@ internal sealed class PageHost : UIViewController
 		UIEdgeInsets safe = View!.SafeAreaInsets;
 		Page.PageSafeArea = new(safe.Left, safe.Top, safe.Right, safe.Bottom);
 
-		// one regime: the page always sits inside the safe area. A view that wants to escape it says
-		// so with IgnoresSafeArea and grows back out — nothing depends on what the root happens to be.
 		CGRect frame = Inset(View.Bounds, safe, Page.SafeAreaEdges);
+		nfloat chrome = (nfloat)ChromeHeight(Page);
+
+		if (contentWidth != frame.Width || contentChrome != chrome)
+		{
+			contentWidth = frame.Width;
+			contentChrome = chrome;
+			ContentMeasureInvalidated();
+		}
+
 		CGRect shrunk = new(
 			frame.X,
 			frame.Y,

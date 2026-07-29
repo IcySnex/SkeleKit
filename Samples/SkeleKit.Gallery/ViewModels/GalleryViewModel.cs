@@ -20,5 +20,5 @@ internal abstract class GalleryViewModel
 
 
 	void ShowInfo() =>
-		_ = navigator.PresentViewAsync<AboutView>(ModalStyle.Sheet(Detent.Medium, Detent.Large));
+		_ = navigator.PresentViewAsync<AboutView>(ModalStyle.Sheet(Detent.Content, Detent.Large));
 }

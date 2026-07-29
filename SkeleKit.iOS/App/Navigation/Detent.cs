@@ -15,6 +15,11 @@ public readonly record struct Detent
 	/// </summary>
 	public static readonly Detent Large = new(DetentKind.Large);
 
+	/// <summary>
+	/// The page's measured content and navigation chrome, updated as layout changes and capped at the available height.
+	/// </summary>
+	public static readonly Detent Content = new(DetentKind.Content);
+
 
 	/// <summary>
 	/// A fixed height in points, clamped to the sheet's available height.
@@ -57,12 +62,24 @@ public readonly record struct Detent
 	internal DetentKind Kind { get; }
 
 	internal double Value { get; }
+
+	internal double Resolve(
+		double maximum,
+		double content = 0) =>
+		Kind switch
+		{
+			DetentKind.Height => Math.Min(Value, maximum),
+			DetentKind.Fraction => Value * maximum,
+			DetentKind.Content => Math.Clamp(content, 0, maximum),
+			_ => maximum
+		};
 }
 
 internal enum DetentKind
 {
 	Medium,
 	Large,
+	Content,
 	Height,
 	Fraction
 }

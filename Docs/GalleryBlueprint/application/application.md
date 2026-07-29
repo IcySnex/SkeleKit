@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 | Lab | APIs | Action | Expected observable behavior |
 | --- | --- | --- | --- |
-| Modal presentations | `INavigator.Present*`, `ModalStyle`, `ModalPresentation`, `Detent`, `PopoverArrow` | Present automatic, full-screen, sheet, and anchored popover variants; exercise system, fixed-height, and fractional detents; rotate while a fractional sheet is visible; drag between detents and attempt guarded dismissal. | Correct iPhone/iPad presentation, fixed heights clamp to available space, fractional heights adapt to the new maximum, arrow selection and anchor behavior remain correct, and `ConfirmLeave` can veto dismissal. |
+| Modal presentations | `INavigator.Present*`, `ModalStyle`, `ModalPresentation`, `Detent`, `PopoverArrow` | Present automatic, full-screen, sheet, and anchored popover variants; exercise system, fixed-height, fractional, and content-fitting detents; add, remove, resize, and restyle content while its sheet is visible; rotate while a fractional or content-fitting sheet is visible; drag between detents and attempt guarded dismissal. | Correct iPhone/iPad presentation, fixed heights clamp to available space, fractional heights adapt to the new maximum, content-fitting sheets animate with their measured content and become scrollable at the maximum, arrow selection and anchor behavior remain correct, and `ConfirmLeave` can veto dismissal. |
 | Dialogs | `AlertAsync`, `ConfirmAsync`, `PromptAsync`, `SelectAsync` | Trigger success, cancel, destructive, empty-input, and long-option states. | Awaited result matches the chosen action; iPad presentation remains anchored and keyboard/focus behavior is stable. |
 | Sharing and picking | `ISharer`, `ShareContent`, `ISystemPicker`, `PickedAsset` | Share text/URL/image and pick image/file; cancel each picker once. | Share sheet contains only supplied content; pickers return deterministic name/data or null on cancel. Permission denial is explained, never represented as an empty successful result. |
 | Haptics | `Haptics`, `HapticEvent`, `HapticStyle`, `HapticsNotification` | Trigger impact strengths, selection, notification outcomes, and a short custom pattern on a physical device. | Each action is perceivable without changing layout; simulator limitations are called out. |
@@ -249,6 +249,7 @@ A height where a modal sheet may rest.
 | --- | --- | --- | --- | --- | --- | --- |
 | Field/value | `SkeleKit.Detent.Medium` | public static readonly | n/a | n/a | n/a | The system medium height. |
 | Field/value | `SkeleKit.Detent.Large` | public static readonly | n/a | n/a | n/a | The system full height. |
+| Field/value | `SkeleKit.Detent.Content` | public static readonly | n/a | n/a | n/a | Fits the page's measured content and visible navigation chrome, updating as its layout changes and clamping at the available height. |
 | Method | `SkeleKit.Detent.Height(System.Double)` | public static | n/a | n/a | n/a | Creates a fixed height in points, clamped to the sheet's available height. Rejects non-finite and non-positive values. |
 | Method | `SkeleKit.Detent.Fraction(System.Double)` | public static | n/a | n/a | n/a | Creates a fraction of the sheet's available height. Accepts finite values greater than 0 and no greater than 1. |
 | Method | `SkeleKit.Detent.ToString` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
@@ -260,7 +261,7 @@ A height where a modal sheet may rest.
 
 ### Gallery treatment
 
-Use the modal-presentation lab above. Show fixed and fractional sheets alone and alongside `Medium` and `Large`, with detents ordered from smallest to largest.
+Use the modal-presentation lab above. Show fixed and fractional sheets alone and alongside `Medium` and `Large`, with detents ordered from smallest to largest. Exercise `Content` alone and before `Large`; change content height repeatedly and verify the sheet follows without polling, caps at full height, and leaves oversized scrolling content usable.
 
 ## INavigator
 

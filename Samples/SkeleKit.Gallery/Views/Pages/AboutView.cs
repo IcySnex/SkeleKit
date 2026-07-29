@@ -4,19 +4,19 @@ using SkeleKit.Gallery.Views.Shared;
 namespace SkeleKit.Gallery.Views.Pages;
 
 [Page]
-internal sealed class AboutView : TintView<AboutViewModel>
+internal sealed class AboutView : ContentView<AboutViewModel>
 {
 	public AboutView(
-		AboutViewModel viewModel) : base(viewModel, Colors.Indigo)
+		AboutViewModel viewModel) : base(viewModel)
 	{
+		Border icon;
+
 		Title = "SkeleKit";
 		BackgroundStyle = PageBackground.Grouped;
-		BarTint = Colors.Indigo;
 
 		ToolbarItems.Add(new()
 		{
 			Text = "Done",
-			IsPrimary = true,
 			Command = viewModel.DismissCommand
 		});
 
@@ -29,7 +29,7 @@ internal sealed class AboutView : TintView<AboutViewModel>
 
 				Children =
 				{
-					new Border
+					(icon = new Border
 					{
 						HorizontalAlignment = HorizontalAlignment.Center,
 						Width = 86,
@@ -46,7 +46,7 @@ internal sealed class AboutView : TintView<AboutViewModel>
 							SymbolWeight = FontWeight.Semibold,
 							Tint = Colors.White
 						}
-					},
+					}),
 
 					new Label
 					{
@@ -101,7 +101,7 @@ internal sealed class AboutView : TintView<AboutViewModel>
 						Icon = "doc.text",
 						Kind = ButtonStyle.Gray,
 						Size = ButtonSize.Large,
-						Command = viewModel.ShowLicensesCommand
+						Command = Command.From(() => icon.IsVisible = !icon.IsVisible.Value)
 					}
 				}
 			}

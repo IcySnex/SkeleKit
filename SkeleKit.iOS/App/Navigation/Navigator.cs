@@ -87,7 +87,10 @@ internal sealed class Navigator(
 
 		if (style.Presentation is ModalPresentation.PageSheet && wrapper.SheetPresentationController is UISheetPresentationController sheet)
 		{
-			sheet.Detents = [.. style.Detents.Select(NativeDetent)];
+			if (style.Detents.Any(detent => detent.Kind == DetentKind.Content))
+				host.AttachContentDetent();
+
+			sheet.Detents = [.. style.Detents.Select(detent => NativeDetent(detent, host))];
 
 			if (Identifier(style.Detents[0]) is UISheetPresentationControllerDetentIdentifier identifier)
 				sheet.SelectedDetentIdentifier = identifier;
@@ -114,18 +117,39 @@ internal sealed class Navigator(
 	}
 
 	static UISheetPresentationControllerDetent NativeDetent(
-		Detent detent) =>
+		Detent detent,
+		PageHost host) =>
 		detent.Kind switch
 		{
 			DetentKind.Medium => UISheetPresentationControllerDetent.CreateMediumDetent(),
 			DetentKind.Large => UISheetPresentationControllerDetent.CreateLargeDetent(),
+			DetentKind.Content => ContentDetent(detent, host),
 			DetentKind.Height => UISheetPresentationControllerDetent.Create(
 				CustomIdentifier(detent),
-				context => (nfloat)Math.Min(detent.Value, (double)context.MaximumDetentValue)),
+				context => (nfloat)detent.Resolve((double)context.MaximumDetentValue)),
 			_ => UISheetPresentationControllerDetent.Create(
 				CustomIdentifier(detent),
-				context => context.MaximumDetentValue * (nfloat)detent.Value)
+				context => (nfloat)detent.Resolve((double)context.MaximumDetentValue))
 		};
+
+	static UISheetPresentationControllerDetent ContentDetent(
+		Detent detent,
+		PageHost host)
+	{
+		WeakReference<PageHost> weakHost = new(host);
+
+		return UISheetPresentationControllerDetent.Create(
+			CustomIdentifier(detent),
+			context =>
+			{
+				double maximum = context.MaximumDetentValue;
+				double content = weakHost.TryGetTarget(out PageHost? target)
+					? target.MeasureContent(maximum)
+					: maximum;
+
+				return (nfloat)detent.Resolve(maximum, content);
+			});
+	}
 
 	static string CustomIdentifier(
 		Detent detent) =>

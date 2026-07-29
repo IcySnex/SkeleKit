@@ -257,8 +257,13 @@ public abstract partial class View
 			apply();
 	}
 
-	partial void RequestLayout() =>
+	partial void RequestLayout()
+	{
 		native?.SetNeedsLayout();
+
+		if (this is ContentView { Host: PageHost host })
+			host.ContentMeasureInvalidated();
+	}
 
 	void ApplyContextMenu()
 	{

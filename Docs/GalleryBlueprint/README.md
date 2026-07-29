@@ -4,8 +4,8 @@ Clean-slate, visualization-first source of truth for a future control gallery. I
 
 ## Baseline and conventions
 
-- Compiled XML baseline: **154 documented types** and **937 documented declared members** (**1091 symbols total**).
-- Reconciled compiled inventory: **155 accessible types** and **1195 declared fields/properties/events/constructors/methods** after metadata-only symbols are added.
+- Compiled XML baseline: **154 documented types** and **938 documented declared members** (**1092 symbols total**).
+- Reconciled compiled inventory: **155 accessible types** and **1196 declared fields/properties/events/constructors/methods** after metadata-only symbols are added.
 - Platform floor: **iOS 18.0**. Availability notes in an API row narrow that floor.
 - A canonical page owns each type. `coverage.md` is the machine-checkable assignment ledger.
 - Declared API tables use exact XML documentation IDs so overloads, generic arity, operators, conversions, and parameter types remain unambiguous.
