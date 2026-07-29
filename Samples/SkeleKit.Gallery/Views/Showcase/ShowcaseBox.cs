@@ -3,7 +3,7 @@ namespace SkeleKit.Gallery.Views.Showcase;
 internal sealed class ShowcaseBox : Border
 {
 	static readonly Color CanvasBackground = Color.Dynamic(
-		Color.FromHex(0xF6F4FA),
+		Colors.White,
 		Color.FromHex(0x2C2C2E));
 
 
