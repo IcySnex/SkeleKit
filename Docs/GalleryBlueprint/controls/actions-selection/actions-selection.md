@@ -26,7 +26,7 @@ A tappable button.
 | Property | `SkeleKit.Button.IconSpacing` | public get/set | 8 | No | Invalidates measure | Points between the icon (or spinner) and the text. |
 | Property | `SkeleKit.Button.Padding` | public get/set | C# default | No | Invalidates measure | Padding around the content, or null for the size class default. |
 | Property | `SkeleKit.Button.IsDestructive` | public get/set | C# default | No | Invalidates measure | Styles the button red, for destructive actions. |
-| Property | `SkeleKit.Button.IsLoading` | public get/set | C# default | Yes | Visual/interaction only | Shows a spinner in place of the icon while true. Bind it to a command's running state. |
+| Property | `SkeleKit.Button.IsLoading` | public get/set | C# default | Yes | Invalidates measure | Shows a spinner in place of the icon while true. Bind it to a command's running state. |
 | Property | `SkeleKit.Button.Menu` | public get | [] | No | No automatic invalidation | Menu entries shown on tap instead of invoking `Button.Command`. Empty for a plain button. |
 | Property | `SkeleKit.Button.SelectsFromMenu` | public get/set | false | No | Visual/interaction only | When true the `Button.Menu` acts as a popup picker: choosing an entry shows it as the button's title, fires its command, and remeasures for the selected title. |
 | Property | `SkeleKit.Button.Command` | public get/set | C# default | No | No automatic invalidation | Command invoked on tap; its CanExecute drives the enabled state. |

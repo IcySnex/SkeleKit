@@ -121,7 +121,7 @@ public class Button : Control
 	public Bindable<bool> IsLoading
 	{
 		get => isLoading;
-		set => isLoadingBinding = Register(isLoadingBinding, value, value => Set(ref isLoading, value, ApplyConfiguration, affectsMeasure: false));
+		set => isLoadingBinding = Register(isLoadingBinding, value, value => Set(ref isLoading, value, ApplyConfiguration));
 	}
 	bool isLoading;
 	Binding<bool>? isLoadingBinding;
