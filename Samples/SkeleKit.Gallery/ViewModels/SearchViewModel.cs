@@ -65,7 +65,12 @@ internal sealed partial class SearchViewModel : ObservableObject
 	[RelayCommand]
 	Task OpenTopicAsync(
 		GalleryTopic? topic) =>
-		topic is null ? Task.CompletedTask : navigator.PushAsync(topic);
+		topic switch
+		{
+			{ Destination: Type destination } => navigator.PushAsync(destination),
+			not null => navigator.PushAsync(topic),
+			_ => Task.CompletedTask
+		};
 
 	[RelayCommand]
 	Task ShowInfoAsync() =>

@@ -1,4 +1,5 @@
 using SkeleKit.Gallery.Models;
+using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
 
 namespace SkeleKit.Gallery.Services;
 
@@ -21,7 +22,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Actions & Selection",
-				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Purple, GalleryArea.Controls),
+				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Purple, GalleryArea.Controls, typeof(ButtonViewModel)),
 				Topic("Picker", "Wheel-based selection from deterministic values.", "dial.medium", Colors.Purple, GalleryArea.Controls),
 				Topic("SegmentedControl", "Compact mutually exclusive choices.", "rectangle.split.3x1", Colors.Purple, GalleryArea.Controls),
 				Topic("DatePicker", "Dates, times, ranges and presentation styles.", "calendar", Colors.Purple, GalleryArea.Controls),
@@ -145,8 +146,9 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		string summary,
 		string symbol,
 		Color accent,
-		GalleryArea area) =>
-		new(title, summary, symbol, accent, area);
+		GalleryArea area,
+		Type? destination = null) =>
+		new(title, summary, symbol, accent, area, destination);
 
 	static int Rank(
 		GalleryTopic topic,

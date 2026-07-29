@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SkeleKit;
 using SkeleKit.Gallery.Services;
 using SkeleKit.Gallery.ViewModels;
+using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
 using SkeleKit.Gallery.Views.Pages;
 
 SkeleApplication.CreateBuilder()
@@ -13,6 +14,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<PlatformViewModel>();
 		services.AddTransient<SearchViewModel>();
 		services.AddTransient<AboutViewModel>();
+		services.AddTransient<ButtonViewModel>();
 	})
 	.UseTint(Colors.Indigo)
 	.UseAppearance(Appearance.System)
