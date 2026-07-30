@@ -42,6 +42,9 @@ public class Slider : Control
 	/// <summary>
 	/// The increment the value snaps to, or 0 for continuous.
 	/// </summary>
+	/// <remarks>
+	/// User changes are reported once per snapped value.
+	/// </remarks>
 	public double Step
 	{
 		get => step;
@@ -146,10 +149,16 @@ public class Slider : Control
 		double value = Ui.Value;
 
 		if (step > 0)
-		{
-			value = minimum + Math.Round((value - minimum) / step) * step;
+			value = Math.Clamp(
+				minimum + Math.Round((value - minimum) / step) * step,
+				Math.Min(minimum, maximum),
+				Math.Max(minimum, maximum));
+
+		if (value == current)
+			return;
+
+		if (step > 0)
 			Ui.Value = (float)value;
-		}
 
 		Set(ref current, value, affectsMeasure: false);
 		valueBinding?.PushToSource(value);
@@ -161,6 +170,9 @@ public class Slider : Control
 	{
 		UISlider slider = new();
 		slider.ValueChanged += (_, _) => OnValueChanged();
+		slider.TouchUpInside += (_, _) => ApplyValue();
+		slider.TouchUpOutside += (_, _) => ApplyValue();
+		slider.TouchCancel += (_, _) => ApplyValue();
 
 		return slider;
 	}
