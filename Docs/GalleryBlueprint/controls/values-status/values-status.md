@@ -146,7 +146,7 @@ A continuous value picker.
 | Property | `SkeleKit.Slider.Value` | public get/set | C# default | Yes | Visual/interaction only | The current value. |
 | Property | `SkeleKit.Slider.Minimum` | public get/set | C# default | No | Visual/interaction only | The minimum selectable value. |
 | Property | `SkeleKit.Slider.Maximum` | public get/set | 1 | No | Visual/interaction only | The maximum selectable value. |
-| Property | `SkeleKit.Slider.Step` | public get/set | C# default | No | Visual/interaction only | The increment the value snaps to, or 0 for continuous. User changes are reported once per snapped value. iOS 26 uses native slider tick configuration for representable stepped ranges. |
+| Property | `SkeleKit.Slider.Step` | public get/set | C# default | No | Visual/interaction only | The increment the value snaps to, or 0 for continuous. User changes are reported once per snapped value. Stepping requires iOS 26 or later. |
 | Property | `SkeleKit.Slider.Continuous` | public get/set | true | No | Visual/interaction only | Whether the value updates all through the drag, rather than only when the thumb is released. |
 | Property | `SkeleKit.Slider.TrackColor` | public get/set | C# default | No | Visual/interaction only | The color of the filled part of the track, or null for the system tint. |
 | Property | `SkeleKit.Slider.EmptyTrackColor` | public get/set | C# default | No | Visual/interaction only | The color of the unfilled part of the track, or null for the system default. |

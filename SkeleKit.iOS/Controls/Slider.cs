@@ -1,5 +1,3 @@
-using System.Runtime.Versioning;
-
 namespace SkeleKit;
 
 /// <summary>
@@ -45,8 +43,7 @@ public class Slider : Control
 	/// The increment the value snaps to, or 0 for continuous.
 	/// </summary>
 	/// <remarks>
-	/// User changes are reported once per snapped value.
-	/// iOS 26 uses native slider ticks for representable stepped ranges.
+	/// Stepping requires iOS 26 or later.
 	/// </remarks>
 	public double Step
 	{
@@ -131,11 +128,17 @@ public class Slider : Control
 
 	void ApplyStep()
 	{
-		if (OperatingSystem.IsIOSVersionAtLeast(26))
+		if (!OperatingSystem.IsIOSVersionAtLeast(26))
+			return;
+
+		if (step <= 0)
 		{
-			int ticks = (int)((maximum - minimum) / step) + 1;
-			Ui.TrackConfiguration = UISliderTrackConfiguration.Create(ticks);
+			Ui.TrackConfiguration = null;
+			return;
 		}
+
+		int ticks = (int)((maximum - minimum) / step) + 1;
+		Ui.TrackConfiguration = UISliderTrackConfiguration.Create(ticks);
 	}
 
 	void ApplyValue() =>
@@ -159,17 +162,6 @@ public class Slider : Control
 	void OnValueChanged()
 	{
 		double value = Ui.Value;
-
-		// if (step > 0 && !nativeSteps)
-		// {
-		// 	value = Math.Clamp(
-		// 		minimum + Math.Round((value - minimum) / step) * step,
-		// 		Math.Min(minimum, maximum),
-		// 		Math.Max(minimum, maximum));
-		// }
-		//
-		// if (step > 0 && !nativeSteps)
-		// 	Ui.Value = (float)value;
 
 		Set(ref current, value, affectsMeasure: false);
 		valueBinding?.PushToSource(value);
