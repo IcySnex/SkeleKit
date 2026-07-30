@@ -106,6 +106,18 @@ public class DatePicker : Control
 	}
 
 
+	protected override Size MeasureOverride(
+		Size availableSize)
+	{
+		Size fallback = base.MeasureOverride(availableSize);
+		CGSize intrinsic = Ui.IntrinsicContentSize;
+
+		return new(
+			intrinsic.Width == UIView.NoIntrinsicMetric ? fallback.Width : intrinsic.Width,
+			intrinsic.Height == UIView.NoIntrinsicMetric ? fallback.Height : intrinsic.Height);
+	}
+
+
 	private protected override UIView CreateNative()
 	{
 		UIDatePicker picker = new();
