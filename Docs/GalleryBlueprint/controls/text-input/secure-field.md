@@ -16,19 +16,28 @@ Secure-entry preset of `TextField`, masking input as it's typed.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
-| Property | `SkeleKit.SecureField.RevealButton` | public get/set | false | No | Invalidates measure | Whether a trailing eye button toggles the masking of the entered text. Owns the trailing slot, so it wins over `TextField.TrailingIcon`. |
+| Property | `SkeleKit.SecureField.RevealButton` | public get/set | false | No | Invalidates measure | Whether a trailing eye button toggles the masking of the entered text. Owns the trailing slot, so it wins over `TextField.TrailingIcon`. Turning it off restores masking. |
 | Method | `SkeleKit.SecureField.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 
 ### Showcase matrix
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `RevealButton` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Secure entry | `RevealButton`; inherited `Text`, `LeadingIcon`, `ContentKind`, `ReturnKey`, `RequiresText`, `SubmitCommand` | Edit a two-way new-password value and inspect masked, revealed, empty, populated, focused, and submitted states. Show deterministic strength feedback without displaying the password. |
+| Password intent and trailing slot | `RevealButton`; inherited `ContentKind`, `TrailingIcon`, `ClearButton` | Switch among current-password, new-password, and no autofill intent. Toggle all three trailing controls and verify that reveal wins over a decorative icon, which wins over the clear button. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(SecureField specimen)
+new SecureField
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Text = Bind(
+		model => model.Text,
+		(model, value) => model.Text = value),
+	Placeholder = "Create a password",
+	LeadingIcon = ImageSource.Symbol("lock.fill"),
+	RevealButton = true,
+	ContentKind = ContentKind.NewPassword,
+	ReturnKey = ReturnKeyType.Done,
+	RequiresText = true,
+	SubmitCommand = viewModel.SubmitCommand
+};
 ```
