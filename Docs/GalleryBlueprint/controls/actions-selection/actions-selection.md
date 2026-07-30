@@ -120,12 +120,12 @@ A menu-style selection button wrapping `UIButton` + `UIMenu`.
 - Source: `SkeleKit.iOS/Controls/Picker.cs`
 - Inheritance/shape: `class Picker<T> : Control`
 - Inherited API: [`View`](../../shared/view.md)
-- Native counterpart: `UIPickerView`
+- Native counterpart: `UIButton` with `UIMenu`
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
-| Property | `SkeleKit.Picker`1.ItemsSource` | public get/set | C# default | No | Invalidates measure | The selectable items. |
+| Property | `SkeleKit.Picker`1.ItemsSource` | public get/set | [] | Yes | Invalidates measure | The selectable items. Live when the list is an `ObservableCollection`. |
 | Property | `SkeleKit.Picker`1.SelectedItem` | public get/set | C# default | Yes | Invalidates measure | The selected item, or null for none. |
 | Property | `SkeleKit.Picker`1.ItemTitle` | public get/set | item => item.ToString() ?? "" | No | No automatic invalidation | How an item is labeled in the menu. Defaults to `ToString()`. |
 | Property | `SkeleKit.Picker`1.Placeholder` | public get/set | C# default | Yes | Invalidates measure | Text shown when nothing is selected. |

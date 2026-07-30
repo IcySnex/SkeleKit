@@ -1,3 +1,5 @@
+using System.Collections.Specialized;
+
 namespace SkeleKit;
 
 /// <summary>
@@ -7,16 +9,22 @@ namespace SkeleKit;
 public class Picker<TItem> : Control
 	where TItem : class
 {
+	bool hooked;
+
+
 	UIButton Ui => (UIButton)Native;
 
 
 	/// <summary>
 	/// The selectable items.
 	/// </summary>
+	/// <remarks>
+	/// Live when the list is an <c>ObservableCollection</c>.
+	/// </remarks>
 	public BindableList<TItem> ItemsSource
 	{
 		get => new(items);
-		set => itemsBinding = Register(itemsBinding, value.Expression, value.Value, value => Set(ref items, value ?? [], ApplyMenu));
+		set => itemsBinding = Register(itemsBinding, value.Expression, value.Value, SetItems);
 	}
 	IReadOnlyList<TItem> items = [];
 	Binding<IReadOnlyList<TItem>?>? itemsBinding;
@@ -54,6 +62,57 @@ public class Picker<TItem> : Control
 	public Action<TItem>? SelectionChanged { get; set; }
 
 
+	void SetItems(
+		IReadOnlyList<TItem>? value)
+	{
+		IReadOnlyList<TItem> next = value ?? [];
+		if (ReferenceEquals(items, next))
+			return;
+
+		if (hooked && items is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnItemsChanged;
+
+		items = next;
+
+		if (hooked && items is INotifyCollectionChanged live)
+			live.CollectionChanged += OnItemsChanged;
+
+		if (IsRealized)
+			ApplyMenu();
+
+		InvalidateMeasure();
+	}
+
+	void HookItems()
+	{
+		if (hooked)
+			return;
+
+		hooked = true;
+
+		if (items is INotifyCollectionChanged live)
+			live.CollectionChanged += OnItemsChanged;
+	}
+
+	void UnhookItems()
+	{
+		if (!hooked)
+			return;
+
+		if (items is INotifyCollectionChanged live)
+			live.CollectionChanged -= OnItemsChanged;
+
+		hooked = false;
+	}
+
+	void OnItemsChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs args)
+	{
+		ApplyMenu();
+		InvalidateMeasure();
+	}
+
 	void ApplyMenu()
 	{
 		UIAction[] actions = new UIAction[items.Count];
@@ -90,6 +149,12 @@ public class Picker<TItem> : Control
 			ChangesSelectionAsPrimaryAction = true
 		};
 
-	private protected override void ApplyProperties() =>
+	private protected override void ApplyProperties()
+	{
+		HookItems();
 		ApplyMenu();
+	}
+
+	private protected override void OnUnrealized() =>
+		UnhookItems();
 }
