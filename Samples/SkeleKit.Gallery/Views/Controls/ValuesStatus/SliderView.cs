@@ -66,16 +66,6 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 			}
 		};
 
-		Switch ticks = new()
-		{
-			IsOn = viewModel.ShowsTicks,
-			Toggled = value =>
-			{
-				viewModel.ShowsTicks = value;
-				slider.ShowsTicks = value;
-			}
-		};
-
 		Switch enabled = new()
 		{
 			IsOn = viewModel.ControlEnabled,
@@ -122,7 +112,6 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 						Command = viewModel.ResetValueCommand
 					}),
 				SettingRow("Step", step),
-				SettingRow("Step markers", ticks),
 				SettingRow("Continuous updates", continuous),
 				SettingRow("Endpoint symbols", icons),
 				SettingRow("Enabled", enabled)),

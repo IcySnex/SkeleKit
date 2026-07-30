@@ -41,10 +41,6 @@ internal sealed partial class SliderViewModel : ShowcaseViewModel
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(SliderCode))]
-	bool showsTicks = true;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SliderCode))]
 	bool controlEnabled = true;
 
 	[ObservableProperty]
@@ -66,7 +62,6 @@ internal sealed partial class SliderViewModel : ShowcaseViewModel
 				Minimum = 0,
 				Maximum = 100,
 				Step = {{Number(SelectedStep.Value)}},
-				ShowsTicks = {{Boolean(ShowsTicks)}},
 				Continuous = {{Boolean(Continuous)}},
 				MinIcon = {{(ShowsIcons ? "\"speaker.fill\"" : "null")}},
 				MaxIcon = {{(ShowsIcons ? "\"speaker.wave.3.fill\"" : "null")}},

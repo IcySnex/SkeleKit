@@ -9,12 +9,9 @@ public class Slider : Control
 {
 	const int MaxNativeTicks = 1024;
 
-	static readonly UIImage HiddenTick = new UIGraphicsImageRenderer(new(1, 1))
-		.CreateImage(static _ => { });
-
-
 	UISlider Ui => (UISlider)Native;
 
+	bool configuring;
 	bool nativeSteps;
 
 
@@ -62,15 +59,6 @@ public class Slider : Control
 		set => Set(ref step, value, ApplyStep, affectsMeasure: false);
 	}
 	double step;
-
-	/// <summary>
-	/// Whether native step tick marks are visible on iOS 26.
-	/// </summary>
-	public bool ShowsTicks
-	{
-		get;
-		set => Set(ref field, value, ApplyStep);
-	} = true;
 
 	/// <summary>
 	/// Whether the value updates all through the drag, rather than only when the thumb is released.
@@ -138,12 +126,8 @@ public class Slider : Control
 	public Action<double>? ValueChanged { get; set; }
 
 
-	void ApplyRange()
-	{
-		Ui.MinValue = (float)minimum;
-		Ui.MaxValue = (float)maximum;
+	void ApplyRange() =>
 		ApplyStep();
-	}
 
 	void ApplyValue() =>
 		Ui.Value = (float)current;
@@ -151,15 +135,25 @@ public class Slider : Control
 	void ApplyStep()
 	{
 		nativeSteps = false;
+		configuring = true;
 
-		if (OperatingSystem.IsIOSVersionAtLeast(26))
+		try
 		{
-			UISliderTrackConfiguration? configuration = NativeStepConfiguration();
-			Ui.TrackConfiguration = configuration;
-			nativeSteps = configuration is not null;
-		}
+			if (OperatingSystem.IsIOSVersionAtLeast(26))
+			{
+				UISliderTrackConfiguration? configuration = NativeStepConfiguration();
+				Ui.TrackConfiguration = configuration;
+				nativeSteps = configuration is not null;
+			}
 
-		ApplyValue();
+			Ui.MinValue = (float)minimum;
+			Ui.MaxValue = (float)maximum;
+			ApplyValue();
+		}
+		finally
+		{
+			configuring = false;
+		}
 	}
 
 	[SupportedOSPlatform("ios26.0")]
@@ -178,16 +172,15 @@ public class Slider : Control
 		int count = whole + 1 + (remainder > span * 1e-9 ? 1 : 0);
 
 		List<UISliderTick> ticks = new(count);
-		UIImage? image = ShowsTicks ? null : HiddenTick;
 
 		for (int index = 0; index <= whole; index++)
 		{
 			float position = (float)(index * step / span);
-			ticks.Add(UISliderTick.Create(position, null, image));
+			ticks.Add(UISliderTick.Create(position, null, null));
 		}
 
 		if (ticks.Count < count)
-			ticks.Add(UISliderTick.Create(1, null, image));
+			ticks.Add(UISliderTick.Create(1, null, null));
 
 		UISliderTrackConfiguration configuration = UISliderTrackConfiguration.Create([.. ticks]);
 		configuration.AllowsTickValuesOnly = true;
@@ -214,6 +207,9 @@ public class Slider : Control
 
 	void OnValueChanged()
 	{
+		if (configuring)
+			return;
+
 		double value = Ui.Value;
 
 		if (step > 0 && !nativeSteps)

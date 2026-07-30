@@ -128,7 +128,7 @@ Every documented exported type in the compiled iOS XML baseline appears exactly 
 | `SkeleApplicationBuilder` | [application/application.md](application/application.md) | Non-gallery | 11 |
 | `SkeleApplicationDelegate` | [appendix/implementation-surface.md](appendix/implementation-surface.md) | Non-gallery | 2 |
 | `SkeleWindowSceneDelegate` | [appendix/implementation-surface.md](appendix/implementation-surface.md) | Non-gallery | 5 |
-| `Slider` | [controls/values-status/values-status.md](controls/values-status/values-status.md) | Lab | 13 |
+| `Slider` | [controls/values-status/values-status.md](controls/values-status/values-status.md) | Lab | 12 |
 | `SolidBrush` | [primitives/colors-brushes.md](primitives/colors-brushes.md) | Visual | 2 |
 | `Span` | [primitives/typography-text.md](primitives/typography-text.md) | Visual | 11 |
 | `StackPanel` | [layout/stack-panel.md](layout/stack-panel.md) | Visual | 5 |
