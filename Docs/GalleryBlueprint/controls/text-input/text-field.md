@@ -18,21 +18,21 @@ A single-line text input.
 | --- | --- | --- | --- | --- | --- | --- |
 | Property | `SkeleKit.TextField.Text` | public get/set | C# default | Yes | Invalidates measure | The current text. Two-way by default. |
 | Property | `SkeleKit.TextField.Placeholder` | public get/set | C# default | Yes | Invalidates measure | Placeholder text shown when empty. |
-| Property | `SkeleKit.TextField.LeadingIcon` | public get/set | null | No | Visual/interaction only | A decorative symbol or bundle icon shown before the text, or null for none. |
-| Property | `SkeleKit.TextField.TrailingIcon` | public get/set | null | No | Visual/interaction only | A decorative symbol or bundle icon shown after the text, or null for none. Shares the trailing slot with `TextField.ClearButton`, so an icon hides the clear button. |
+| Property | `SkeleKit.TextField.LeadingIcon` | public get/set | null | No | Invalidates measure | A decorative symbol or bundle icon shown before the text, or null for none. |
+| Property | `SkeleKit.TextField.TrailingIcon` | public get/set | null | No | Invalidates measure | A decorative symbol or bundle icon shown after the text, or null for none. Shares the trailing slot with `TextField.ClearButton`, so an icon hides the clear button. |
 | Property | `SkeleKit.TextField.Keyboard` | public get/set | KeyboardType.Default | No | Visual/interaction only | Which on-screen keyboard to show while editing. |
 | Property | `SkeleKit.TextField.ReturnKey` | public get/set | ReturnKeyType.Default | No | Visual/interaction only | The label shown on the keyboard's return key. |
 | Property | `SkeleKit.TextField.ContentKind` | public get/set | C# default | No | Visual/interaction only | What the field holds, so the system can offer autofill (passwords, one-time codes, contacts). |
 | Property | `SkeleKit.TextField.Capitalization` | public get/set | Capitalization.Sentences | No | Visual/interaction only | When typing is automatically capitalized. |
 | Property | `SkeleKit.TextField.Autocorrection` | public get/set | true | No | Visual/interaction only | Whether the keyboard autocorrects and spell-checks the input. |
-| Property | `SkeleKit.TextField.ClearButton` | public get/set | C# default | No | Visual/interaction only | When the field shows its built-in clear button. |
+| Property | `SkeleKit.TextField.ClearButton` | public get/set | C# default | No | Invalidates measure | When the field shows its built-in clear button. |
 | Property | `SkeleKit.TextField.RequiresText` | public get/set | C# default | No | Visual/interaction only | Whether the return key is disabled while the field is empty. |
 | Property | `SkeleKit.TextField.KeyboardLook` | public get/set | KeyboardLook.Default | No | Visual/interaction only | The color scheme of the raised keyboard. |
 | Property | `SkeleKit.TextField.KeyboardToolbar` | public get/set | C# default | No | Visual/interaction only | A bar above the raised keyboard with Done and optional previous/next arrows. |
 | Property | `SkeleKit.TextField.KeyboardAccessory` | public get/set | C# default | No | Visual/interaction only | A custom view above the raised keyboard. Wins over `TextField.KeyboardToolbar`; one view per field. |
 | Property | `SkeleKit.TextField.FontSize` | public get/set | 17 | Yes | Invalidates measure | Font size in points. |
-| Property | `SkeleKit.TextField.FontWeight` | public get/set | FontWeight.Regular | No | Visual/interaction only | The weight the text is drawn at. |
-| Property | `SkeleKit.TextField.FontDesign` | public get/set | C# default | No | Visual/interaction only | The system font design the text uses. |
+| Property | `SkeleKit.TextField.FontWeight` | public get/set | FontWeight.Regular | No | Invalidates measure | The weight the text is drawn at. |
+| Property | `SkeleKit.TextField.FontDesign` | public get/set | C# default | No | Invalidates measure | The system font design the text uses. |
 | Property | `SkeleKit.TextField.TextChanged` | public get/set | null | No | No automatic invalidation | Invoked with the new value whenever the text changes. |
 | Property | `SkeleKit.TextField.SubmitCommand` | public get/set | null | No | No automatic invalidation | Command invoked when the user taps the keyboard's return key. |
 | Method | `SkeleKit.TextField.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |

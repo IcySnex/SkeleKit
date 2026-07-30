@@ -103,7 +103,7 @@ public class TextEditor : Control
 	public FontWeight FontWeight
 	{
 		get => fontWeight;
-		set => Set(ref fontWeight, value, ApplyFont, affectsMeasure: false);
+		set => Set(ref fontWeight, value, ApplyFont);
 	}
 	FontWeight fontWeight = FontWeight.Regular;
 
@@ -113,7 +113,7 @@ public class TextEditor : Control
 	public FontDesign FontDesign
 	{
 		get => fontDesign;
-		set => Set(ref fontDesign, value, ApplyFont, affectsMeasure: false);
+		set => Set(ref fontDesign, value, ApplyFont);
 	}
 	FontDesign fontDesign;
 

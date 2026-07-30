@@ -16,7 +16,7 @@ Secure-entry preset of `TextField`, masking input as it's typed.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
-| Property | `SkeleKit.SecureField.RevealButton` | public get/set | false | No | Visual/interaction only | Whether a trailing eye button toggles the masking of the entered text. Owns the trailing slot, so it wins over `TextField.TrailingIcon`. |
+| Property | `SkeleKit.SecureField.RevealButton` | public get/set | false | No | Invalidates measure | Whether a trailing eye button toggles the masking of the entered text. Owns the trailing slot, so it wins over `TextField.TrailingIcon`. |
 | Method | `SkeleKit.SecureField.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 
 ### Showcase matrix
@@ -32,4 +32,3 @@ static void Showcase(SecureField specimen)
 	_ = specimen; // configure the documented properties for the selected matrix row
 }
 ```
-

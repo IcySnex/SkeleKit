@@ -24,8 +24,8 @@ A multi-line text input.
 | Property | `SkeleKit.TextEditor.KeyboardToolbar` | public get/set | C# default | No | Visual/interaction only | A bar above the raised keyboard with Done and optional previous/next arrows. |
 | Property | `SkeleKit.TextEditor.KeyboardAccessory` | public get/set | C# default | No | Visual/interaction only | A custom view above the raised keyboard. Wins over `TextEditor.KeyboardToolbar`; one view per field. |
 | Property | `SkeleKit.TextEditor.FontSize` | public get/set | 17 | Yes | Invalidates measure | Font size in points. |
-| Property | `SkeleKit.TextEditor.FontWeight` | public get/set | FontWeight.Regular | No | Visual/interaction only | The weight the text is drawn at. |
-| Property | `SkeleKit.TextEditor.FontDesign` | public get/set | C# default | No | Visual/interaction only | The system font design the text uses. |
+| Property | `SkeleKit.TextEditor.FontWeight` | public get/set | FontWeight.Regular | No | Invalidates measure | The weight the text is drawn at. |
+| Property | `SkeleKit.TextEditor.FontDesign` | public get/set | C# default | No | Invalidates measure | The system font design the text uses. |
 | Property | `SkeleKit.TextEditor.TextChanged` | public get/set | null | No | No automatic invalidation | Invoked with the new value whenever the text changes. |
 | Method | `SkeleKit.TextEditor.MeasureOverride(SkeleKit.Size)` | protected override | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 | Method | `SkeleKit.TextEditor.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
@@ -43,4 +43,3 @@ static void Showcase(TextEditor specimen)
 	_ = specimen; // configure the documented properties for the selected matrix row
 }
 ```
-

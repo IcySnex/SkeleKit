@@ -109,7 +109,7 @@ public class TextField : Control
 	public ImageSource? LeadingIcon
 	{
 		get;
-		set => Set(ref field, value, ApplyLeading, affectsMeasure: false);
+		set => Set(ref field, value, ApplyLeading);
 	}
 
 	/// <summary>
@@ -121,7 +121,7 @@ public class TextField : Control
 	public ImageSource? TrailingIcon
 	{
 		get;
-		set => Set(ref field, value, ApplyTrailing, affectsMeasure: false);
+		set => Set(ref field, value, ApplyTrailing);
 	}
 
 	/// <summary>
@@ -180,7 +180,7 @@ public class TextField : Control
 	public ClearButton ClearButton
 	{
 		get => clearButton;
-		set => Set(ref clearButton, value, ApplyTraits, affectsMeasure: false);
+		set => Set(ref clearButton, value, ApplyTraits);
 	}
 	ClearButton clearButton;
 
@@ -244,7 +244,7 @@ public class TextField : Control
 	public FontWeight FontWeight
 	{
 		get => fontWeight;
-		set => Set(ref fontWeight, value, ApplyFont, affectsMeasure: false);
+		set => Set(ref fontWeight, value, ApplyFont);
 	}
 	FontWeight fontWeight = FontWeight.Regular;
 
@@ -254,7 +254,7 @@ public class TextField : Control
 	public FontDesign FontDesign
 	{
 		get => fontDesign;
-		set => Set(ref fontDesign, value, ApplyFont, affectsMeasure: false);
+		set => Set(ref fontDesign, value, ApplyFont);
 	}
 	FontDesign fontDesign;
 

@@ -17,7 +17,7 @@ public class SecureField : TextField
 	public bool RevealButton
 	{
 		get;
-		set => Set(ref field, value, ApplyTrailing, affectsMeasure: false);
+		set => Set(ref field, value, ApplyTrailing);
 	}
 
 
