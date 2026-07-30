@@ -34,12 +34,25 @@ A multi-line text input.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Text`, `ContentKind`, `Capitalization`, `Autocorrection`, `KeyboardLook`, `KeyboardToolbar`, `KeyboardAccessory`, `FontSize`, `FontWeight`, `FontDesign`, `TextChanged` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Binding and live growth | `Text`, `TextChanged` | Edit a two-way value, observe every native change, and set or clear it from the ViewModel. Add and remove lines to verify that the editor remeasures with its content. |
+| Keyboard behavior | `ContentKind`, `Capitalization`, `Autocorrection`, `KeyboardLook` | Change native text traits while focused and inspect autofill intent, capitalization, correction, spelling, and system/light/dark keyboard appearance. |
+| Typography | `FontSize`, `FontWeight`, `FontDesign` | Adjust explicit size, every native weight, and all four system font designs while the editor remains editable and remeasures. |
+| Keyboard accessories | `KeyboardToolbar`, `KeyboardAccessory` | Focus either of two editors and switch live among no accessory, Done, navigation, and a custom SkeleKit accessory. The custom view wins over the toolbar. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(TextEditor specimen)
+new TextEditor
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Text = Bind(
+		model => model.Text,
+		(model, value) => model.Text = value),
+	ContentKind = ContentKind.None,
+	Capitalization = Capitalization.Sentences,
+	Autocorrection = true,
+	KeyboardLook = KeyboardLook.Default,
+	KeyboardToolbar = KeyboardToolbar.Done,
+	FontSize = 17,
+	FontWeight = FontWeight.Regular,
+	FontDesign = FontDesign.Default,
+	TextChanged = viewModel.RecordTextChanged
+};
 ```
