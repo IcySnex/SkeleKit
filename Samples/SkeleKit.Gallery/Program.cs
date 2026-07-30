@@ -4,6 +4,7 @@ using SkeleKit.Gallery.Services;
 using SkeleKit.Gallery.ViewModels;
 using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
 using SkeleKit.Gallery.ViewModels.Controls.TextInput;
+using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
 using SkeleKit.Gallery.Views.Pages;
 
 SkeleApplication.CreateBuilder()
@@ -22,6 +23,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<PickerViewModel>();
 		services.AddTransient<SecureFieldViewModel>();
 		services.AddTransient<SegmentedControlViewModel>();
+		services.AddTransient<SwitchViewModel>();
 		services.AddTransient<TextEditorViewModel>();
 		services.AddTransient<TextFieldViewModel>();
 		services.AddTransient<TextViewViewModel>();

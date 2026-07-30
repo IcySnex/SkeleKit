@@ -1,6 +1,7 @@
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
 using SkeleKit.Gallery.ViewModels.Controls.TextInput;
+using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
 
 namespace SkeleKit.Gallery.Services;
 
@@ -31,7 +32,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Values & Status",
-				Topic("Switch", "A native binary setting with two-way state.", "switch.2", Colors.Red, GalleryArea.Controls),
+				Topic("Switch", "A native binary setting with two-way state.", "switch.2", Colors.Red, GalleryArea.Controls, typeof(SwitchViewModel)),
 				Topic("Slider", "Continuous values, ranges and custom tinting.", "slider.horizontal.3", Colors.Red, GalleryArea.Controls),
 				Topic("Stepper", "Increment and decrement bounded values.", "plusminus", Colors.Red, GalleryArea.Controls),
 				Topic("ProgressBar", "Determinate task progress and tinting.", "chart.bar.fill", Colors.Red, GalleryArea.Controls),

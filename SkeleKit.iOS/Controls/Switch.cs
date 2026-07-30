@@ -20,7 +20,7 @@ public class Switch : Control
 	Binding<bool>? isOnBinding;
 
 	/// <summary>
-	/// The fill color while on, or null for the system green.
+	/// The fill color while on, or null for the inherited tint.
 	/// </summary>
 	public Color? OnColor
 	{

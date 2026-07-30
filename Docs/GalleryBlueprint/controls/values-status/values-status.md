@@ -216,7 +216,7 @@ A binary on/off toggle.
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
 | Property | `SkeleKit.Switch.IsOn` | public get/set | C# default | Yes | Visual/interaction only | Whether the switch is on. |
-| Property | `SkeleKit.Switch.OnColor` | public get/set | C# default | No | Visual/interaction only | The fill color while on, or null for the system green. |
+| Property | `SkeleKit.Switch.OnColor` | public get/set | C# default | No | Visual/interaction only | The fill color while on, or null for the inherited tint. |
 | Property | `SkeleKit.Switch.ThumbColor` | public get/set | C# default | No | Visual/interaction only | The thumb color, or null for the system default. |
 | Property | `SkeleKit.Switch.Toggled` | public get/set | null | No | No automatic invalidation | Invoked with the new value whenever the user toggles the switch. |
 | Method | `SkeleKit.Switch.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
@@ -225,13 +225,17 @@ A binary on/off toggle.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `IsOn`, `OnColor`, `ThumbColor`, `Toggled` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Binding and callback | `IsOn`, `Toggled` | Toggle the native control and observe the two-way ViewModel value and callback count. Change the value programmatically and verify that the control updates without invoking the user callback. |
+| Color and state | `OnColor`, `ThumbColor`; inherited `IsEnabled` | Compare inherited, pink, indigo, and purple on colors plus system, white, and pink thumbs across on, off, enabled, and disabled states. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Switch specimen)
+new Switch
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	IsOn = Bind(
+		model => model.IsOn,
+		(model, value) => model.IsOn = value),
+	OnColor = null,
+	ThumbColor = null,
+	Toggled = viewModel.RecordToggle
+};
 ```
-
