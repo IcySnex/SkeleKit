@@ -136,14 +136,37 @@ A menu-style selection button wrapping `UIButton` + `UIMenu`.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `ItemsSource`, `SelectedItem`, `ItemTitle`, `Placeholder`, `SelectionChanged` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Selection & labels | `ItemsSource`, `SelectedItem`, `ItemTitle`, `Placeholder`, `SelectionChanged` | Pick a destination and verify the two-way source, formatted title, checked menu action, and callback status update together. Clear the source selection and verify the placeholder replaces the title. |
+| Live items | `ItemsSource`, `SelectedItem`, `ItemTitle`, `Placeholder` | Switch an `ObservableCollection` between base, empty, and extended contents. Verify the menu updates immediately, the empty state shows the placeholder, and selecting the deliberately long item remeasures the control. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Picker<string> specimen)
+Picker<PickerDestination> picker = new()
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	ItemsSource = Bind(model => model.Destinations),
+	SelectedItem = Bind(
+		model => model.SelectedDestination,
+		(model, value) => model.SelectedDestination = value),
+	Placeholder = "Choose a destination",
+	ItemTitle = item => $"{item.City}, {item.Country}",
+	SelectionChanged = viewModel.RecordSelection
+};
+```
+
+```csharp
+ObservableCollection<PickerDestination> destinations =
+[
+	new("Oslo", "Norway", "OSL"),
+	new("Paris", "France", "CDG")
+];
+
+Picker<PickerDestination> live = new()
+{
+	ItemsSource = destinations,
+	Placeholder = "Select an item",
+	ItemTitle = item => $"{item.City}, {item.Country}"
+};
+
+destinations.Add(new("San Francisco", "United States", "SFO"));
 ```
 
 ## SegmentedControl

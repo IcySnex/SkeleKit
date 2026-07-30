@@ -15,6 +15,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<SearchViewModel>();
 		services.AddTransient<AboutViewModel>();
 		services.AddTransient<ButtonViewModel>();
+		services.AddTransient<PickerViewModel>();
 	})
 	.UseTint(Colors.Indigo)
 	.Tabs(tabs => tabs
