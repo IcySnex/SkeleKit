@@ -247,7 +247,6 @@ public class TextView : Control
 		NSMutableParagraphStyle paragraph = new()
 		{
 			LineSpacing = (nfloat)lineSpacing,
-			LineBreakMode = maxLines > 0 ? UILineBreakMode.TailTruncation : UILineBreakMode.WordWrap,
 			Alignment = Alignment()
 		};
 
