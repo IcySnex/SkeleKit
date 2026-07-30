@@ -9,7 +9,7 @@ namespace SkeleKit.Gallery.Views.Pages;
 internal sealed class SearchView : TintView<SearchViewModel>
 {
 	public SearchView(
-		SearchViewModel viewModel) : base(viewModel, Colors.White)
+		SearchViewModel viewModel) : base(viewModel, Colors.Label)
 	{
 		Title = "Search";
 		BackgroundStyle = PageBackground.Grouped;
@@ -53,7 +53,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 						Width = 68,
 						Height = 68,
 						CornerRadius = 20,
-						Background = Colors.White.WithAlpha(0.12),
+						Background = Colors.Label.WithAlpha(0.12),
 
 						Child = new Image
 						{
@@ -62,7 +62,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 							Source = ImageSource.Symbol("magnifyingglass"),
 							SymbolSize = 28,
 							SymbolWeight = FontWeight.Semibold,
-							Tint = Colors.White
+							Tint = Colors.Label
 						}
 					},
 
