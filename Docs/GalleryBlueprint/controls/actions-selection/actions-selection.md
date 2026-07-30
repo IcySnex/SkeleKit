@@ -190,12 +190,27 @@ A segmented control choosing one of a few options.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Items`, `SelectedIndex`, `SelectionChanged` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Selection & binding | `Items`, `SelectedIndex`, `SelectionChanged` | Select Overview, Details, and Reviews. Verify the two-way source index, visible segment, derived title, and callback status update together; reset from the ViewModel and verify the first segment becomes selected. |
+| Content density | `Items`, `SelectedIndex` | Compare interactive controls containing two, three, and five short titles. Verify UIKit distributes each fixed item set without clipping at compact phone widths and preserves independent selection. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(SegmentedControl specimen)
+SegmentedControl sections = new()
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	SelectedIndex = Bind(
+		model => model.SelectedIndex,
+		(model, value) => model.SelectedIndex = value),
+	SelectionChanged = viewModel.RecordSelection
+};
+sections.Items.Add("Overview");
+sections.Items.Add("Details");
+sections.Items.Add("Reviews");
+```
+
+```csharp
+SegmentedControl history = new();
+history.Items.Add("1D");
+history.Items.Add("1W");
+history.Items.Add("1M");
+history.Items.Add("6M");
+history.Items.Add("1Y");
 ```

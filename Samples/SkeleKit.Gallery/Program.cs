@@ -16,6 +16,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<AboutViewModel>();
 		services.AddTransient<ButtonViewModel>();
 		services.AddTransient<PickerViewModel>();
+		services.AddTransient<SegmentedControlViewModel>();
 	})
 	.UseTint(Colors.Indigo)
 	.Tabs(tabs => tabs
