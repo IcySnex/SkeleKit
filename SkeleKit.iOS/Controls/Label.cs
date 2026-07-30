@@ -208,7 +208,9 @@ public class Label : Control
 
 		UIStringAttributes attributes = new()
 		{
-			ParagraphStyle = BuildParagraph()
+			ParagraphStyle = BuildParagraph(),
+			Font = FontFor(weight, design, fontSize),
+			ForegroundColor = textColor?.ToUIColor() ?? UIColor.Label
 		};
 
 		if (letterSpacing is not 0)
@@ -261,14 +263,16 @@ public class Label : Control
 			_ => UILineBreakMode.TailTruncation
 		};
 
-		if (UsesAttributes)
+		if (UsesAttributes || spans is { Count: > 0 })
 			ApplyText();
 	}
 
 	void ApplyTextColor()
 	{
-		if (textColor is Color color)
-			Ui.TextColor = color.ToUIColor();
+		Ui.TextColor = textColor?.ToUIColor() ?? UIColor.Label;
+
+		if (UsesAttributes || spans is { Count: > 0 })
+			ApplyText();
 	}
 
 	void ApplyMaxLines() =>
