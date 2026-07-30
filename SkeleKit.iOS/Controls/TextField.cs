@@ -177,6 +177,9 @@ public class TextField : Control
 	/// <summary>
 	/// When the field shows its built-in clear button.
 	/// </summary>
+	/// <remarks>
+	/// Clearing preserves focus and updates <see cref="Text"/> and <see cref="TextChanged"/>.
+	/// </remarks>
 	public ClearButton ClearButton
 	{
 		get => clearButton;
@@ -388,6 +391,13 @@ public class TextField : Control
 
 		field.EditingChanged += (_, _) => OnEdited();
 		field.EditingDidEnd += (_, _) => OnEditingEnded();
+
+		field.ShouldClear = textField =>
+		{
+			textField.Text = "";
+			OnEdited();
+			return false;
+		};
 
 		field.ShouldReturn = textField =>
 		{

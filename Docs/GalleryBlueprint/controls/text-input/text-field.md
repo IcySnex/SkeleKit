@@ -25,7 +25,7 @@ A single-line text input.
 | Property | `SkeleKit.TextField.ContentKind` | public get/set | C# default | No | Visual/interaction only | What the field holds, so the system can offer autofill (passwords, one-time codes, contacts). |
 | Property | `SkeleKit.TextField.Capitalization` | public get/set | Capitalization.Sentences | No | Visual/interaction only | When typing is automatically capitalized. |
 | Property | `SkeleKit.TextField.Autocorrection` | public get/set | true | No | Visual/interaction only | Whether the keyboard autocorrects and spell-checks the input. |
-| Property | `SkeleKit.TextField.ClearButton` | public get/set | C# default | No | Invalidates measure | When the field shows its built-in clear button. |
+| Property | `SkeleKit.TextField.ClearButton` | public get/set | C# default | No | Invalidates measure | When the field shows its built-in clear button. Clearing preserves focus and updates `Text` and `TextChanged`. |
 | Property | `SkeleKit.TextField.RequiresText` | public get/set | C# default | No | Visual/interaction only | Whether the return key is disabled while the field is empty. |
 | Property | `SkeleKit.TextField.KeyboardLook` | public get/set | KeyboardLook.Default | No | Visual/interaction only | The color scheme of the raised keyboard. |
 | Property | `SkeleKit.TextField.KeyboardToolbar` | public get/set | C# default | No | Visual/interaction only | A bar above the raised keyboard with Done and optional previous/next arrows. |
