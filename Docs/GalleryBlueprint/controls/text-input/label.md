@@ -39,13 +39,93 @@ A text label.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Text`, `Spans`, `TextStyle`, `FontSize`, `Bold`, `FontWeight`, `FontDesign`, `Truncation`, `TextColor`, `MaxLines`, `TextAlignment`, `LineSpacing`, `LetterSpacing`, `Underline`, `Strikethrough`, `AutoShrink`, `MaxFontSize` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Dynamic Type | `Text`, `TextStyle`, `MaxFontSize`, `TextAlignment` | Select every native text style and change the system Dynamic Type size. The label follows the selected native scaling curve; enabling the cap limits its largest accessibility size without changing the base style. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Label specimen)
+new Label
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Text = "Typography that follows the reader",
+	TextStyle = TextStyle.Body,
+	MaxFontSize = 34,
+	TextAlignment = TextAlignment.Center
+};
 ```
 
+| Scenario | Declared properties covered | Interaction and expected result |
+| --- | --- | --- |
+| Font configuration | `Text`, `FontSize`, `Bold`, `FontWeight`, `FontDesign`, `TextColor` | Move the explicit size slider, select every native weight, and compare the default, rounded, serif, and monospaced designs. A second label demonstrates the `Bold` shorthand while the primary label uses a semantic purple color. |
+
+```csharp
+new Label
+{
+	Text = "Designed for emphasis",
+	FontSize = Bind(model => model.FontSize),
+	FontWeight = FontWeight.Semibold,
+	FontDesign = FontDesign.Rounded,
+	TextColor = Colors.Purple
+};
+
+new Label
+{
+	Text = "Bold shorthand",
+	Bold = true
+};
+```
+
+| Scenario | Declared properties covered | Interaction and expected result |
+| --- | --- | --- |
+| Layout and fitting | `Text`, `MaxLines`, `Truncation`, `TextAlignment`, `AutoShrink` | Constrain a wrapping label to one, two, or unlimited lines and select every alignment. Independently compare every truncation position against single-line shrinking inside a fixed width. |
+
+```csharp
+new Label
+{
+	Text = "Native text wraps naturally inside a constrained layout.",
+	MaxLines = 2,
+	Truncation = Truncation.None,
+	TextAlignment = TextAlignment.Leading
+};
+
+new Label
+{
+	Text = "Quarterly-performance-overview.pdf",
+	MaxLines = 1,
+	Truncation = Truncation.Tail,
+	AutoShrink = 0.65
+};
+```
+
+| Scenario | Declared properties covered | Interaction and expected result |
+| --- | --- | --- |
+| Attributed text | `Text`, `Spans`, `LineSpacing`, `LetterSpacing`, `Underline`, `Strikethrough` | Verify `Spans` replaces the fallback `Text` and preserves inherited label typography. Adjust line and letter spacing, then apply underline and strikethrough globally while the per-run font, color, size, and decorations remain intact. |
+
+```csharp
+new Label
+{
+	Text = "Fallback text",
+	Spans =
+	[
+		"Mix ",
+		new("weight") { Bold = true },
+		", ",
+		new("color") { TextColor = Colors.Purple },
+		" and ",
+		new("design")
+		{
+			FontWeight = FontWeight.Light,
+			FontDesign = FontDesign.Serif
+		},
+		".\n",
+		new("Per-run styling")
+		{
+			FontSize = 22,
+			Underline = true
+		},
+		" replaces ",
+		new("uniform text") { Strikethrough = true }
+	],
+	LineSpacing = 6,
+	LetterSpacing = 0.5,
+	Underline = false,
+	Strikethrough = false
+};
+```

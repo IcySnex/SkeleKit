@@ -1,5 +1,6 @@
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
+using SkeleKit.Gallery.ViewModels.Controls.TextInput;
 
 namespace SkeleKit.Gallery.Services;
 
@@ -14,7 +15,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Text & Input",
-				Topic("Label", "Plain and attributed text with Dynamic Type.", "textformat", Colors.Pink, GalleryArea.Controls),
+				Topic("Label", "Plain and attributed text with Dynamic Type.", "textformat", Colors.Pink, GalleryArea.Controls, typeof(LabelViewModel)),
 				Topic("TextView", "Selectable rich text with links and menus.", "doc.richtext", Colors.Pink, GalleryArea.Controls),
 				Topic("TextField", "Single-line text entry and keyboard behavior.", "character.cursor.ibeam", Colors.Pink, GalleryArea.Controls),
 				Topic("SecureField", "Password entry with reveal and validation states.", "lock.fill", Colors.Pink, GalleryArea.Controls),

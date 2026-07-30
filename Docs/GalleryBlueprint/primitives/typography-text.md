@@ -219,14 +219,26 @@ A styled run of text inside a `Label`'s `Label.Spans`.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Text`, `Bold`, `FontWeight`, `FontDesign`, `FontSize`, `TextColor`, `Underline`, `Strikethrough` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Label attributed text | `Text`, `Bold`, `FontWeight`, `FontDesign`, `FontSize`, `TextColor`, `Underline`, `Strikethrough` | Render all fields together inside the Label attributed-text lab. Unset fields inherit the owning label, string literals use the implicit conversion, and per-run settings remain distinct when whole-label spacing or decoration changes. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Span specimen)
-{
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+IReadOnlyList<Span> spans =
+[
+	"Mix ",
+	new("weight") { Bold = true },
+	new("color") { TextColor = Colors.Purple },
+	new("design")
+	{
+		FontWeight = FontWeight.Light,
+		FontDesign = FontDesign.Serif
+	},
+	new("Per-run styling")
+	{
+		FontSize = 22,
+		Underline = true
+	},
+	new("uniform text") { Strikethrough = true }
+];
 ```
 
 ## TextAlignment
@@ -493,4 +505,3 @@ static void Showcase(TextStyle specimen)
 	_ = specimen; // configure the documented properties for the selected matrix row
 }
 ```
-

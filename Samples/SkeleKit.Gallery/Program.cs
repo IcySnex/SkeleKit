@@ -3,6 +3,7 @@ using SkeleKit;
 using SkeleKit.Gallery.Services;
 using SkeleKit.Gallery.ViewModels;
 using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
+using SkeleKit.Gallery.ViewModels.Controls.TextInput;
 using SkeleKit.Gallery.Views.Pages;
 
 SkeleApplication.CreateBuilder()
@@ -17,6 +18,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<ButtonViewModel>();
 		services.AddTransient<ColorWellViewModel>();
 		services.AddTransient<DatePickerViewModel>();
+		services.AddTransient<LabelViewModel>();
 		services.AddTransient<PickerViewModel>();
 		services.AddTransient<SegmentedControlViewModel>();
 	})
