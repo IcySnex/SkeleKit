@@ -41,13 +41,77 @@ A single-line text input.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Text`, `Placeholder`, `LeadingIcon`, `TrailingIcon`, `Keyboard`, `ReturnKey`, `ContentKind`, `Capitalization`, `Autocorrection`, `ClearButton`, `RequiresText`, `KeyboardLook`, `KeyboardToolbar`, `KeyboardAccessory`, `FontSize`, `FontWeight`, `FontDesign`, `TextChanged`, `SubmitCommand` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Binding and submission | `Text`, `Placeholder`, `LeadingIcon`, `ClearButton`, `ReturnKey`, `ContentKind`, `Capitalization`, `Autocorrection`, `RequiresText`, `TextChanged`, `SubmitCommand` | Edit an email field and verify its two-way ViewModel value and `TextChanged` status update on every native edit. Set and clear the value from the ViewModel. Toggle the required-text behavior and verify the Send key is disabled only while empty. Submit through the keyboard and verify the command result. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(TextField specimen)
+new TextField
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Text = Bind(
+		model => model.Text,
+		(model, value) => model.Text = value),
+	Placeholder = "name@example.com",
+	LeadingIcon = ImageSource.Symbol("envelope"),
+	ClearButton = ClearButton.WhileEditing,
+	Keyboard = KeyboardType.Email,
+	ReturnKey = ReturnKeyType.Send,
+	ContentKind = ContentKind.Email,
+	Capitalization = Capitalization.None,
+	Autocorrection = false,
+	RequiresText = true,
+	TextChanged = viewModel.RecordTextChanged,
+	SubmitCommand = viewModel.SubmitCommand
+};
 ```
 
+| Scenario | Declared properties covered | Interaction and expected result |
+| --- | --- | --- |
+| Keyboard behavior | `Keyboard`, `ReturnKey`, `ContentKind`, `Capitalization`, `Autocorrection`, `KeyboardLook` | Keep the field focused while selecting every keyboard type, return-key label, autofill kind, capitalization mode, correction state, and keyboard appearance. The raised keyboard refreshes immediately where UIKit exposes a visible distinction; autofill suggestions remain dependent on device data and context. |
+
+```csharp
+new TextField
+{
+	Placeholder = "Tap to inspect the keyboard",
+	Keyboard = KeyboardType.Email,
+	ReturnKey = ReturnKeyType.Send,
+	ContentKind = ContentKind.Email,
+	Capitalization = Capitalization.None,
+	Autocorrection = false,
+	KeyboardLook = KeyboardLook.Default
+};
+```
+
+| Scenario | Declared properties covered | Interaction and expected result |
+| --- | --- | --- |
+| Chrome and typography | `Text`, `LeadingIcon`, `TrailingIcon`, `ClearButton`, `FontSize`, `FontWeight`, `FontDesign` | Toggle the leading symbol and switch the shared trailing slot among a clear button, decorative icon, and empty state. In clear mode inspect Never, While Editing, Unless Editing, and Always. Adjust explicit size, every native weight, and all four font designs. A trailing icon intentionally suppresses the clear button. |
+
+```csharp
+new TextField
+{
+	Text = "SkeleKit",
+	LeadingIcon = ImageSource.Symbol("character.cursor.ibeam"),
+	TrailingIcon = ImageSource.Symbol("checkmark.circle.fill"),
+	ClearButton = ClearButton.Never,
+	FontSize = 20,
+	FontWeight = FontWeight.Regular,
+	FontDesign = FontDesign.Rounded
+};
+```
+
+| Scenario | Declared properties covered | Interaction and expected result |
+| --- | --- | --- |
+| Keyboard accessories | `KeyboardToolbar`, `KeyboardAccessory` | Focus each of three fields and switch live among no accessory, Done, navigation, and a custom SkeleKit accessory. Done dismisses the keyboard, navigation moves through page inputs in document order, and the custom accessory overrides the toolbar and provides its own dismissal action. |
+
+```csharp
+TextField field = new()
+{
+	KeyboardToolbar = KeyboardToolbar.Navigation
+};
+
+field.KeyboardAccessory = new Border
+{
+	Child = new Label
+	{
+		Text = "Custom keyboard accessory"
+	}
+};
+```

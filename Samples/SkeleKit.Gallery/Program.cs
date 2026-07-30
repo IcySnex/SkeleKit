@@ -21,6 +21,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<LabelViewModel>();
 		services.AddTransient<PickerViewModel>();
 		services.AddTransient<SegmentedControlViewModel>();
+		services.AddTransient<TextFieldViewModel>();
 		services.AddTransient<TextViewViewModel>();
 	})
 	.UseTint(Colors.Indigo)

@@ -10,8 +10,8 @@ How scrolling dismisses the on-screen keyboard.
 
 - Source: `SkeleKit.iOS/Primitives/KeyboardDismiss.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: link attributes on a `UITextView` text item
-- Gallery role: Interactive lab in the TextView showcase.
+- Native counterpart: `UIScrollView.KeyboardDismissMode`
+- Gallery role: Interactive lab in the ScrollView showcase.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -40,8 +40,8 @@ The color scheme of the keyboard raised by a text input.
 
 - Source: `SkeleKit.iOS/Primitives/KeyboardLook.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
+- Native counterpart: `UIKeyboardAppearance`
+- Gallery role: Interactive lab in the TextField showcase.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -54,14 +54,13 @@ The color scheme of the keyboard raised by a text input.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Baseline | _(type has no declared documented properties)_ | Render or invoke the type in the smallest owning control and verify its documented behavior. |
+| TextField keyboard behavior | `Default`, `Light`, `Dark` | Keep a text field focused while selecting each appearance. Default follows the effective system appearance; Light and Dark override the raised keyboard immediately. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(KeyboardLook specimen)
+new TextField
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	KeyboardLook = KeyboardLook.Dark
+};
 ```
 
 ## KeyboardToolbar
@@ -70,8 +69,8 @@ The bar shown above the raised keyboard.
 
 - Source: `SkeleKit.iOS/Primitives/KeyboardToolbar.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
+- Native counterpart: `UIToolbar` assigned as an input accessory
+- Gallery role: Interactive lab in the TextField showcase.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -84,14 +83,13 @@ The bar shown above the raised keyboard.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Baseline | _(type has no declared documented properties)_ | Render or invoke the type in the smallest owning control and verify its documented behavior. |
+| TextField keyboard accessories | `None`, `Done`, `Navigation` | Change modes while a field is focused. None removes the accessory, Done adds a dismissal button, and Navigation adds previous/next focus actions plus Done. Compare all three with a custom `KeyboardAccessory`, which takes precedence. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(KeyboardToolbar specimen)
+new TextField
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	KeyboardToolbar = KeyboardToolbar.Navigation
+};
 ```
 
 ## KeyboardType
@@ -100,8 +98,8 @@ The on-screen keyboard shown while editing a text input.
 
 - Source: `SkeleKit.iOS/Primitives/KeyboardType.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
+- Native counterpart: `UIKeyboardType`
+- Gallery role: Interactive lab in the TextField showcase.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -117,14 +115,13 @@ The on-screen keyboard shown while editing a text input.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Baseline | _(type has no declared documented properties)_ | Render or invoke the type in the smallest owning control and verify its documented behavior. |
+| TextField keyboard behavior | `Default`, `Numeric`, `Decimal`, `Phone`, `Email`, `Url` | Keep a field focused while selecting every keyboard. The raised keyboard immediately changes its native key layout; hardware keyboards may hide the visible distinction. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(KeyboardType specimen)
+new TextField
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Keyboard = KeyboardType.Email
+};
 ```
 
 ## Link
@@ -133,8 +130,8 @@ A tappable run of text inside a `TextView`'s `TextView.Spans`.
 
 - Source: `SkeleKit.iOS/Primitives/Link.cs`
 - Inheritance/shape: `class Link : Span`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
+- Native counterpart: link attributes on a `UITextView` text item
+- Gallery role: Interactive lab in the TextView showcase.
 - Behavior note: It renders like a `Span` but fires `Link.Command` when tapped and shows `Link.ContextMenu` as a native hold-to-peek menu. Inside a plain `Label` it is styled text only: the command and menu are ignored, since a `Label` is not interactive.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
@@ -180,8 +177,8 @@ The label shown on the keyboard's return key.
 
 - Source: `SkeleKit.iOS/Primitives/ReturnKeyType.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
+- Native counterpart: `UIReturnKeyType`
+- Gallery role: Interactive lab in the TextField showcase.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -197,14 +194,13 @@ The label shown on the keyboard's return key.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Baseline | _(type has no declared documented properties)_ | Render or invoke the type in the smallest owning control and verify its documented behavior. |
+| TextField keyboard behavior | `Default`, `Go`, `Next`, `Search`, `Send`, `Done` | Keep a field focused while selecting every return-key type and verify its native label updates. The binding-and-submission lab uses Send to invoke `SubmitCommand`. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(ReturnKeyType specimen)
+new TextField
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	ReturnKey = ReturnKeyType.Send
+};
 ```
 
 ## Span
@@ -293,8 +289,8 @@ What the field holds, so the system can offer autofill (passwords, one-time code
 
 - Source: `SkeleKit.iOS/Primitives/TextInput.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
+- Native counterpart: `UITextContentType`
+- Gallery role: Interactive lab in the TextField showcase.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -314,14 +310,13 @@ What the field holds, so the system can offer autofill (passwords, one-time code
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Baseline | _(type has no declared documented properties)_ | Render or invoke the type in the smallest owning control and verify its documented behavior. |
+| TextField keyboard behavior | `None`, `Username`, `Password`, `NewPassword`, `OneTimeCode`, `Email`, `Name`, `PhoneNumber`, `StreetAddress`, `Url` | Select every autofill hint on a focused field. The property updates immediately; actual QuickType suggestions depend on matching device credentials, contacts, messages, and surrounding form context. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(ContentKind specimen)
+new TextField
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	ContentKind = ContentKind.Email
+};
 ```
 
 ## Capitalization
@@ -330,8 +325,8 @@ When typing is automatically capitalized.
 
 - Source: `SkeleKit.iOS/Primitives/TextInput.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
+- Native counterpart: `UITextAutocapitalizationType`
+- Gallery role: Interactive lab in the TextField showcase.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -345,14 +340,13 @@ When typing is automatically capitalized.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Baseline | _(type has no declared documented properties)_ | Render or invoke the type in the smallest owning control and verify its documented behavior. |
+| TextField keyboard behavior | `Sentences`, `None`, `Words`, `Characters` | Keep a plain field focused and type after selecting every mode. The keyboard shifts according to the selected capitalization policy, subject to hardware-keyboard behavior. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Capitalization specimen)
+new TextField
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Capitalization = Capitalization.Words
+};
 ```
 
 ## ClearButton
@@ -361,8 +355,8 @@ When a text field shows its built-in clear button.
 
 - Source: `SkeleKit.iOS/Primitives/TextInput.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
+- Native counterpart: `UITextFieldViewMode`
+- Gallery role: Visual and interactive lab in the TextField showcase.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -376,14 +370,14 @@ When a text field shows its built-in clear button.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Baseline | _(type has no declared documented properties)_ | Render or invoke the type in the smallest owning control and verify its documented behavior. |
+| TextField chrome and typography | `Never`, `WhileEditing`, `UnlessEditing`, `Always` | Inspect every mode with populated and empty text while focused and unfocused. Switch the trailing slot to a decorative icon and verify it intentionally suppresses the clear button. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(ClearButton specimen)
+new TextField
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Text = "SkeleKit",
+	ClearButton = ClearButton.WhileEditing
+};
 ```
 
 ## Truncation

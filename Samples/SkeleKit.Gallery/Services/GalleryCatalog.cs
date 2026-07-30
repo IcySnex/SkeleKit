@@ -17,7 +17,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				"Text & Input",
 				Topic("Label", "Plain and attributed text with Dynamic Type.", "textformat", Colors.Pink, GalleryArea.Controls, typeof(LabelViewModel)),
 				Topic("TextView", "Selectable rich text with links and menus.", "doc.richtext", Colors.Pink, GalleryArea.Controls, typeof(TextViewViewModel)),
-				Topic("TextField", "Single-line text entry and keyboard behavior.", "character.cursor.ibeam", Colors.Pink, GalleryArea.Controls),
+				Topic("TextField", "Single-line text entry and keyboard behavior.", "character.cursor.ibeam", Colors.Pink, GalleryArea.Controls, typeof(TextFieldViewModel)),
 				Topic("SecureField", "Password entry with reveal and validation states.", "lock.fill", Colors.Pink, GalleryArea.Controls),
 				Topic("TextEditor", "Multi-line editing, selection and formatting.", "square.and.pencil", Colors.Pink, GalleryArea.Controls)),
 
