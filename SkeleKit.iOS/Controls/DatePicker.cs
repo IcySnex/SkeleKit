@@ -110,11 +110,26 @@ public class DatePicker : Control
 		Size availableSize)
 	{
 		Size fallback = base.MeasureOverride(availableSize);
+		CGSize compressed = Ui.SystemLayoutSizeFittingSize(UIView.UILayoutFittingCompressedSize);
 		CGSize intrinsic = Ui.IntrinsicContentSize;
 
 		return new(
-			intrinsic.Width == UIView.NoIntrinsicMetric ? fallback.Width : intrinsic.Width,
-			intrinsic.Height == UIView.NoIntrinsicMetric ? fallback.Height : intrinsic.Height);
+			FittingDimension(compressed.Width, intrinsic.Width, fallback.Width),
+			FittingDimension(compressed.Height, intrinsic.Height, fallback.Height));
+	}
+
+
+	static double FittingDimension(
+		nfloat compressed,
+		nfloat intrinsic,
+		double fallback)
+	{
+		if (compressed > 0 && nfloat.IsFinite(compressed))
+			return compressed;
+		if (intrinsic != UIView.NoIntrinsicMetric && intrinsic > 0 && nfloat.IsFinite(intrinsic))
+			return intrinsic;
+
+		return fallback;
 	}
 
 
