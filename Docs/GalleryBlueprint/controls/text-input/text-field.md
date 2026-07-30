@@ -99,7 +99,7 @@ new TextField
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Keyboard accessories | `KeyboardToolbar`, `KeyboardAccessory` | Focus each of three fields and switch live among no accessory, Done, navigation, and a custom SkeleKit accessory. Done dismisses the keyboard, navigation moves through page inputs in document order, and the custom accessory overrides the toolbar and provides its own dismissal action. |
+| Keyboard accessories | `KeyboardToolbar`, `KeyboardAccessory` | Focus each of three fields and switch live among no accessory, Done, navigation, and a custom SkeleKit accessory. Done dismisses the keyboard, navigation moves through page inputs in document order, and the custom accessory overrides the toolbar with a trailing Liquid Glass dismissal capsule on supported systems. |
 
 ```csharp
 TextField field = new()
@@ -107,11 +107,23 @@ TextField field = new()
 	KeyboardToolbar = KeyboardToolbar.Navigation
 };
 
-field.KeyboardAccessory = new Border
+field.KeyboardAccessory = new Grid
 {
-	Child = new Label
+	Padding = new(8, 6),
+	Columns =
 	{
-		Text = "Custom keyboard accessory"
+		GridLength.Star,
+		GridLength.Auto
+	},
+	Children =
+	{
+		new Button
+		{
+			Text = "Done",
+			Icon = "keyboard.chevron.compact.down",
+			Kind = ButtonStyle.Glass,
+			Command = Command.From(field.Unfocus)
+		}.Column(1)
 	}
 };
 ```

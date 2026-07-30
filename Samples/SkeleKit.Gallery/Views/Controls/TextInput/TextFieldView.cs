@@ -56,7 +56,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 				ShowcaseBox.Canvas(
 					new StackPanel
 					{
-						HorizontalAlignment = HorizontalAlignment.Center,
+						HorizontalAlignment = HorizontalAlignment.Stretch,
 						VerticalAlignment = VerticalAlignment.Center,
 						MaxWidth = 320,
 						Spacing = 10,
@@ -195,7 +195,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 				ShowcaseBox.Canvas(
 					new StackPanel
 					{
-						HorizontalAlignment = HorizontalAlignment.Center,
+						HorizontalAlignment = HorizontalAlignment.Stretch,
 						VerticalAlignment = VerticalAlignment.Center,
 						MaxWidth = 320,
 						Spacing = 8,
@@ -318,7 +318,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 				ShowcaseBox.Canvas(
 					new StackPanel
 					{
-						HorizontalAlignment = HorizontalAlignment.Center,
+						HorizontalAlignment = HorizontalAlignment.Stretch,
 						VerticalAlignment = VerticalAlignment.Center,
 						MaxWidth = 320,
 
@@ -373,7 +373,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 				ShowcaseBox.Canvas(
 					new StackPanel
 					{
-						HorizontalAlignment = HorizontalAlignment.Center,
+						HorizontalAlignment = HorizontalAlignment.Stretch,
 						VerticalAlignment = VerticalAlignment.Center,
 						MaxWidth = 320,
 						Spacing = 10,
@@ -415,38 +415,26 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 	static View CustomAccessory(
 		TextField field) =>
-		new Border
+		new Grid
 		{
-			Background = Colors.SecondaryBackground,
+			Padding = new(8, 6),
 
-			Child = new Grid
+			Columns =
 			{
-				Padding = new(12, 8),
+				GridLength.Star,
+				GridLength.Auto
+			},
 
-				Columns =
+			Children =
+			{
+				new Button
 				{
-					GridLength.Star,
-					GridLength.Auto
-				},
-
-				Children =
-				{
-					new Label
-					{
-						VerticalAlignment = VerticalAlignment.Center,
-						Text = "Custom keyboard accessory",
-						TextStyle = TextStyle.Subheadline,
-						FontWeight = FontWeight.Medium
-					},
-
-					new Button
-					{
-						Text = "Done",
-						Kind = ButtonStyle.Tinted,
-						Size = ButtonSize.Small,
-						Command = Command.From(field.Unfocus)
-					}.Column(1)
-				}
+					Text = "Done",
+					Icon = "keyboard.chevron.compact.down",
+					Kind = ButtonStyle.Glass,
+					Size = ButtonSize.Small,
+					Command = Command.From(field.Unfocus)
+				}.Column(1)
 			}
 		};
 

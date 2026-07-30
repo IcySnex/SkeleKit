@@ -257,11 +257,23 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 				_ =>
 					"""
 					TextField field = new();
-					field.KeyboardAccessory = new Border
+					field.KeyboardAccessory = new Grid
 					{
-						Child = new Label
+						Padding = new(8, 6),
+						Columns =
 						{
-							Text = "Custom keyboard accessory"
+							GridLength.Star,
+							GridLength.Auto
+						},
+						Children =
+						{
+							new Button
+							{
+								Text = "Done",
+								Icon = "keyboard.chevron.compact.down",
+								Kind = ButtonStyle.Glass,
+								Command = Command.From(field.Unfocus)
+							}.Column(1)
 						}
 					};
 					"""
