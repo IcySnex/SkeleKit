@@ -87,6 +87,7 @@ A date and time picker.
 - Inheritance/shape: `class DatePicker : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIDatePicker`
+- Layout: Uses the native intrinsic size by default. Explicit `Width`, `MinWidth`, and `MaxWidth` constrain its bounds while UIKit keeps compact formatting adaptive.
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
