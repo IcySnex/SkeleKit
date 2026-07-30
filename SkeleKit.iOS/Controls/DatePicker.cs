@@ -19,7 +19,7 @@ public class DatePicker : Control
 	public Bindable<DateTime> Date
 	{
 		get => date;
-		set => dateBinding = Register(dateBinding, value, value => Set(ref date, value, ApplyDate, affectsMeasure: false));
+		set => dateBinding = Register(dateBinding, value, value => Set(ref date, value, ApplyDate));
 	}
 	DateTime date = DateTime.Now;
 	Binding<DateTime>? dateBinding;
@@ -100,7 +100,7 @@ public class DatePicker : Control
 	{
 		DateTime value = ((DateTime)Ui.Date).ToLocalTime();
 
-		Set(ref date, value, affectsMeasure: false);
+		Set(ref date, value);
 		dateBinding?.PushToSource(value);
 		DateChanged?.Invoke(value);
 	}

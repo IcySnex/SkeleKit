@@ -91,7 +91,7 @@ A date and time picker.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
-| Property | `SkeleKit.DatePicker.Date` | public get/set | DateTime.Now | Yes | Visual/interaction only | The picked date, in local time. Two-way by default. |
+| Property | `SkeleKit.DatePicker.Date` | public get/set | DateTime.Now | Yes | Invalidates measure | The picked date, in local time. Two-way by default. Compact styles remeasure as the localized value changes width. |
 | Property | `SkeleKit.DatePicker.Mode` | public get/set | DatePickerMode.Date | No | Invalidates measure | What the picker lets the user pick. |
 | Property | `SkeleKit.DatePicker.Kind` | public get/set | DatePickerStyle.Compact | No | Invalidates measure | How the picker presents itself. |
 | Property | `SkeleKit.DatePicker.Minimum` | public get/set | C# default | No | Visual/interaction only | The earliest pickable date, or null for no bound. |
