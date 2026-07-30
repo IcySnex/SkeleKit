@@ -147,6 +147,7 @@ A continuous value picker.
 | Property | `SkeleKit.Slider.Minimum` | public get/set | C# default | No | Visual/interaction only | The minimum selectable value. |
 | Property | `SkeleKit.Slider.Maximum` | public get/set | 1 | No | Visual/interaction only | The maximum selectable value. |
 | Property | `SkeleKit.Slider.Step` | public get/set | C# default | No | Visual/interaction only | The increment the value snaps to, or 0 for continuous. User changes are reported once per snapped value. iOS 26 uses native slider tick configuration for representable stepped ranges. |
+| Property | `SkeleKit.Slider.ShowsTicks` | public get/set | true | No | Invalidates measure | Whether native step tick marks are visible on iOS 26. |
 | Property | `SkeleKit.Slider.Continuous` | public get/set | true | No | Visual/interaction only | Whether the value updates all through the drag, rather than only when the thumb is released. |
 | Property | `SkeleKit.Slider.TrackColor` | public get/set | C# default | No | Visual/interaction only | The color of the filled part of the track, or null for the system tint. |
 | Property | `SkeleKit.Slider.EmptyTrackColor` | public get/set | C# default | No | Visual/interaction only | The color of the unfilled part of the track, or null for the system default. |
@@ -160,7 +161,7 @@ A continuous value picker.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Value and behavior | `Value`, `Minimum`, `Maximum`, `Step`, `Continuous`, default `TrackColor`, default `EmptyTrackColor`, default `ThumbColor`, `MinIcon`, `MaxIcon`, `ValueChanged`; inherited `IsEnabled` | Drag a two-way 0–100 slider and observe its value and callback. Switch among continuous, 1, 5, and 10-point steps; compare continuous and release-only reporting; toggle endpoint symbols and enabled state. Default colors demonstrate inherited/native styling without a redundant color-customization lab. |
+| Value and behavior | `Value`, `Minimum`, `Maximum`, `Step`, `ShowsTicks`, `Continuous`, default `TrackColor`, default `EmptyTrackColor`, default `ThumbColor`, `MinIcon`, `MaxIcon`, `ValueChanged`; inherited `IsEnabled` | Drag a two-way 0–100 slider and observe its value and callback. Switch among continuous, 1, 5, and 10-point steps; toggle native step markers; compare continuous and release-only reporting; toggle endpoint symbols and enabled state. Default colors demonstrate inherited/native styling without a redundant color-customization lab. |
 
 ```csharp
 new Slider
@@ -171,6 +172,7 @@ new Slider
 	Minimum = 0,
 	Maximum = 100,
 	Step = 5,
+	ShowsTicks = true,
 	Continuous = true,
 	MinIcon = "speaker.fill",
 	MaxIcon = "speaker.wave.3.fill",

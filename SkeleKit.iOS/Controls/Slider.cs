@@ -1,3 +1,5 @@
+using System.Runtime.Versioning;
+
 namespace SkeleKit;
 
 /// <summary>
@@ -6,6 +8,9 @@ namespace SkeleKit;
 public class Slider : Control
 {
 	const int MaxNativeTicks = 1024;
+
+	static readonly UIImage HiddenTick = new UIGraphicsImageRenderer(new(1, 1))
+		.CreateImage(static _ => { });
 
 
 	UISlider Ui => (UISlider)Native;
@@ -57,6 +62,15 @@ public class Slider : Control
 		set => Set(ref step, value, ApplyStep, affectsMeasure: false);
 	}
 	double step;
+
+	/// <summary>
+	/// Whether native step tick marks are visible on iOS 26.
+	/// </summary>
+	public bool ShowsTicks
+	{
+		get;
+		set => Set(ref field, value, ApplyStep);
+	} = true;
 
 	/// <summary>
 	/// Whether the value updates all through the drag, rather than only when the thumb is released.
@@ -138,39 +152,47 @@ public class Slider : Control
 	{
 		nativeSteps = false;
 
-		if (!OperatingSystem.IsIOSVersionAtLeast(26))
-			return;
+		if (OperatingSystem.IsIOSVersionAtLeast(26))
+		{
+			UISliderTrackConfiguration? configuration = NativeStepConfiguration();
+			Ui.TrackConfiguration = configuration;
+			nativeSteps = configuration is not null;
+		}
 
-		Ui.TrackConfiguration = null;
+		ApplyValue();
+	}
 
+	[SupportedOSPlatform("ios26.0")]
+	UISliderTrackConfiguration? NativeStepConfiguration()
+	{
 		double span = maximum - minimum;
 		if (step <= 0 || span <= 0)
-			return;
+			return null;
 
 		double intervals = span / step;
 		if (!double.IsFinite(intervals) || intervals + 2 > MaxNativeTicks)
-			return;
+			return null;
 
 		int whole = (int)Math.Floor(intervals);
 		double remainder = span - whole * step;
 		int count = whole + 1 + (remainder > span * 1e-9 ? 1 : 0);
 
 		List<UISliderTick> ticks = new(count);
+		UIImage? image = ShowsTicks ? null : HiddenTick;
 
 		for (int index = 0; index <= whole; index++)
 		{
 			float position = (float)(index * step / span);
-			ticks.Add(UISliderTick.Create(position, null, null));
+			ticks.Add(UISliderTick.Create(position, null, image));
 		}
 
 		if (ticks.Count < count)
-			ticks.Add(UISliderTick.Create(1, null, null));
+			ticks.Add(UISliderTick.Create(1, null, image));
 
 		UISliderTrackConfiguration configuration = UISliderTrackConfiguration.Create([.. ticks]);
 		configuration.AllowsTickValuesOnly = true;
 
-		Ui.TrackConfiguration = configuration;
-		nativeSteps = true;
+		return configuration;
 	}
 
 	void ApplyStyle()
