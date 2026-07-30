@@ -11,7 +11,6 @@ public class Slider : Control
 
 	UISlider Ui => (UISlider)Native;
 
-	bool configuring;
 	bool nativeSteps;
 
 
@@ -135,25 +134,18 @@ public class Slider : Control
 	void ApplyStep()
 	{
 		nativeSteps = false;
-		configuring = true;
 
-		try
+		if (OperatingSystem.IsIOSVersionAtLeast(26))
 		{
-			if (OperatingSystem.IsIOSVersionAtLeast(26))
-			{
-				UISliderTrackConfiguration? configuration = NativeStepConfiguration();
-				Ui.TrackConfiguration = configuration;
-				nativeSteps = configuration is not null;
-			}
+			UISliderTrackConfiguration? configuration = NativeStepConfiguration();
+			Ui.TrackConfiguration = configuration;
+			nativeSteps = configuration is not null;
+		}
 
-			Ui.MinValue = (float)minimum;
-			Ui.MaxValue = (float)maximum;
-			ApplyValue();
-		}
-		finally
-		{
-			configuring = false;
-		}
+		Ui.MinValue = (float)minimum;
+		Ui.MaxValue = (float)maximum;
+		Ui.Continuous = continuous;
+		ApplyValue();
 	}
 
 	[SupportedOSPlatform("ios26.0")]
@@ -207,9 +199,6 @@ public class Slider : Control
 
 	void OnValueChanged()
 	{
-		if (configuring)
-			return;
-
 		double value = Ui.Value;
 
 		if (step > 0 && !nativeSteps)
@@ -229,20 +218,10 @@ public class Slider : Control
 		ValueChanged?.Invoke(value);
 	}
 
-	void SettleValue()
-	{
-		if (!nativeSteps)
-			ApplyValue();
-	}
-
-
 	private protected override UIView CreateNative()
 	{
 		UISlider slider = new();
 		slider.ValueChanged += (_, _) => OnValueChanged();
-		slider.TouchUpInside += (_, _) => SettleValue();
-		slider.TouchUpOutside += (_, _) => SettleValue();
-		slider.TouchCancel += (_, _) => SettleValue();
 
 		return slider;
 	}
