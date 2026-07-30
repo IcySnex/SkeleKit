@@ -31,7 +31,7 @@ A text label.
 | Property | `SkeleKit.Label.LetterSpacing` | public get/set | C# default | No | Invalidates measure | Extra points between characters (negative tightens). |
 | Property | `SkeleKit.Label.Underline` | public get/set | C# default | No | Visual/interaction only | Underlines the text. |
 | Property | `SkeleKit.Label.Strikethrough` | public get/set | C# default | No | Visual/interaction only | Strikes the text through. |
-| Property | `SkeleKit.Label.AutoShrink` | public get/set | C# default | No | Visual/interaction only | How far the text may shrink to fit its width, 0.5 meaning half size, or 0 to truncate instead. |
+| Property | `SkeleKit.Label.AutoShrink` | public get/set | C# default | No | Invalidates measure | How far the text may shrink to fit its width, 0.5 meaning half size, or 0 to truncate instead. |
 | Property | `SkeleKit.Label.MaxFontSize` | public get/set | double.NaN | No | Invalidates measure | The largest point size Dynamic Type may scale the text to, or NaN to follow the accessibility sizes all the way up. |
 | Method | `SkeleKit.Label.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 

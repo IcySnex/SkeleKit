@@ -177,7 +177,7 @@ public class Label : Control
 	public double AutoShrink
 	{
 		get => autoShrink;
-		set => Set(ref autoShrink, value, ApplyAutoShrink, affectsMeasure: false);
+		set => Set(ref autoShrink, value, ApplyAutoShrink);
 	}
 	double autoShrink;
 
