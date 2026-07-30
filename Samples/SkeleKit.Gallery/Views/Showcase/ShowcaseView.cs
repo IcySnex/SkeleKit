@@ -84,6 +84,103 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 		});
 	}
 
+	protected static View PreviewWithSettings(
+		View canvas,
+		params View[] settings)
+	{
+		StackPanel configuration = new()
+		{
+			Padding = 16,
+			Spacing = 16
+		};
+
+		foreach (View setting in settings)
+			configuration.Children.Add(setting);
+
+		return new StackPanel
+		{
+			Children =
+			{
+				canvas,
+				new Divider(),
+				configuration
+			}
+		};
+	}
+
+	protected static View SettingRow(
+		string title,
+		View control) =>
+		new Grid
+		{
+			ColumnSpacing = 12,
+			MinHeight = 34,
+
+			Columns =
+			{
+				GridLength.Star,
+				GridLength.Auto
+			},
+
+			Children =
+			{
+				SettingLabel(title),
+
+				control.Column(1)
+			}
+		};
+
+	protected static View LabeledControl(
+		string title,
+		View control) =>
+		new StackPanel
+		{
+			Spacing = 8,
+
+			Children =
+			{
+				SettingLabel(title),
+
+				control
+			}
+		};
+
+	protected static View LabeledSlider(
+		string title,
+		BindingExpression<string?> value,
+		Slider slider) =>
+		new StackPanel
+		{
+			Spacing = 8,
+
+			Children =
+			{
+				new Grid
+				{
+					Columns =
+					{
+						GridLength.Star,
+						GridLength.Auto
+					},
+
+					Children =
+					{
+						SettingLabel(title),
+
+						new Label
+						{
+							VerticalAlignment = VerticalAlignment.Center,
+							Text = value,
+							TextStyle = TextStyle.Subheadline,
+							TextColor = Colors.SecondaryLabel
+						}.Column(1)
+					}
+				},
+
+				slider
+			}
+		};
+
 
 	protected override void OnLoaded()
 	{
@@ -121,5 +218,15 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 			Appearance.Dark => "moon.fill",
 			Appearance.Light => "sun.max.fill",
 			_ => "circle.lefthalf.filled"
+		};
+
+	static Label SettingLabel(
+		string title) =>
+		new()
+		{
+			VerticalAlignment = VerticalAlignment.Center,
+			Text = title,
+			TextStyle = TextStyle.Subheadline,
+			FontWeight = FontWeight.Medium
 		};
 }
