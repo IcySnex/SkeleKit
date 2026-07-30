@@ -69,14 +69,18 @@ A swatch that opens the system color picker.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Selected`, `Title`, `SupportsAlpha`, `SelectionChanged` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Selection and presentation | `Selected`, `Title`, `SupportsAlpha`, `SelectionChanged` | Open the system picker and drag through colors and opacity. The bound RGBA summary and callback status update live. Toggle the title and opacity slider, reopen the picker to verify each presentation, then reset the bound color from the ViewModel. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(ColorWell specimen)
+new ColorWell
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Selected = Bind(
+		model => model.SelectedColor,
+		(model, value) => model.SelectedColor = value),
+	Title = "Gallery accent",
+	SupportsAlpha = true,
+	SelectionChanged = viewModel.RecordSelection
+};
 ```
 
 ## DatePicker
