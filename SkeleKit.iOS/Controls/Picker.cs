@@ -145,8 +145,7 @@ public class Picker<TItem> : Control
 		new UIButton(UIButtonType.System)
 		{
 			Configuration = UIButtonConfiguration.GrayButtonConfiguration,
-			ShowsMenuAsPrimaryAction = true,
-			ChangesSelectionAsPrimaryAction = true
+			ShowsMenuAsPrimaryAction = true
 		};
 
 	private protected override void ApplyProperties()
