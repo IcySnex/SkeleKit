@@ -7,11 +7,7 @@ namespace SkeleKit;
 /// </summary>
 public class Slider : Control
 {
-	const int MaxNativeTicks = 1024;
-
 	UISlider Ui => (UISlider)Native;
-
-	bool nativeSteps;
 
 
 	/// <summary>
@@ -65,7 +61,7 @@ public class Slider : Control
 	public bool Continuous
 	{
 		get => continuous;
-		set => Set(ref continuous, value, ApplyStyle, affectsMeasure: false);
+		set => Set(ref continuous, value, ApplyRange, affectsMeasure: false);
 	}
 	bool continuous = true;
 
@@ -125,60 +121,25 @@ public class Slider : Control
 	public Action<double>? ValueChanged { get; set; }
 
 
-	void ApplyRange() =>
-		ApplyStep();
+	void ApplyRange()
+	{
+		Ui.MinValue = (float)minimum;
+		Ui.MaxValue = (float)maximum;
 
-	void ApplyValue() =>
-		Ui.Value = (float)current;
+		Ui.Continuous = continuous;
+	}
 
 	void ApplyStep()
 	{
-		nativeSteps = false;
-
 		if (OperatingSystem.IsIOSVersionAtLeast(26))
 		{
-			UISliderTrackConfiguration? configuration = NativeStepConfiguration();
-			Ui.TrackConfiguration = configuration;
-			nativeSteps = configuration is not null;
+			int ticks = (int)((maximum - minimum) / step) + 1;
+			Ui.TrackConfiguration = UISliderTrackConfiguration.Create(ticks);
 		}
-
-		Ui.MinValue = (float)minimum;
-		Ui.MaxValue = (float)maximum;
-		Ui.Continuous = continuous;
-		ApplyValue();
 	}
 
-	[SupportedOSPlatform("ios26.0")]
-	UISliderTrackConfiguration? NativeStepConfiguration()
-	{
-		double span = maximum - minimum;
-		if (step <= 0 || span <= 0)
-			return null;
-
-		double intervals = span / step;
-		if (!double.IsFinite(intervals) || intervals + 2 > MaxNativeTicks)
-			return null;
-
-		int whole = (int)Math.Floor(intervals);
-		double remainder = span - whole * step;
-		int count = whole + 1 + (remainder > span * 1e-9 ? 1 : 0);
-
-		List<UISliderTick> ticks = new(count);
-
-		for (int index = 0; index <= whole; index++)
-		{
-			float position = (float)(index * step / span);
-			ticks.Add(UISliderTick.Create(position, null, null));
-		}
-
-		if (ticks.Count < count)
-			ticks.Add(UISliderTick.Create(1, null, null));
-
-		UISliderTrackConfiguration configuration = UISliderTrackConfiguration.Create([.. ticks]);
-		configuration.AllowsTickValuesOnly = true;
-
-		return configuration;
-	}
+	void ApplyValue() =>
+		Ui.Value = (float)current;
 
 	void ApplyStyle()
 	{
@@ -193,30 +154,28 @@ public class Slider : Control
 
 		Ui.MinValueImage = minIcon is string min ? UIImage.GetSystemImage(min) : null;
 		Ui.MaxValueImage = maxIcon is string max ? UIImage.GetSystemImage(max) : null;
-
-		Ui.Continuous = continuous;
 	}
 
 	void OnValueChanged()
 	{
 		double value = Ui.Value;
 
-		if (step > 0 && !nativeSteps)
-			value = Math.Clamp(
-				minimum + Math.Round((value - minimum) / step) * step,
-				Math.Min(minimum, maximum),
-				Math.Max(minimum, maximum));
-
-		if (value == current)
-			return;
-
-		if (step > 0 && !nativeSteps)
-			Ui.Value = (float)value;
+		// if (step > 0 && !nativeSteps)
+		// {
+		// 	value = Math.Clamp(
+		// 		minimum + Math.Round((value - minimum) / step) * step,
+		// 		Math.Min(minimum, maximum),
+		// 		Math.Max(minimum, maximum));
+		// }
+		//
+		// if (step > 0 && !nativeSteps)
+		// 	Ui.Value = (float)value;
 
 		Set(ref current, value, affectsMeasure: false);
 		valueBinding?.PushToSource(value);
 		ValueChanged?.Invoke(value);
 	}
+
 
 	private protected override UIView CreateNative()
 	{
@@ -228,6 +187,7 @@ public class Slider : Control
 
 	private protected override void ApplyProperties()
 	{
+		ApplyStep();
 		ApplyRange();
 		ApplyValue();
 		ApplyStyle();
