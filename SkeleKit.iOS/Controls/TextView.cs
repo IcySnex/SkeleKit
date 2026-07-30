@@ -203,6 +203,8 @@ public class TextView : Control
 
 		if (IsRealized)
 			ApplyText();
+
+		InvalidateMeasure();
 	}
 
 	void HookSpans()
@@ -229,8 +231,11 @@ public class TextView : Control
 
 	void OnSpansChanged(
 		object? sender,
-		NotifyCollectionChangedEventArgs args) =>
+		NotifyCollectionChangedEventArgs args)
+	{
 		ApplyText();
+		InvalidateMeasure();
+	}
 
 	void ApplyText()
 	{
@@ -297,6 +302,7 @@ public class TextView : Control
 	{
 		Ui.TextContainer.MaximumNumberOfLines = (nuint)maxLines;
 		Ui.TextContainer.LineBreakMode = maxLines > 0 ? UILineBreakMode.TailTruncation : UILineBreakMode.WordWrap;
+		ApplyText();
 	}
 
 	UITextAlignment Alignment() =>
@@ -356,7 +362,6 @@ public class TextView : Control
 	{
 		HookSpans();
 		ApplyMaxLines();
-		ApplyText();
 	}
 
 	private protected override void OnUnrealized() =>

@@ -11,7 +11,7 @@ Read-only rich text that can be selected, with tappable `Link` runs.
 - Source: `SkeleKit.iOS/Controls/TextView.cs`
 - Inheritance/shape: `class TextView : Control`
 - Inherited API: [`View`](../../shared/view.md)
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
+- Native counterpart: `UITextView`
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
