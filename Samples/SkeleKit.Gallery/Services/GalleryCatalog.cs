@@ -25,7 +25,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Purple, GalleryArea.Controls, typeof(ButtonViewModel)),
 				Topic("Picker", "Menu selection, custom labels and live items.", "dial.medium", Colors.Purple, GalleryArea.Controls, typeof(PickerViewModel)),
 				Topic("SegmentedControl", "Compact selection, binding and content density.", "rectangle.split.3x1", Colors.Purple, GalleryArea.Controls, typeof(SegmentedControlViewModel)),
-				Topic("DatePicker", "Dates, times, ranges and presentation styles.", "calendar", Colors.Purple, GalleryArea.Controls),
+				Topic("DatePicker", "Dates, times, ranges and presentation styles.", "calendar", Colors.Purple, GalleryArea.Controls, typeof(DatePickerViewModel)),
 				Topic("ColorWell", "System color selection with alpha support.", "paintpalette.fill", Colors.Purple, GalleryArea.Controls)),
 
 			Section(

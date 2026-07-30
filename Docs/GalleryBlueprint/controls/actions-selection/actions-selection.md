@@ -103,14 +103,33 @@ A date and time picker.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Date`, `Mode`, `Kind`, `Minimum`, `Maximum`, `DateChanged` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Mode and presentation | `Date`, `Mode`, `Kind` | Switch between date, time, and combined input while comparing compact, inline, and wheel presentations. The native picker remeasures for every combination and retains the deterministic value. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(DatePicker specimen)
+new DatePicker
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Date = new DateTime(2026, 8, 12, 14, 30, 0),
+	Mode = DatePickerMode.DateAndTime,
+	Kind = DatePickerStyle.Inline
+};
+```
+
+| Scenario | Declared properties covered | Interaction and expected result |
+| --- | --- | --- |
+| Range and binding | `Date`, `Minimum`, `Maximum`, `DateChanged` | Choose start, middle, or end from the ViewModel, then change the native picker. The visible value, two-way source, and callback status remain synchronized, while dates outside August 10–14 are unavailable. |
+
+```csharp
+new DatePicker
+{
+	Date = Bind(
+		model => model.SelectedDate,
+		(model, value) => model.SelectedDate = value),
+	Mode = DatePickerMode.DateAndTime,
+	Kind = DatePickerStyle.Compact,
+	Minimum = new DateTime(2026, 8, 10, 9, 0, 0),
+	Maximum = new DateTime(2026, 8, 14, 18, 0, 0),
+	DateChanged = viewModel.RecordDateChanged
+};
 ```
 
 ## Picker<T>
