@@ -220,12 +220,17 @@ public partial class ScrollView
 		if (!hiding)
 		{
 			CGRect keyboard = UIKeyboard.FrameEndFromNotification(notification);
-			CGRect hostInWindow = host.ConvertRectToView(host.Bounds, host);
+			CGRect hostInWindow = host.ConvertRectToView(host.Bounds, null);
+			bool intersects = keyboard.GetMaxX() > hostInWindow.GetMinX()
+				&& keyboard.GetMinX() < hostInWindow.GetMaxX();
 
-			// the safe-area bottom is already in the adjusted inset, so do not count it twice
-			covered = (nfloat)Math.Max(
-				0,
-				hostInWindow.GetMaxY() - keyboard.GetMinY() - host.SafeAreaInsets.Bottom);
+			if (intersects)
+			{
+				// the safe-area bottom is already in the adjusted inset, so do not count it twice
+				covered = (nfloat)Math.Max(
+					0,
+					hostInWindow.GetMaxY() - keyboard.GetMinY() - host.SafeAreaInsets.Bottom);
+			}
 		}
 
 		keyboardCover = covered;
@@ -236,8 +241,13 @@ public partial class ScrollView
 		if (hiding || focused is null)
 			return;
 
-		CGRect target = focused.ConvertRectToView(focused.Bounds, host);
-		host.ScrollRectToVisible(target.Inset(0, -8), true);
+		CGRect target = focused.ConvertRectToView(focused.Bounds, host).Inset(0, -8);
+		UIEdgeInsets adjusted = host.AdjustedContentInset;
+		nfloat visibleTop = host.ContentOffset.Y + adjusted.Top;
+		nfloat visibleBottom = host.ContentOffset.Y + host.Bounds.Height - adjusted.Bottom;
+
+		if (target.GetMinY() < visibleTop || target.GetMaxY() > visibleBottom)
+			host.ScrollRectToVisible(target, true);
 	}
 
 	internal void OnDragEnded()
