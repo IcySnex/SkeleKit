@@ -13,6 +13,7 @@ public class SecureField : TextField
 	/// </summary>
 	/// <remarks>
 	/// Owns the trailing slot, so it wins over <see cref="TextField.TrailingIcon"/>.
+	/// Turning it off restores masking.
 	/// </remarks>
 	public bool RevealButton
 	{
@@ -59,6 +60,7 @@ public class SecureField : TextField
 	{
 		if (!RevealButton)
 		{
+			Ui.SecureTextEntry = true;
 			revealButton = null;
 			base.ApplyTrailing();
 			return;
