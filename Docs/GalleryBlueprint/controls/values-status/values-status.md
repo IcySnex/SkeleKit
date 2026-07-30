@@ -225,8 +225,7 @@ A binary on/off toggle.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Binding and callback | `IsOn`, `Toggled` | Toggle the native control and observe the two-way ViewModel value and callback count. Change the value programmatically and verify that the control updates without invoking the user callback. |
-| Color and state | `OnColor`, `ThumbColor`; inherited `IsEnabled` | Compare inherited, pink, indigo, and purple on colors plus system, white, and pink thumbs across on, off, enabled, and disabled states. |
+| State | `IsOn`, `Toggled`, default `OnColor`, default `ThumbColor`; inherited `IsEnabled` | Toggle the plain native control and observe its two-way ViewModel value and callback count. Change the value programmatically, then compare enabled and disabled interaction. The default colors demonstrate inherited tint and the system thumb without a redundant color-customization lab. |
 
 ```csharp
 new Switch
