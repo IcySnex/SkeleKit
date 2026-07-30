@@ -19,11 +19,30 @@ public partial class ScrollView
 		return null;
 	}
 
+	static nfloat MaximumOffset(
+		UIScrollView host,
+		UIEdgeInsets insets) =>
+		(nfloat)Math.Max(
+			-insets.Top,
+			host.ContentSize.Height - host.Bounds.Height + insets.Bottom);
+
 
 	nfloat keyboardCover;
 	UIRefreshControl? refresh;
 	bool endsAfterDrag;
 
+
+	void ApplyIndicatorInsets(
+		UIScrollView host,
+		UIEdgeInsets contentInsets)
+	{
+		UIEdgeInsets insets = IndicatorInsets is Thickness custom
+			? new((nfloat)custom.Top, (nfloat)custom.Left, (nfloat)custom.Bottom, (nfloat)custom.Right)
+			: contentInsets;
+
+		host.VerticalScrollIndicatorInsets = insets;
+		host.HorizontalScrollIndicatorInsets = insets;
+	}
 
 	void ApplyRefresh(
 		UIScrollView host)
@@ -64,17 +83,17 @@ public partial class ScrollView
 		if (host.ContentInset == insets)
 			return;
 
-		// we own the insets, so UIKit will not re-anchor the offset when chrome resizes them
-		// (search bar activation, bar collapse): a scroll resting at the top must stay at the
-		// top, or the stale offset opens a gap and pins the linked bar collapsed
 		bool atTop = host.ContentOffset.Y <= -host.ContentInset.Top + 1;
+		bool atBottom = Orientation == Orientation.Vertical
+			&& host.ContentOffset.Y >= MaximumOffset(host, host.ContentInset) - 1;
 
 		host.ContentInset = insets;
-		host.VerticalScrollIndicatorInsets = insets;
-		host.HorizontalScrollIndicatorInsets = insets;
+		ApplyIndicatorInsets(host, insets);
 
 		if (atTop && Orientation == Orientation.Vertical)
 			host.ContentOffset = new(host.ContentOffset.X, -insets.Top);
+		else if (atBottom)
+			host.ContentOffset = new(host.ContentOffset.X, MaximumOffset(host, insets));
 	}
 
 	partial void ApplyRefreshingCore()
@@ -126,15 +145,8 @@ public partial class ScrollView
 			_ => UIScrollViewIndicatorStyle.Default
 		};
 
-		host.AutomaticallyAdjustsScrollIndicatorInsets = IndicatorInsets is null;
-
-		if (IndicatorInsets is Thickness insets)
-		{
-			UIEdgeInsets native = new((nfloat)insets.Top, (nfloat)insets.Left, (nfloat)insets.Bottom, (nfloat)insets.Right);
-
-			host.VerticalScrollIndicatorInsets = native;
-			host.HorizontalScrollIndicatorInsets = native;
-		}
+		host.AutomaticallyAdjustsScrollIndicatorInsets = false;
+		ApplyIndicatorInsets(host, host.ContentInset);
 	}
 
 	partial void ArrangeContent(
@@ -155,6 +167,24 @@ public partial class ScrollView
 				? new(host.ContentOffset.X, (nfloat)offset)
 				: new((nfloat)offset, host.ContentOffset.Y),
 			animated);
+	}
+
+	void ApplyKeyboardLayout(
+		UIView? focused)
+	{
+		ApplyContentInsets();
+
+		if (focused is null)
+			return;
+
+		UIScrollView host = (UIScrollView)Native;
+		CGRect target = focused.ConvertRectToView(focused.Bounds, host).Inset(0, -8);
+		UIEdgeInsets adjusted = host.AdjustedContentInset;
+		nfloat visibleTop = host.ContentOffset.Y + adjusted.Top;
+		nfloat visibleBottom = host.ContentOffset.Y + host.Bounds.Height - adjusted.Bottom;
+
+		if (target.GetMinY() < visibleTop || target.GetMaxY() > visibleBottom)
+			host.ScrollRectToVisible(target, false);
 	}
 
 
@@ -226,28 +256,26 @@ public partial class ScrollView
 
 			if (intersects)
 			{
-				// the safe-area bottom is already in the adjusted inset, so do not count it twice
 				covered = (nfloat)Math.Max(
 					0,
-					hostInWindow.GetMaxY() - keyboard.GetMinY() - host.SafeAreaInsets.Bottom);
+					hostInWindow.GetMaxY() - keyboard.GetMinY() - BledInsets.Bottom);
 			}
 		}
 
 		keyboardCover = covered;
 
 		double duration = UIKeyboard.AnimationDurationFromNotification(notification);
-		UIView.Animate(duration, ApplyContentInsets);
+		UIViewAnimationOptions options =
+			(UIViewAnimationOptions)((uint)UIKeyboard.AnimationCurveFromNotification(notification) << 16)
+			| UIViewAnimationOptions.AllowUserInteraction
+			| UIViewAnimationOptions.BeginFromCurrentState;
 
-		if (hiding || focused is null)
-			return;
-
-		CGRect target = focused.ConvertRectToView(focused.Bounds, host).Inset(0, -8);
-		UIEdgeInsets adjusted = host.AdjustedContentInset;
-		nfloat visibleTop = host.ContentOffset.Y + adjusted.Top;
-		nfloat visibleBottom = host.ContentOffset.Y + host.Bounds.Height - adjusted.Bottom;
-
-		if (target.GetMinY() < visibleTop || target.GetMaxY() > visibleBottom)
-			host.ScrollRectToVisible(target, true);
+		UIView.AnimateNotify(
+			duration,
+			0,
+			options,
+			() => ApplyKeyboardLayout(hiding ? null : focused),
+			static _ => { });
 	}
 
 	internal void OnDragEnded()

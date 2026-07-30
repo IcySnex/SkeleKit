@@ -17,7 +17,7 @@ A scrolling container for a single child.
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
 | Property | `SkeleKit.ScrollView.Orientation` | public/protected as emitted | implementation-defined; inspect source | No | n/a | The scroll axis. |
-| Property | `SkeleKit.ScrollView.AvoidsKeyboard` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Whether the content is inset so the keyboard never covers the focused control. Only an overlapping keyboard is counted, and an already-visible focused control keeps its scroll position. |
+| Property | `SkeleKit.ScrollView.AvoidsKeyboard` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Whether the content is inset so the keyboard never covers the focused control. Only an overlapping keyboard is counted, an already-visible focused control keeps its scroll position, and bottom-anchored content follows the keyboard animation. |
 | Property | `SkeleKit.ScrollView.RefreshCommand` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Command invoked when the user pulls to refresh. Setting it enables the refresh control. |
 | Property | `SkeleKit.ScrollView.IsRefreshing` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Whether the refresh spinner is showing. Two-way: the pull sets it true, the ViewModel sets it false when done. |
 | Property | `SkeleKit.ScrollView.Scrolled` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Invoked as the view scrolls, with the offset in points. |
