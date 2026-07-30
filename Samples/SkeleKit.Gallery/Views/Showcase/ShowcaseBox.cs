@@ -2,9 +2,9 @@ namespace SkeleKit.Gallery.Views.Showcase;
 
 internal sealed class ShowcaseBox : Border
 {
-	static readonly Color CanvasBackground = Color.Dynamic(
-		Colors.White,
-		Color.FromHex(0x2C2C2E));
+	static readonly Color ContentBackground = Color.Dynamic(
+		Color.FromHex(0xf9f9f9),
+		Color.FromHex(0x202020));
 
 
 	readonly View code;
@@ -63,7 +63,7 @@ internal sealed class ShowcaseBox : Border
 		new Border
 		{
 			Height = height,
-			Background = CanvasBackground,
+			Background = ContentBackground,
 
 			Child = new Overlay
 			{
@@ -77,6 +77,24 @@ internal sealed class ShowcaseBox : Border
 						Child = content
 					}
 				}
+			}
+		};
+
+	public static View Code(
+		BindingExpression<IReadOnlyList<Span>?> spans) =>
+		new Border
+		{
+			Padding = 16,
+			Background = ContentBackground,
+
+			Child = new TextView
+			{
+				Spans = spans,
+				IsSelectable = true,
+				FontSize = 13,
+				FontDesign = FontDesign.Monospaced,
+				TextColor = Colors.Label,
+				LineSpacing = 2
 			}
 		};
 

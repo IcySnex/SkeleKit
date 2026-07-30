@@ -17,7 +17,6 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<ButtonViewModel>();
 	})
 	.UseTint(Colors.Indigo)
-	.UseAppearance(Appearance.System)
 	.Tabs(tabs => tabs
 		.LargeTitles()
 		.Tab<FrameworkView>("Framework", "square.stack.3d.up")

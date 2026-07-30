@@ -32,7 +32,6 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 
 		Picker<ShowcaseOption<ButtonStyle>> style = new()
 		{
-			MinWidth = 180,
 			ItemsSource = viewModel.Styles,
 			SelectedItem = viewModel.SelectedStyle,
 			SelectionChanged = option =>
@@ -63,7 +62,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 				ShowcaseBox.Canvas(button),
 				SettingRow("Style", style),
 				LabeledControl("Size", size)),
-			CodeView(Bind(model => model.ConfigurationCode)));
+			ShowcaseBox.Code(Bind(model => model.ConfigurationCode)));
 	}
 
 	void AddContentShowcase(
@@ -155,7 +154,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 				LabeledSlider("Icon size", Bind(model => model.IconSizeLabel), iconSize),
 				LabeledSlider("Icon spacing", Bind(model => model.IconSpacingLabel), iconSpacing),
 				LabeledSlider("Horizontal padding", Bind(model => model.PaddingLabel), padding)),
-			CodeView(Bind(model => model.ContentCode)));
+			ShowcaseBox.Code(Bind(model => model.ContentCode)));
 	}
 
 	void AddStateShowcase(
@@ -225,7 +224,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 				SettingRow("Loading", loading),
 				SettingRow("Destructive", destructive),
 				SettingRow("Enabled", enabled)),
-			CodeView(Bind(model => model.StateCode)));
+			ShowcaseBox.Code(Bind(model => model.StateCode)));
 	}
 
 	void AddMenuShowcase(
@@ -265,7 +264,6 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Text = "Density",
-			Icon = "line.3.horizontal.decrease",
 			Kind = ButtonStyle.Tinted,
 			SelectsFromMenu = true
 		};
@@ -324,7 +322,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 					}
 				},
 				190),
-			CodeView(Bind(model => model.MenuCode)));
+			ShowcaseBox.Code(Bind(model => model.MenuCode)));
 	}
 
 
@@ -433,23 +431,5 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Text = title,
 			TextStyle = TextStyle.Subheadline,
 			FontWeight = FontWeight.Medium
-		};
-
-	static View CodeView(
-		BindingExpression<IReadOnlyList<Span>?> spans) =>
-		new Border
-		{
-			Padding = 16,
-			Background = Colors.TertiaryGroupedBackground,
-
-			Child = new TextView
-			{
-				Spans = spans,
-				IsSelectable = true,
-				FontSize = 13,
-				FontDesign = FontDesign.Monospaced,
-				TextColor = Colors.Label,
-				LineSpacing = 2
-			}
 		};
 }
