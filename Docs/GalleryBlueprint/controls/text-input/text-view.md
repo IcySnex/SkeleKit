@@ -1,6 +1,6 @@
 # TextView
 
-Classification: **Shared visual reference**. Platform: **iOS 18.0+**; APIs explicitly described as iPad- or iOS-version-specific retain that narrower requirement.
+Classification: **Visual showcase**. Platform: **iOS 18.0+**; APIs explicitly described as iPad- or iOS-version-specific retain that narrower requirement.
 
 This is the canonical declaration inventory for the types below. Inherited `View` behavior is linked instead of repeated. `Bindable<T>` properties accept either a literal or a binding expression. Defaults are implementation defaults: an explicit initializer/backing-field initializer is shown when present; otherwise the C# zero/null/default value applies.
 
@@ -16,7 +16,7 @@ Read-only rich text that can be selected, with tappable `Link` runs.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
-| Property | `SkeleKit.TextView.Spans` | public get/set | C# default | No | Invalidates measure | The styled runs to display; a plain string becomes an unstyled run, a `Link` a tappable one. Changes re-render and animate nothing, since they replace the text. Live when the list is an `ObservableCollection`. |
+| Property | `SkeleKit.TextView.Spans` | public get/set | C# default | Yes | Invalidates measure | The styled runs to display; a plain string becomes an unstyled run, a `Link` a tappable one. Changes re-render and animate nothing, since they replace the text. Live when the list is an `ObservableCollection`. |
 | Property | `SkeleKit.TextView.IsSelectable` | public get/set | C# default | Yes | Visual/interaction only | Whether the text can be selected and copied. A `Link` run forces selection on, since UIKit only makes text items tappable while the view is selectable. |
 | Property | `SkeleKit.TextView.TextStyle` | public get/set | C# default | No | Invalidates measure | The step of the native type hierarchy the text follows, or null to size it by `TextView.FontSize`. |
 | Property | `SkeleKit.TextView.FontSize` | public get/set | double.NaN | No | Invalidates measure | Explicit font size in points, overriding `TextView.TextStyle`. NaN falls back to the text style, or 17 points without one. |
@@ -34,12 +34,73 @@ Read-only rich text that can be selected, with tappable `Link` runs.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Spans`, `IsSelectable`, `TextStyle`, `FontSize`, `FontWeight`, `FontDesign`, `TextColor`, `LinkColor`, `MaxLines`, `TextAlignment`, `LineSpacing`, `LetterSpacing` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Selection and links | `Spans`, `IsSelectable`, `LinkColor` | Switch one live `ObservableCollection<Span>` between plain text and links. Toggle selection, select and copy the plain text, tap each link, and hold the documentation link for its native menu. A link remains interactive when the explicit selection toggle is off because UIKit requires selectable text items. Compare app tint with an explicit pink link color. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(TextView specimen)
+ObservableCollection<Span> spans =
+[
+	"Read the ",
+	new Link("documentation")
+	{
+		Command = viewModel.OpenLinkCommand,
+		CommandParameter = "Documentation"
+	}
+];
+
+new TextView
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Spans = spans,
+	IsSelectable = true,
+	LinkColor = null
+};
+```
+
+| Scenario | Declared properties covered | Interaction and expected result |
+| --- | --- | --- |
+| Typography | `Spans`, `TextStyle`, `FontSize`, `FontWeight`, `FontDesign`, `TextColor` | Select every native text style, switch between Dynamic Type and an explicit 24-point size, select every weight, and compare all four system font designs. The base pink color and typography flow through every run except a deliberately overridden span. |
+
+```csharp
+new TextView
+{
+	Spans =
+	[
+		"Base typography flows through every run, while ",
+		new("individual spans")
+		{
+			FontWeight = FontWeight.Bold,
+			Underline = true
+		},
+		" can override it."
+	],
+	TextStyle = TextStyle.Body,
+	FontSize = double.NaN,
+	FontWeight = FontWeight.Regular,
+	FontDesign = FontDesign.Rounded,
+	TextColor = Colors.Pink
+};
+```
+
+| Scenario | Declared properties covered | Interaction and expected result |
+| --- | --- | --- |
+| Text container | `Spans`, `MaxLines`, `TextAlignment`, `LineSpacing`, `LetterSpacing` | Constrain rich text to 250 points, select one, two, or unlimited lines, compare every alignment, and adjust line and letter spacing. The native text container wraps freely at zero lines and uses tail truncation at a finite limit. |
+
+```csharp
+new TextView
+{
+	Width = 250,
+	Spans =
+	[
+		"Text views use their native text container to wrap ",
+		new("styled content")
+		{
+			TextColor = Colors.Pink,
+			FontWeight = FontWeight.Semibold
+		},
+		" across a constrained width and truncate at the selected line limit."
+	],
+	MaxLines = 2,
+	TextAlignment = TextAlignment.Leading,
+	LineSpacing = 5,
+	LetterSpacing = 0
+};
 ```

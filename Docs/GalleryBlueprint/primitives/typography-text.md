@@ -10,8 +10,8 @@ How scrolling dismisses the on-screen keyboard.
 
 - Source: `SkeleKit.iOS/Primitives/KeyboardDismiss.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
-- Native counterpart: value/configuration type or implementation-selected UIKit peer
-- Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
+- Native counterpart: link attributes on a `UITextView` text item
+- Gallery role: Interactive lab in the TextView showcase.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -148,14 +148,30 @@ A tappable run of text inside a `TextView`'s `TextView.Spans`.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Command`, `CommandParameter`, `ContextMenu` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| TextView selection and links | `Command`, `CommandParameter`, `ContextMenu` | Tap links with distinct command parameters and verify the callback result. Hold the documentation link to open a native menu, then select its icon-bearing actions and verify their commands and parameters. The same `Link` inside a `Label` remains visual text and does not expose these interactions. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Link specimen)
+Link documentation = new("documentation")
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Command = viewModel.OpenLinkCommand,
+	CommandParameter = "Documentation"
+};
+documentation.ContextMenu.Add(new()
+{
+	Text = "Open",
+	Icon = "arrow.up.forward",
+	Command = viewModel.RunMenuActionCommand,
+	CommandParameter = "Open"
+});
+
+new TextView
+{
+	Spans =
+	[
+		"Read the ",
+		documentation
+	]
+};
 ```
 
 ## ReturnKeyType
