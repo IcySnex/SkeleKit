@@ -16,7 +16,7 @@ Secure-entry preset of `TextField`, masking input as it's typed.
 
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
-| Property | `SkeleKit.SecureField.RevealButton` | public get/set | false | No | Invalidates measure | Whether a trailing eye button toggles the masking of the entered text. Owns the trailing slot, so it wins over `TextField.TrailingIcon`. Turning it off restores masking. |
+| Property | `SkeleKit.SecureField.RevealButton` | public get/set | false | No | Invalidates measure | Whether a trailing eye button toggles the masking of the entered text. Owns the trailing slot, so it wins over `TextField.TrailingIcon`. Toggling preserves focus; turning it off restores masking. |
 | Method | `SkeleKit.SecureField.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 
 ### Showcase matrix

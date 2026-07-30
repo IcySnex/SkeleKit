@@ -67,6 +67,21 @@ internal sealed class PageHost : UIViewController
 		return null;
 	}
 
+	static bool IsWithin(
+		UIView ancestor,
+		UIView? view)
+	{
+		while (view is not null)
+		{
+			if (ReferenceEquals(view, ancestor))
+				return true;
+
+			view = view.Superview;
+		}
+
+		return false;
+	}
+
 	static CGRect Inset(
 		CGRect bounds,
 		UIEdgeInsets insets,
@@ -754,6 +769,8 @@ internal sealed class PageHost : UIViewController
 		{
 			CancelsTouchesInView = false
 		};
+		dismissKeyboard.ShouldReceiveTouch = (_, touch) =>
+			FirstResponder(View!) is not UIView focused || !IsWithin(focused, touch.View);
 		View!.AddGestureRecognizer(dismissKeyboard);
 
 		themeChange = RegisterForTraitChanges([typeof(UITraitUserInterfaceStyle)], (_, _) => Page?.ReapplyVisuals());

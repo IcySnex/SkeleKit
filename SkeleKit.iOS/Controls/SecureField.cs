@@ -13,7 +13,7 @@ public class SecureField : TextField
 	/// </summary>
 	/// <remarks>
 	/// Owns the trailing slot, so it wins over <see cref="TextField.TrailingIcon"/>.
-	/// Turning it off restores masking.
+	/// Toggling preserves focus; turning it off restores masking.
 	/// </remarks>
 	public bool RevealButton
 	{
@@ -31,7 +31,11 @@ public class SecureField : TextField
 		revealButton.SetImage(glyph, UIControlState.Normal);
 
 		if (glyph is not null)
-			revealButton.Frame = new(0, 0, glyph.Size.Width, glyph.Size.Height);
+			revealButton.Frame = new(
+				revealButton.Frame.X,
+				revealButton.Frame.Y,
+				glyph.Size.Width,
+				glyph.Size.Height);
 	}
 
 	void ToggleReveal()
@@ -73,7 +77,9 @@ public class SecureField : TextField
 			revealButton.TouchUpInside += (_, _) => ToggleReveal();
 		}
 
-		Ui.RightView = revealButton;
+		if (!ReferenceEquals(Ui.RightView, revealButton))
+			Ui.RightView = revealButton;
+
 		Ui.RightViewMode = UITextFieldViewMode.Always;
 		UpdateRevealGlyph();
 	}
