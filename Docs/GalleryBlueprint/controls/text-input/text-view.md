@@ -34,7 +34,7 @@ Read-only rich text that can be selected, with tappable `Link` runs.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Selection and links | `Spans`, `IsSelectable`, `LinkColor` | Switch one live `ObservableCollection<Span>` between plain text and links. Toggle selection, select and copy the plain text, tap each link, and hold the documentation link for its native menu. A link remains interactive when the explicit selection toggle is off because UIKit requires selectable text items. Compare app tint with an explicit pink link color. |
+| Selection and links | `Spans`, `IsSelectable`, `LinkColor` | Switch one live `ObservableCollection<Span>` between plain text and links. Toggle selection and select or copy the plain text. Tap each link and hold the documentation link for its native menu. The selection setting is hidden for link content because UIKit necessarily makes linked text selectable. Compare app tint with an explicit blue link color. |
 
 ```csharp
 ObservableCollection<Span> spans =
@@ -57,7 +57,7 @@ new TextView
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Typography | `Spans`, `TextStyle`, `FontSize`, `FontWeight`, `FontDesign`, `TextColor` | Select every native text style, switch between Dynamic Type and an explicit 24-point size, select every weight, and compare all four system font designs. The base pink color and typography flow through every run except a deliberately overridden span. |
+| Typography | `Spans`, `TextStyle`, `FontSize`, `FontWeight`, `FontDesign`, `TextColor` | Choose Dynamic Type to select every native text style, or choose Fixed to replace the style picker with a 12–40 point size slider. Select every weight, compare all four system font designs, and switch between the semantic system text color and blue. Base typography flows through every run except a deliberately overridden span. |
 
 ```csharp
 new TextView
@@ -76,7 +76,7 @@ new TextView
 	FontSize = double.NaN,
 	FontWeight = FontWeight.Regular,
 	FontDesign = FontDesign.Rounded,
-	TextColor = Colors.Pink
+	TextColor = Colors.Blue
 };
 ```
 

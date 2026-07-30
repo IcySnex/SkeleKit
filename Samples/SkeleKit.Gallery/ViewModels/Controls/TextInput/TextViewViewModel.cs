@@ -91,9 +91,7 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 
 	public string SelectionSummary =>
 		ContentModeIndex is 1
-			? IsSelectable
-				? "Links are active and the surrounding text is selectable."
-				: "Links stay active because UIKit requires selectable text items."
+			? "UIKit keeps text selectable while links are active."
 			: IsSelectable
 				? "Press and hold to select and copy the plain text."
 				: "Selection is disabled for the plain text.";
@@ -115,7 +113,7 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 			{
 				Spans = spans,
 				IsSelectable = {{Boolean(IsSelectable)}},
-				LinkColor = {{(LinkColorIndex is 0 ? "null" : "Colors.Pink")}}
+				LinkColor = {{(LinkColorIndex is 0 ? "null" : "Colors.Blue")}}
 			};
 			""");
 
@@ -129,12 +127,23 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 	bool usesExplicitSize;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(FontSizeLabel))]
+	[NotifyPropertyChangedFor(nameof(TypographyCode))]
+	double fontSize = 24;
+
+	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(TypographyCode))]
 	ShowcaseOption<FontWeight> selectedWeight = null!;
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(TypographyCode))]
 	ShowcaseOption<FontDesign> selectedDesign = null!;
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(TypographyCode))]
+	int textColorIndex;
+
+	public string FontSizeLabel => $"{Number(FontSize)} pt";
 
 	public List<Span> TypographySpans { get; } =
 	[
@@ -159,10 +168,10 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 					" can override it."
 				],
 				TextStyle = {{(UsesExplicitSize ? "null" : $"TextStyle.{SelectedTextStyle.Value}")}},
-				FontSize = {{(UsesExplicitSize ? "24" : "double.NaN")}},
+				FontSize = {{(UsesExplicitSize ? Number(FontSize) : "double.NaN")}},
 				FontWeight = FontWeight.{{SelectedWeight.Value}},
 				FontDesign = FontDesign.{{SelectedDesign.Value}},
-				TextColor = Colors.Pink
+				TextColor = {{(TextColorIndex is 0 ? "null" : "Colors.Blue")}}
 			};
 			""");
 

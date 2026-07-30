@@ -32,8 +32,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl content = new()
 		{
-			SelectedIndex = viewModel.ContentModeIndex,
-			SelectionChanged = index => viewModel.ContentModeIndex = index
+			SelectedIndex = viewModel.ContentModeIndex
 		};
 		content.Items.Add("Plain");
 		content.Items.Add("Links");
@@ -45,17 +44,26 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 				static (model, value) => model.IsSelectable = value)
 		};
 
+		View selectableSetting = SettingRow("Selectable", selectable);
+		selectableSetting.IsVisible = viewModel.ContentModeIndex is 0;
+
+		content.SelectionChanged = index =>
+		{
+			viewModel.ContentModeIndex = index;
+			selectableSetting.IsVisible = index is 0;
+		};
+
 		SegmentedControl linkColor = new()
 		{
 			SelectedIndex = viewModel.LinkColorIndex,
 			SelectionChanged = index =>
 			{
 				viewModel.LinkColorIndex = index;
-				text.LinkColor = index is 0 ? null : Colors.Pink;
+				text.LinkColor = index is 0 ? null : Colors.Blue;
 			}
 		};
 		linkColor.Items.Add("Tint");
-		linkColor.Items.Add("Pink");
+		linkColor.Items.Add("Blue");
 
 		AddShowcase(
 			"Selection & links",
@@ -96,7 +104,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 					},
 					230),
 				LabeledControl("Content", content),
-				SettingRow("Selectable", selectable),
+				selectableSetting,
 				LabeledControl("Link color", linkColor)),
 			ShowcaseBox.Code(Bind(model => model.SelectionCode)));
 	}
@@ -113,7 +121,6 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			TextStyle = viewModel.SelectedTextStyle.Value,
 			FontWeight = viewModel.SelectedWeight.Value,
 			FontDesign = viewModel.SelectedDesign.Value,
-			TextColor = Colors.Pink,
 			TextAlignment = TextAlignment.Center
 		};
 
@@ -131,13 +138,33 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			}
 		};
 
+		View styleSetting = SettingRow("Text style", style);
+
+		Slider size = new()
+		{
+			Minimum = 12,
+			Maximum = 40,
+			Step = 1,
+			Value = viewModel.FontSize,
+			ValueChanged = value =>
+			{
+				viewModel.FontSize = value;
+				text.FontSize = value;
+			}
+		};
+
+		View sizeSetting = LabeledSlider("Font size", Bind(model => model.FontSizeLabel), size);
+		sizeSetting.IsVisible = false;
+
 		SegmentedControl sizing = new()
 		{
 			SelectionChanged = index =>
 			{
 				viewModel.UsesExplicitSize = index is 1;
 				text.TextStyle = viewModel.UsesExplicitSize ? null : viewModel.SelectedTextStyle.Value;
-				text.FontSize = viewModel.UsesExplicitSize ? 24 : double.NaN;
+				text.FontSize = viewModel.UsesExplicitSize ? viewModel.FontSize : double.NaN;
+				styleSetting.IsVisible = !viewModel.UsesExplicitSize;
+				sizeSetting.IsVisible = viewModel.UsesExplicitSize;
 			}
 		};
 		sizing.Items.Add("Dynamic");
@@ -169,15 +196,28 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 		design.Items.Add("Serif");
 		design.Items.Add("Mono");
 
+		SegmentedControl color = new()
+		{
+			SelectionChanged = index =>
+			{
+				viewModel.TextColorIndex = index;
+				text.TextColor = index is 0 ? (Color?)null : Colors.Blue;
+			}
+		};
+		color.Items.Add("System");
+		color.Items.Add("Blue");
+
 		AddShowcase(
 			"Typography",
-			"Set the base Dynamic Type style, explicit size, weight, design and color inherited by every run.",
+			"Choose either Dynamic Type or an explicit size, then set the base weight, design and color inherited by every run.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(text, 220),
-				SettingRow("Text style", style),
 				LabeledControl("Sizing", sizing),
+				styleSetting,
+				sizeSetting,
 				SettingRow("Weight", weight),
-				LabeledControl("Design", design)),
+				LabeledControl("Design", design),
+				LabeledControl("Text color", color)),
 			ShowcaseBox.Code(Bind(model => model.TypographyCode)));
 	}
 
