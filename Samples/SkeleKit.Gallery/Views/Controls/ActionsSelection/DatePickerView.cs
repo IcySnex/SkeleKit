@@ -69,7 +69,6 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 	{
 		DatePicker picker = new()
 		{
-			HorizontalAlignment = HorizontalAlignment.Center,
 			Date = Bind(
 				model => model.SelectedDate,
 				static (model, value) => model.SelectedDate = value),
@@ -103,7 +102,30 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 
 						Children =
 						{
-							picker,
+							new Grid
+							{
+								ColumnSpacing = 12,
+								MinHeight = 34,
+
+								Columns =
+								{
+									GridLength.Star,
+									215
+								},
+
+								Children =
+								{
+									new Label
+									{
+										VerticalAlignment = VerticalAlignment.Center,
+										Text = "Value",
+										TextStyle = TextStyle.Subheadline,
+										FontWeight = FontWeight.Medium
+									},
+
+									picker.Column(1)
+								}
+							},
 
 							new Label
 							{
