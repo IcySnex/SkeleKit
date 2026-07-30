@@ -24,7 +24,7 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 
 	public LabelViewModel()
 	{
-		SelectedTextStyle = TextStyles[6];
+		SelectedTextStyle = TextStyles[0];
 		SelectedWeight = FontWeights[5];
 		SelectedDesign = FontDesigns[1];
 		SelectedTruncation = Truncations[1];
@@ -91,7 +91,7 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 			{
 				Text = "Typography that follows the reader",
 				TextStyle = TextStyle.{{SelectedTextStyle.Value}},
-				MaxFontSize = {{(CapsDynamicType ? "34" : "double.NaN")}},
+				MaxFontSize = {{(CapsDynamicType ? "24" : "double.NaN")}},
 				TextAlignment = TextAlignment.Center
 			};
 			""");
@@ -163,17 +163,11 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 			$$"""
 			new Label
 			{
-				Text = "Native text wraps naturally inside a constrained layout.",
+				Width = 250,
+				Text = "Quarterly performance overview for international product teams and regional partners.",
 				MaxLines = {{WrappingLines}},
-				Truncation = Truncation.None,
-				TextAlignment = TextAlignment.{{SelectedAlignment}}
-			};
-
-			new Label
-			{
-				Text = "Quarterly-performance-overview.pdf",
-				MaxLines = 1,
 				Truncation = Truncation.{{SelectedTruncation.Value}},
+				TextAlignment = TextAlignment.{{SelectedAlignment}},
 				AutoShrink = {{(ShrinksToFit ? "0.65" : "0")}}
 			};
 			""");
@@ -202,7 +196,7 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 		"Mix ",
 		new("weight") { Bold = true },
 		", ",
-		new("color") { TextColor = Colors.Purple },
+		new("color") { TextColor = Colors.Pink },
 		" and ",
 		new("design") { FontWeight = FontWeight.Light, FontDesign = FontDesign.Serif },
 		".\n",

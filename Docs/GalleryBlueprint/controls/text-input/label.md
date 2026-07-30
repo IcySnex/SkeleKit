@@ -45,8 +45,8 @@ A text label.
 new Label
 {
 	Text = "Typography that follows the reader",
-	TextStyle = TextStyle.Body,
-	MaxFontSize = 34,
+	TextStyle = TextStyle.LargeTitle,
+	MaxFontSize = 24,
 	TextAlignment = TextAlignment.Center
 };
 ```
@@ -74,22 +74,16 @@ new Label
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Layout and fitting | `Text`, `MaxLines`, `Truncation`, `TextAlignment`, `AutoShrink` | Constrain a wrapping label to one, two, or unlimited lines and select every alignment. Independently compare every truncation position against single-line shrinking inside a fixed width. |
+| Layout and fitting | `Text`, `MaxLines`, `Truncation`, `TextAlignment`, `AutoShrink` | Use one constrained label to select one, two, or unlimited lines, every truncation position, and every alignment. Enabling shrinking selects the valid single-line configuration; choosing a multiline limit disables shrinking. |
 
 ```csharp
 new Label
 {
-	Text = "Native text wraps naturally inside a constrained layout.",
-	MaxLines = 2,
-	Truncation = Truncation.None,
-	TextAlignment = TextAlignment.Leading
-};
-
-new Label
-{
-	Text = "Quarterly-performance-overview.pdf",
+	Width = 250,
+	Text = "Quarterly performance overview for international product teams and regional partners.",
 	MaxLines = 1,
 	Truncation = Truncation.Tail,
+	TextAlignment = TextAlignment.Leading,
 	AutoShrink = 0.65
 };
 ```

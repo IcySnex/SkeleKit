@@ -49,7 +49,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			Toggled = value =>
 			{
 				viewModel.CapsDynamicType = value;
-				label.MaxFontSize = value ? 34 : double.NaN;
+				label.MaxFontSize = value ? 24 : double.NaN;
 			}
 		};
 
@@ -59,7 +59,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(label, 190),
 				SettingRow("Text style", style),
-				SettingRow("Maximum size", cap)),
+				SettingRow("Cap at 24 pt", cap)),
 			ShowcaseBox.Code(Bind(model => model.DynamicTypeCode)));
 	}
 
@@ -73,7 +73,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			FontSize = Bind(model => model.FontSize),
 			FontWeight = Bind(model => model.SelectedWeightValue),
 			FontDesign = viewModel.SelectedDesign.Value,
-			TextColor = Colors.Purple,
+			TextColor = Colors.Pink,
 			TextAlignment = TextAlignment.Center
 		};
 
@@ -142,28 +142,22 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 	void AddFlowShowcase(
 		LabelViewModel viewModel)
 	{
-		Label wrapping = new()
+		Label label = new()
 		{
-			Text = "Native text wraps naturally inside a constrained layout.",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Width = 250,
+			Text = "Quarterly performance overview for international product teams and regional partners.",
 			TextStyle = TextStyle.Body,
 			MaxLines = Bind(model => model.WrappingLines),
-			Truncation = Truncation.None,
-			TextAlignment = Bind(model => model.SelectedAlignment)
-		};
-
-		Label fitting = new()
-		{
-			Text = "Quarterly-performance-overview.pdf",
-			TextStyle = TextStyle.Subheadline,
-			MaxLines = 1,
 			Truncation = viewModel.SelectedTruncation.Value,
+			TextAlignment = Bind(model => model.SelectedAlignment),
 			AutoShrink = 0
 		};
 
 		SegmentedControl lines = new()
 		{
-			SelectedIndex = 1,
-			SelectionChanged = index => viewModel.LineCountIndex = index
+			SelectedIndex = 1
 		};
 		lines.Items.Add("1");
 		lines.Items.Add("2");
@@ -185,40 +179,45 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			SelectionChanged = option =>
 			{
 				viewModel.SelectedTruncation = option;
-				fitting.Truncation = option.Value;
+				label.Truncation = option.Value;
 			}
 		};
 
 		Switch shrink = new()
 		{
-			IsOn = viewModel.ShrinksToFit,
-			Toggled = value =>
+			IsOn = viewModel.ShrinksToFit
+		};
+
+		lines.SelectionChanged = index =>
+		{
+			viewModel.LineCountIndex = index;
+
+			if (index is not 0 && viewModel.ShrinksToFit)
 			{
-				viewModel.ShrinksToFit = value;
-				fitting.AutoShrink = value ? 0.65 : 0;
+				viewModel.ShrinksToFit = false;
+				shrink.IsOn = false;
+				label.AutoShrink = 0;
 			}
+		};
+
+		shrink.Toggled = value =>
+		{
+			viewModel.ShrinksToFit = value;
+
+			if (value && viewModel.LineCountIndex is not 0)
+			{
+				viewModel.LineCountIndex = 0;
+				lines.SelectedIndex = 0;
+			}
+
+			label.AutoShrink = value ? 0.65 : 0;
 		};
 
 		AddShowcase(
 			"Layout & fitting",
-			"Constrain wrapping separately from single-line truncation and shrinking.",
+			"Combine line limits, truncation, alignment and single-line shrinking on one constrained label.",
 			PreviewWithSettings(
-				ShowcaseBox.Canvas(
-					new StackPanel
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						VerticalAlignment = VerticalAlignment.Center,
-						Width = 250,
-						Spacing = 18,
-
-						Children =
-						{
-							wrapping,
-							new Divider(),
-							fitting
-						}
-					},
-					250),
+				ShowcaseBox.Canvas(label, 220),
 				LabeledControl("Maximum lines", lines),
 				LabeledControl("Text alignment", alignment),
 				SettingRow("Truncation", truncation),
