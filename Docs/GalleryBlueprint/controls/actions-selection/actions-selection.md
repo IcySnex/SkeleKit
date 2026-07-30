@@ -122,6 +122,8 @@ new DatePicker
 ```csharp
 new DatePicker
 {
+	HorizontalAlignment = HorizontalAlignment.Center,
+	Width = 215,
 	Date = Bind(
 		model => model.SelectedDate,
 		(model, value) => model.SelectedDate = value),
