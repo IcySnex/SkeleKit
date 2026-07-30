@@ -137,7 +137,7 @@ A menu-style selection button wrapping `UIButton` + `UIMenu`.
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
 | Selection & labels | `ItemsSource`, `SelectedItem`, `ItemTitle`, `Placeholder`, `SelectionChanged` | Pick a destination and verify the two-way source, formatted title, checked menu action, and callback status update together. Clear the source selection and verify the placeholder replaces the title. |
-| Live items | `ItemsSource`, `SelectedItem`, `ItemTitle`, `Placeholder` | Switch an `ObservableCollection` between base, empty, and extended contents. Verify the menu updates immediately, the empty state shows the placeholder, and selecting the deliberately long item remeasures the control. |
+| Live items | `ItemsSource`, `SelectedItem`, `ItemTitle`, `Placeholder` | Switch an `ObservableCollection` between base, empty, and extended contents. Verify the menu updates immediately, retained items preserve selection, removed items and the empty state restore the placeholder, and selecting the deliberately long item remeasures the control. |
 
 ```csharp
 Picker<PickerDestination> picker = new()

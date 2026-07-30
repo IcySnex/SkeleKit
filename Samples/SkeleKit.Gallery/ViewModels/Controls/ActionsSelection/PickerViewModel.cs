@@ -117,7 +117,14 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 	internal void SetLiveItemsState(
 		int state)
 	{
-		LiveSelectedDestination = null;
+		bool preservesSelection = LiveSelectedDestination is PickerDestination selected
+			&& state is not 1
+			&& (LiveDefaults.Any(item => ReferenceEquals(item, selected))
+				|| state is 2 && ReferenceEquals(ExtraDestination, selected));
+
+		if (!preservesSelection)
+			LiveSelectedDestination = null;
+
 		LiveDestinations.Clear();
 
 		if (state is not 1)
