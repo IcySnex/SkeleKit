@@ -26,7 +26,7 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 			Kind = viewModel.SelectedStyle
 		};
 
-		View canvas = ShowcaseBox.Canvas(picker, StyleHeight(viewModel.SelectedStyle));
+		View canvas = ShowcaseBox.FittingCanvas(picker);
 
 		SegmentedControl mode = new()
 		{
@@ -48,7 +48,6 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 			{
 				viewModel.SelectedStyleIndex = index;
 				picker.Kind = viewModel.SelectedStyle;
-				canvas.Height = StyleHeight(viewModel.SelectedStyle);
 			}
 		};
 		style.Items.Add("Compact");
@@ -129,14 +128,4 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 				LabeledControl("Bound value", position)),
 			ShowcaseBox.Code(Bind(model => model.RangeCode)));
 	}
-
-
-	static double StyleHeight(
-		DatePickerStyle style) =>
-		style switch
-		{
-			DatePickerStyle.Inline => 370,
-			DatePickerStyle.Wheels => 250,
-			_ => 156
-		};
 }

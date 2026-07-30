@@ -60,9 +60,22 @@ internal sealed class ShowcaseBox : Border
 	public static View Canvas(
 		View content,
 		double height = 156) =>
+		Canvas(content, height, 0);
+
+	public static View FittingCanvas(
+		View content,
+		double minHeight = 156) =>
+		Canvas(content, double.NaN, minHeight);
+
+
+	static View Canvas(
+		View content,
+		double height,
+		double minHeight) =>
 		new Border
 		{
 			Height = height,
+			MinHeight = minHeight,
 			Background = ContentBackground,
 
 			Child = new Overlay
