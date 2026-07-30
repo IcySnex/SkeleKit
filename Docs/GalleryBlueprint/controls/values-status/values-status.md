@@ -160,14 +160,22 @@ A continuous value picker.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Value`, `Minimum`, `Maximum`, `Step`, `Continuous`, `TrackColor`, `EmptyTrackColor`, `ThumbColor`, `MinIcon`, `MaxIcon`, `ValueChanged` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Value and behavior | `Value`, `Minimum`, `Maximum`, `Step`, `Continuous`, default `TrackColor`, default `EmptyTrackColor`, default `ThumbColor`, `MinIcon`, `MaxIcon`, `ValueChanged`; inherited `IsEnabled` | Drag a two-way 0–100 slider and observe its value and callback. Switch among continuous, 1, 5, and 10-point steps; compare continuous and release-only reporting; toggle endpoint symbols and enabled state. Default colors demonstrate inherited/native styling without a redundant color-customization lab. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Slider specimen)
+new Slider
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Value = Bind(
+		model => model.Value,
+		(model, value) => model.Value = value),
+	Minimum = 0,
+	Maximum = 100,
+	Step = 5,
+	Continuous = true,
+	MinIcon = "speaker.fill",
+	MaxIcon = "speaker.wave.3.fill",
+	ValueChanged = viewModel.RecordChange
+};
 ```
 
 ## Stepper
