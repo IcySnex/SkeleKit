@@ -5,7 +5,12 @@ namespace SkeleKit;
 /// </summary>
 public class Slider : Control
 {
+	const int MaxNativeTicks = 1024;
+
+
 	UISlider Ui => (UISlider)Native;
+
+	bool nativeSteps;
 
 
 	/// <summary>
@@ -44,11 +49,12 @@ public class Slider : Control
 	/// </summary>
 	/// <remarks>
 	/// User changes are reported once per snapped value.
+	/// iOS 26 uses native slider ticks for representable stepped ranges.
 	/// </remarks>
 	public double Step
 	{
 		get => step;
-		set => Set(ref step, value, affectsMeasure: false);
+		set => Set(ref step, value, ApplyStep, affectsMeasure: false);
 	}
 	double step;
 
@@ -122,10 +128,50 @@ public class Slider : Control
 	{
 		Ui.MinValue = (float)minimum;
 		Ui.MaxValue = (float)maximum;
+		ApplyStep();
 	}
 
 	void ApplyValue() =>
 		Ui.Value = (float)current;
+
+	void ApplyStep()
+	{
+		nativeSteps = false;
+
+		if (!OperatingSystem.IsIOSVersionAtLeast(26))
+			return;
+
+		Ui.TrackConfiguration = null;
+
+		double span = maximum - minimum;
+		if (step <= 0 || span <= 0)
+			return;
+
+		double intervals = span / step;
+		if (!double.IsFinite(intervals) || intervals + 2 > MaxNativeTicks)
+			return;
+
+		int whole = (int)Math.Floor(intervals);
+		double remainder = span - whole * step;
+		int count = whole + 1 + (remainder > span * 1e-9 ? 1 : 0);
+
+		List<UISliderTick> ticks = new(count);
+
+		for (int index = 0; index <= whole; index++)
+		{
+			float position = (float)(index * step / span);
+			ticks.Add(UISliderTick.Create(position, null, null));
+		}
+
+		if (ticks.Count < count)
+			ticks.Add(UISliderTick.Create(1, null, null));
+
+		UISliderTrackConfiguration configuration = UISliderTrackConfiguration.Create([.. ticks]);
+		configuration.AllowsTickValuesOnly = true;
+
+		Ui.TrackConfiguration = configuration;
+		nativeSteps = true;
+	}
 
 	void ApplyStyle()
 	{
@@ -148,7 +194,7 @@ public class Slider : Control
 	{
 		double value = Ui.Value;
 
-		if (step > 0)
+		if (step > 0 && !nativeSteps)
 			value = Math.Clamp(
 				minimum + Math.Round((value - minimum) / step) * step,
 				Math.Min(minimum, maximum),
@@ -157,7 +203,7 @@ public class Slider : Control
 		if (value == current)
 			return;
 
-		if (step > 0)
+		if (step > 0 && !nativeSteps)
 			Ui.Value = (float)value;
 
 		Set(ref current, value, affectsMeasure: false);
@@ -165,14 +211,20 @@ public class Slider : Control
 		ValueChanged?.Invoke(value);
 	}
 
+	void SettleValue()
+	{
+		if (!nativeSteps)
+			ApplyValue();
+	}
+
 
 	private protected override UIView CreateNative()
 	{
 		UISlider slider = new();
 		slider.ValueChanged += (_, _) => OnValueChanged();
-		slider.TouchUpInside += (_, _) => ApplyValue();
-		slider.TouchUpOutside += (_, _) => ApplyValue();
-		slider.TouchCancel += (_, _) => ApplyValue();
+		slider.TouchUpInside += (_, _) => SettleValue();
+		slider.TouchUpOutside += (_, _) => SettleValue();
+		slider.TouchCancel += (_, _) => SettleValue();
 
 		return slider;
 	}
