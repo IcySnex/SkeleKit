@@ -26,7 +26,7 @@ internal abstract class CatalogView<TViewModel> : TintView<TViewModel>
 		{
 			VerticalAlignment = VerticalAlignment.Start,
 			Height = 260,
-			IgnoresSafeArea = SafeAreaEdges.Top,
+			IgnoresSafeArea = SafeAreaEdges.Top | SafeAreaEdges.Leading | SafeAreaEdges.Trailing,
 			Background = LinearGradient.Vertical(
 				accent.WithAlpha(0.2),
 				accent.WithAlpha(0))
