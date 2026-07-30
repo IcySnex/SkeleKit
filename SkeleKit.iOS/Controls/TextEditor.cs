@@ -129,12 +129,20 @@ public class TextEditor : Control
 	void ApplyFont() =>
 		Ui.Font = Fonts.Scaled(fontSize, fontWeight, fontDesign);
 
-	void ApplyToolbar() =>
-		Ui.InputAccessoryView = keyboardAccessory is View custom
-			? accessoryHost ??= AccessoryHost.ForKeyboard(custom)
-			: keyboardToolbar is KeyboardToolbar.None
-				? null
-				: (accessoryBar ??= Keyboards.Toolbar(this, keyboardToolbar)).Bar;
+	void ApplyToolbar()
+	{
+		accessoryHost = keyboardAccessory is View custom
+			? AccessoryHost.ForKeyboard(custom)
+			: null;
+		accessoryBar = keyboardAccessory is null && keyboardToolbar is not KeyboardToolbar.None
+			? Keyboards.Toolbar(this, keyboardToolbar)
+			: null;
+
+		Ui.InputAccessoryView = accessoryHost is UIView host
+			? host
+			: accessoryBar?.Bar;
+		ReloadKeyboard();
+	}
 
 	void ApplyTraits()
 	{
@@ -150,6 +158,13 @@ public class TextEditor : Control
 		Ui.AutocorrectionType = autocorrection ? UITextAutocorrectionType.Yes : UITextAutocorrectionType.No;
 		Ui.SpellCheckingType = autocorrection ? UITextSpellCheckingType.Yes : UITextSpellCheckingType.No;
 		Ui.KeyboardAppearance = Keyboards.Appearance(keyboardLook);
+		ReloadKeyboard();
+	}
+
+	void ReloadKeyboard()
+	{
+		if (Ui.IsFirstResponder)
+			Ui.ReloadInputViews();
 	}
 
 	void OnChanged()

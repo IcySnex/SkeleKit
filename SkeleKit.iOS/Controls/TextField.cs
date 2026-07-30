@@ -286,12 +286,20 @@ public class TextField : Control
 	void ApplyFont() =>
 		Ui.Font = Fonts.Scaled(fontSize, fontWeight, fontDesign);
 
-	void ApplyToolbar() =>
-		Ui.InputAccessoryView = keyboardAccessory is View custom
-			? accessoryHost ??= AccessoryHost.ForKeyboard(custom)
-			: keyboardToolbar is KeyboardToolbar.None
-				? null
-				: (accessoryBar ??= Keyboards.Toolbar(this, keyboardToolbar)).Bar;
+	void ApplyToolbar()
+	{
+		accessoryHost = keyboardAccessory is View custom
+			? AccessoryHost.ForKeyboard(custom)
+			: null;
+		accessoryBar = keyboardAccessory is null && keyboardToolbar is not KeyboardToolbar.None
+			? Keyboards.Toolbar(this, keyboardToolbar)
+			: null;
+
+		Ui.InputAccessoryView = accessoryHost is UIView host
+			? host
+			: accessoryBar?.Bar;
+		ReloadKeyboard();
+	}
 
 	void ApplyTraits()
 	{
@@ -315,9 +323,11 @@ public class TextField : Control
 		Ui.SpellCheckingType = autocorrection ? UITextSpellCheckingType.Yes : UITextSpellCheckingType.No;
 		Ui.EnablesReturnKeyAutomatically = requiresText;
 		Ui.KeyboardAppearance = Keyboards.Appearance(keyboardLook);
+		ReloadKeyboard();
 	}
 
-	void ApplyKeyboard() =>
+	void ApplyKeyboard()
+	{
 		Ui.KeyboardType = keyboard switch
 		{
 			KeyboardType.Numeric => UIKeyboardType.NumberPad,
@@ -327,8 +337,11 @@ public class TextField : Control
 			KeyboardType.Url => UIKeyboardType.Url,
 			_ => UIKeyboardType.Default
 		};
+		ReloadKeyboard();
+	}
 
-	void ApplyReturnKey() =>
+	void ApplyReturnKey()
+	{
 		Ui.ReturnKeyType = returnKey switch
 		{
 			ReturnKeyType.Go => UIReturnKeyType.Go,
@@ -338,6 +351,14 @@ public class TextField : Control
 			ReturnKeyType.Done => UIReturnKeyType.Done,
 			_ => UIReturnKeyType.Default
 		};
+		ReloadKeyboard();
+	}
+
+	void ReloadKeyboard()
+	{
+		if (Ui.IsFirstResponder)
+			Ui.ReloadInputViews();
+	}
 
 	void OnEdited()
 	{
