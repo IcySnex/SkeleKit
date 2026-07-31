@@ -469,7 +469,11 @@ public class MapView : Control
 	/// <remarks>
 	/// Only used while <see cref="ClustersPins"/> is on.
 	/// </remarks>
-	public Func<int, View>? ClusterMarker { get; set; }
+	public Func<int, View>? ClusterMarker
+	{
+		get;
+		set => Set(ref field, value, ReloadPins, affectsMeasure: false);
+	}
 
 	/// <summary>
 	/// Invoked with the tapped pin.

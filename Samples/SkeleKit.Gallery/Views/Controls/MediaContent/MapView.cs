@@ -168,7 +168,6 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 			SelectionChanged = index =>
 			{
 				viewModel.ClusterModeIndex = index;
-				map.ClustersPins = false;
 				map.ClusterMarker = index is 2 ? BuildCluster : null;
 				map.ClustersPins = index > 0;
 				map.SetRegion(index > 0 ? ClusterRegion : SanFrancisco, animated: true);

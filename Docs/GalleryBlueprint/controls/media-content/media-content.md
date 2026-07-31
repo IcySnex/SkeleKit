@@ -98,7 +98,7 @@ Embeds an interactive map in the tree, backed by a UIKit map view.
 | Property | `SkeleKit.MapView.Pins` | public get/set | C# default | No | Invalidates measure | The markers dropped on the map. |
 | Property | `SkeleKit.MapView.Overlays` | public get/set | C# default | No | Invalidates measure | The shapes drawn on the map beneath its pins. |
 | Property | `SkeleKit.MapView.ClustersPins` | public get/set | false | No | Visual/interaction only | Whether nearby pins collapse into a single counted marker that splits apart on zoom. |
-| Property | `SkeleKit.MapView.ClusterMarker` | public get/set | null | No | No automatic invalidation | Builds a custom view for a cluster from its pin count, or null for the native counted marker. Only used while `MapView.ClustersPins` is on. |
+| Property | `SkeleKit.MapView.ClusterMarker` | public get/set | null | No | Visual/interaction only | Builds a custom view for a cluster from its pin count, or null for the native counted marker. Changing it reloads the current pins. Only used while `MapView.ClustersPins` is on. |
 | Property | `SkeleKit.MapView.SelectionCommand` | public get/set | null | No | No automatic invalidation | Invoked with the tapped pin. |
 | Property | `SkeleKit.MapView.PinSelected` | public get/set | null | No | No automatic invalidation | Called with the pin the user tapped. |
 | Method | `SkeleKit.MapView.SetRegion(SkeleKit.MapRegion,System.Boolean)` | public | n/a | n/a | n/a | Moves the map to a region. |
