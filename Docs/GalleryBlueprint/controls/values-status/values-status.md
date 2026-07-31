@@ -56,14 +56,14 @@ A hairline separator view.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Color` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Separator | `Color` | Show a native-scale hairline between adjacent content. Toggle its bound color between the adaptive system separator and the page accent in both appearances. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Divider specimen)
+new Divider
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	HorizontalAlignment = HorizontalAlignment.Stretch,
+	Color = Bind(model => model.DividerColor)
+};
 ```
 
 ## PageControl

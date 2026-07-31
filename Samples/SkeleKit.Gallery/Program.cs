@@ -20,6 +20,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<ButtonViewModel>();
 		services.AddTransient<ColorWellViewModel>();
 		services.AddTransient<DatePickerViewModel>();
+		services.AddTransient<DividerViewModel>();
 		services.AddTransient<LabelViewModel>();
 		services.AddTransient<PageControlViewModel>();
 		services.AddTransient<PickerViewModel>();
