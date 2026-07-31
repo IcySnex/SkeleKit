@@ -1,53 +1,30 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using SkeleKit.Gallery.ViewModels.Showcase;
 
 namespace SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 
-internal sealed partial class NativeViewModel : ShowcaseViewModel
+internal sealed class NativeViewModel : ShowcaseViewModel
 {
-	[ObservableProperty]
-	string selectionSummary = "Choose a date in the UIKit calendar.";
-
-	public IReadOnlyList<Span> CalendarCode { get; } =
+	public IReadOnlyList<Span> CanvasCode { get; } =
 	[
 		new(
 			"""
-			sealed class CalendarDelegate : UICalendarSelectionSingleDateDelegate
+			PKCanvasView canvas = new()
 			{
-				readonly Action<DateTime> selected;
-
-				public CalendarDelegate(
-					Action<DateTime> selected)
-				{
-					this.selected = selected;
-				}
-
-				public override void DidSelectDate(
-					UICalendarSelectionSingleDate selection,
-					NSDateComponents? date)
-				{
-					if (date is not null)
-						selected(new((int)date.Year, (int)date.Month, (int)date.Day));
-				}
-			}
-
-			CalendarDelegate selectionDelegate = new(viewModel.SelectDate);
-			UICalendarSelectionSingleDate selection = new(selectionDelegate);
-
-			UICalendarView calendar = new()
-			{
-				SelectionBehavior = selection
+				BackgroundColor = UIColor.SystemBackground,
+				DrawingPolicy = PKCanvasViewDrawingPolicy.AnyInput,
+				Tool = new PKInkingTool(
+					PKInkType.Pen,
+					UIColor.SystemOrange,
+					5)
 			};
 
-			new NativeView(calendar)
+			new NativeView(canvas)
 			{
-				Height = 360
+				Height = 260,
+				CornerRadius = 18
 			};
+
+			canvas.Drawing = new PKDrawing();
 			""")
 	];
-
-
-	internal void SelectDate(
-		DateTime date) =>
-		SelectionSummary = date.ToString("D");
 }

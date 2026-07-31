@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.Input;
-using Foundation;
-using ObjCRuntime;
+using PencilKit;
 using SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 using SkeleKit.Gallery.Views.Showcase;
 using UIKit;
@@ -10,117 +9,44 @@ namespace SkeleKit.Gallery.Views.Controls.MediaContent;
 [Page]
 internal sealed class NativeView : ShowcaseView<NativeViewModel>
 {
-	sealed class CalendarDelegate : UICalendarSelectionSingleDateDelegate
-	{
-		readonly Action<DateTime>? selected;
-
-		public CalendarDelegate(
-			Action<DateTime> selected)
-		{
-			this.selected = selected;
-		}
-
-		// ReSharper disable once UnusedMember.Local
-		public CalendarDelegate(
-			NativeHandle handle) : base(handle)
-		{ }
-
-
-		public override void DidSelectDate(
-			UICalendarSelectionSingleDate selection,
-			NSDateComponents? dateComponents)
-		{
-			if (dateComponents is null)
-				return;
-
-			selected?.Invoke(new(
-				(int)dateComponents.Year,
-				(int)dateComponents.Month,
-				(int)dateComponents.Day));
-		}
-	}
-
-
-	readonly CalendarDelegate calendarDelegate;
-	readonly UICalendarSelectionSingleDate calendarSelection;
-
-
 	public NativeView(
 		NativeViewModel viewModel) : base(viewModel, "Native View", Colors.Orange)
 	{
-		calendarDelegate = new(viewModel.SelectDate);
-		calendarSelection = new(calendarDelegate);
-
-		AddCalendarShowcase(viewModel);
+		AddCanvasShowcase();
 	}
 
 
-	void AddCalendarShowcase(
-		NativeViewModel viewModel)
+	void AddCanvasShowcase()
 	{
-		UICalendarView calendar = new()
+		PKCanvasView canvas = new()
 		{
-			SelectionBehavior = calendarSelection
+			BackgroundColor = UIColor.SystemBackground,
+			DrawingPolicy = PKCanvasViewDrawingPolicy.AnyInput,
+			Tool = new PKInkingTool(PKInkType.Pen, UIColor.SystemOrange, 5)
 		};
 
-		DateTime today = DateTime.Today;
-		NSDateComponents todayComponents = Components(today);
-
-		Button selectToday = new()
+		Button clear = new()
 		{
-			Text = "Select today",
-			Icon = "calendar.badge.checkmark",
+			Text = "Clear",
+			Icon = "trash",
 			Kind = ButtonStyle.Tinted,
 			Size = ButtonSize.Small,
-			Command = new RelayCommand(() =>
-			{
-				calendar.SetVisibleDateComponents(todayComponents, animated: true);
-				calendarSelection.SetSelectedDate(todayComponents, animated: true);
-				viewModel.SelectDate(today);
-			})
+			Command = new RelayCommand(() => canvas.Drawing = new())
 		};
 
 		AddShowcase(
-			"UIKit calendar",
-			"Host an unsupported UIKit control and bridge its native selection delegate into the ViewModel.",
+			"PencilKit canvas",
+			"Host an unsupported native framework view and control it from the surrounding SkeleKit tree.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
-					new StackPanel
+					new SkeleKit.NativeView(canvas)
 					{
 						HorizontalAlignment = HorizontalAlignment.Stretch,
-						VerticalAlignment = VerticalAlignment.Center,
-						Spacing = 8,
-
-						Children =
-						{
-							new SkeleKit.NativeView(calendar)
-							{
-								HorizontalAlignment = HorizontalAlignment.Stretch,
-								Height = 340
-							},
-
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.SelectionSummary),
-								TextStyle = TextStyle.Caption1,
-								TextColor = Colors.SecondaryLabel,
-								TextAlignment = TextAlignment.Center
-							}
-						}
+						Height = 260,
+						CornerRadius = 18
 					},
-					420),
-				SettingRow("Selection", selectToday)),
-			ShowcaseBox.Code(Bind(model => model.CalendarCode)));
+					300),
+				SettingRow("Drawing", clear)),
+			ShowcaseBox.Code(Bind(model => model.CanvasCode)));
 	}
-
-
-	static NSDateComponents Components(
-		DateTime date) =>
-		new()
-		{
-			Year = date.Year,
-			Month = date.Month,
-			Day = date.Day
-		};
 }
