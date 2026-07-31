@@ -39,10 +39,6 @@ internal sealed partial class WebViewModel : ShowcaseViewModel
 
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(WebsiteCode))]
-	bool allowsHistorySwipe = true;
-
-	[ObservableProperty]
 	string localStatus = "Waiting for the local document.";
 
 	[ObservableProperty]
@@ -71,15 +67,14 @@ internal sealed partial class WebViewModel : ShowcaseViewModel
 			"""")
 	];
 
-	public IReadOnlyList<Span> WebsiteCode =>
+	public IReadOnlyList<Span> WebsiteCode { get; } =
 	[
 		new(
-			$$"""
+			"""
 			WebView web = new()
 			{
 				Height = 300,
-				Url = "{{WebsiteUrl}}",
-				AllowsBackGestures = {{Boolean(AllowsHistorySwipe)}},
+				Url = "https://github.com/IcySnex/SkeleKit",
 				Navigated = viewModel.RecordWebsiteNavigation,
 				NavigationFailed = viewModel.RecordWebsiteFailure
 			};
@@ -108,9 +103,4 @@ internal sealed partial class WebViewModel : ShowcaseViewModel
 	internal void RecordWebsiteFailure(
 		string message) =>
 		WebsiteStatus = $"Failed · {message}";
-
-
-	static string Boolean(
-		bool value) =>
-		value ? "true" : "false";
 }

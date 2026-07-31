@@ -162,7 +162,7 @@ Embeds live web content in the tree, backed by a UIKit web view.
 | --- | --- | --- | --- | --- | --- | --- |
 | Property | `SkeleKit.WebView.Url` | public get/set | C# default | Yes | Visual/interaction only | The web address to load. Takes effect when `WebView.Html` is not set. |
 | Property | `SkeleKit.WebView.Html` | public get/set | C# default | Yes | Visual/interaction only | Raw HTML to load, overriding `WebView.Url` when set. |
-| Property | `SkeleKit.WebView.AllowsBackGestures` | public get/set | C# default | No | Visual/interaction only | Whether swiping from the screen edge navigates back and forward through history. |
+| Property | `SkeleKit.WebView.AllowsBackGestures` | public get/set | C# default | No | Visual/interaction only | Whether swiping navigates back and forward through web history. This may compete with a containing navigation controller's interactive pop gesture, particularly the content-wide gesture on iOS 26. |
 | Property | `SkeleKit.WebView.Navigated` | public get/set | null | No | No automatic invalidation | Called with the final address each time a page finishes loading. |
 | Property | `SkeleKit.WebView.NavigationFailed` | public get/set | null | No | No automatic invalidation | Called with the failure description when a load fails. |
 | Method | `SkeleKit.WebView.GoBack` | public | n/a | n/a | n/a | Navigates back to the previous page in history, if any. |
@@ -177,7 +177,7 @@ Embeds live web content in the tree, backed by a UIKit web view.
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
 | HTML and JavaScript | `Html`, `Navigated`, `NavigationFailed`, `EvaluateAsync` | Load a deterministic bundled document, use its own button, and run JavaScript from native code to change the card and button colors. Inspect the navigation and evaluation status below the bounded web view. |
-| Website and navigation | `Url`, `AllowsBackGestures`, `Navigated`, `NavigationFailed`, `GoBack`, `GoForward`, `Reload` | Browse the SkeleKit GitHub repository, follow links, navigate backward and forward, reload, and toggle edge swipes through browsing history. Navigation failures remain observable without introducing a deliberate failure state. |
+| Website and navigation | `Url`, `Navigated`, `NavigationFailed`, `GoBack`, `GoForward`, `Reload` | Browse the SkeleKit GitHub repository, follow links, navigate backward and forward, and reload. Navigation failures remain observable without introducing a deliberate failure state. `AllowsBackGestures` is documented but omitted from this pushed gallery page because it competes with the host navigation gesture. |
 
 ```csharp
 WebView web = new()
@@ -200,7 +200,6 @@ WebView web = new()
 {
 	Height = 300,
 	Url = "https://github.com/IcySnex/SkeleKit",
-	AllowsBackGestures = true,
 	Navigated = viewModel.RecordWebsiteNavigation,
 	NavigationFailed = viewModel.RecordWebsiteFailure
 };

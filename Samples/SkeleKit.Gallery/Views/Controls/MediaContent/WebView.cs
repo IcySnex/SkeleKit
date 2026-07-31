@@ -92,7 +92,6 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			Height = 300,
 			Url = WebViewModel.WebsiteUrl,
-			AllowsBackGestures = viewModel.AllowsHistorySwipe,
 			Navigated = viewModel.RecordWebsiteNavigation,
 			NavigationFailed = viewModel.RecordWebsiteFailure,
 			CornerRadius = 18
@@ -111,19 +110,9 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 			}
 		};
 
-		Switch gestures = new()
-		{
-			IsOn = viewModel.AllowsHistorySwipe,
-			Toggled = value =>
-			{
-				viewModel.AllowsHistorySwipe = value;
-				web.AllowsBackGestures = value;
-			}
-		};
-
 		AddShowcase(
 			"Website & navigation",
-			"Browse the SkeleKit repository with native history controls and optional edge-swipe navigation.",
+			"Browse the SkeleKit repository with native history controls.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
 					new StackPanel
@@ -139,8 +128,7 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 						}
 					},
 					350),
-				SettingRow("Navigation", navigation),
-				SettingRow("History swipe", gestures)),
+				SettingRow("Navigation", navigation)),
 			ShowcaseBox.Code(Bind(model => model.WebsiteCode)));
 	}
 
