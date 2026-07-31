@@ -176,14 +176,40 @@ Escape hatch to embed any UIKit view in a SkeleKit tree.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Baseline | _(type has no declared documented properties)_ | Render or invoke the type in the smallest owning control and verify its documented behavior. |
+| UIKit calendar | `NativeView(UIView)` | Wrap a `UICalendarView` in a bounded slot, select a date through its native delegate, and select today from a SkeleKit button. Verify native interaction updates the ViewModel while the wrapper participates in normal SkeleKit layout and appearance. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(NativeView specimen)
+sealed class CalendarDelegate : UICalendarSelectionSingleDateDelegate
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
+	readonly Action<DateTime> selected;
+
+	public CalendarDelegate(
+		Action<DateTime> selected)
+	{
+		this.selected = selected;
+	}
+
+	public override void DidSelectDate(
+		UICalendarSelectionSingleDate selection,
+		NSDateComponents? date)
+	{
+		if (date is not null)
+			selected(new((int)date.Year, (int)date.Month, (int)date.Day));
+	}
 }
+
+CalendarDelegate selectionDelegate = new(viewModel.SelectDate);
+UICalendarSelectionSingleDate selection = new(selectionDelegate);
+
+UICalendarView calendar = new()
+{
+	SelectionBehavior = selection
+};
+
+new NativeView(calendar)
+{
+	Height = 340
+};
 ```
 
 ## WebView
