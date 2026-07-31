@@ -6,7 +6,7 @@ namespace SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 
 internal sealed partial class ImageViewModel : ShowcaseViewModel
 {
-	const string GalleryIconUrl = "https://raw.githubusercontent.com/IcySnex/SkeleKit/main/Samples/SkeleKit.Gallery/Assets.xcassets/AppIcon.appiconset/Icon1024.png";
+	const string StockImageUrl = "https://picsum.photos/500";
 	const string FailureUrl = "https://example.invalid/image.png";
 
 	public ImageViewModel()
@@ -22,7 +22,7 @@ internal sealed partial class ImageViewModel : ShowcaseViewModel
 
 	public List<ShowcaseOption<string>> Sources { get; } =
 	[
-		new("Remote", GalleryIconUrl),
+		new("Remote", StockImageUrl),
 		new("Failure", FailureUrl)
 	];
 
@@ -121,12 +121,6 @@ internal sealed partial class ImageViewModel : ShowcaseViewModel
 				SymbolSize = {{SymbolSize:0}},
 				SymbolWeight = FontWeight.{{SelectedWeight.Value}},
 				SymbolScale = SymbolScale.{{SelectedScale.Value}},
-				SymbolColors =
-				{
-					Colors.Orange,
-					Colors.Blue,
-					Colors.Cyan
-				},
 				PrefersMulticolor = {{Boolean(PrefersMulticolor)}}
 			};
 			""")

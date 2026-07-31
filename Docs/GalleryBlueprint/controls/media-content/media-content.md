@@ -35,7 +35,7 @@ Displays an image from a symbol, bundle asset, or URL.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Source and layout | `Source`, `Placeholder`, `Fallback`, `FadesIn`, `Stretch` | Load the gallery icon from its repository with an explicit frame, placeholder, fallback, and cross-dissolve. Switch to an invalid address to expose failure behavior and compare every stretch mode. |
+| Source and layout | `Source`, `Placeholder`, `Fallback`, `FadesIn`, `Stretch` | Load a fixed stock photograph with an explicit frame, placeholder, fallback, and cross-dissolve. Switch to an invalid address to expose failure behavior and compare every stretch mode. |
 | Symbol rendering | `Source`, `SymbolSize`, `SymbolWeight`, `SymbolScale`, `SymbolColors`, `PrefersMulticolor` | Render a local SF Symbol with a three-color palette. Adjust point size, stroke weight, relative scale, and the preferred multicolor rendition. |
 | Variable symbols and effects | `Source`, `SymbolValue`, `SymbolEffect`, `PlaySymbolEffect` | Drive a speaker symbol from 0 through 1, choose a continuously repeating ambient effect, and trigger a one-shot bounce independently. |
 

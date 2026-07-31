@@ -76,13 +76,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 			SymbolSize = viewModel.SymbolSize,
 			SymbolWeight = viewModel.SelectedWeight.Value,
 			SymbolScale = viewModel.SelectedScale.Value,
-			PrefersMulticolor = viewModel.PrefersMulticolor,
-			SymbolColors =
-			{
-				Colors.Orange,
-				Colors.Blue,
-				Colors.Cyan
-			}
+			PrefersMulticolor = viewModel.PrefersMulticolor
 		};
 
 		Slider size = new()
