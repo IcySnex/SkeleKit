@@ -176,12 +176,23 @@ Embeds live web content in the tree, backed by a UIKit web view.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Url`, `Html`, `AllowsBackGestures`, `Navigated`, `NavigationFailed` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Content and navigation | `Url`, `Html`, `AllowsBackGestures`, `Navigated`, `NavigationFailed`, `GoBack`, `GoForward`, `Reload`, `EvaluateAsync` | Switch among deterministic local HTML, a live website, and an invalid address. Create a local history entry, navigate backward and forward, reload, toggle native gestures, run JavaScript, and inspect success or failure callbacks. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(WebView specimen)
+WebView web = new()
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Height = 280,
+	Html = """
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<h1>SkeleKit</h1>
+		""",
+	AllowsBackGestures = true,
+	Navigated = viewModel.RecordNavigation,
+	NavigationFailed = viewModel.RecordFailure
+};
+
+web.GoBack();
+web.GoForward();
+web.Reload();
+string? title = await web.EvaluateAsync("document.title");
 ```

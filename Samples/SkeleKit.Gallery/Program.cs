@@ -35,6 +35,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<TextEditorViewModel>();
 		services.AddTransient<TextFieldViewModel>();
 		services.AddTransient<TextViewViewModel>();
+		services.AddTransient<WebViewModel>();
 	})
 	.UseTint(Colors.Indigo)
 	.Tabs(tabs => tabs
