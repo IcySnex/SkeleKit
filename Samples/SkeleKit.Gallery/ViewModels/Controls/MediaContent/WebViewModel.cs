@@ -1,19 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.ViewModels.Showcase;
 
 namespace SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 
-internal enum WebContentKind
-{
-	Local,
-	Website,
-	Failure
-}
-
 internal sealed partial class WebViewModel : ShowcaseViewModel
 {
-	const string LocalHtml = """
+	internal const string WebsiteUrl = "https://github.com/IcySnex/SkeleKit";
+
+	internal const string LocalHtml = """
 		<!doctype html>
 		<html>
 		<head>
@@ -21,121 +15,99 @@ internal sealed partial class WebViewModel : ShowcaseViewModel
 			<style>
 				:root { color-scheme: light dark; font-family: -apple-system; }
 				body { margin: 0; padding: 20px; background: transparent; }
-				.card { padding: 20px; border-radius: 18px; background: color-mix(in srgb, #ff9500 16%, transparent); }
+				.card { padding: 20px; border-radius: 18px; background: rgba(255, 149, 0, 0.16); }
 				h1 { margin: 0 0 8px; font-size: 24px; }
 				p { margin: 0 0 16px; color: #8e8e93; line-height: 1.4; }
 				button { border: 0; border-radius: 999px; padding: 10px 16px; color: white; background: #ff9500; font: inherit; font-weight: 600; }
 			</style>
 		</head>
 		<body>
-			<div class="card">
+			<div class="card" data-color="orange">
 				<h1 id="title">Native web content</h1>
 				<p id="copy">This page is bundled directly in the gallery.</p>
-				<button onclick="openDetails()">Open details</button>
+				<button onclick="showDetails()">Show details</button>
 			</div>
 			<script>
-				function openDetails() {
-					history.pushState({}, '', '#details');
-					document.querySelector('#title').textContent = 'History entry';
-					document.querySelector('#copy').textContent = 'Use the native back and forward controls below.';
+				function showDetails() {
+					document.querySelector('#title').textContent = 'JavaScript is active';
+					document.querySelector('#copy').textContent = 'The button and native command share the same document.';
 				}
 			</script>
 		</body>
 		</html>
 		""";
 
-	public WebViewModel()
-	{
-		SelectedContent = Contents[0];
-		Html = LocalHtml;
-	}
-
-
-	public List<ShowcaseOption<WebContentKind>> Contents { get; } =
-	[
-		new("Local HTML", WebContentKind.Local),
-		new("Website", WebContentKind.Website),
-		new("Failure", WebContentKind.Failure)
-	];
-
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(WebViewCode))]
-	ShowcaseOption<WebContentKind> selectedContent = null!;
+	[NotifyPropertyChangedFor(nameof(WebsiteCode))]
+	bool allowsHistorySwipe = true;
 
 	[ObservableProperty]
-	string? url;
+	string localStatus = "Waiting for the local document.";
 
 	[ObservableProperty]
-	string? html;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(WebViewCode))]
-	bool allowsBackGestures = true;
-
-	[ObservableProperty]
-	string navigationStatus = "Waiting for the first navigation.";
+	string websiteStatus = "Opening the SkeleKit repository.";
 
 	[ObservableProperty]
 	string javaScriptStatus = "JavaScript has not run yet.";
 
-	public IReadOnlyList<Span> WebViewCode =>
+	public IReadOnlyList<Span> HtmlCode { get; } =
 	[
-		new(SelectedContent.Value is WebContentKind.Local
-			? $$"""
-				new WebView
-				{
-					Height = 280,
-					Html = "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><h1>SkeleKit</h1>",
-					AllowsBackGestures = {{Boolean(AllowsBackGestures)}},
-					Navigated = viewModel.RecordNavigation,
-					NavigationFailed = viewModel.RecordFailure
-				};
-				"""
-			: $$"""
-				new WebView
-				{
-					Height = 280,
-					Url = "{{SelectedUrl}}",
-					AllowsBackGestures = {{Boolean(AllowsBackGestures)}},
-					Navigated = viewModel.RecordNavigation,
-					NavigationFailed = viewModel.RecordFailure
-				};
-				""")
+		new(
+			""""
+			WebView web = new()
+			{
+				Height = 240,
+				Html = """
+					<meta name="viewport" content="width=device-width, initial-scale=1">
+					<div class="card">Bundled HTML</div>
+					""",
+				Navigated = viewModel.RecordLocalNavigation,
+				NavigationFailed = viewModel.RecordLocalFailure
+			};
+
+			string? result = await web.EvaluateAsync(
+				"document.querySelector('.card').style.background = '#0a84ff'; 'Blue';");
+			"""")
 	];
 
-	string SelectedUrl =>
-		SelectedContent.Value is WebContentKind.Website
-			? "https://example.com"
-			: "https://example.invalid";
+	public IReadOnlyList<Span> WebsiteCode =>
+	[
+		new(
+			$$"""
+			WebView web = new()
+			{
+				Height = 300,
+				Url = "{{WebsiteUrl}}",
+				AllowsBackGestures = {{Boolean(AllowsHistorySwipe)}},
+				Navigated = viewModel.RecordWebsiteNavigation,
+				NavigationFailed = viewModel.RecordWebsiteFailure
+			};
+
+			web.GoBack();
+			web.GoForward();
+			web.Reload();
+			""")
+	];
 
 
-	internal void SelectContent(
-		ShowcaseOption<WebContentKind> option)
-	{
-		SelectedContent = option;
-
-		if (option.Value is WebContentKind.Local)
-		{
-			Url = null;
-			Html = LocalHtml;
-		}
-		else
-		{
-			Html = null;
-			Url = SelectedUrl;
-		}
-	}
-
-	internal void RecordNavigation(
+	internal void RecordLocalNavigation(
 		string address) =>
-		NavigationStatus = string.IsNullOrEmpty(address)
-			? "Navigated · local HTML"
-			: $"Navigated · {address}";
+		LocalStatus = string.IsNullOrEmpty(address)
+			? "Loaded · bundled HTML"
+			: $"Loaded · {address}";
 
-	internal void RecordFailure(
+	internal void RecordLocalFailure(
 		string message) =>
-		NavigationStatus = $"Failed · {message}";
+		LocalStatus = $"Failed · {message}";
+
+	internal void RecordWebsiteNavigation(
+		string address) =>
+		WebsiteStatus = $"Loaded · {address}";
+
+	internal void RecordWebsiteFailure(
+		string message) =>
+		WebsiteStatus = $"Failed · {message}";
 
 
 	static string Boolean(

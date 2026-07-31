@@ -1,6 +1,5 @@
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
-using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 using SkeleKit.Gallery.Views.Showcase;
 
@@ -12,41 +11,91 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 	public WebView(
 		WebViewModel viewModel) : base(viewModel, "Web View", Colors.Orange)
 	{
-		AddWebShowcase(viewModel);
+		AddHtmlShowcase(viewModel);
+		AddWebsiteShowcase(viewModel);
 	}
 
 
-	void AddWebShowcase(
+	void AddHtmlShowcase(
 		WebViewModel viewModel)
 	{
 		SkeleKit.WebView web = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Stretch,
-			Height = 280,
-			Url = Bind(model => model.Url),
-			Html = Bind(model => model.Html),
-			AllowsBackGestures = viewModel.AllowsBackGestures,
-			Navigated = viewModel.RecordNavigation,
-			NavigationFailed = viewModel.RecordFailure,
+			Height = 240,
+			Html = WebViewModel.LocalHtml,
+			Navigated = viewModel.RecordLocalNavigation,
+			NavigationFailed = viewModel.RecordLocalFailure,
 			CornerRadius = 18
 		};
 
-		Picker<ShowcaseOption<WebContentKind>> content = new()
+		AsyncRelayCommand evaluate = new(async () =>
 		{
-			MinWidth = 150,
-			ItemsSource = viewModel.Contents,
-			SelectedItem = viewModel.SelectedContent,
-			SelectionChanged = viewModel.SelectContent
-		};
-
-		Switch gestures = new()
-		{
-			IsOn = viewModel.AllowsBackGestures,
-			Toggled = value =>
+			try
 			{
-				viewModel.AllowsBackGestures = value;
-				web.AllowsBackGestures = value;
+				string? result = await web.EvaluateAsync(
+					"""
+					(() => {
+						const card = document.querySelector('.card');
+						const button = document.querySelector('button');
+						const blue = card.dataset.color === 'blue';
+						card.dataset.color = blue ? 'orange' : 'blue';
+						card.style.background = blue ? 'rgba(255, 149, 0, 0.16)' : 'rgba(10, 132, 255, 0.16)';
+						button.style.background = blue ? '#ff9500' : '#0a84ff';
+						return blue ? 'Orange' : 'Blue';
+					})()
+					""");
+				viewModel.JavaScriptStatus = $"JavaScript · {result ?? "no result"}";
 			}
+			catch (Exception exception)
+			{
+				viewModel.JavaScriptStatus = $"JavaScript failed · {exception.Message}";
+			}
+		});
+
+		AddShowcase(
+			"HTML & JavaScript",
+			"Load a bundled document, interact with its own script, and update its colors from native code.",
+			PreviewWithSettings(
+				ShowcaseBox.Canvas(
+					new StackPanel
+					{
+						HorizontalAlignment = HorizontalAlignment.Stretch,
+						VerticalAlignment = VerticalAlignment.Center,
+						Spacing = 8,
+
+						Children =
+						{
+							web,
+							Status(Bind(model => model.LocalStatus)),
+							Status(Bind(model => model.JavaScriptStatus))
+						}
+					},
+					320),
+				SettingRow(
+					"JavaScript",
+					new Button
+					{
+						Text = "Change color",
+						Kind = ButtonStyle.Tinted,
+						Size = ButtonSize.Small,
+						Command = evaluate
+					})),
+			ShowcaseBox.Code(Bind(model => model.HtmlCode)));
+	}
+
+	void AddWebsiteShowcase(
+		WebViewModel viewModel)
+	{
+		SkeleKit.WebView web = new()
+		{
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			Height = 300,
+			Url = WebViewModel.WebsiteUrl,
+			AllowsBackGestures = viewModel.AllowsHistorySwipe,
+			Navigated = viewModel.RecordWebsiteNavigation,
+			NavigationFailed = viewModel.RecordWebsiteFailure,
+			CornerRadius = 18
 		};
 
 		StackPanel navigation = new()
@@ -62,23 +111,19 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 			}
 		};
 
-		AsyncRelayCommand evaluate = new(async () =>
+		Switch gestures = new()
 		{
-			try
+			IsOn = viewModel.AllowsHistorySwipe,
+			Toggled = value =>
 			{
-				string? result = await web.EvaluateAsync(
-					"document.body.style.fontSize = '18px'; document.title || 'Untitled';");
-				viewModel.JavaScriptStatus = $"JavaScript · {result ?? "no result"}";
+				viewModel.AllowsHistorySwipe = value;
+				web.AllowsBackGestures = value;
 			}
-			catch (Exception exception)
-			{
-				viewModel.JavaScriptStatus = $"JavaScript failed · {exception.Message}";
-			}
-		});
+		};
 
 		AddShowcase(
-			"Content & navigation",
-			"Load local HTML or a URL, navigate history, reload, evaluate JavaScript, and inspect callbacks.",
+			"Website & navigation",
+			"Browse the SkeleKit repository with native history controls and optional edge-swipe navigation.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
 					new StackPanel
@@ -90,24 +135,13 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 						Children =
 						{
 							web,
-							Status(Bind(model => model.NavigationStatus)),
-							Status(Bind(model => model.JavaScriptStatus))
+							Status(Bind(model => model.WebsiteStatus))
 						}
 					},
 					350),
-				SettingRow("Content", content),
 				SettingRow("Navigation", navigation),
-				SettingRow("Back gestures", gestures),
-				SettingRow(
-					"JavaScript",
-					new Button
-					{
-						Text = "Evaluate",
-						Kind = ButtonStyle.Tinted,
-						Size = ButtonSize.Small,
-						Command = evaluate
-					})),
-			ShowcaseBox.Code(Bind(model => model.WebViewCode)));
+				SettingRow("History swipe", gestures)),
+			ShowcaseBox.Code(Bind(model => model.WebsiteCode)));
 	}
 
 

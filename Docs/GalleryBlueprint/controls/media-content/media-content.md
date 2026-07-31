@@ -176,23 +176,36 @@ Embeds live web content in the tree, backed by a UIKit web view.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Content and navigation | `Url`, `Html`, `AllowsBackGestures`, `Navigated`, `NavigationFailed`, `GoBack`, `GoForward`, `Reload`, `EvaluateAsync` | Switch among deterministic local HTML, a live website, and an invalid address. Create a local history entry, navigate backward and forward, reload, toggle native gestures, run JavaScript, and inspect success or failure callbacks. |
+| HTML and JavaScript | `Html`, `Navigated`, `NavigationFailed`, `EvaluateAsync` | Load a deterministic bundled document, use its own button, and run JavaScript from native code to change the card and button colors. Inspect the navigation and evaluation status below the bounded web view. |
+| Website and navigation | `Url`, `AllowsBackGestures`, `Navigated`, `NavigationFailed`, `GoBack`, `GoForward`, `Reload` | Browse the SkeleKit GitHub repository, follow links, navigate backward and forward, reload, and toggle edge swipes through browsing history. Navigation failures remain observable without introducing a deliberate failure state. |
 
 ```csharp
 WebView web = new()
 {
-	Height = 280,
+	Height = 240,
 	Html = """
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<h1>SkeleKit</h1>
+		<div class="card">Bundled HTML</div>
 		""",
+	Navigated = viewModel.RecordLocalNavigation,
+	NavigationFailed = viewModel.RecordLocalFailure
+};
+
+string? color = await web.EvaluateAsync(
+	"document.querySelector('.card').style.background = '#0a84ff'; 'Blue';");
+```
+
+```csharp
+WebView web = new()
+{
+	Height = 300,
+	Url = "https://github.com/IcySnex/SkeleKit",
 	AllowsBackGestures = true,
-	Navigated = viewModel.RecordNavigation,
-	NavigationFailed = viewModel.RecordFailure
+	Navigated = viewModel.RecordWebsiteNavigation,
+	NavigationFailed = viewModel.RecordWebsiteFailure
 };
 
 web.GoBack();
 web.GoForward();
 web.Reload();
-string? title = await web.EvaluateAsync("document.title");
 ```
