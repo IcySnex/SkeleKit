@@ -25,14 +25,15 @@ An activity indicator spinner.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `IsAnimating`, `IsLarge`, `Color` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Loading state | `IsAnimating`, `IsLarge`, `Color` | Compare the native medium system-colored indicator with a large custom-colored indicator. Stop and restart their bound animation state; stopped indicators hide while their labels remain visible. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(ActivityIndicator specimen)
+new ActivityIndicator
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	IsAnimating = Bind(model => model.IsAnimating),
+	IsLarge = true,
+	Color = Colors.Red
+};
 ```
 
 ## Divider

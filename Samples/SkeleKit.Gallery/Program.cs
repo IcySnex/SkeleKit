@@ -16,6 +16,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<PlatformViewModel>();
 		services.AddTransient<SearchViewModel>();
 		services.AddTransient<AboutViewModel>();
+		services.AddTransient<ActivityIndicatorViewModel>();
 		services.AddTransient<ButtonViewModel>();
 		services.AddTransient<ColorWellViewModel>();
 		services.AddTransient<DatePickerViewModel>();
