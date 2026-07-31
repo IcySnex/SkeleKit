@@ -1,5 +1,6 @@
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
+using SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 using SkeleKit.Gallery.ViewModels.Controls.TextInput;
 using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
 
@@ -42,7 +43,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Media & Content",
-				Topic("Image", "Symbols, bundle assets, remote images and effects.", "photo.fill", Colors.Orange, GalleryArea.Controls),
+				Topic("Image", "Symbols, bundle assets, remote images and effects.", "photo.fill", Colors.Orange, GalleryArea.Controls, typeof(ImageViewModel)),
 				Topic("WebView", "Web navigation, loading and failure states.", "globe", Colors.Orange, GalleryArea.Controls),
 				Topic("MapView", "Regions, pins, overlays and user location.", "map.fill", Colors.Orange, GalleryArea.Controls),
 				Topic("NativeView", "Host a custom UIKit view when needed.", "shippingbox.fill", Colors.Orange, GalleryArea.Controls))

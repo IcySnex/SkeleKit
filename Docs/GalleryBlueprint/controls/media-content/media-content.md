@@ -35,14 +35,41 @@ Displays an image from a symbol, bundle asset, or URL.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Source`, `Placeholder`, `Fallback`, `FadesIn`, `Stretch`, `SymbolSize`, `SymbolWeight`, `SymbolScale`, `SymbolColors`, `PrefersMulticolor`, `SymbolValue`, `SymbolEffect` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Source and layout | `Source`, `Placeholder`, `Fallback`, `FadesIn`, `Stretch` | Load the gallery icon from its repository with an explicit frame, placeholder, fallback, and cross-dissolve. Switch to an invalid address to expose failure behavior and compare every stretch mode. |
+| Symbol rendering | `Source`, `SymbolSize`, `SymbolWeight`, `SymbolScale`, `SymbolColors`, `PrefersMulticolor` | Render a local SF Symbol with a three-color palette. Adjust point size, stroke weight, relative scale, and the preferred multicolor rendition. |
+| Variable symbols and effects | `Source`, `SymbolValue`, `SymbolEffect`, `PlaySymbolEffect` | Drive a speaker symbol from 0 through 1, choose a continuously repeating ambient effect, and trigger a one-shot bounce independently. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Image specimen)
+new Image
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Width = 280,
+	Height = 180,
+	Source = ImageSource.Url("https://example.com/image.png"),
+	Placeholder = ImageSource.Symbol("photo"),
+	Fallback = ImageSource.Symbol("exclamationmark.triangle.fill"),
+	FadesIn = true,
+	Stretch = Stretch.UniformToFill
+};
+
+new Image
+{
+	Source = ImageSource.Symbol("cloud.sun.rain.fill"),
+	SymbolSize = 72,
+	SymbolWeight = FontWeight.Semibold,
+	SymbolScale = SymbolScale.Large,
+	SymbolColors = { Colors.Orange, Colors.Blue, Colors.Cyan },
+	PrefersMulticolor = true
+};
+
+Image image = new()
+{
+	Source = ImageSource.Symbol("speaker.wave.3.fill"),
+	SymbolSize = 72,
+	SymbolValue = Bind(model => model.SymbolValue),
+	SymbolEffect = SymbolEffect.Pulse
+};
+
+image.PlaySymbolEffect(SymbolEffect.Bounce);
 ```
 
 ## MapView
@@ -158,4 +185,3 @@ static void Showcase(WebView specimen)
 	_ = specimen; // configure the documented properties for the selected matrix row
 }
 ```
-
