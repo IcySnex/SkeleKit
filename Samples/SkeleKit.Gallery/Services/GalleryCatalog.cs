@@ -45,7 +45,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				"Media & Content",
 				Topic("Image", "Symbols, bundle assets, remote images and effects.", "photo.fill", Colors.Orange, GalleryArea.Controls, typeof(ImageViewModel)),
 				Topic("WebView", "Web navigation, loading and failure states.", "globe", Colors.Orange, GalleryArea.Controls, typeof(WebViewModel)),
-				Topic("MapView", "Regions, pins, overlays and user location.", "map.fill", Colors.Orange, GalleryArea.Controls),
+				Topic("MapView", "Regions, pins, overlays and clustering.", "map.fill", Colors.Orange, GalleryArea.Controls, typeof(MapViewModel)),
 				Topic("NativeView", "Host a custom UIKit view when needed.", "shippingbox.fill", Colors.Orange, GalleryArea.Controls))
 		];
 

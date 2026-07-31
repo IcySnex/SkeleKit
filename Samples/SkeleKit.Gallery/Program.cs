@@ -36,6 +36,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<TextFieldViewModel>();
 		services.AddTransient<TextViewViewModel>();
 		services.AddTransient<WebViewModel>();
+		services.AddTransient<MapViewModel>();
 	})
 	.UseTint(Colors.Indigo)
 	.Tabs(tabs => tabs
