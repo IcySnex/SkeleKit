@@ -44,29 +44,6 @@ internal sealed partial class SegmentedControlViewModel : ShowcaseViewModel
 			""")
 	];
 
-	public IReadOnlyList<Span> DensityCode { get; } =
-	[
-		new(
-			"""
-			SegmentedControl range = new();
-			range.Items.Add("Day");
-			range.Items.Add("Week");
-
-			SegmentedControl period = new();
-			period.Items.Add("Day");
-			period.Items.Add("Week");
-			period.Items.Add("Month");
-
-			SegmentedControl history = new();
-			history.Items.Add("1D");
-			history.Items.Add("1W");
-			history.Items.Add("1M");
-			history.Items.Add("6M");
-			history.Items.Add("1Y");
-			""")
-	];
-
-
 	[RelayCommand]
 	void ResetSelection()
 	{

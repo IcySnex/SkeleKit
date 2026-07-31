@@ -39,30 +39,19 @@ A text label.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Dynamic Type | `Text`, `TextStyle`, `MaxFontSize`, `TextAlignment` | Select every native text style and change the system Dynamic Type size. The label follows the selected native scaling curve; enabling the cap limits its largest accessibility size without changing the base style. |
+| Typography | `Text`, `TextStyle`, `FontSize`, `MaxFontSize`, `Bold`, `FontWeight`, `FontDesign`, `TextColor`, `TextAlignment` | Choose Dynamic to select every native text style and optionally cap its largest accessibility size, or Fixed to reveal a 12–40 point size slider. Select every native weight and compare the default, rounded, serif, and monospaced designs. A second label demonstrates the `Bold` shorthand. |
 
 ```csharp
 new Label
 {
 	Text = "Typography that follows the reader",
 	TextStyle = TextStyle.LargeTitle,
+	FontSize = double.NaN,
 	MaxFontSize = 24,
-	TextAlignment = TextAlignment.Center
-};
-```
-
-| Scenario | Declared properties covered | Interaction and expected result |
-| --- | --- | --- |
-| Font configuration | `Text`, `FontSize`, `Bold`, `FontWeight`, `FontDesign`, `TextColor` | Move the explicit size slider, select every native weight, and compare the default, rounded, serif, and monospaced designs. A second label demonstrates the `Bold` shorthand while the primary label uses a semantic purple color. |
-
-```csharp
-new Label
-{
-	Text = "Designed for emphasis",
-	FontSize = Bind(model => model.FontSize),
 	FontWeight = FontWeight.Semibold,
 	FontDesign = FontDesign.Rounded,
-	TextColor = Colors.Purple
+	TextColor = Colors.Pink,
+	TextAlignment = TextAlignment.Center
 };
 
 new Label

@@ -168,7 +168,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			}
 		};
 		sizing.Items.Add("Dynamic");
-		sizing.Items.Add("24 pt");
+		sizing.Items.Add("Fixed");
 
 		Picker<ShowcaseOption<FontWeight>> weight = new()
 		{

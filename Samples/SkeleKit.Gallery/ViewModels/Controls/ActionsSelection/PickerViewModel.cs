@@ -11,25 +11,7 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 	static readonly PickerDestination ExtraDestination =
 		new("San Francisco", "United States", "SFO");
 
-	static readonly PickerDestination[] LiveDefaults =
-	[
-		new("Oslo", "Norway", "OSL"),
-		new("Paris", "France", "CDG"),
-		new("Rome", "Italy", "FCO")
-	];
-
-
-	public PickerViewModel()
-	{
-		foreach (PickerDestination destination in LiveDefaults)
-			LiveDestinations.Add(destination);
-
-		SelectedDestination = Destinations[1];
-		LiveSelectedDestination = LiveDestinations[0];
-	}
-
-
-	public List<PickerDestination> Destinations { get; } =
+	static readonly PickerDestination[] Defaults =
 	[
 		new("Berlin", "Germany", "BER"),
 		new("Copenhagen", "Denmark", "CPH"),
@@ -37,7 +19,17 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 		new("Lisbon", "Portugal", "LIS")
 	];
 
-	public ObservableCollection<PickerDestination> LiveDestinations { get; } = [];
+
+	public PickerViewModel()
+	{
+		foreach (PickerDestination destination in Defaults)
+			Destinations.Add(destination);
+
+		SelectedDestination = Destinations[1];
+	}
+
+
+	public ObservableCollection<PickerDestination> Destinations { get; } = [];
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(SelectedSummary))]
@@ -53,51 +45,28 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 			? $"{destination.Code} · {destination.City}, {destination.Country}"
 			: "No destination selected";
 
-	public IReadOnlyList<Span> SelectionCode { get; } =
+	public string ItemsSummary =>
+		$"{Destinations.Count} items · ObservableCollection";
+
+	public IReadOnlyList<Span> PickerCode { get; } =
 	[
 		new(
 			"""
+			ObservableCollection<PickerDestination> destinations =
+			[
+				new("Berlin", "Germany", "BER"),
+				new("Copenhagen", "Denmark", "CPH")
+			];
+
 			Picker<PickerDestination> picker = new()
 			{
-				ItemsSource = Bind(model => model.Destinations),
+				ItemsSource = destinations,
 				SelectedItem = Bind(
 					model => model.SelectedDestination,
 					(model, value) => model.SelectedDestination = value),
 				Placeholder = "Choose a destination",
 				ItemTitle = item => $"{item.City}, {item.Country}",
 				SelectionChanged = viewModel.RecordSelection
-			};
-			""")
-	];
-
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(LiveSelectionSummary))]
-	PickerDestination? liveSelectedDestination;
-
-	public string LiveSelectionSummary =>
-		LiveSelectedDestination is PickerDestination destination
-			? $"{destination.Code} selected"
-			: "No live item selected";
-
-	public string ItemsSummary =>
-		$"{LiveDestinations.Count} items · ObservableCollection";
-
-	public IReadOnlyList<Span> LiveItemsCode { get; } =
-	[
-		new(
-			"""
-			ObservableCollection<PickerDestination> destinations =
-			[
-				new("Oslo", "Norway", "OSL"),
-				new("Paris", "France", "CDG")
-			];
-
-			Picker<PickerDestination> picker = new()
-			{
-				ItemsSource = destinations,
-				Placeholder = "Select an item",
-				ItemTitle = item => $"{item.City}, {item.Country}"
 			};
 
 			destinations.Clear();
@@ -114,25 +83,25 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 		SelectionStatus = "Selection cleared from the ViewModel.";
 	}
 
-	internal void SetLiveItemsState(
+	internal void SetItemsState(
 		int state)
 	{
-		bool preservesSelection = LiveSelectedDestination is PickerDestination selected
+		bool preservesSelection = SelectedDestination is PickerDestination selected
 			&& state is not 1
-			&& (LiveDefaults.Any(item => ReferenceEquals(item, selected))
+			&& (Defaults.Any(item => ReferenceEquals(item, selected))
 				|| state is 2 && ReferenceEquals(ExtraDestination, selected));
 
 		if (!preservesSelection)
-			LiveSelectedDestination = null;
+			SelectedDestination = null;
 
-		LiveDestinations.Clear();
+		Destinations.Clear();
 
 		if (state is not 1)
-			foreach (PickerDestination destination in LiveDefaults)
-				LiveDestinations.Add(destination);
+			foreach (PickerDestination destination in Defaults)
+				Destinations.Add(destination);
 
 		if (state is 2)
-			LiveDestinations.Add(ExtraDestination);
+			Destinations.Add(ExtraDestination);
 
 		OnPropertyChanged(nameof(ItemsSummary));
 	}

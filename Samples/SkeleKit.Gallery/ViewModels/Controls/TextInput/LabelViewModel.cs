@@ -77,53 +77,45 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(DynamicTypeCode))]
+	[NotifyPropertyChangedFor(nameof(TypographyCode))]
 	ShowcaseOption<TextStyle> selectedTextStyle = null!;
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(DynamicTypeCode))]
+	[NotifyPropertyChangedFor(nameof(TypographyCode))]
 	bool capsDynamicType;
 
-	public IReadOnlyList<Span> DynamicTypeCode =>
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(TypographyCode))]
+	bool usesExplicitSize;
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(FontSizeLabel))]
+	[NotifyPropertyChangedFor(nameof(TypographyCode))]
+	double fontSize = 26;
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(TypographyCode))]
+	ShowcaseOption<FontWeight> selectedWeight = null!;
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(TypographyCode))]
+	ShowcaseOption<FontDesign> selectedDesign = null!;
+
+	public string FontSizeLabel => $"{Number(FontSize)} pt";
+
+	public IReadOnlyList<Span> TypographyCode =>
 		Code(
 			$$"""
 			new Label
 			{
 				Text = "Typography that follows the reader",
-				TextStyle = TextStyle.{{SelectedTextStyle.Value}},
-				MaxFontSize = {{(CapsDynamicType ? "24" : "double.NaN")}},
-				TextAlignment = TextAlignment.Center
-			};
-			""");
-
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(FontSizeLabel))]
-	[NotifyPropertyChangedFor(nameof(FontCode))]
-	double fontSize = 26;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SelectedWeightValue))]
-	[NotifyPropertyChangedFor(nameof(FontCode))]
-	ShowcaseOption<FontWeight> selectedWeight = null!;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(FontCode))]
-	ShowcaseOption<FontDesign> selectedDesign = null!;
-
-	public string FontSizeLabel => $"{Number(FontSize)} pt";
-	public FontWeight SelectedWeightValue => SelectedWeight.Value;
-
-	public IReadOnlyList<Span> FontCode =>
-		Code(
-			$$"""
-			new Label
-			{
-				Text = "Designed for emphasis",
-				FontSize = Bind(model => model.FontSize),
+				TextStyle = {{(UsesExplicitSize ? "null" : $"TextStyle.{SelectedTextStyle.Value}")}},
+				FontSize = {{(UsesExplicitSize ? Number(FontSize) : "double.NaN")}},
+				MaxFontSize = {{(!UsesExplicitSize && CapsDynamicType ? "24" : "double.NaN")}},
 				FontWeight = FontWeight.{{SelectedWeight.Value}},
 				FontDesign = FontDesign.{{SelectedDesign.Value}},
-				TextColor = Colors.Purple
+				TextColor = Colors.Pink,
+				TextAlignment = TextAlignment.Center
 			};
 
 			new Label

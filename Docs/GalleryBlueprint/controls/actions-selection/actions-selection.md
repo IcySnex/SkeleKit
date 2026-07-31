@@ -162,13 +162,18 @@ A menu-style selection button wrapping `UIButton` + `UIMenu`.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Selection & labels | `ItemsSource`, `SelectedItem`, `ItemTitle`, `Placeholder`, `SelectionChanged` | Pick a destination and verify the two-way source, formatted title, checked menu action, and callback status update together. Clear the source selection and verify the placeholder replaces the title. |
-| Live items | `ItemsSource`, `SelectedItem`, `ItemTitle`, `Placeholder` | Switch an `ObservableCollection` between base, empty, and extended contents. Verify the menu updates immediately, retained items preserve selection, removed items and the empty state restore the placeholder, and selecting the deliberately long item remeasures the control. |
+| Selection & items | `ItemsSource`, `SelectedItem`, `ItemTitle`, `Placeholder`, `SelectionChanged` | Pick and clear a destination while switching one `ObservableCollection` between base, empty, and extended contents. Verify the formatted title, checked menu action, two-way source, callback status, placeholder, retained selection, and intrinsic width update together. |
 
 ```csharp
+ObservableCollection<PickerDestination> destinations =
+[
+	new("Berlin", "Germany", "BER"),
+	new("Copenhagen", "Denmark", "CPH")
+];
+
 Picker<PickerDestination> picker = new()
 {
-	ItemsSource = Bind(model => model.Destinations),
+	ItemsSource = destinations,
 	SelectedItem = Bind(
 		model => model.SelectedDestination,
 		(model, value) => model.SelectedDestination = value),
@@ -176,22 +181,8 @@ Picker<PickerDestination> picker = new()
 	ItemTitle = item => $"{item.City}, {item.Country}",
 	SelectionChanged = viewModel.RecordSelection
 };
-```
 
-```csharp
-ObservableCollection<PickerDestination> destinations =
-[
-	new("Oslo", "Norway", "OSL"),
-	new("Paris", "France", "CDG")
-];
-
-Picker<PickerDestination> live = new()
-{
-	ItemsSource = destinations,
-	Placeholder = "Select an item",
-	ItemTitle = item => $"{item.City}, {item.Country}"
-};
-
+destinations.Clear();
 destinations.Add(new("San Francisco", "United States", "SFO"));
 ```
 
@@ -217,7 +208,6 @@ A segmented control choosing one of a few options.
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
 | Selection & binding | `Items`, `SelectedIndex`, `SelectionChanged` | Select Overview, Details, and Reviews. Verify the two-way source index, visible segment, derived title, and callback status update together; reset from the ViewModel and verify the first segment becomes selected. |
-| Content density | `Items`, `SelectedIndex` | Compare interactive controls containing two, three, and five short titles. Verify UIKit distributes each fixed item set without clipping at compact phone widths and preserves independent selection. |
 
 ```csharp
 SegmentedControl sections = new()
@@ -230,13 +220,4 @@ SegmentedControl sections = new()
 sections.Items.Add("Overview");
 sections.Items.Add("Details");
 sections.Items.Add("Reviews");
-```
-
-```csharp
-SegmentedControl history = new();
-history.Items.Add("1D");
-history.Items.Add("1W");
-history.Items.Add("1M");
-history.Items.Add("6M");
-history.Items.Add("1Y");
 ```

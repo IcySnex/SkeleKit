@@ -10,14 +10,13 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 	public LabelView(
 		LabelViewModel viewModel) : base(viewModel, "Label", Colors.Pink)
 	{
-		AddDynamicTypeShowcase(viewModel);
-		AddFontShowcase(viewModel);
+		AddTypographyShowcase(viewModel);
 		AddFlowShowcase(viewModel);
 		AddAttributedShowcase(viewModel);
 	}
 
 
-	void AddDynamicTypeShowcase(
+	void AddTypographyShowcase(
 		LabelViewModel viewModel)
 	{
 		Label label = new()
@@ -27,6 +26,9 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			Text = "Typography that follows the reader",
 			TextStyle = viewModel.SelectedTextStyle.Value,
 			MaxFontSize = double.NaN,
+			FontWeight = viewModel.SelectedWeight.Value,
+			FontDesign = viewModel.SelectedDesign.Value,
+			TextColor = Colors.Pink,
 			MaxLines = 2,
 			TextAlignment = TextAlignment.Center
 		};
@@ -43,6 +45,8 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			}
 		};
 
+		View styleSetting = SettingRow("Text style", style);
+
 		Switch cap = new()
 		{
 			IsOn = viewModel.CapsDynamicType,
@@ -53,36 +57,52 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			}
 		};
 
-		AddShowcase(
-			"Dynamic Type",
-			"Follow every native text-style curve and optionally cap its largest accessibility size.",
-			PreviewWithSettings(
-				ShowcaseBox.Canvas(label, 190),
-				SettingRow("Text style", style),
-				SettingRow("Cap at 24 pt", cap)),
-			ShowcaseBox.Code(Bind(model => model.DynamicTypeCode)));
-	}
+		View capSetting = SettingRow("Cap at 24 pt", cap);
 
-	void AddFontShowcase(
-		LabelViewModel viewModel)
-	{
-		Label label = new()
+		Slider size = new()
 		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			Text = "Designed for emphasis",
-			FontSize = Bind(model => model.FontSize),
-			FontWeight = Bind(model => model.SelectedWeightValue),
-			FontDesign = viewModel.SelectedDesign.Value,
-			TextColor = Colors.Pink,
-			TextAlignment = TextAlignment.Center
+			Minimum = 12,
+			Maximum = 40,
+			Step = 1,
+			Value = viewModel.FontSize,
+			ValueChanged = value =>
+			{
+				viewModel.FontSize = value;
+				label.FontSize = value;
+			}
 		};
+
+		View sizeSetting = LabeledSlider("Font size", Bind(model => model.FontSizeLabel), size);
+		sizeSetting.IsVisible = false;
+
+		SegmentedControl sizing = new()
+		{
+			SelectionChanged = index =>
+			{
+				viewModel.UsesExplicitSize = index is 1;
+				label.TextStyle = viewModel.UsesExplicitSize ? null : viewModel.SelectedTextStyle.Value;
+				label.FontSize = viewModel.UsesExplicitSize ? viewModel.FontSize : double.NaN;
+				label.MaxFontSize = !viewModel.UsesExplicitSize && viewModel.CapsDynamicType
+					? 24
+					: double.NaN;
+				styleSetting.IsVisible = !viewModel.UsesExplicitSize;
+				capSetting.IsVisible = !viewModel.UsesExplicitSize;
+				sizeSetting.IsVisible = viewModel.UsesExplicitSize;
+			}
+		};
+		sizing.Items.Add("Dynamic");
+		sizing.Items.Add("Fixed");
 
 		Picker<ShowcaseOption<FontWeight>> weight = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.FontWeights,
 			SelectedItem = viewModel.SelectedWeight,
-			SelectionChanged = option => viewModel.SelectedWeight = option
+			SelectionChanged = option =>
+			{
+				viewModel.SelectedWeight = option;
+				label.FontWeight = option.Value;
+			}
 		};
 
 		SegmentedControl design = new()
@@ -99,18 +119,9 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 		design.Items.Add("Serif");
 		design.Items.Add("Mono");
 
-		Slider size = new()
-		{
-			Minimum = 12,
-			Maximum = 40,
-			Step = 1,
-			Value = viewModel.FontSize,
-			ValueChanged = value => viewModel.FontSize = value
-		};
-
 		AddShowcase(
-			"Font configuration",
-			"Compose explicit size, every native weight, system font designs and semantic color.",
+			"Typography",
+			"Choose Dynamic Type or a fixed size, then configure the native weight and system font design.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
 					new StackPanel
@@ -132,11 +143,14 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 							}
 						}
 					},
-					190),
+					210),
+				LabeledControl("Sizing", sizing),
+				styleSetting,
+				capSetting,
+				sizeSetting,
 				SettingRow("Weight", weight),
-				LabeledControl("Design", design),
-				LabeledSlider("Font size", Bind(model => model.FontSizeLabel), size)),
-			ShowcaseBox.Code(Bind(model => model.FontCode)));
+				LabeledControl("Design", design)),
+			ShowcaseBox.Code(Bind(model => model.TypographyCode)));
 	}
 
 	void AddFlowShowcase(
