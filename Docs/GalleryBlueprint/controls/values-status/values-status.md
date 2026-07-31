@@ -91,14 +91,21 @@ A row of dots marking the current page of a paging scroll or a carousel.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Count`, `Current`, `DotColor`, `CurrentDotColor`, `HidesForSinglePage`, `AllowsScrubbing`, `PageChanged` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Pages and interaction | `Count`, `Current`, `DotColor`, `CurrentDotColor`, `HidesForSinglePage`, `AllowsScrubbing`, `PageChanged` | Switch among 1, 3, 5, and 10 pages. Tap or scrub the dots, advance the two-way current page programmatically, observe callback delivery, and compare hidden and visible single-page states with custom dot colors. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(PageControl specimen)
+new PageControl
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Count = Bind(model => model.Count),
+	Current = Bind(
+		model => model.Current,
+		(model, value) => model.Current = value),
+	DotColor = Colors.Red.WithAlpha(0.25),
+	CurrentDotColor = Colors.Red,
+	HidesForSinglePage = true,
+	AllowsScrubbing = true,
+	PageChanged = viewModel.RecordPage
+};
 ```
 
 ## ProgressBar

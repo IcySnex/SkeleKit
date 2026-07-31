@@ -21,6 +21,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<ColorWellViewModel>();
 		services.AddTransient<DatePickerViewModel>();
 		services.AddTransient<LabelViewModel>();
+		services.AddTransient<PageControlViewModel>();
 		services.AddTransient<PickerViewModel>();
 		services.AddTransient<ProgressBarViewModel>();
 		services.AddTransient<SecureFieldViewModel>();

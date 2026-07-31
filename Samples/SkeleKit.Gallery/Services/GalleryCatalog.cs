@@ -37,7 +37,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				Topic("Stepper", "Increment and decrement bounded values.", "plusminus", Colors.Red, GalleryArea.Controls, typeof(StepperViewModel)),
 				Topic("ProgressBar", "Determinate task progress and tinting.", "chart.bar.fill", Colors.Red, GalleryArea.Controls, typeof(ProgressBarViewModel)),
 				Topic("ActivityIndicator", "Indeterminate work and visibility states.", "progress.indicator", Colors.Red, GalleryArea.Controls, typeof(ActivityIndicatorViewModel)),
-				Topic("PageControl", "Page position, direction and interaction.", "ellipsis", Colors.Red, GalleryArea.Controls),
+				Topic("PageControl", "Page position, direction and interaction.", "ellipsis", Colors.Red, GalleryArea.Controls, typeof(PageControlViewModel)),
 				Topic("Divider", "Native-scale separators and semantic colors.", "minus", Colors.Red, GalleryArea.Controls)),
 
 			Section(
