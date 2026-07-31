@@ -17,7 +17,7 @@ An activity indicator spinner.
 | Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
 | Property | `SkeleKit.ActivityIndicator.IsAnimating` | public get/set | true | Yes | Visual/interaction only | Whether the spinner is animating. |
-| Property | `SkeleKit.ActivityIndicator.IsLarge` | public get/set | false | No | No automatic invalidation | Whether to use the large style instead of medium. |
+| Property | `SkeleKit.ActivityIndicator.IsLarge` | public get/set | false | No | Invalidates measure | Whether to use the large style instead of medium. Updates the realized native indicator immediately. |
 | Property | `SkeleKit.ActivityIndicator.Color` | public get/set | C# default | Yes | Visual/interaction only | The spinner color, or null for the system default. |
 | Method | `SkeleKit.ActivityIndicator.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 
@@ -25,7 +25,7 @@ An activity indicator spinner.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Loading state | `IsAnimating`, `IsLarge`, `Color` | Compare the native medium system-colored indicator with a large custom-colored indicator. Stop and restart their bound animation state; stopped indicators hide while their labels remain visible. |
+| Loading state | `IsAnimating`, `IsLarge`, `Color` | Switch one custom-colored native indicator between medium and large. Stop and restart its bound animation state; the stopped indicator hides while its state label remains visible. |
 
 ```csharp
 new ActivityIndicator

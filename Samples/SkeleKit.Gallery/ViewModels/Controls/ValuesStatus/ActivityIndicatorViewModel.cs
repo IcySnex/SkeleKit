@@ -10,8 +10,13 @@ internal sealed partial class ActivityIndicatorViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(IndicatorCode))]
 	bool isAnimating = true;
 
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(StateLabel))]
+	[NotifyPropertyChangedFor(nameof(IndicatorCode))]
+	bool isLarge;
+
 	public string StateLabel =>
-		IsAnimating ? "Animating" : "Stopped · hidden";
+		$"{(IsLarge ? "Large" : "Medium")} · {(IsAnimating ? "animating" : "stopped · hidden")}";
 
 	public IReadOnlyList<Span> IndicatorCode =>
 	[
@@ -20,9 +25,14 @@ internal sealed partial class ActivityIndicatorViewModel : ShowcaseViewModel
 			new ActivityIndicator
 			{
 				IsAnimating = Bind(model => model.IsAnimating),
-				IsLarge = true,
+				IsLarge = {{Boolean(IsLarge)}},
 				Color = Colors.Red
 			};
 			""")
 	];
+
+
+	static string Boolean(
+		bool value) =>
+		value ? "true" : "false";
 }

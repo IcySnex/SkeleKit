@@ -16,15 +16,32 @@ internal sealed class ActivityIndicatorView : ShowcaseView<ActivityIndicatorView
 	void AddActivityShowcase(
 		ActivityIndicatorViewModel viewModel)
 	{
+		ActivityIndicator indicator = new()
+		{
+			IsAnimating = Bind(model => model.IsAnimating),
+			IsLarge = viewModel.IsLarge,
+			Color = Colors.Red
+		};
+
 		Switch animating = new()
 		{
 			IsOn = viewModel.IsAnimating,
 			Toggled = value => viewModel.IsAnimating = value
 		};
 
+		Switch size = new()
+		{
+			IsOn = viewModel.IsLarge,
+			Toggled = value =>
+			{
+				viewModel.IsLarge = value;
+				indicator.IsLarge = value;
+			}
+		};
+
 		AddShowcase(
 			"Loading state",
-			"Compare the native medium and large styles, then stop and restart their animation.",
+			"Switch the native indicator between medium and large, then stop and restart its animation.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
 					new StackPanel
@@ -35,26 +52,7 @@ internal sealed class ActivityIndicatorView : ShowcaseView<ActivityIndicatorView
 
 						Children =
 						{
-							new StackPanel
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
-								Orientation = Orientation.Horizontal,
-								Spacing = 48,
-
-								Children =
-								{
-									Indicator("Medium", new ActivityIndicator
-									{
-										IsAnimating = Bind(model => model.IsAnimating)
-									}),
-									Indicator("Large", new ActivityIndicator
-									{
-										IsAnimating = Bind(model => model.IsAnimating),
-										IsLarge = true,
-										Color = Colors.Red
-									})
-								}
-							},
+							indicator,
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
@@ -65,29 +63,8 @@ internal sealed class ActivityIndicatorView : ShowcaseView<ActivityIndicatorView
 						}
 					},
 					180),
+				SettingRow("Large", size),
 				SettingRow("Animating", animating)),
 			ShowcaseBox.Code(Bind(model => model.IndicatorCode)));
 	}
-
-
-	static StackPanel Indicator(
-		string title,
-		ActivityIndicator indicator) =>
-		new()
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			Spacing = 10,
-
-			Children =
-			{
-				indicator,
-				new Label
-				{
-					HorizontalAlignment = HorizontalAlignment.Center,
-					Text = title,
-					TextStyle = TextStyle.Caption1,
-					TextColor = Colors.SecondaryLabel
-				}
-			}
-		};
 }

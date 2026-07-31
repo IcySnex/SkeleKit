@@ -22,7 +22,12 @@ public class ActivityIndicator : Control
 	/// <summary>
 	/// Whether to use the large style instead of medium.
 	/// </summary>
-	public bool IsLarge { get; set; }
+	public bool IsLarge
+	{
+		get => isLarge;
+		set => Set(ref isLarge, value, ApplyStyle);
+	}
+	bool isLarge;
 
 	/// <summary>
 	/// The spinner color, or null for the system default.
@@ -44,6 +49,9 @@ public class ActivityIndicator : Control
 			Ui.StopAnimating();
 	}
 
+	void ApplyStyle() =>
+		Ui.ActivityIndicatorViewStyle = isLarge ? UIActivityIndicatorViewStyle.Large : UIActivityIndicatorViewStyle.Medium;
+
 	void ApplyColor()
 	{
 		// ignores the view tint, needs its own Color
@@ -59,6 +67,7 @@ public class ActivityIndicator : Control
 
 	private protected override void ApplyProperties()
 	{
+		ApplyStyle();
 		ApplyColor();
 		ApplyIsAnimating();
 	}
