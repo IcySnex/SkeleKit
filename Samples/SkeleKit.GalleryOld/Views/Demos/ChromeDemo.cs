@@ -19,7 +19,7 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 		// the bottom toolbar and the tab bar share the screen edge: this page trades the tab bar away
 		HidesTabBar = true;
 
-		BarAccent = Colors.Orange;
+		BarTint = Colors.Orange;
 		TitleColor = Colors.Indigo;
 		LargeTitleColor = Colors.Indigo;
 

@@ -131,13 +131,7 @@ public class Slider : Control
 		if (!OperatingSystem.IsIOSVersionAtLeast(26))
 			return;
 
-		if (step <= 0)
-		{
-			Ui.TrackConfiguration = null;
-			return;
-		}
-
-		int ticks = (int)((maximum - minimum) / step) + 1;
+		int ticks = step <= 0 ? 0 : (int)((maximum - minimum) / step) + 1;
 		Ui.TrackConfiguration = UISliderTrackConfiguration.Create(ticks);
 	}
 

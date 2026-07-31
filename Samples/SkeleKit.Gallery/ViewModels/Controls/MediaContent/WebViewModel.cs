@@ -15,10 +15,9 @@ internal sealed partial class WebViewModel : ShowcaseViewModel
 			<style>
 				:root { color-scheme: light dark; font-family: -apple-system; }
 				body { margin: 0; padding: 20px; background: transparent; }
-				.card { padding: 20px; border-radius: 18px; background: rgba(255, 149, 0, 0.16); }
-				h1 { margin: 0 0 8px; font-size: 24px; }
+				.card { padding: 20px; background: rgba(255, 149, 0, 0.16); }
 				p { margin: 0 0 16px; color: #8e8e93; line-height: 1.4; }
-				button { border: 0; border-radius: 999px; padding: 10px 16px; color: white; background: #ff9500; font: inherit; font-weight: 600; }
+				button { border: 0; padding: 10px 16px; color: white; background: #ff9500; font: inherit; font-weight: 600; }
 			</style>
 		</head>
 		<body>
@@ -30,7 +29,7 @@ internal sealed partial class WebViewModel : ShowcaseViewModel
 			<script>
 				function showDetails() {
 					document.querySelector('#title').textContent = 'JavaScript is active';
-					document.querySelector('#copy').textContent = 'The button and native command share the same document.';
+					document.querySelector('#copy').textContent = 'wuhuuu yipeee.';
 				}
 			</script>
 		</body>
