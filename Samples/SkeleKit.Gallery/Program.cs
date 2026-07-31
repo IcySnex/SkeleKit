@@ -24,6 +24,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<SecureFieldViewModel>();
 		services.AddTransient<SegmentedControlViewModel>();
 		services.AddTransient<SliderViewModel>();
+		services.AddTransient<StepperViewModel>();
 		services.AddTransient<SwitchViewModel>();
 		services.AddTransient<TextEditorViewModel>();
 		services.AddTransient<TextFieldViewModel>();

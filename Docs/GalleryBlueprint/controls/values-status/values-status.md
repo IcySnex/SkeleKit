@@ -201,14 +201,19 @@ An increment/decrement control.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Value`, `Minimum`, `Maximum`, `Step`, `ValueChanged` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Value and range | `Value`, `Minimum`, `Maximum`, `Step`, `ValueChanged`; inherited `IsEnabled` | Increment and decrement a two-way value bounded from 0 through 20. Switch among 0.5, 1, 2, and 5-point steps, reset the bound value programmatically, observe callback delivery, and compare enabled and disabled interaction. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(Stepper specimen)
+new Stepper
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Value = Bind(
+		model => model.Value,
+		(model, value) => model.Value = value),
+	Minimum = 0,
+	Maximum = 20,
+	Step = 1,
+	ValueChanged = viewModel.RecordChange
+};
 ```
 
 ## Switch
