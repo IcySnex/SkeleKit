@@ -109,14 +109,53 @@ Embeds an interactive map in the tree, backed by a UIKit map view.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Region`, `Kind`, `ShowsUserLocation`, `ScrollEnabled`, `ZoomEnabled`, `RotateEnabled`, `PitchEnabled`, `ShowsCompass`, `ShowsScale`, `ShowsTraffic`, `Pins`, `Overlays`, `ClustersPins`, `ClusterMarker`, `SelectionCommand`, `PinSelected` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Region and presentation | `Region`, `Kind`, `ScrollEnabled`, `ZoomEnabled`, `RotateEnabled`, `PitchEnabled`, `ShowsCompass`, `ShowsScale`, `ShowsTraffic`, `SetRegion` | Pan and zoom to verify the two-way region, move between animated city presets, compare every `MapKind`, choose all gestures, pan and zoom only, or a locked map, and toggle traffic. Rotate away from north to reveal the optional compass; change the zoom level to reveal the optional transient scale. |
+| Pins and overlays | `Pins`, `Overlays`, `ClustersPins`, `ClusterMarker`, `SelectionCommand`, `PinSelected` | Select native and custom markers, open native and custom callouts, verify the command and callback receive the same pin, compare MapKit's native counted cluster with a deliberately distinct indigo SkeleKit marker, and toggle a polyline, polygon, and circle together. |
+| User location | `ShowsUserLocation` | Permission-dependent and intentionally omitted from the gallery target. Enable it only in an app containing `NSLocationWhenInUseUsageDescription`, then verify the system-authorized blue location marker appears. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(MapView specimen)
+MapView map = new()
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	Height = 300,
+	Region = Bind(
+		model => model.Region,
+		(model, value) => model.Region = value),
+	Kind = MapKind.Muted,
+	ScrollEnabled = true,
+	ZoomEnabled = true,
+	RotateEnabled = false,
+	PitchEnabled = false,
+	ShowsCompass = true,
+	ShowsScale = true,
+	ShowsTraffic = false
+};
+
+map.SetRegion(
+	MapRegion.FromRadius(new(37.7749, -122.4194), 5_000),
+	animated: true);
+```
+
+```csharp
+MapPin ferryBuilding = new(new(37.7955, -122.3937))
+{
+	Title = "Ferry Building",
+	Subtitle = "San Francisco",
+	Symbol = "ferry.fill",
+	Tint = Colors.Orange,
+	Callout = BuildCallout
+};
+
+MapView places = new()
+{
+	Height = 320,
+	Region = MapRegion.FromRadius(new(37.7749, -122.4194), 5_000),
+	Pins = pins,
+	Overlays = overlays,
+	ClustersPins = true,
+	ClusterMarker = BuildCluster,
+	SelectionCommand = viewModel.SelectPinCommand,
+	PinSelected = viewModel.RecordPinSelection
+};
 ```
 
 ## NativeView
