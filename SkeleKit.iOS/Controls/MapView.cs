@@ -33,6 +33,19 @@ public class MapView : Control
 	}
 
 
+	sealed class ClusterAnnotation : MKClusterAnnotation
+	{
+		public ClusterAnnotation(
+			IMKAnnotation[] members) : base(members)
+		{ }
+
+		// ReSharper disable once UnusedMember.Local
+		public ClusterAnnotation(
+			NativeHandle handle) : base(handle)
+		{ }
+	}
+
+
 	sealed class MarkerHost : MKAnnotationView
 	{
 		View? content;
@@ -148,7 +161,7 @@ public class MapView : Control
 			MKMapView mapView,
 			IMKAnnotation annotation)
 		{
-			if (annotation is MKClusterAnnotation cluster)
+			if (annotation is ClusterAnnotation cluster)
 			{
 				int count = cluster.MemberAnnotations.Length;
 
@@ -199,6 +212,11 @@ public class MapView : Control
 
 			return view;
 		}
+
+		public override MKClusterAnnotation CreateClusterAnnotation(
+			MKMapView mapView,
+			IMKAnnotation[] memberAnnotations) =>
+			new ClusterAnnotation(memberAnnotations);
 
 		public override MKOverlayRenderer OverlayRenderer(
 			MKMapView mapView,
