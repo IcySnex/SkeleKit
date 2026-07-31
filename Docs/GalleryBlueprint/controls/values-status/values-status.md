@@ -121,14 +121,16 @@ A progress bar.
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `Progress`, `FillColor`, `TrackColor` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Progress | `Progress`, `FillColor`, `TrackColor` | Switch among empty, 25%, 65%, and completed determinate progress. Show the bound percentage with a custom fill and matching translucent track in both appearances. |
 
 ```csharp
-// Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
-static void Showcase(ProgressBar specimen)
+new ProgressBar
 {
-	_ = specimen; // configure the documented properties for the selected matrix row
-}
+	HorizontalAlignment = HorizontalAlignment.Stretch,
+	Progress = Bind(model => model.Progress),
+	FillColor = Colors.Red,
+	TrackColor = Colors.Red.WithAlpha(0.16)
+};
 ```
 
 ## Slider

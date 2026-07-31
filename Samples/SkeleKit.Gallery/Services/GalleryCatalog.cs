@@ -35,7 +35,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				Topic("Switch", "A native binary setting with two-way state.", "switch.2", Colors.Red, GalleryArea.Controls, typeof(SwitchViewModel)),
 				Topic("Slider", "Continuous values, snapping and update behavior.", "slider.horizontal.3", Colors.Red, GalleryArea.Controls, typeof(SliderViewModel)),
 				Topic("Stepper", "Increment and decrement bounded values.", "plusminus", Colors.Red, GalleryArea.Controls, typeof(StepperViewModel)),
-				Topic("ProgressBar", "Determinate task progress and tinting.", "chart.bar.fill", Colors.Red, GalleryArea.Controls),
+				Topic("ProgressBar", "Determinate task progress and tinting.", "chart.bar.fill", Colors.Red, GalleryArea.Controls, typeof(ProgressBarViewModel)),
 				Topic("ActivityIndicator", "Indeterminate work and visibility states.", "progress.indicator", Colors.Red, GalleryArea.Controls),
 				Topic("PageControl", "Page position, direction and interaction.", "ellipsis", Colors.Red, GalleryArea.Controls),
 				Topic("Divider", "Native-scale separators and semantic colors.", "minus", Colors.Red, GalleryArea.Controls)),
