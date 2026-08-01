@@ -29,37 +29,37 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 			Continuous = viewModel.Continuous,
 			MinIcon = "speaker.fill",
 			MaxIcon = "speaker.wave.3.fill",
-			IsEnabled = viewModel.ControlEnabled
+			IsEnabled = Bind(model => model.ControlEnabled)
 		};
 
 		Picker<ShowcaseOption<double>> step = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Steps,
-			SelectedItem = viewModel.SelectedStep,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedStep = option;
-				slider.Step = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedStep,
+				static (model, value) => model.SelectedStep = value!),
+			SelectionChanged = option => slider.Step = option.Value
 		};
 
 		Switch continuous = new()
 		{
-			IsOn = viewModel.Continuous,
+			IsOn = Bind(
+				model => model.Continuous,
+				static (model, value) => model.Continuous = value),
 			Toggled = value =>
 			{
-				viewModel.Continuous = value;
 				slider.Continuous = value;
 			}
 		};
 
 		Switch icons = new()
 		{
-			IsOn = viewModel.ShowsIcons,
+			IsOn = Bind(
+				model => model.ShowsIcons,
+				static (model, value) => model.ShowsIcons = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsIcons = value;
 				slider.MinIcon = value ? "speaker.fill" : null;
 				slider.MaxIcon = value ? "speaker.wave.3.fill" : null;
 			}
@@ -67,12 +67,9 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 
 		Switch enabled = new()
 		{
-			IsOn = viewModel.ControlEnabled,
-			Toggled = value =>
-			{
-				viewModel.ControlEnabled = value;
-				slider.IsEnabled = value;
-			}
+			IsOn = Bind(
+				model => model.ControlEnabled,
+				static (model, value) => model.ControlEnabled = value)
 		};
 
 		AddShowcase(

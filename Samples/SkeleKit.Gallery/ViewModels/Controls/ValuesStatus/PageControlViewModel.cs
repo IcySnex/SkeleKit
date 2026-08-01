@@ -68,11 +68,10 @@ internal sealed partial class PageControlViewModel : ShowcaseViewModel
 	void AdvancePage() =>
 		Current = (Current + 1) % Count;
 
-	internal void SelectCount(
-		ShowcaseOption<int> option)
+	partial void OnSelectedCountChanged(
+		ShowcaseOption<int> value)
 	{
-		SelectedCount = option;
-		Count = option.Value;
+		Count = value.Value;
 		Current = Math.Min(Current, Count - 1);
 	}
 

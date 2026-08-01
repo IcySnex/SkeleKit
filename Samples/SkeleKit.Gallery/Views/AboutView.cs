@@ -8,8 +8,6 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 	public AboutView(
 		AboutViewModel viewModel) : base(viewModel)
 	{
-		Border icon;
-
 		Title = "SkeleKit";
 		BackgroundStyle = PageBackground.Grouped;
 
@@ -28,7 +26,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 
 				Children =
 				{
-					(icon = new Border
+					new Border
 					{
 						HorizontalAlignment = HorizontalAlignment.Center,
 						Width = 86,
@@ -45,7 +43,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 							SymbolWeight = FontWeight.Semibold,
 							Tint = Colors.White
 						}
-					}),
+					},
 
 					new Label
 					{
@@ -102,7 +100,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 						Kind = ButtonStyle.Gray,
 						Size = ButtonSize.Large,
 						Tint = Colors.Indigo,
-						Command = Command.From(() => icon.IsVisible = !icon.IsVisible.Value)
+						Command = viewModel.ShowLicensesCommand
 					}
 				}
 			}

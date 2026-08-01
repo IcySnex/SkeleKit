@@ -42,34 +42,31 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Kinds,
-			SelectedItem = viewModel.SelectedKind,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedKind = option;
-				map.Kind = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedKind,
+				static (model, value) => model.SelectedKind = value!),
+			SelectionChanged = option => map.Kind = option.Value
 		};
 
 		Picker<ShowcaseOption<MapRegion>> region = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Regions,
-			SelectedItem = viewModel.SelectedRegion,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedRegion = option;
-				map.SetRegion(option.Value, animated: true);
-			}
+			SelectedItem = Bind(
+				model => model.SelectedRegion,
+				static (model, value) => model.SelectedRegion = value!),
+			SelectionChanged = option => map.SetRegion(option.Value, animated: true)
 		};
 
 		Picker<ShowcaseOption<MapGestureMode>> gestures = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Gestures,
-			SelectedItem = viewModel.SelectedGestures,
+			SelectedItem = Bind(
+				model => model.SelectedGestures,
+				static (model, value) => model.SelectedGestures = value!),
 			SelectionChanged = option =>
 			{
-				viewModel.SelectedGestures = option;
 				map.ScrollEnabled = viewModel.ScrollEnabled;
 				map.ZoomEnabled = viewModel.ZoomEnabled;
 				map.RotateEnabled = viewModel.RotateEnabled;
@@ -79,30 +76,33 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 
 		Switch scale = new()
 		{
-			IsOn = viewModel.ShowsScale,
+			IsOn = Bind(
+				model => model.ShowsScale,
+				static (model, value) => model.ShowsScale = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsScale = value;
 				map.ShowsScale = value;
 			}
 		};
 
 		Switch compass = new()
 		{
-			IsOn = viewModel.ShowsCompass,
+			IsOn = Bind(
+				model => model.ShowsCompass,
+				static (model, value) => model.ShowsCompass = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsCompass = value;
 				map.ShowsCompass = value;
 			}
 		};
 
 		Switch traffic = new()
 		{
-			IsOn = viewModel.ShowsTraffic,
+			IsOn = Bind(
+				model => model.ShowsTraffic,
+				static (model, value) => model.ShowsTraffic = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsTraffic = value;
 				map.ShowsTraffic = value;
 			}
 		};
@@ -165,9 +165,11 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 
 		SegmentedControl clustering = new()
 		{
+			SelectedIndex = Bind(
+				model => model.ClusterModeIndex,
+				static (model, value) => model.ClusterModeIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.ClusterModeIndex = index;
 				map.ClusterMarker = index is 2 ? BuildCluster : null;
 				map.ClustersPins = index > 0;
 				map.SetRegion(index > 0 ? ClusterRegion : SanFrancisco, animated: true);
@@ -179,10 +181,11 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 
 		Switch showsOverlays = new()
 		{
-			IsOn = viewModel.ShowsOverlays,
+			IsOn = Bind(
+				model => model.ShowsOverlays,
+				static (model, value) => model.ShowsOverlays = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsOverlays = value;
 				overlays.Clear();
 
 				if (value)

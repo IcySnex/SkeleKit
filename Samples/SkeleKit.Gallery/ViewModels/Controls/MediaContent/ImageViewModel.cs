@@ -16,7 +16,6 @@ internal sealed partial class ImageViewModel : ShowcaseViewModel
 		SelectedWeight = Weights[1];
 		SelectedScale = Scales[2];
 		SelectedEffect = Effects[0];
-		RemoteSource = ImageSource.Url(SelectedSource.Value);
 	}
 
 
@@ -143,12 +142,9 @@ internal sealed partial class ImageViewModel : ShowcaseViewModel
 	];
 
 
-	internal void SelectSource(
-		ShowcaseOption<string> option)
-	{
-		SelectedSource = option;
-		RemoteSource = ImageSource.Url(option.Value);
-	}
+	partial void OnSelectedSourceChanged(
+		ShowcaseOption<string> value) =>
+		RemoteSource = ImageSource.Url(value.Value);
 
 
 	static string Boolean(

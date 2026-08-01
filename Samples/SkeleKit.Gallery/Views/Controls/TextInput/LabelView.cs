@@ -37,22 +37,21 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 		{
 			MinWidth = 140,
 			ItemsSource = viewModel.TextStyles,
-			SelectedItem = viewModel.SelectedTextStyle,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedTextStyle = option;
-				label.TextStyle = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedTextStyle,
+				static (model, value) => model.SelectedTextStyle = value!),
+			SelectionChanged = option => label.TextStyle = option.Value
 		};
 
 		View styleSetting = SettingRow("Text style", style);
 
 		Switch cap = new()
 		{
-			IsOn = viewModel.CapsDynamicType,
+			IsOn = Bind(
+				model => model.CapsDynamicType,
+				static (model, value) => model.CapsDynamicType = value),
 			Toggled = value =>
 			{
-				viewModel.CapsDynamicType = value;
 				label.MaxFontSize = value ? 24 : double.NaN;
 			}
 		};
@@ -64,10 +63,11 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			Minimum = 12,
 			Maximum = 40,
 			Step = 1,
-			Value = viewModel.FontSize,
+			Value = Bind(
+				model => model.FontSize,
+				static (model, value) => model.FontSize = value),
 			ValueChanged = value =>
 			{
-				viewModel.FontSize = value;
 				label.FontSize = value;
 			}
 		};
@@ -77,9 +77,13 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 
 		SegmentedControl sizing = new()
 		{
+			SelectedIndex = Bind(
+				model => model.UsesExplicitSize,
+				static (model, value) => model.UsesExplicitSize = value,
+				static value => value ? 1 : 0,
+				static index => index is 1),
 			SelectionChanged = index =>
 			{
-				viewModel.UsesExplicitSize = index is 1;
 				label.TextStyle = viewModel.UsesExplicitSize ? null : viewModel.SelectedTextStyle.Value;
 				label.FontSize = viewModel.UsesExplicitSize ? viewModel.FontSize : double.NaN;
 				label.MaxFontSize = !viewModel.UsesExplicitSize && viewModel.CapsDynamicType
@@ -97,20 +101,19 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.FontWeights,
-			SelectedItem = viewModel.SelectedWeight,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedWeight = option;
-				label.FontWeight = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedWeight,
+				static (model, value) => model.SelectedWeight = value!),
+			SelectionChanged = option => label.FontWeight = option.Value
 		};
 
 		SegmentedControl design = new()
 		{
-			SelectedIndex = 1,
+			SelectedIndex = Bind(
+				model => model.SelectedDesignIndex,
+				static (model, value) => model.SelectedDesignIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.SelectedDesign = viewModel.FontDesigns[index];
 				label.FontDesign = viewModel.SelectedDesign.Value;
 			}
 		};
@@ -171,7 +174,9 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 
 		SegmentedControl lines = new()
 		{
-			SelectedIndex = 1
+			SelectedIndex = Bind(
+				model => model.LineCountIndex,
+				static (model, value) => model.LineCountIndex = value)
 		};
 		lines.Items.Add("1");
 		lines.Items.Add("2");
@@ -179,7 +184,9 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 
 		SegmentedControl alignment = new()
 		{
-			SelectionChanged = index => viewModel.AlignmentIndex = index
+			SelectedIndex = Bind(
+				model => model.AlignmentIndex,
+				static (model, value) => model.AlignmentIndex = value)
 		};
 		alignment.Items.Add("Leading");
 		alignment.Items.Add("Center");
@@ -189,43 +196,23 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 		{
 			MinWidth = 120,
 			ItemsSource = viewModel.Truncations,
-			SelectedItem = viewModel.SelectedTruncation,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedTruncation = option;
-				label.Truncation = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedTruncation,
+				static (model, value) => model.SelectedTruncation = value!),
+			SelectionChanged = option => label.Truncation = option.Value
 		};
 
 		Switch shrink = new()
 		{
-			IsOn = viewModel.ShrinksToFit
+			IsOn = Bind(
+				model => model.ShrinksToFit,
+				static (model, value) => model.ShrinksToFit = value)
 		};
 
 		lines.SelectionChanged = index =>
-		{
-			viewModel.LineCountIndex = index;
+			label.AutoShrink = viewModel.ShrinksToFit ? 0.65 : 0;
 
-			if (index is not 0 && viewModel.ShrinksToFit)
-			{
-				viewModel.ShrinksToFit = false;
-				shrink.IsOn = false;
-				label.AutoShrink = 0;
-			}
-		};
-
-		shrink.Toggled = value =>
-		{
-			viewModel.ShrinksToFit = value;
-
-			if (value && viewModel.LineCountIndex is not 0)
-			{
-				viewModel.LineCountIndex = 0;
-				lines.SelectedIndex = 0;
-			}
-
-			label.AutoShrink = value ? 0.65 : 0;
-		};
+		shrink.Toggled = value => label.AutoShrink = value ? 0.65 : 0;
 
 		AddShowcase(
 			"Layout & fitting",
@@ -262,10 +249,11 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			Minimum = 0,
 			Maximum = 12,
 			Step = 1,
-			Value = viewModel.LineSpacing,
+			Value = Bind(
+				model => model.LineSpacing,
+				static (model, value) => model.LineSpacing = value),
 			ValueChanged = value =>
 			{
-				viewModel.LineSpacing = value;
 				label.LineSpacing = value;
 			}
 		};
@@ -275,30 +263,33 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			Minimum = -1,
 			Maximum = 3,
 			Step = 0.25,
-			Value = viewModel.LetterSpacing,
+			Value = Bind(
+				model => model.LetterSpacing,
+				static (model, value) => model.LetterSpacing = value),
 			ValueChanged = value =>
 			{
-				viewModel.LetterSpacing = value;
 				label.LetterSpacing = value;
 			}
 		};
 
 		Switch underline = new()
 		{
-			IsOn = viewModel.UnderlinesAll,
+			IsOn = Bind(
+				model => model.UnderlinesAll,
+				static (model, value) => model.UnderlinesAll = value),
 			Toggled = value =>
 			{
-				viewModel.UnderlinesAll = value;
 				label.Underline = value;
 			}
 		};
 
 		Switch strike = new()
 		{
-			IsOn = viewModel.StrikesAll,
+			IsOn = Bind(
+				model => model.StrikesAll,
+				static (model, value) => model.StrikesAll = value),
 			Toggled = value =>
 			{
-				viewModel.StrikesAll = value;
 				label.Strikethrough = value;
 			}
 		};

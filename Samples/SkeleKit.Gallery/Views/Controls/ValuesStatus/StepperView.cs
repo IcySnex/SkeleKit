@@ -26,29 +26,24 @@ internal sealed class StepperView : ShowcaseView<StepperViewModel>
 			Minimum = 0,
 			Maximum = 20,
 			Step = viewModel.SelectedStep.Value,
-			IsEnabled = viewModel.ControlEnabled
+			IsEnabled = Bind(model => model.ControlEnabled)
 		};
 
 		Picker<ShowcaseOption<double>> increment = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Steps,
-			SelectedItem = viewModel.SelectedStep,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedStep = option;
-				stepper.Step = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedStep,
+				static (model, value) => model.SelectedStep = value!),
+			SelectionChanged = option => stepper.Step = option.Value
 		};
 
 		Switch enabled = new()
 		{
-			IsOn = viewModel.ControlEnabled,
-			Toggled = value =>
-			{
-				viewModel.ControlEnabled = value;
-				stepper.IsEnabled = value;
-			}
+			IsOn = Bind(
+				model => model.ControlEnabled,
+				static (model, value) => model.ControlEnabled = value)
 		};
 
 		AddShowcase(

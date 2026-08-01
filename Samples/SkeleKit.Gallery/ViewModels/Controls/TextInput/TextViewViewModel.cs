@@ -28,7 +28,6 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 	{
 		SelectedTextStyle = TextStyles[6];
 		SelectedWeight = FontWeights[3];
-		SelectedDesign = FontDesigns[1];
 		UpdateInteractiveSpans();
 	}
 
@@ -127,8 +126,12 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 	ShowcaseOption<FontWeight> selectedWeight = null!;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SelectedDesign))]
 	[NotifyPropertyChangedFor(nameof(TypographyCode))]
-	ShowcaseOption<FontDesign> selectedDesign = null!;
+	int selectedDesignIndex = 1;
+
+	public ShowcaseOption<FontDesign> SelectedDesign =>
+		FontDesigns[Math.Clamp(SelectedDesignIndex, 0, FontDesigns.Count - 1)];
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(TypographyCode))]

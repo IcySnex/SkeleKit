@@ -28,6 +28,13 @@ class MovieViewModel : Notifier
 		set { minutes = value; Raise(); }
 	}
 
+	bool enabled;
+	public bool Enabled
+	{
+		get => enabled;
+		set { enabled = value; Raise(); }
+	}
+
 	Movie? movie;
 	public Movie? Movie
 	{

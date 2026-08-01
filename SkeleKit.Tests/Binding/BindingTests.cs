@@ -27,6 +27,20 @@ public class BindingTests
 		Assert.Equal("Dune", view.Current);
 	}
 
+	[Fact]
+	public void IsEnabled_TracksSourceChanges()
+	{
+		MovieViewModel viewModel = new() { Enabled = true };
+		StubBound view = new() { IsEnabled = BindingFactory.Bind((MovieViewModel vm) => vm.Enabled) };
+		view.BindingContext = viewModel;
+
+		Assert.True(view.IsEnabled.Value);
+
+		viewModel.Enabled = false;
+
+		Assert.False(view.IsEnabled.Value);
+	}
+
 	// the neutral shim applies inline; this locks the marshalled refresh path end-to-end
 	[Fact]
 	public async Task OneWay_TracksChangesFromBackgroundThread()

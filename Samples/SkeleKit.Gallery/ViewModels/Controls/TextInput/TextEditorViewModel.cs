@@ -11,10 +11,7 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 	public TextEditorViewModel()
 	{
 		SelectedContentKind = ContentKinds[0];
-		SelectedCapitalization = Capitalizations[0];
-		SelectedKeyboardLook = KeyboardLooks[0];
 		SelectedWeight = FontWeights[3];
-		SelectedDesign = FontDesigns[0];
 	}
 
 
@@ -97,16 +94,24 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 	ShowcaseOption<ContentKind> selectedContentKind = null!;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SelectedCapitalization))]
 	[NotifyPropertyChangedFor(nameof(KeyboardCode))]
-	ShowcaseOption<Capitalization> selectedCapitalization = null!;
+	int selectedCapitalizationIndex;
+
+	public ShowcaseOption<Capitalization> SelectedCapitalization =>
+		Capitalizations[Math.Clamp(SelectedCapitalizationIndex, 0, Capitalizations.Count - 1)];
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(KeyboardCode))]
 	bool autocorrection = true;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SelectedKeyboardLook))]
 	[NotifyPropertyChangedFor(nameof(KeyboardCode))]
-	ShowcaseOption<KeyboardLook> selectedKeyboardLook = null!;
+	int selectedKeyboardLookIndex;
+
+	public ShowcaseOption<KeyboardLook> SelectedKeyboardLook =>
+		KeyboardLooks[Math.Clamp(SelectedKeyboardLookIndex, 0, KeyboardLooks.Count - 1)];
 
 	public IReadOnlyList<Span> KeyboardCode =>
 		Code(
@@ -132,8 +137,12 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 	ShowcaseOption<FontWeight> selectedWeight = null!;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SelectedDesign))]
 	[NotifyPropertyChangedFor(nameof(TypographyCode))]
-	ShowcaseOption<FontDesign> selectedDesign = null!;
+	int selectedDesignIndex;
+
+	public ShowcaseOption<FontDesign> SelectedDesign =>
+		FontDesigns[Math.Clamp(SelectedDesignIndex, 0, FontDesigns.Count - 1)];
 
 	public string FontSizeLabel => $"{Number(FontSize)} pt";
 

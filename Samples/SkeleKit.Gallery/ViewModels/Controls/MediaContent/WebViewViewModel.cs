@@ -102,4 +102,12 @@ internal sealed partial class WebViewModel : ShowcaseViewModel
 	internal void RecordWebsiteFailure(
 		string message) =>
 		WebsiteStatus = $"Failed · {message}";
+
+	internal void RecordJavaScriptResult(
+		string? result) =>
+		JavaScriptStatus = $"JavaScript · {result ?? "no result"}";
+
+	internal void RecordJavaScriptFailure(
+		string message) =>
+		JavaScriptStatus = $"JavaScript failed · {message}";
 }

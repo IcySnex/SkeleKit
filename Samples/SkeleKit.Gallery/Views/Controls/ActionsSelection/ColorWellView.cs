@@ -28,20 +28,22 @@ internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 
 		Switch title = new()
 		{
-			IsOn = viewModel.ShowsTitle,
+			IsOn = Bind(
+				model => model.ShowsTitle,
+				static (model, value) => model.ShowsTitle = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsTitle = value;
 				well.Title = value ? "Gallery accent" : null;
 			}
 		};
 
 		Switch alpha = new()
 		{
-			IsOn = viewModel.SupportsAlpha,
+			IsOn = Bind(
+				model => model.SupportsAlpha,
+				static (model, value) => model.SupportsAlpha = value),
 			Toggled = value =>
 			{
-				viewModel.SupportsAlpha = value;
 				well.SupportsAlpha = value;
 			}
 		};

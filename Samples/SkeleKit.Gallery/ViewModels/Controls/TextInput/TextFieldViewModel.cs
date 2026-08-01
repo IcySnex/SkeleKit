@@ -13,11 +13,8 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 		SelectedKeyboard = Keyboards[4];
 		SelectedReturnKey = ReturnKeys[4];
 		SelectedContentKind = ContentKinds[5];
-		SelectedCapitalization = Capitalizations[1];
-		SelectedKeyboardLook = KeyboardLooks[0];
 		SelectedClearButton = ClearButtons[1];
 		SelectedWeight = FontWeights[3];
-		SelectedDesign = FontDesigns[1];
 	}
 
 
@@ -142,16 +139,24 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 	ShowcaseOption<ContentKind> selectedContentKind = null!;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SelectedCapitalization))]
 	[NotifyPropertyChangedFor(nameof(KeyboardCode))]
-	ShowcaseOption<Capitalization> selectedCapitalization = null!;
+	int selectedCapitalizationIndex = 1;
+
+	public ShowcaseOption<Capitalization> SelectedCapitalization =>
+		Capitalizations[Math.Clamp(SelectedCapitalizationIndex, 0, Capitalizations.Count - 1)];
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(KeyboardCode))]
 	bool autocorrection;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SelectedKeyboardLook))]
 	[NotifyPropertyChangedFor(nameof(KeyboardCode))]
-	ShowcaseOption<KeyboardLook> selectedKeyboardLook = null!;
+	int selectedKeyboardLookIndex;
+
+	public ShowcaseOption<KeyboardLook> SelectedKeyboardLook =>
+		KeyboardLooks[Math.Clamp(SelectedKeyboardLookIndex, 0, KeyboardLooks.Count - 1)];
 
 	public IReadOnlyList<Span> KeyboardCode =>
 		Code(
@@ -191,8 +196,12 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 	ShowcaseOption<FontWeight> selectedWeight = null!;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SelectedDesign))]
 	[NotifyPropertyChangedFor(nameof(ChromeCode))]
-	ShowcaseOption<FontDesign> selectedDesign = null!;
+	int selectedDesignIndex = 1;
+
+	public ShowcaseOption<FontDesign> SelectedDesign =>
+		FontDesigns[Math.Clamp(SelectedDesignIndex, 0, FontDesigns.Count - 1)];
 
 	public string FontSizeLabel => $"{Number(FontSize)} pt";
 

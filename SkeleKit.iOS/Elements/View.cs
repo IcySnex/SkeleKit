@@ -222,11 +222,16 @@ public abstract partial class View
 	/// <summary>
 	/// Whether the view responds to touches.
 	/// </summary>
-	public bool IsEnabled
+	public Bindable<bool> IsEnabled
 	{
-		get;
-		set => Set(ref field, value, ApplyInteraction, affectsMeasure: false);
-	} = true;
+		get => isEnabled;
+		set => isEnabledBinding = Register(
+			isEnabledBinding,
+			value,
+			value => Set(ref isEnabled, value, ApplyInteraction, affectsMeasure: false));
+	}
+	bool isEnabled = true;
+	Binding<bool>? isEnabledBinding;
 
 	/// <summary>
 	/// The iPad pointer effect shown when a trackpad or mouse hovers this view, or None (the default).

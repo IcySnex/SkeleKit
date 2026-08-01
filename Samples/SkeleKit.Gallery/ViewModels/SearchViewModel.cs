@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.Services.Abstract;
-using SkeleKit.Gallery.Views;
 
 namespace SkeleKit.Gallery.ViewModels;
 
@@ -30,14 +29,16 @@ internal sealed partial class SearchViewModel(
 		: "Try another term or broaden the selected category.";
 
 
-	public void Search(
+	[RelayCommand]
+	void Search(
 		string value)
 	{
 		Query = value;
 		Refresh();
 	}
 
-	public void SelectScope(
+	[RelayCommand]
+	void SelectScope(
 		int index)
 	{
 		area = index switch
@@ -55,16 +56,17 @@ internal sealed partial class SearchViewModel(
 	[RelayCommand]
 	Task OpenTopicAsync(
 		GalleryTopic? topic) =>
-		topic switch
-		{
-			{ Destination: Type destination } => navigator.PushAsync(destination),
-			not null => navigator.PushAsync(topic),
-			_ => Task.CompletedTask
-		};
+		topic is not null
+			? navigator.PushAsync(topic.Destination)
+			: Task.CompletedTask;
 
 	[RelayCommand]
 	Task ShowInfoAsync() =>
-		navigator.PresentViewAsync<AboutView>(ModalStyle.Sheet(Detent.Content, Detent.Large));
+		navigator.PresentAsync<AboutViewModel>(ModalStyle.Sheet(Detent.Content, Detent.Large));
+
+	[RelayCommand]
+	void CancelSearch() =>
+		Search("");
 
 	void Refresh() =>
 		Results = catalog.Search(Query, area);

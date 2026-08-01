@@ -33,20 +33,19 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		Picker<ShowcaseOption<ButtonStyle>> style = new()
 		{
 			ItemsSource = viewModel.Styles,
-			SelectedItem = viewModel.SelectedStyle,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedStyle = option;
-				button.Kind = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedStyle,
+				static (model, value) => model.SelectedStyle = value!),
+			SelectionChanged = option => button.Kind = option.Value
 		};
 
 		SegmentedControl size = new()
 		{
-			SelectedIndex = viewModel.SelectedSizeIndex,
+			SelectedIndex = Bind(
+				model => model.SelectedSizeIndex,
+				static (model, value) => model.SelectedSizeIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.SelectedSizeIndex = index;
 				button.Size = viewModel.SelectedSize;
 			}
 		};
@@ -87,20 +86,19 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Placements,
-			SelectedItem = viewModel.SelectedPlacement,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedPlacement = option;
-				button.IconPlacement = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedPlacement,
+				static (model, value) => model.SelectedPlacement = value!),
+			SelectionChanged = option => button.IconPlacement = option.Value
 		};
 
 		Switch subtitle = new()
 		{
-			IsOn = viewModel.ShowsSubtitle,
+			IsOn = Bind(
+				model => model.ShowsSubtitle,
+				static (model, value) => model.ShowsSubtitle = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsSubtitle = value;
 				button.Subtitle = value ? "Updated moments ago" : null;
 			}
 		};
@@ -110,12 +108,10 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Minimum = 10,
 			Maximum = 28,
 			Step = 1,
-			Value = viewModel.IconSize,
-			ValueChanged = value =>
-			{
-				viewModel.IconSize = value;
-				button.IconSize = value;
-			}
+			Value = Bind(
+				model => model.IconSize,
+				static (model, value) => model.IconSize = value),
+			ValueChanged = value => button.IconSize = value
 		};
 
 		Slider iconSpacing = new()
@@ -123,12 +119,10 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Minimum = 0,
 			Maximum = 20,
 			Step = 1,
-			Value = viewModel.IconSpacing,
-			ValueChanged = value =>
-			{
-				viewModel.IconSpacing = value;
-				button.IconSpacing = value;
-			}
+			Value = Bind(
+				model => model.IconSpacing,
+				static (model, value) => model.IconSpacing = value),
+			ValueChanged = value => button.IconSpacing = value
 		};
 
 		Slider padding = new()
@@ -136,12 +130,10 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Minimum = 8,
 			Maximum = 32,
 			Step = 1,
-			Value = viewModel.HorizontalPadding,
-			ValueChanged = value =>
-			{
-				viewModel.HorizontalPadding = value;
-				button.Padding = new(value, 12);
-			}
+			Value = Bind(
+				model => model.HorizontalPadding,
+				static (model, value) => model.HorizontalPadding = value),
+			ValueChanged = value => button.Padding = new(value, 12)
 		};
 
 		AddShowcase(
@@ -173,24 +165,24 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 
 		Switch loading = new()
 		{
-			IsOn = viewModel.IsLoading,
-			Toggled = value => viewModel.IsLoading = value
+			IsOn = Bind(
+				model => model.IsLoading,
+				static (model, value) => model.IsLoading = value)
 		};
 
 		Switch destructive = new()
 		{
-			IsOn = viewModel.IsDestructive,
-			Toggled = value =>
-			{
-				viewModel.IsDestructive = value;
-				button.IsDestructive = value;
-			}
+			IsOn = Bind(
+				model => model.IsDestructive,
+				static (model, value) => model.IsDestructive = value),
+			Toggled = value => button.IsDestructive = value
 		};
 
 		Switch enabled = new()
 		{
-			IsOn = viewModel.IsButtonEnabled,
-			Toggled = value => viewModel.IsButtonEnabled = value
+			IsOn = Bind(
+				model => model.IsButtonEnabled,
+				static (model, value) => model.IsButtonEnabled = value)
 		};
 
 		AddShowcase(

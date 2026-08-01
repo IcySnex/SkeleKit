@@ -60,7 +60,7 @@ internal sealed partial class SliderViewModel : ShowcaseViewModel
 				Continuous = {{Boolean(Continuous)}},
 				MinIcon = {{(ShowsIcons ? "\"speaker.fill\"" : "null")}},
 				MaxIcon = {{(ShowsIcons ? "\"speaker.wave.3.fill\"" : "null")}},
-				IsEnabled = {{Boolean(ControlEnabled)}}
+				IsEnabled = Bind(model => model.ControlEnabled)
 			};
 			""")
 	];

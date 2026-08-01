@@ -15,9 +15,9 @@ internal sealed class SearchView : TintView<SearchViewModel>
 		BackgroundStyle = PageBackground.Grouped;
 		SearchPlaceholder = "Search SkeleKit";
 		HidesSearchScopesWhenEmpty = true;
-		SearchChanged = viewModel.Search;
-		SearchScopeChanged = viewModel.SelectScope;
-		SearchCanceled = () => viewModel.Search("");
+		SearchChanged = viewModel.SearchCommand.Execute;
+		SearchScopeChanged = viewModel.SelectScopeCommand.Execute;
+		SearchCanceled = () => viewModel.CancelSearchCommand.Execute(null);
 
 		SearchScopes.Add("All");
 		SearchScopes.Add("Controls");

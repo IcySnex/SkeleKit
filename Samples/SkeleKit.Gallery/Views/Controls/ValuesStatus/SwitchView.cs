@@ -23,17 +23,14 @@ internal sealed class SwitchView : ShowcaseView<SwitchViewModel>
 			IsOn = Bind(
 				model => model.IsOn,
 				static (model, value) => model.IsOn = value),
-			IsEnabled = viewModel.ControlEnabled
+			IsEnabled = Bind(model => model.ControlEnabled)
 		};
 
 		Switch enabled = new()
 		{
-			IsOn = viewModel.ControlEnabled,
-			Toggled = value =>
-			{
-				viewModel.ControlEnabled = value;
-				toggle.IsEnabled = value;
-			}
+			IsOn = Bind(
+				model => model.ControlEnabled,
+				static (model, value) => model.ControlEnabled = value)
 		};
 
 		AddShowcase(

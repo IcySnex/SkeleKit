@@ -34,26 +34,29 @@ internal sealed class PageControlView : ShowcaseView<PageControlViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Counts,
-			SelectedItem = viewModel.SelectedCount,
-			SelectionChanged = viewModel.SelectCount
+			SelectedItem = Bind(
+				model => model.SelectedCount,
+				static (model, value) => model.SelectedCount = value!)
 		};
 
 		Switch hiding = new()
 		{
-			IsOn = viewModel.HidesForSinglePage,
+			IsOn = Bind(
+				model => model.HidesForSinglePage,
+				static (model, value) => model.HidesForSinglePage = value),
 			Toggled = value =>
 			{
-				viewModel.HidesForSinglePage = value;
 				pages.HidesForSinglePage = value;
 			}
 		};
 
 		Switch scrubbing = new()
 		{
-			IsOn = viewModel.AllowsScrubbing,
+			IsOn = Bind(
+				model => model.AllowsScrubbing,
+				static (model, value) => model.AllowsScrubbing = value),
 			Toggled = value =>
 			{
-				viewModel.AllowsScrubbing = value;
 				pages.AllowsScrubbing = value;
 			}
 		};

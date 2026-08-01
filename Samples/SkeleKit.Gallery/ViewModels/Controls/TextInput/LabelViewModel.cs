@@ -26,7 +26,6 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 	{
 		SelectedTextStyle = TextStyles[0];
 		SelectedWeight = FontWeights[5];
-		SelectedDesign = FontDesigns[1];
 		SelectedTruncation = Truncations[1];
 	}
 
@@ -98,8 +97,12 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 	ShowcaseOption<FontWeight> selectedWeight = null!;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SelectedDesign))]
 	[NotifyPropertyChangedFor(nameof(TypographyCode))]
-	ShowcaseOption<FontDesign> selectedDesign = null!;
+	int selectedDesignIndex = 1;
+
+	public ShowcaseOption<FontDesign> SelectedDesign =>
+		FontDesigns[Math.Clamp(SelectedDesignIndex, 0, FontDesigns.Count - 1)];
 
 	public string FontSizeLabel => $"{Number(FontSize)} pt";
 
@@ -163,6 +166,20 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 				AutoShrink = {{(ShrinksToFit ? "0.65" : "0")}}
 			};
 			""");
+
+	partial void OnLineCountIndexChanged(
+		int value)
+	{
+		if (value is not 0 && ShrinksToFit)
+			ShrinksToFit = false;
+	}
+
+	partial void OnShrinksToFitChanged(
+		bool value)
+	{
+		if (value && LineCountIndex is not 0)
+			LineCountIndex = 0;
+	}
 
 
 	[ObservableProperty]

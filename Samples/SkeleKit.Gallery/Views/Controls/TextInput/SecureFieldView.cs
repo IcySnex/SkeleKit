@@ -35,10 +35,11 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 
 		Switch reveal = new()
 		{
-			IsOn = viewModel.RevealsEntry,
+			IsOn = Bind(
+				model => model.RevealsEntry,
+				static (model, value) => model.RevealsEntry = value),
 			Toggled = value =>
 			{
-				viewModel.RevealsEntry = value;
 				field.RevealButton = value;
 			}
 		};
@@ -119,30 +120,30 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 		{
 			MinWidth = 160,
 			ItemsSource = viewModel.PasswordIntents,
-			SelectedItem = viewModel.SelectedIntent,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedIntent = option;
-				field.ContentKind = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedIntent,
+				static (model, value) => model.SelectedIntent = value!),
+			SelectionChanged = option => field.ContentKind = option.Value
 		};
 
 		Switch reveal = new()
 		{
-			IsOn = viewModel.ShowsReveal,
+			IsOn = Bind(
+				model => model.ShowsReveal,
+				static (model, value) => model.ShowsReveal = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsReveal = value;
 				field.RevealButton = value;
 			}
 		};
 
 		Switch trailing = new()
 		{
-			IsOn = viewModel.ShowsTrailingIcon,
+			IsOn = Bind(
+				model => model.ShowsTrailingIcon,
+				static (model, value) => model.ShowsTrailingIcon = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsTrailingIcon = value;
 				field.TrailingIcon = value
 					? ImageSource.Symbol("checkmark.circle.fill")
 					: (ImageSource?)null;
@@ -151,10 +152,11 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 
 		Switch clear = new()
 		{
-			IsOn = viewModel.ShowsClearButton,
+			IsOn = Bind(
+				model => model.ShowsClearButton,
+				static (model, value) => model.ShowsClearButton = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsClearButton = value;
 				field.ClearButton = value
 					? ClearButton.WhileEditing
 					: ClearButton.Never;

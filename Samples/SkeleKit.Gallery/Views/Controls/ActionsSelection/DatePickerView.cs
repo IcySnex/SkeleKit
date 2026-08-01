@@ -30,10 +30,11 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 
 		SegmentedControl mode = new()
 		{
-			SelectedIndex = viewModel.SelectedModeIndex,
+			SelectedIndex = Bind(
+				model => model.SelectedModeIndex,
+				static (model, value) => model.SelectedModeIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.SelectedModeIndex = index;
 				picker.Mode = viewModel.SelectedMode;
 			}
 		};
@@ -43,10 +44,11 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 
 		SegmentedControl style = new()
 		{
-			SelectedIndex = viewModel.SelectedStyleIndex,
+			SelectedIndex = Bind(
+				model => model.SelectedStyleIndex,
+				static (model, value) => model.SelectedStyleIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.SelectedStyleIndex = index;
 				picker.Kind = viewModel.SelectedStyle;
 			}
 		};
@@ -82,8 +84,9 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 
 		SegmentedControl position = new()
 		{
-			SelectedIndex = 1,
-			SelectionChanged = viewModel.SetRangePosition
+			SelectedIndex = Bind(
+				model => model.RangePositionIndex,
+				static (model, value) => model.RangePositionIndex = value)
 		};
 		position.Items.Add("Start");
 		position.Items.Add("Middle");

@@ -32,7 +32,9 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl content = new()
 		{
-			SelectedIndex = viewModel.ContentModeIndex
+			SelectedIndex = Bind(
+				model => model.ContentModeIndex,
+				static (model, value) => model.ContentModeIndex = value)
 		};
 		content.Items.Add("Plain");
 		content.Items.Add("Links");
@@ -49,16 +51,16 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		content.SelectionChanged = index =>
 		{
-			viewModel.ContentModeIndex = index;
 			selectableSetting.IsVisible = index is 0;
 		};
 
 		SegmentedControl linkColor = new()
 		{
-			SelectedIndex = viewModel.LinkColorIndex,
+			SelectedIndex = Bind(
+				model => model.LinkColorIndex,
+				static (model, value) => model.LinkColorIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.LinkColorIndex = index;
 				text.LinkColor = index is 0 ? null : Colors.Blue;
 			}
 		};
@@ -118,11 +120,11 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 		{
 			MinWidth = 140,
 			ItemsSource = viewModel.TextStyles,
-			SelectedItem = viewModel.SelectedTextStyle,
+			SelectedItem = Bind(
+				model => model.SelectedTextStyle,
+				static (model, value) => model.SelectedTextStyle = value!),
 			SelectionChanged = option =>
 			{
-				viewModel.SelectedTextStyle = option;
-
 				if (!viewModel.UsesExplicitSize)
 					text.TextStyle = option.Value;
 			}
@@ -135,10 +137,11 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			Minimum = 12,
 			Maximum = 40,
 			Step = 1,
-			Value = viewModel.FontSize,
+			Value = Bind(
+				model => model.FontSize,
+				static (model, value) => model.FontSize = value),
 			ValueChanged = value =>
 			{
-				viewModel.FontSize = value;
 				text.FontSize = value;
 			}
 		};
@@ -148,9 +151,13 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl sizing = new()
 		{
+			SelectedIndex = Bind(
+				model => model.UsesExplicitSize,
+				static (model, value) => model.UsesExplicitSize = value,
+				static value => value ? 1 : 0,
+				static index => index is 1),
 			SelectionChanged = index =>
 			{
-				viewModel.UsesExplicitSize = index is 1;
 				text.TextStyle = viewModel.UsesExplicitSize ? null : viewModel.SelectedTextStyle.Value;
 				text.FontSize = viewModel.UsesExplicitSize ? viewModel.FontSize : double.NaN;
 				styleSetting.IsVisible = !viewModel.UsesExplicitSize;
@@ -164,20 +171,19 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.FontWeights,
-			SelectedItem = viewModel.SelectedWeight,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedWeight = option;
-				text.FontWeight = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedWeight,
+				static (model, value) => model.SelectedWeight = value!),
+			SelectionChanged = option => text.FontWeight = option.Value
 		};
 
 		SegmentedControl design = new()
 		{
-			SelectedIndex = 1,
+			SelectedIndex = Bind(
+				model => model.SelectedDesignIndex,
+				static (model, value) => model.SelectedDesignIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.SelectedDesign = viewModel.FontDesigns[index];
 				text.FontDesign = viewModel.SelectedDesign.Value;
 			}
 		};
@@ -188,9 +194,11 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl color = new()
 		{
+			SelectedIndex = Bind(
+				model => model.TextColorIndex,
+				static (model, value) => model.TextColorIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.TextColorIndex = index;
 				text.TextColor = index is 0 ? (Color?)null : Colors.Blue;
 			}
 		};
@@ -229,10 +237,11 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl lines = new()
 		{
-			SelectedIndex = viewModel.LineCountIndex,
+			SelectedIndex = Bind(
+				model => model.LineCountIndex,
+				static (model, value) => model.LineCountIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.LineCountIndex = index;
 				text.MaxLines = viewModel.SelectedLineCount;
 			}
 		};
@@ -242,9 +251,11 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl alignment = new()
 		{
+			SelectedIndex = Bind(
+				model => model.AlignmentIndex,
+				static (model, value) => model.AlignmentIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.AlignmentIndex = index;
 				text.TextAlignment = viewModel.SelectedAlignment;
 			}
 		};
@@ -257,10 +268,11 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			Minimum = 0,
 			Maximum = 12,
 			Step = 1,
-			Value = viewModel.LineSpacing,
+			Value = Bind(
+				model => model.LineSpacing,
+				static (model, value) => model.LineSpacing = value),
 			ValueChanged = value =>
 			{
-				viewModel.LineSpacing = value;
 				text.LineSpacing = value;
 			}
 		};
@@ -270,10 +282,11 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			Minimum = -1,
 			Maximum = 3,
 			Step = 0.25,
-			Value = viewModel.LetterSpacing,
+			Value = Bind(
+				model => model.LetterSpacing,
+				static (model, value) => model.LetterSpacing = value),
 			ValueChanged = value =>
 			{
-				viewModel.LetterSpacing = value;
 				text.LetterSpacing = value;
 			}
 		};

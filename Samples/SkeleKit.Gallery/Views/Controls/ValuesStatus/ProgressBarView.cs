@@ -21,12 +21,9 @@ internal sealed class ProgressBarView : ShowcaseView<ProgressBarViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.ProgressValues,
-			SelectedItem = viewModel.SelectedProgress,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedProgress = option;
-				viewModel.Progress = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedProgress,
+				static (model, value) => model.SelectedProgress = value!)
 		};
 
 		AddShowcase(

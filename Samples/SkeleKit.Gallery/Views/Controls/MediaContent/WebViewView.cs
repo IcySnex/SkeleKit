@@ -45,11 +45,11 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 						return blue ? 'Orange' : 'Blue';
 					})()
 					""");
-				viewModel.JavaScriptStatus = $"JavaScript · {result ?? "no result"}";
+				viewModel.RecordJavaScriptResult(result);
 			}
 			catch (Exception exception)
 			{
-				viewModel.JavaScriptStatus = $"JavaScript failed · {exception.Message}";
+				viewModel.RecordJavaScriptFailure(exception.Message);
 			}
 		});
 

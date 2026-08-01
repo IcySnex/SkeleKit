@@ -39,20 +39,19 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Sources,
-			SelectedItem = viewModel.SelectedSource,
-			SelectionChanged = viewModel.SelectSource
+			SelectedItem = Bind(
+				model => model.SelectedSource,
+				static (model, value) => model.SelectedSource = value!)
 		};
 
 		Picker<ShowcaseOption<Stretch>> stretch = new()
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Stretches,
-			SelectedItem = viewModel.SelectedStretch,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedStretch = option;
-				image.Stretch = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedStretch,
+				static (model, value) => model.SelectedStretch = value!),
+			SelectionChanged = option => image.Stretch = option.Value
 		};
 
 		AddShowcase(
@@ -84,46 +83,41 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 		Slider size = new()
 		{
 			MinWidth = 150,
-			Value = viewModel.SymbolSize,
+			Value = Bind(
+				model => model.SymbolSize,
+				static (model, value) => model.SymbolSize = value),
 			Minimum = 32,
 			Maximum = 96,
-			ValueChanged = value =>
-			{
-				viewModel.SymbolSize = value;
-				symbol.SymbolSize = value;
-			}
+			ValueChanged = value => symbol.SymbolSize = value
 		};
 
 		Picker<ShowcaseOption<FontWeight>> weight = new()
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Weights,
-			SelectedItem = viewModel.SelectedWeight,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedWeight = option;
-				symbol.SymbolWeight = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedWeight,
+				static (model, value) => model.SelectedWeight = value!),
+			SelectionChanged = option => symbol.SymbolWeight = option.Value
 		};
 
 		Picker<ShowcaseOption<SymbolScale>> scale = new()
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Scales,
-			SelectedItem = viewModel.SelectedScale,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedScale = option;
-				symbol.SymbolScale = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedScale,
+				static (model, value) => model.SelectedScale = value!),
+			SelectionChanged = option => symbol.SymbolScale = option.Value
 		};
 
 		Switch multicolor = new()
 		{
-			IsOn = viewModel.PrefersMulticolor,
+			IsOn = Bind(
+				model => model.PrefersMulticolor,
+				static (model, value) => model.PrefersMulticolor = value),
 			Toggled = value =>
 			{
-				viewModel.PrefersMulticolor = value;
 				symbol.PrefersMulticolor = value;
 			}
 		};
@@ -169,12 +163,10 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Effects,
-			SelectedItem = viewModel.SelectedEffect,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedEffect = option;
-				symbol.SymbolEffect = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedEffect,
+				static (model, value) => model.SelectedEffect = value!),
+			SelectionChanged = option => symbol.SymbolEffect = option.Value
 		};
 
 		AddShowcase(

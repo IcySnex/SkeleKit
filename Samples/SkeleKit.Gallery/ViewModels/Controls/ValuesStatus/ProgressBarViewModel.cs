@@ -45,4 +45,9 @@ internal sealed partial class ProgressBarViewModel : ShowcaseViewModel
 			};
 			""")
 	];
+
+
+	partial void OnSelectedProgressChanged(
+		ShowcaseOption<double> value) =>
+		Progress = value.Value;
 }

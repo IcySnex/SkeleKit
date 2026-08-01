@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using SkeleKit.Gallery.ViewModels.Showcase;
 using SkeleKit.Gallery.Views.Abstract;
 
@@ -22,7 +21,7 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 
 		appearanceItem = new()
 		{
-			Command = viewModel.CycleAppearanceCommand
+			Command = Command.From(CycleAppearance)
 		};
 		UpdateAppearanceItem();
 		ToolbarItems.Add(appearanceItem);
@@ -182,38 +181,29 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 		};
 
 
-	protected override void OnLoaded()
-	{
-		base.OnLoaded();
-		ViewModel.PropertyChanged += OnViewModelPropertyChanged;
-	}
-
-	protected override void OnUnloaded()
-	{
-		ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
-		base.OnUnloaded();
-	}
-
 	protected override void OnAppearing()
 	{
-		if (SkeleApplication.Current is SkeleApplication app)
-			ViewModel.Appearance = app.Appearance;
-
 		UpdateAppearanceItem();
 		base.OnAppearing();
 	}
 
 
-	void OnViewModelPropertyChanged(
-		object? sender,
-		PropertyChangedEventArgs args)
+	void CycleAppearance()
 	{
-		if (args.PropertyName == nameof(ShowcaseViewModel.Appearance))
-			UpdateAppearanceItem();
+		if (SkeleApplication.Current is not SkeleApplication app)
+			return;
+
+		app.Appearance = app.Appearance switch
+		{
+			Appearance.System => Appearance.Dark,
+			Appearance.Dark => Appearance.Light,
+			_ => Appearance.System
+		};
+		UpdateAppearanceItem();
 	}
 
 	void UpdateAppearanceItem() =>
-		appearanceItem.Icon = ViewModel.Appearance switch
+		appearanceItem.Icon = SkeleApplication.Current?.Appearance switch
 		{
 			Appearance.Dark => "moon.fill",
 			Appearance.Light => "sun.max.fill",

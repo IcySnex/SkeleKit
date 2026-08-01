@@ -39,7 +39,9 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 
 		SegmentedControl items = new()
 		{
-			SelectionChanged = viewModel.SetItemsState
+			SelectedIndex = Bind(
+				model => model.ItemsStateIndex,
+				static (model, value) => model.ItemsStateIndex = value)
 		};
 		items.Items.Add("Base");
 		items.Items.Add("Empty");

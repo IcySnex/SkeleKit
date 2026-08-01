@@ -16,13 +16,13 @@ internal sealed partial class SwitchViewModel : ShowcaseViewModel
 	public IReadOnlyList<Span> SwitchCode =>
 	[
 		new(
-			$$"""
+			"""
 			new Switch
 			{
 				IsOn = Bind(
 					model => model.IsOn,
 					(model, value) => model.IsOn = value),
-				IsEnabled = {{Boolean(ControlEnabled)}}
+				IsEnabled = Bind(model => model.ControlEnabled)
 			};
 			""")
 	];
@@ -31,8 +31,4 @@ internal sealed partial class SwitchViewModel : ShowcaseViewModel
 	[RelayCommand]
 	void ToggleFromViewModel() =>
 		IsOn = !IsOn;
-
-	static string Boolean(
-		bool value) =>
-		value ? "true" : "false";
 }

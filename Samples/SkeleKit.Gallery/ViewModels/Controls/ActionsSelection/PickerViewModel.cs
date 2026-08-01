@@ -34,6 +34,9 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 	[ObservableProperty]
 	PickerDestination? selectedDestination;
 
+	[ObservableProperty]
+	int itemsStateIndex;
+
 	public string ItemsSummary =>
 		$"{Destinations.Count} items";
 
@@ -68,24 +71,24 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 	void ClearSelection() =>
 		SelectedDestination = null;
 
-	internal void SetItemsState(
-		int state)
+	partial void OnItemsStateIndexChanged(
+		int value)
 	{
 		bool preservesSelection = SelectedDestination is PickerDestination selected
-			&& state is not 1
+			&& value is not 1
 			&& (Defaults.Any(item => ReferenceEquals(item, selected))
-				|| state is 2 && ReferenceEquals(ExtraDestination, selected));
+				|| value is 2 && ReferenceEquals(ExtraDestination, selected));
 
 		if (!preservesSelection)
 			SelectedDestination = null;
 
 		Destinations.Clear();
 
-		if (state is not 1)
+		if (value is not 1)
 			foreach (PickerDestination destination in Defaults)
 				Destinations.Add(destination);
 
-		if (state is 2)
+		if (value is 2)
 			Destinations.Add(ExtraDestination);
 
 		OnPropertyChanged(nameof(ItemsSummary));

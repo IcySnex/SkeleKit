@@ -446,7 +446,7 @@ public abstract partial class View
 		ApplyGestures();
 		ApplyContextMenu();
 
-		native.UserInteractionEnabled = IsEnabled;
+		native.UserInteractionEnabled = isEnabled;
 
 		if (tapCommand is not null && tapRecognizer is null)
 		{
@@ -547,13 +547,13 @@ public abstract partial class View
 			native.AddGestureRecognizer(recognizer);
 		}
 
-		tapRecognizer?.Enabled = tapCommand is not null && IsEnabled;
-		doubleTapRecognizer?.Enabled = doubleTapCommand is not null && IsEnabled;
-		longPressRecognizer?.Enabled = longPressCommand is not null && IsEnabled;
-		pressRecognizer?.Enabled = pressed is not null && IsEnabled;
-		panRecognizer?.Enabled = panned is not null && IsEnabled;
-		pinchRecognizer?.Enabled = pinched is not null && IsEnabled;
-		rotationRecognizer?.Enabled = rotated is not null && IsEnabled;
+		tapRecognizer?.Enabled = tapCommand is not null && isEnabled;
+		doubleTapRecognizer?.Enabled = doubleTapCommand is not null && isEnabled;
+		longPressRecognizer?.Enabled = longPressCommand is not null && isEnabled;
+		pressRecognizer?.Enabled = pressed is not null && isEnabled;
+		panRecognizer?.Enabled = panned is not null && isEnabled;
+		pinchRecognizer?.Enabled = pinched is not null && isEnabled;
+		rotationRecognizer?.Enabled = rotated is not null && isEnabled;
 
 		// a hovered pointer picks up the effect through the delegate, which reads the live PointerEffect
 		if (PointerEffect is not PointerEffect.None && pointerInteraction is null)

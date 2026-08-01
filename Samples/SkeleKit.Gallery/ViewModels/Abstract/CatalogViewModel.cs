@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SkeleKit.Gallery.Models;
-using SkeleKit.Gallery.Views;
 
 namespace SkeleKit.Gallery.ViewModels.Abstract;
 
@@ -19,5 +18,5 @@ internal abstract partial class CatalogViewModel(
 
 	[RelayCommand]
 	Task ShowInfoAsync() =>
-		navigator.PresentViewAsync<AboutView>(ModalStyle.Sheet(Detent.Content));
+		navigator.PresentAsync<AboutViewModel>(ModalStyle.Sheet(Detent.Content));
 }

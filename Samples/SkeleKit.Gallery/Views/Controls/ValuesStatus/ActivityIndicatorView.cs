@@ -25,16 +25,18 @@ internal sealed class ActivityIndicatorView : ShowcaseView<ActivityIndicatorView
 
 		Switch animating = new()
 		{
-			IsOn = viewModel.IsAnimating,
-			Toggled = value => viewModel.IsAnimating = value
+			IsOn = Bind(
+				model => model.IsAnimating,
+				static (model, value) => model.IsAnimating = value)
 		};
 
 		Switch size = new()
 		{
-			IsOn = viewModel.IsLarge,
+			IsOn = Bind(
+				model => model.IsLarge,
+				static (model, value) => model.IsLarge = value),
 			Toggled = value =>
 			{
-				viewModel.IsLarge = value;
 				indicator.IsLarge = value;
 			}
 		};

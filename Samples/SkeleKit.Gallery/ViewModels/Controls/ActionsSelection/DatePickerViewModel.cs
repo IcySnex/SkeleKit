@@ -58,6 +58,9 @@ internal sealed partial class DatePickerViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(RangeCode))]
 	DateTime selectedDate = ExampleDate;
 
+	[ObservableProperty]
+	int rangePositionIndex = 1;
+
 	public string DateSummary =>
 		SelectedDate.ToString("ddd, MMM d · HH:mm", CultureInfo.CurrentCulture);
 
@@ -79,16 +82,14 @@ internal sealed partial class DatePickerViewModel : ShowcaseViewModel
 			""");
 
 
-	internal void SetRangePosition(
-		int index)
-	{
-		SelectedDate = index switch
+	partial void OnRangePositionIndexChanged(
+		int value) =>
+		SelectedDate = value switch
 		{
 			0 => MinimumDate,
 			2 => MaximumDate,
 			_ => ExampleDate
 		};
-	}
 
 
 	static IReadOnlyList<Span> Code(

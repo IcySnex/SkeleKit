@@ -40,10 +40,11 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		Switch requiresText = new()
 		{
-			IsOn = viewModel.RequiresText,
+			IsOn = Bind(
+				model => model.RequiresText,
+				static (model, value) => model.RequiresText = value),
 			Toggled = value =>
 			{
-				viewModel.RequiresText = value;
 				field.RequiresText = value;
 			}
 		};
@@ -117,44 +118,39 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Keyboards,
-			SelectedItem = viewModel.SelectedKeyboard,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedKeyboard = option;
-				field.Keyboard = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedKeyboard,
+				static (model, value) => model.SelectedKeyboard = value!),
+			SelectionChanged = option => field.Keyboard = option.Value
 		};
 
 		Picker<ShowcaseOption<ReturnKeyType>> returnKey = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.ReturnKeys,
-			SelectedItem = viewModel.SelectedReturnKey,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedReturnKey = option;
-				field.ReturnKey = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedReturnKey,
+				static (model, value) => model.SelectedReturnKey = value!),
+			SelectionChanged = option => field.ReturnKey = option.Value
 		};
 
 		Picker<ShowcaseOption<ContentKind>> contentKind = new()
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.ContentKinds,
-			SelectedItem = viewModel.SelectedContentKind,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedContentKind = option;
-				field.ContentKind = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedContentKind,
+				static (model, value) => model.SelectedContentKind = value!),
+			SelectionChanged = option => field.ContentKind = option.Value
 		};
 
 		SegmentedControl capitalization = new()
 		{
-			SelectedIndex = 1,
+			SelectedIndex = Bind(
+				model => model.SelectedCapitalizationIndex,
+				static (model, value) => model.SelectedCapitalizationIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.SelectedCapitalization = viewModel.Capitalizations[index];
 				field.Capitalization = viewModel.SelectedCapitalization.Value;
 			}
 		};
@@ -165,19 +161,22 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		Switch autocorrection = new()
 		{
-			IsOn = viewModel.Autocorrection,
+			IsOn = Bind(
+				model => model.Autocorrection,
+				static (model, value) => model.Autocorrection = value),
 			Toggled = value =>
 			{
-				viewModel.Autocorrection = value;
 				field.Autocorrection = value;
 			}
 		};
 
 		SegmentedControl look = new()
 		{
+			SelectedIndex = Bind(
+				model => model.SelectedKeyboardLookIndex,
+				static (model, value) => model.SelectedKeyboardLookIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.SelectedKeyboardLook = viewModel.KeyboardLooks[index];
 				field.KeyboardLook = viewModel.SelectedKeyboardLook.Value;
 			}
 		};
@@ -228,10 +227,11 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		Switch leading = new()
 		{
-			IsOn = viewModel.ShowsLeadingIcon,
+			IsOn = Bind(
+				model => model.ShowsLeadingIcon,
+				static (model, value) => model.ShowsLeadingIcon = value),
 			Toggled = value =>
 			{
-				viewModel.ShowsLeadingIcon = value;
 				field.LeadingIcon = value
 					? ImageSource.Symbol("character.cursor.ibeam")
 					: (ImageSource?)null;
@@ -242,11 +242,11 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.ClearButtons,
-			SelectedItem = viewModel.SelectedClearButton,
+			SelectedItem = Bind(
+				model => model.SelectedClearButton,
+				static (model, value) => model.SelectedClearButton = value!),
 			SelectionChanged = option =>
 			{
-				viewModel.SelectedClearButton = option;
-
 				if (viewModel.TrailingModeIndex is 0)
 					field.ClearButton = option.Value;
 			}
@@ -256,9 +256,11 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		SegmentedControl trailing = new()
 		{
+			SelectedIndex = Bind(
+				model => model.TrailingModeIndex,
+				static (model, value) => model.TrailingModeIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.TrailingModeIndex = index;
 				field.TrailingIcon = index is 1
 					? ImageSource.Symbol("checkmark.circle.fill")
 					: (ImageSource?)null;
@@ -277,28 +279,28 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 			Minimum = 12,
 			Maximum = 32,
 			Step = 1,
-			Value = viewModel.FontSize,
-			ValueChanged = value => viewModel.FontSize = value
+			Value = Bind(
+				model => model.FontSize,
+				static (model, value) => model.FontSize = value)
 		};
 
 		Picker<ShowcaseOption<FontWeight>> weight = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.FontWeights,
-			SelectedItem = viewModel.SelectedWeight,
-			SelectionChanged = option =>
-			{
-				viewModel.SelectedWeight = option;
-				field.FontWeight = option.Value;
-			}
+			SelectedItem = Bind(
+				model => model.SelectedWeight,
+				static (model, value) => model.SelectedWeight = value!),
+			SelectionChanged = option => field.FontWeight = option.Value
 		};
 
 		SegmentedControl design = new()
 		{
-			SelectedIndex = 1,
+			SelectedIndex = Bind(
+				model => model.SelectedDesignIndex,
+				static (model, value) => model.SelectedDesignIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.SelectedDesign = viewModel.FontDesigns[index];
 				field.FontDesign = viewModel.SelectedDesign.Value;
 			}
 		};
@@ -348,11 +350,11 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		SegmentedControl mode = new()
 		{
-			SelectedIndex = viewModel.AccessoryModeIndex,
+			SelectedIndex = Bind(
+				model => model.AccessoryModeIndex,
+				static (model, value) => model.AccessoryModeIndex = value),
 			SelectionChanged = index =>
 			{
-				viewModel.AccessoryModeIndex = index;
-
 				foreach (TextField field in fields)
 					ApplyAccessory(field, index);
 			}

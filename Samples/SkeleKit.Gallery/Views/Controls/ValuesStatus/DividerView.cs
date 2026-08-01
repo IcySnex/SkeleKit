@@ -18,8 +18,9 @@ internal sealed class DividerView : ShowcaseView<DividerViewModel>
 	{
 		Switch accent = new()
 		{
-			IsOn = viewModel.UsesAccent,
-			Toggled = value => viewModel.UsesAccent = value
+			IsOn = Bind(
+				model => model.UsesAccent,
+				static (model, value) => model.UsesAccent = value)
 		};
 
 		AddShowcase(

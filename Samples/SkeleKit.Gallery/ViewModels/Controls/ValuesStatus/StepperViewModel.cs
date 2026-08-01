@@ -50,7 +50,7 @@ internal sealed partial class StepperViewModel : ShowcaseViewModel
 				Minimum = 0,
 				Maximum = 20,
 				Step = {{Number(SelectedStep.Value)}},
-				IsEnabled = {{Boolean(ControlEnabled)}}
+				IsEnabled = Bind(model => model.ControlEnabled)
 			};
 			""")
 	];
@@ -59,10 +59,6 @@ internal sealed partial class StepperViewModel : ShowcaseViewModel
 	[RelayCommand]
 	void ResetValue() =>
 		Value = 10;
-
-	static string Boolean(
-		bool value) =>
-		value ? "true" : "false";
 
 	static string Number(
 		double value) =>
