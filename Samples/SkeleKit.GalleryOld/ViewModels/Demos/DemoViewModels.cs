@@ -41,6 +41,26 @@ public partial class ChromeDemoViewModel(
 	[ObservableProperty]
 	public partial string SearchStatus { get; set; } = "Nothing yet";
 
+	[ObservableProperty]
+	public partial string SearchText { get; set; } = "";
+
+	[ObservableProperty]
+	public partial int SearchScopeIndex { get; set; }
+
+	partial void OnSearchTextChanged(
+		string value) =>
+		SearchStatus = $"Typing: {value}";
+
+	partial void OnSearchScopeIndexChanged(
+		int value) =>
+		SearchStatus = $"Scope {value} selected";
+
+	public void CancelSearch()
+	{
+		SearchText = "";
+		SearchStatus = "Search cancelled";
+	}
+
 	public async Task<bool> ConfirmLeaveAsync() =>
 		!GuardLeave || await navigator.ConfirmAsync("Leave this page?", "The guard switch is on.", "Leave", "Stay", destructive: true);
 
@@ -72,6 +92,19 @@ public partial class SearchTabDemoViewModel : ObservableObject
 {
 	[ObservableProperty]
 	public partial string Status { get; set; } = "Nothing searched yet";
+
+	[ObservableProperty]
+	public partial string Query { get; set; } = "";
+
+	partial void OnQueryChanged(
+		string value) =>
+		Status = $"Searching: {value}";
+
+	public void CancelSearch()
+	{
+		Query = "";
+		Status = "Cancelled";
+	}
 }
 
 public partial class PlayerBarViewModel : ObservableObject

@@ -42,7 +42,7 @@ public class SettingsGroupView : ContentView<SettingsGroupViewModel>
         {
             Layout = CollectionLayout.List(grouped: true),
             GroupedItemsSource = Bind<IReadOnlyList<SettingsSection>?>(vm => vm.Sections),
-            SelectionCommand = ViewModel.OpenGroupCommand,        // command off the injected ViewModel
+            ItemCommand = ViewModel.OpenGroupCommand,             // command off the injected ViewModel
             ItemTemplate = () => new SettingsRow(),
             HeaderTemplate = () => new SectionHeader()
         };
@@ -148,7 +148,7 @@ Command     = ViewModel.CloseCommand;                            // commands nev
 TapCommand  = ViewModel.OpenMovieCommand;                        // any view is tappable
 Command     = Command.From(Close);                              // ... or a view-local handler
 
-SelectionCommand = Bindable.From<ICommand?>(someCommand);        // literal for an interface-typed prop
+ItemCommand = someCommand;                                       // commands are assigned directly
 ```
 
 ## 5. Navigation from a ViewModel

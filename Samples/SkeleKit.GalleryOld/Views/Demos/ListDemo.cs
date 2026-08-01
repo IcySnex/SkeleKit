@@ -26,7 +26,7 @@ public class ListDemo : ContentView<ListDemoViewModel>
 			HeaderTemplate = () => new SectionHeader(),
 			FooterTemplate = () => new SectionFooter(),
 			GroupedItemsSource = ViewModel.Sections,
-			SelectionCommand = ViewModel.OpenCommand,
+			ItemCommand = ViewModel.OpenCommand,
 
 			// no context menu here, so the drag starts straight from a long-press; crossing sections works
 			ReorderCommand = ViewModel.ReorderCommand,

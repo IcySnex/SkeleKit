@@ -494,14 +494,9 @@ public class MapView : Control
 	}
 
 	/// <summary>
-	/// Invoked with the tapped pin.
+	/// Command invoked with the tapped pin.
 	/// </summary>
-	public ICommand? SelectionCommand { get; set; }
-
-	/// <summary>
-	/// Called with the pin the user tapped.
-	/// </summary>
-	public Action<MapPin>? PinSelected { get; set; }
+	public ICommand? PinCommand { get; set; }
 
 
 	void ApplyRegion()
@@ -639,10 +634,8 @@ public class MapView : Control
 	void OnPinSelected(
 		MapPin pin)
 	{
-		if (SelectionCommand is ICommand command && command.CanExecute(pin))
+		if (PinCommand is ICommand command && command.CanExecute(pin))
 			command.Execute(pin);
-
-		PinSelected?.Invoke(pin);
 	}
 
 	void Root(

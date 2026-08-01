@@ -84,10 +84,7 @@ internal sealed partial class MapViewModel : ShowcaseViewModel
 	bool showsOverlays = true;
 
 	[ObservableProperty]
-	string selectionStatus = "Tap a marker to inspect its command and callback.";
-
-	string? callbackSelection;
-	string? commandSelection;
+	string selectionStatus = "Tap a marker.";
 
 	public string RegionSummary =>
 		$"{Number(Region.Center.Latitude)}, {Number(Region.Center.Longitude)}";
@@ -141,8 +138,7 @@ internal sealed partial class MapViewModel : ShowcaseViewModel
 				Overlays = overlays,
 				ClustersPins = {{Boolean(ClusterModeIndex > 0)}},
 				ClusterMarker = {{(ClusterModeIndex is 2 ? "BuildCluster" : "null")}},
-				SelectionCommand = viewModel.SelectPinCommand,
-				PinSelected = viewModel.RecordPinSelection
+				PinCommand = viewModel.SelectPinCommand
 			};
 			""")
 	];
@@ -162,22 +158,8 @@ internal sealed partial class MapViewModel : ShowcaseViewModel
 
 	[RelayCommand]
 	void SelectPin(
-		MapPin pin)
-	{
-		commandSelection = pin.Title ?? "Untitled pin";
-		UpdateSelectionStatus();
-	}
-
-	internal void RecordPinSelection(
-		MapPin pin)
-	{
-		callbackSelection = pin.Title ?? "Untitled pin";
-		UpdateSelectionStatus();
-	}
-
-
-	void UpdateSelectionStatus() =>
-		SelectionStatus = $"Command · {commandSelection ?? "waiting"} | Callback · {callbackSelection ?? "waiting"}";
+		MapPin pin) =>
+		SelectionStatus = pin.Title ?? "Untitled pin";
 
 	static string Boolean(
 		bool value) =>

@@ -15,9 +15,13 @@ internal sealed class SearchView : TintView<SearchViewModel>
 		BackgroundStyle = PageBackground.Grouped;
 		SearchPlaceholder = "Search SkeleKit";
 		HidesSearchScopesWhenEmpty = true;
-		SearchChanged = viewModel.SearchCommand.Execute;
-		SearchScopeChanged = viewModel.SelectScopeCommand.Execute;
-		SearchCanceled = () => viewModel.CancelSearchCommand.Execute(null);
+		SearchText = Bind(
+			model => model.Query,
+			static (model, value) => model.Query = value ?? "");
+		SearchScopeIndex = Bind(
+			model => model.SelectedScopeIndex,
+			static (model, value) => model.SelectedScopeIndex = value);
+		SearchCanceled = viewModel.CancelSearch;
 
 		SearchScopes.Add("All");
 		SearchScopes.Add("Controls");
@@ -35,7 +39,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 			ItemsSource = Bind(model => model.Results),
 			ItemTemplate = static () => new TopicCell(showsArea: true),
 			Layout = CollectionLayout.List(grouped: true),
-			SelectionCommand = viewModel.OpenTopicCommand,
+			ItemCommand = viewModel.OpenTopicCommand,
 			HighlightsSelection = true,
 
 			EmptyView = new StackPanel

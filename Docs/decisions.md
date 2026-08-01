@@ -99,17 +99,22 @@ owns), but state and accessories are chrome that make a row feel native. `IsSele
 prop, so cells restyle on selection through ordinary bindings; list sections get the native tap
 highlight free.
 
-## ADR-012: Commands for intents, Actions for streams, ViewModels by constructor
+## ADR-012: Bind state, command operations, observe streams, inject ViewModels
 
-**Decision:** discrete intents (tap, long-press, submit, selection, toolbar, swipe, menu) are plain
-`ICommand?` properties, never bindable; continuous signals (pan, pinch, scroll, text-as-you-type,
-value-during-drag) are past-tense `Action<T>` (no `On` prefix — `On…` is lifecycle only). A page's
+**Decision:** mutable control values (`IsOn`, text, numeric values, selected options) are two-way
+`Bindable<T>` state. Their optional past-tense `Action<T>` callbacks observe the same state for
+view-local presentation; they are not a second MVVM path. Discrete operations (tap, long-press,
+submit, item or pin activation, toolbar, swipe, menu) are plain `ICommand?` properties, never
+bindable. Transient signals and outcomes (pan, pinch, scroll, navigation completion, text or value
+during editing) remain past-tense Actions; `On…` is reserved for lifecycle overrides. A page's
 ViewModel arrives by constructor (`ContentView<TVm>` stores it, `[Page]` generates factory lambdas),
-so commands are assigned directly (`Command = ViewModel.SaveCommand`); view-local handlers use
-`Command.From`.
-**Why:** commands never change after construction (nothing to bind), and `ICommand.Execute` boxes
-every tick at 60–120 Hz (streams stay Actions). Factory lambdas keep page construction
-reflection-free. Pull-to-refresh is `RefreshCommand` + a two-way `IsRefreshing`.
+so commands are assigned directly (`Command = ViewModel.SaveCommand`); view-local operation handlers
+use `Command.From`.
+**Why:** a command is appropriate only when `CanExecute` can meaningfully gate an operation. A
+value-change command makes that contract ambiguous: rejecting it would have to prevent or revert
+state the control already changed. Bindings synchronize state directly, while Actions avoid boxing
+continuous values at 60–120 Hz. Factory lambdas keep page construction reflection-free.
+Pull-to-refresh is `RefreshCommand` + a two-way `IsRefreshing`.
 
 ## ADR-013: View-centric pages, ViewModel-first navigation
 
@@ -138,7 +143,7 @@ group resets the user's arrangement.
 
 **Decision:** `MapView` wraps `MKMapView` with a bindable two-way `Region`, a `Kind`, interaction and
 chrome toggles, a `Pins` `BindableList<MapPin>` (native `MKMarkerAnnotationView` markers with
-title/subtitle callouts and a `SelectionCommand`), and an `Overlays` `BindableList<MapOverlay>` drawn
+title/subtitle callouts and a `PinCommand`), and an `Overlays` `BindableList<MapOverlay>` drawn
 as `MKPolyline`/`MKPolygon`/`MKCircle` renderers. A pin may instead supply its own `Marker` and
 `Callout` builders (`Func<View>`) hosted in the annotation view and detail-callout slot. The geography
 types are neutral SkeleKit primitives (`Coordinate`, `MapRegion`, `MapKind`, `MapPin`, `MapOverlay`

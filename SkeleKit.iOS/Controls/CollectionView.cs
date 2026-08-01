@@ -37,7 +37,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 	internal override bool Scrolls => true;
 
-	internal ICommand? Selection => selectionCommand;
+	internal ICommand? ItemActivation => itemCommand;
 
 	internal bool IsGrouped => sections is not null;
 
@@ -116,14 +116,14 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public Func<TSection, CollectionLayout>? SectionLayout { get; set; }
 
 	/// <summary>
-	/// Invoked with the tapped item.
+	/// Command invoked with the tapped item.
 	/// </summary>
-	public ICommand? SelectionCommand
+	public ICommand? ItemCommand
 	{
-		get => selectionCommand;
-		set => Set(ref selectionCommand, value, affectsMeasure: false);
+		get => itemCommand;
+		set => Set(ref itemCommand, value, affectsMeasure: false);
 	}
-	ICommand? selectionCommand;
+	ICommand? itemCommand;
 
 	/// <summary>
 	/// Whether rows draw their separator lines.

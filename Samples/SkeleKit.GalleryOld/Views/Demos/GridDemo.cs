@@ -35,7 +35,7 @@ public class GridDemo : ContentView<GridDemoViewModel>
 			Layout = CollectionLayout.Grid(columns: 3, spacing: 12),
 			ItemTemplate = () => new MovieCell(),
 			ItemsSource = ViewModel.Movies,
-			SelectionCommand = ViewModel.OpenCommand,
+			ItemCommand = ViewModel.OpenCommand,
 			LoadMoreCommand = ViewModel.LoadMoreCommand,
 			HighlightsSelection = false,
 			Prefetch = movie => movie.PosterUrl,

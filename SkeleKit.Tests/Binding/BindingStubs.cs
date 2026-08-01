@@ -35,6 +35,20 @@ class MovieViewModel : Notifier
 		set { enabled = value; Raise(); }
 	}
 
+	string query = "";
+	public string Query
+	{
+		get => query;
+		set { query = value; Raise(); }
+	}
+
+	int searchScope;
+	public int SearchScope
+	{
+		get => searchScope;
+		set { searchScope = value; Raise(); }
+	}
+
 	Movie? movie;
 	public Movie? Movie
 	{
@@ -84,3 +98,5 @@ class StubBound : View
 		Size availableSize) =>
 		Size.Zero;
 }
+
+class StubPage : ContentView;

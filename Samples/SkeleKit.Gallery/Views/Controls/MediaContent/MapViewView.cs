@@ -158,8 +158,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 			Kind = MapKind.Muted,
 			Pins = CreatePins(),
 			Overlays = overlays,
-			SelectionCommand = viewModel.SelectPinCommand,
-			PinSelected = viewModel.RecordPinSelection,
+			PinCommand = viewModel.SelectPinCommand,
 			CornerRadius = 18
 		};
 

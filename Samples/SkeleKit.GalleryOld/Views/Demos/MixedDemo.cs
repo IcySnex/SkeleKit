@@ -27,7 +27,7 @@ public class MixedDemo : ContentView<MixedDemoViewModel>
 			ItemTemplate = () => new MovieCell(),
 			HeaderTemplate = () => new RowHeader(),
 			GroupedItemsSource = viewModel.Rows,
-			SelectionCommand = viewModel.OpenCommand,
+			ItemCommand = viewModel.OpenCommand,
 			HighlightsSelection = false,
 			Prefetch = movie => movie.PosterUrl
 		};

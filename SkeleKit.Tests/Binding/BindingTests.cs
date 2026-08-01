@@ -41,6 +41,52 @@ public class BindingTests
 		Assert.False(view.IsEnabled.Value);
 	}
 
+	[Fact]
+	public void SearchState_RoundTrips()
+	{
+		MovieViewModel viewModel = new() { Query = "SkeleKit", SearchScope = 1 };
+		StubPage page = new()
+		{
+			SearchText = BindingFactory.Bind(
+				(MovieViewModel vm) => vm.Query,
+				static (vm, value) => vm.Query = value ?? ""),
+			SearchScopeIndex = BindingFactory.Bind(
+				(MovieViewModel vm) => vm.SearchScope,
+				static (vm, value) => vm.SearchScope = value)
+		};
+		page.BindingContext = viewModel;
+
+		Assert.Equal("SkeleKit", page.SearchText.Value);
+		Assert.Equal(1, page.SearchScopeIndex.Value);
+
+		page.NotifySearch("bindings");
+		page.NotifySearchScope(2);
+
+		Assert.Equal("bindings", viewModel.Query);
+		Assert.Equal(2, viewModel.SearchScope);
+
+		viewModel.Query = "commands";
+		viewModel.SearchScope = 3;
+
+		Assert.Equal("commands", page.SearchText.Value);
+		Assert.Equal(3, page.SearchScopeIndex.Value);
+	}
+
+	[Fact]
+	public void SearchCommand_ReceivesCurrentText()
+	{
+		string? submitted = null;
+		StubPage page = new()
+		{
+			SearchText = "SkeleKit",
+			SearchCommand = Command.From<string>(value => submitted = value)
+		};
+
+		page.NotifySearchSubmitted();
+
+		Assert.Equal("SkeleKit", submitted);
+	}
+
 	// the neutral shim applies inline; this locks the marshalled refresh path end-to-end
 	[Fact]
 	public async Task OneWay_TracksChangesFromBackgroundThread()

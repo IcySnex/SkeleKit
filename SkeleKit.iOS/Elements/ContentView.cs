@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 namespace SkeleKit;
 
@@ -111,9 +112,9 @@ public abstract partial class ContentView : Panel
 	public bool HidesTabBar { get; set; }
 
 	/// <summary>
-	/// Invoked when this page's tab is tapped while already selected, replacing the default pop-to-root / scroll-to-top.
+	/// Command invoked when this page's tab is tapped while already selected, replacing the default pop-to-root / scroll-to-top.
 	/// </summary>
-	public Action? TabReselected { get; set; }
+	public ICommand? TabReselectedCommand { get; set; }
 
 	/// <summary>
 	/// The badge on this page's tab bar item, or null for none.
@@ -189,6 +190,28 @@ public abstract partial class ContentView : Panel
 	public bool HidesSearchScopesWhenEmpty { get; set; }
 
 	/// <summary>
+	/// The search field's text. Two-way by default.
+	/// </summary>
+	public Bindable<string?> SearchText
+	{
+		get => searchText;
+		set => searchTextBinding = Register(searchTextBinding, value, value => Set(ref searchText, value, ApplySearchText, affectsMeasure: false));
+	}
+	string? searchText;
+	Binding<string?>? searchTextBinding;
+
+	/// <summary>
+	/// The selected search scope index. Two-way by default.
+	/// </summary>
+	public Bindable<int> SearchScopeIndex
+	{
+		get => searchScopeIndex;
+		set => searchScopeIndexBinding = Register(searchScopeIndexBinding, value, value => Set(ref searchScopeIndex, value, ApplySearchScope, affectsMeasure: false));
+	}
+	int searchScopeIndex;
+	Binding<int>? searchScopeIndexBinding;
+
+	/// <summary>
 	/// Invoked as the user types in the search field.
 	/// </summary>
 	public Action<string>? SearchChanged { get; set; }
@@ -197,6 +220,11 @@ public abstract partial class ContentView : Panel
 	/// Invoked with the selected index when the user switches search scope.
 	/// </summary>
 	public Action<int>? SearchScopeChanged { get; set; }
+
+	/// <summary>
+	/// Command invoked when the user submits the current search text.
+	/// </summary>
+	public ICommand? SearchCommand { get; set; }
 
 	/// <summary>
 	/// Invoked when the user cancels out of the search field.
@@ -225,9 +253,19 @@ public abstract partial class ContentView : Panel
 	void ApplyPrompt() =>
 		ApplyPromptCore();
 
+	void ApplySearchText() =>
+		ApplySearchTextCore();
+
+	void ApplySearchScope() =>
+		ApplySearchScopeCore();
+
 	partial void ApplyTitleCore();
 
 	partial void ApplyPromptCore();
+
+	partial void ApplySearchTextCore();
+
+	partial void ApplySearchScopeCore();
 
 	partial void ApplyTabBadgeCore();
 
@@ -272,12 +310,26 @@ public abstract partial class ContentView : Panel
 
 
 	internal void NotifySearch(
-		string text) =>
+		string text)
+	{
+		Set(ref searchText, text, affectsMeasure: false);
+		searchTextBinding?.PushToSource(text);
 		SearchChanged?.Invoke(text);
+	}
 
 	internal void NotifySearchScope(
-		int index) =>
+		int index)
+	{
+		Set(ref searchScopeIndex, index, affectsMeasure: false);
+		searchScopeIndexBinding?.PushToSource(index);
 		SearchScopeChanged?.Invoke(index);
+	}
+
+	internal void NotifySearchSubmitted()
+	{
+		if (SearchCommand is ICommand command && command.CanExecute(searchText))
+			command.Execute(searchText);
+	}
 
 	internal void NotifySearchCanceled() =>
 		SearchCanceled?.Invoke();

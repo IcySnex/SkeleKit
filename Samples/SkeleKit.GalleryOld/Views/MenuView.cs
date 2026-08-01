@@ -47,7 +47,7 @@ public class MenuView : ContentView<MenuViewModel>
 					Layout = CollectionLayout.List(),
 					ItemTemplate = () => new DemoRow(),
 					ItemsSource = ViewModel.Demos,
-					SelectionCommand = ViewModel.OpenDemoCommand,
+					ItemCommand = ViewModel.OpenDemoCommand,
 					IgnoresSafeArea = SafeAreaEdges.Bottom,
 					HighlightColor = Palette.Highlight
 				}.Row(1)

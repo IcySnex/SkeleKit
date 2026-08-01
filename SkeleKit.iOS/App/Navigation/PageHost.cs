@@ -592,6 +592,7 @@ internal sealed class PageHost : UIViewController
 		};
 
 		search.SearchBar.Placeholder = placeholder;
+		search.SearchBar.Text = page.SearchText.Value;
 		search.SearchBar.TextChanged += (_, e) =>
 		{
 			if (page.HidesSearchScopesWhenEmpty)
@@ -599,6 +600,7 @@ internal sealed class PageHost : UIViewController
 
 			page.NotifySearch(e.SearchText);
 		};
+		search.SearchBar.SearchButtonClicked += (_, _) => page.NotifySearchSubmitted();
 		search.SearchBar.CancelButtonClicked += (_, _) =>
 		{
 			if (page.HidesSearchScopesWhenEmpty)
@@ -610,12 +612,13 @@ internal sealed class PageHost : UIViewController
 		if (page.SearchScopes.Count > 0)
 		{
 			search.SearchBar.ScopeButtonTitles = [.. page.SearchScopes];
+			search.SearchBar.SelectedScopeButtonIndex = page.SearchScopeIndex.Value;
 			search.SearchBar.ScopeBarBackgroundImage = TransparentScopeBackground;
 			search.SearchBar.SelectedScopeButtonIndexChanged += (_, e) => page.NotifySearchScope((int)e.SelectedScope);
 
 			if (page.HidesSearchScopesWhenEmpty)
 			{
-				search.SearchBar.ShowsScopeBar = false;
+				search.SearchBar.ShowsScopeBar = !string.IsNullOrEmpty(page.SearchText.Value);
 				search.ScopeBarActivation = UISearchControllerScopeBarActivation.Manual;
 			}
 		}
@@ -624,6 +627,26 @@ internal sealed class PageHost : UIViewController
 		NavigationItem.HidesSearchBarWhenScrolling = page.HidesSearchBarWhenScrolling;
 
 		DefinesPresentationContext = true;
+	}
+
+	internal void ApplySearchText(
+		string? value)
+	{
+		if (search is null)
+			return;
+
+		if (search.SearchBar.Text != value)
+			search.SearchBar.Text = value;
+
+		if (Page?.HidesSearchScopesWhenEmpty is true)
+			search.SearchBar.SetShowsScopeBar(!string.IsNullOrEmpty(value), true);
+	}
+
+	internal void ApplySearchScope(
+		int value)
+	{
+		if (search is not null && search.SearchBar.SelectedScopeButtonIndex != value)
+			search.SearchBar.SelectedScopeButtonIndex = value;
 	}
 
 	void ApplyBackGuard()

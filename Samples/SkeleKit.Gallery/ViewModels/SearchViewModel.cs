@@ -9,9 +9,6 @@ internal sealed partial class SearchViewModel(
 	IGalleryCatalog catalog,
 	INavigator navigator) : ObservableObject
 {
-	GalleryArea? area;
-
-
 	[ObservableProperty]
 	public partial List<GalleryTopic> Results { get; set; } = [];
 
@@ -19,6 +16,9 @@ internal sealed partial class SearchViewModel(
 	[NotifyPropertyChangedFor(nameof(EmptyTitle))]
 	[NotifyPropertyChangedFor(nameof(EmptySummary))]
 	public partial string Query { get; set; } = "";
+
+	[ObservableProperty]
+	public partial int SelectedScopeIndex { get; set; }
 
 	public string EmptyTitle => string.IsNullOrWhiteSpace(Query)
 		? "Search in SkeleKit"
@@ -29,28 +29,13 @@ internal sealed partial class SearchViewModel(
 		: "Try another term or broaden the selected category.";
 
 
-	[RelayCommand]
-	void Search(
-		string value)
-	{
-		Query = value;
+	partial void OnQueryChanged(
+		string value) =>
 		Refresh();
-	}
 
-	[RelayCommand]
-	void SelectScope(
-		int index)
-	{
-		area = index switch
-		{
-			1 => GalleryArea.Controls,
-			2 => GalleryArea.Framework,
-			3 => GalleryArea.Platform,
-			_ => null
-		};
-
+	partial void OnSelectedScopeIndexChanged(
+		int value) =>
 		Refresh();
-	}
 
 
 	[RelayCommand]
@@ -64,10 +49,17 @@ internal sealed partial class SearchViewModel(
 	Task ShowInfoAsync() =>
 		navigator.PresentAsync<AboutViewModel>(ModalStyle.Sheet(Detent.Content, Detent.Large));
 
-	[RelayCommand]
-	void CancelSearch() =>
-		Search("");
+	internal void CancelSearch() =>
+		Query = "";
 
 	void Refresh() =>
-		Results = catalog.Search(Query, area);
+		Results = catalog.Search(
+			Query,
+			SelectedScopeIndex switch
+			{
+				1 => GalleryArea.Controls,
+				2 => GalleryArea.Framework,
+				3 => GalleryArea.Platform,
+				_ => null
+			});
 }

@@ -77,7 +77,7 @@ public class MapViewDemo : ContentView<MapViewDemoViewModel>
 				new MapCircle(Mission, 800) { StrokeColor = Colors.Green, FillColor = Colors.Green.WithAlpha(0.2) }
 			],
 			ClustersPins = true,
-			SelectionCommand = viewModel.SelectCommand
+			PinCommand = viewModel.SelectCommand
 		};
 
 		Content = map;

@@ -35,9 +35,13 @@ public class ChromeDemo : ContentView<ChromeDemoViewModel>
 		SearchScopes.Add("All");
 		SearchScopes.Add("Recent");
 		SearchScopes.Add("Starred");
-		SearchChanged = text => ViewModel.SearchStatus = $"Typing: {text}";
-		SearchScopeChanged = index => ViewModel.SearchStatus = $"Scope {index} selected";
-		SearchCanceled = () => ViewModel.SearchStatus = "Search cancelled";
+		SearchText = Bind(
+			model => model.SearchText,
+			static (model, value) => model.SearchText = value ?? "");
+		SearchScopeIndex = Bind(
+			model => model.SearchScopeIndex,
+			static (model, value) => model.SearchScopeIndex = value);
+		SearchCanceled = viewModel.CancelSearch;
 
 		BottomToolbarItems.Add(new() { Icon = "square.and.arrow.up", Command = Command.From(() => ViewModel.SearchStatus = "Share tapped") });
 		BottomToolbarItems.Add(new() { Icon = "star", Command = Command.From(() => ViewModel.SearchStatus = "Star tapped") });

@@ -886,7 +886,7 @@ public partial class CollectionView<TItem, TSection>
 		int section,
 		int index)
 	{
-		if (ItemAt(section, index) is not TItem item || Selection is not ICommand command)
+		if (ItemAt(section, index) is not TItem item || ItemActivation is not ICommand command)
 			return;
 
 		if (command.CanExecute(item))

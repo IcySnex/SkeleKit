@@ -118,9 +118,10 @@ Shape:
 - **Bindings** (neutral, unit-tested): `Bindable<T>`/`BindingExpression<T>`/`Binding<T>`,
   `BindingContext` inherited down the tree, `BindingFactory.Bind/BindPath`. Compiled getters +
   `[CallerArgumentExpression]` paths, per-segment INPC, zero reflection. Commands are never bindable
-  (plain `ICommand?` from the ctor-injected ViewModel, ADR-012); continuous streams are past-tense
-  `Action<T>` (`Panned`, `Scrolled`, `TextChanged`; `On…` = lifecycle overrides only). List sources
-  are `BindableList<T>`.
+  (plain `ICommand?` from the ctor-injected ViewModel, ADR-012); control values are two-way
+  `Bindable<T>` state with optional past-tense `Action<T>` observers, while operations use commands
+  and continuous signals remain Actions (`Panned`, `Scrolled`; `On…` = lifecycle overrides only).
+  List sources are `BindableList<T>`.
 - **App**: `SkeleApplication.CreateBuilder().UseServices().UsePages().Tabs().Build().Run(args)`.
   `ContentView<TVm>` takes its ViewModel by constructor; `PageHost` is the hidden
   `UIViewController`. `INavigator` is ViewModel-first push/pop/present + alert/confirm/sheet.
@@ -139,7 +140,7 @@ Shape:
   inits → theme → `Style` → local). Plain statics, no `ResourceDictionary` (ADR-008).
 - **CollectionView<TItem>** over `UICollectionView` + `UICollectionViewDiffableDataSource` (UIKit
   diffs). `ItemView<TItem>` built once per recycled cell, rebound on reuse. `CollectionLayout.List/
-  Grid/Carousel`, sections, `SelectionCommand`, `EmptyView`, swipe/context/reorder/prefetch. One
+  Grid/Carousel`, sections, `ItemCommand`, `EmptyView`, swipe/context/reorder/prefetch. One
   cached `ItemKey` per item (roots the peers); snapshots coalesce onto the next run-loop turn.
 
 Hard-won rules (load-bearing — don't relearn):

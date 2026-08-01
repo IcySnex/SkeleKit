@@ -40,8 +40,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   via the accessory environment trait — the bar minimizes now (`Tabs.Minimizes()`) and the
   accessory docks inline automatically, but there is no API yet for a condensed tree in that
   state.
-- ~~★ **Search**~~ — **done** (`HidesSearchBarWhenScrolling`, `SearchScopes` +
-  `SearchScopeChanged`, `SearchCancelled`, `SearchObscuresBackground`).
+- ~~★ **Search**~~ — **done** (two-way `SearchText`/`SearchScopeIndex`, optional change/cancel
+  callbacks, `SearchCommand`, `HidesSearchBarWhenScrolling`, `SearchScopes`, and
+  `SearchObscuresBackground`).
 - ◆ (skip) **Search suggestions** — built on `UISearchSuggestionItem` 2026-07-15, then **removed
   the same day**: with a nil results controller, UIKit's built-in presentation is a flat gray
   panel below an immovable dead gap (verified on the iOS 26.5 sim: scopes, `ObscuresBackground`
@@ -215,8 +216,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `Region`, `Kind` (Standard/Muted/Satellite/Hybrid), `ShowsUserLocation`, interaction toggles
   (`Scroll`/`Zoom`/`Rotate`/`PitchEnabled`) and chrome (`ShowsCompass`/`Scale`/`Traffic`). `Pins` is a
   `BindableList<MapPin>` (coordinate, title, subtitle, SF-symbol glyph, tint) rendered as
-  `MKMarkerAnnotationView` with native title/subtitle callouts; `SelectionCommand`/`PinSelected` fire
-  on tap. A pin can instead supply `Marker`/`Callout` builders (`Func<View>`) for arbitrary content,
+  `MKMarkerAnnotationView` with native title/subtitle callouts; `PinCommand` fires on tap. A pin can
+  instead supply `Marker`/`Callout` builders (`Func<View>`) for arbitrary content,
   and `Overlays` (`BindableList<MapOverlay>` = `MapPolyline`/`MapPolygon`/`MapCircle` with stroke/fill/
   dash) draw shapes beneath the pins. `ClustersPins` collapses nearby pins into counted clusters (with
   an optional `ClusterMarker` view builder). Geography is neutral primitives (`Coordinate`,

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using System.Windows.Input;
 
 namespace SkeleKit;
 
@@ -157,9 +158,9 @@ public class SkeleApplication
 
 		PageHost? root = stack.ViewControllers?.FirstOrDefault() as PageHost;
 
-		if (root?.Page?.TabReselected is Action handler)
+		if (root?.Page?.TabReselectedCommand is ICommand command && command.CanExecute(null))
 		{
-			handler();
+			command.Execute(null);
 			return;
 		}
 

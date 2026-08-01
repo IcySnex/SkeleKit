@@ -133,8 +133,9 @@ public class MovieInfoView : ContentView<MovieInfoViewModel>
 - The `ViewModel` is **ctor-injected** (`: base(viewModel)`, resolved through DI) — no
   `OnViewModelAttached`; compose the tree against it directly and bind values/commands.
 - Lifecycle: `OnLoaded` / `OnAppearing` / `OnDisappearing` / `OnUnloaded`.
-- Page chrome as properties, not UIKit calls: `Title` (bindable), `TitleStyle`, `ToolbarItems`,
-  `HidesNavigationBar`, `BackgroundStyle`, `SearchPlaceholder`/`SearchChanged`, `ScrollsUnderBars`.
+- Page chrome as properties, not UIKit calls: `Title`, `SearchText`, and `SearchScopeIndex` are
+  bindable; `TitleStyle`, `ToolbarItems`, `HidesNavigationBar`, `BackgroundStyle`,
+  `SearchPlaceholder`, and `ScrollsUnderBars` are configuration.
 - A hidden `PageHost : UIViewController` hosts the page (`ContentView.Controller` escape hatch).
 
 ### Navigation (view-centric registration, ViewModel-first navigation)
@@ -169,7 +170,7 @@ new CollectionView<Movie>
     Layout       = CollectionLayout.Grid(columns: 3, spacing: 12),   // or .List(grouped:), .Carousel()
     ItemsSource  = Bind<IReadOnlyList<Movie>?>(vm => vm.Movies),
     ItemTemplate = () => new PosterCell(),                           // built once per recycled cell
-    SelectionCommand = ViewModel.OpenMovieCommand
+    ItemCommand = ViewModel.OpenMovieCommand
 }
 ```
 

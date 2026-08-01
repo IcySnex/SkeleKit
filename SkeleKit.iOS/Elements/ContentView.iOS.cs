@@ -58,6 +58,12 @@ public abstract partial class ContentView
 		}
 	}
 
+	partial void ApplySearchTextCore() =>
+		Host?.ApplySearchText(SearchText.Value);
+
+	partial void ApplySearchScopeCore() =>
+		Host?.ApplySearchScope(SearchScopeIndex.Value);
+
 	partial void ApplyTabBadgeCore()
 	{
 		if (Host is not PageHost host)

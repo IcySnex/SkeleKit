@@ -99,8 +99,7 @@ Embeds an interactive map in the tree, backed by a UIKit map view.
 | Property | `SkeleKit.MapView.Overlays` | public get/set | C# default | No | Invalidates measure | The shapes drawn on the map beneath its pins. |
 | Property | `SkeleKit.MapView.ClustersPins` | public get/set | false | No | Visual/interaction only | Whether nearby pins collapse into a single counted marker that splits apart on zoom. |
 | Property | `SkeleKit.MapView.ClusterMarker` | public get/set | null | No | Visual/interaction only | Builds a custom view for a cluster from its pin count, or null for the native counted marker. Changing it reloads the current pins. Only used while `MapView.ClustersPins` is on. |
-| Property | `SkeleKit.MapView.SelectionCommand` | public get/set | null | No | No automatic invalidation | Invoked with the tapped pin. |
-| Property | `SkeleKit.MapView.PinSelected` | public get/set | null | No | No automatic invalidation | Called with the pin the user tapped. |
+| Property | `SkeleKit.MapView.PinCommand` | public get/set | null | No | No automatic invalidation | Command invoked with the tapped pin. |
 | Method | `SkeleKit.MapView.SetRegion(SkeleKit.MapRegion,System.Boolean)` | public | n/a | n/a | n/a | Moves the map to a region. |
 | Method | `SkeleKit.MapView.MeasureOverride(SkeleKit.Size)` | protected override | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 | Method | `SkeleKit.MapView.#ctor` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
@@ -110,7 +109,7 @@ Embeds an interactive map in the tree, backed by a UIKit map view.
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
 | Region and presentation | `Region`, `Kind`, `ScrollEnabled`, `ZoomEnabled`, `RotateEnabled`, `PitchEnabled`, `ShowsCompass`, `ShowsScale`, `ShowsTraffic`, `SetRegion` | Pan and zoom to verify the two-way region, move between animated city presets, compare every `MapKind`, choose all gestures, pan and zoom only, or a locked map, and toggle traffic. Rotate away from north to reveal the optional compass; change the zoom level to reveal the optional transient scale. |
-| Pins and overlays | `Pins`, `Overlays`, `ClustersPins`, `ClusterMarker`, `SelectionCommand`, `PinSelected` | Select native and custom markers, open native and custom callouts, verify the command and callback receive the same pin, compare MapKit's native counted cluster with a deliberately distinct indigo SkeleKit marker, and toggle a polyline, polygon, and circle together. |
+| Pins and overlays | `Pins`, `Overlays`, `ClustersPins`, `ClusterMarker`, `PinCommand` | Select native and custom markers, open native and custom callouts, verify the command receives the pin, compare MapKit's native counted cluster with a deliberately distinct indigo SkeleKit marker, and toggle a polyline, polygon, and circle together. |
 | User location | `ShowsUserLocation` | Permission-dependent and intentionally omitted from the gallery target. Enable it only in an app containing `NSLocationWhenInUseUsageDescription`, then verify the system-authorized blue location marker appears. |
 
 ```csharp
@@ -153,8 +152,7 @@ MapView places = new()
 	Overlays = overlays,
 	ClustersPins = true,
 	ClusterMarker = BuildCluster,
-	SelectionCommand = viewModel.SelectPinCommand,
-	PinSelected = viewModel.RecordPinSelection
+	PinCommand = viewModel.SelectPinCommand
 };
 ```
 

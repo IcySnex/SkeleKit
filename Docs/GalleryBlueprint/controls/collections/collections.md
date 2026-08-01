@@ -56,7 +56,7 @@ A data-driven list, grid, or carousel whose groups carry their own section model
 | Property | `SkeleKit.CollectionView`2.FooterTemplate` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Builds a section footer. Bound to the section model. |
 | Property | `SkeleKit.CollectionView`2.Layout` | public/protected as emitted | implementation-defined; inspect source | No | n/a | How the items are arranged. |
 | Property | `SkeleKit.CollectionView`2.SectionLayout` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Gives each section its own layout, or null to arrange every section with `CollectionView`2.Layout`. Mixes arrangements in one collection, like a carousel row above a list. Every section shares the one `CollectionView`2.ItemTemplate`. |
-| Property | `SkeleKit.CollectionView`2.SelectionCommand` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Invoked with the tapped item. |
+| Property | `SkeleKit.CollectionView`2.ItemCommand` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Command invoked with the tapped item. |
 | Property | `SkeleKit.CollectionView`2.ShowsSeparators` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Whether rows draw their separator lines. List layouts only. |
 | Property | `SkeleKit.CollectionView`2.SeparatorInsets` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Leading/trailing insets for the separator lines, or null for the system default. List layouts only. |
 | Property | `SkeleKit.CollectionView`2.HighlightsSelection` | public/protected as emitted | implementation-defined; inspect source | No | n/a | Whether a tapped row shows a highlight until the page is next appeared. |
@@ -86,7 +86,7 @@ A data-driven list, grid, or carousel whose groups carry their own section model
 
 | Scenario | Declared properties covered | Interaction and expected result |
 | --- | --- | --- |
-| Deliberate property/state matrix | `ItemsSource`, `GroupedItemsSource`, `ItemTemplate`, `HeaderTemplate`, `FooterTemplate`, `Layout`, `SectionLayout`, `SelectionCommand`, `ShowsSeparators`, `SeparatorInsets`, `HighlightsSelection`, `HighlightColor`, `SectionIndexTitle`, `IndexTitles`, `LoadMoreCommand`, `LoadMoreThreshold`, `EmptyView`, `RefreshCommand`, `IsRefreshing`, `SwipeActions`, `ItemContextMenu`, `ItemPreview`, `PreviewShape`, `PreviewCommand`, `Prefetch`, `ReorderCommand`, `IsEditing`, `SelectedItems`, `Scrolled` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
+| Deliberate property/state matrix | `ItemsSource`, `GroupedItemsSource`, `ItemTemplate`, `HeaderTemplate`, `FooterTemplate`, `Layout`, `SectionLayout`, `ItemCommand`, `ShowsSeparators`, `SeparatorInsets`, `HighlightsSelection`, `HighlightColor`, `SectionIndexTitle`, `IndexTitles`, `LoadMoreCommand`, `LoadMoreThreshold`, `EmptyView`, `RefreshCommand`, `IsRefreshing`, `SwipeActions`, `ItemContextMenu`, `ItemPreview`, `PreviewShape`, `PreviewCommand`, `Prefetch`, `ReorderCommand`, `IsEditing`, `SelectedItems`, `Scrolled` | Give every listed property at least one nondefault or semantic-edge state. Toggle each independently, preserve focus/selection where relevant, and match the default/semantics table. Repeat enabled/disabled, empty/populated, focused/unfocused, selected/unselected, light/dark, Dynamic Type, and iPad presentation where supported. |
 
 ```csharp
 // Compile this specimen inside a SkeleKit page; each matrix row supplies a deliberate value.
@@ -95,4 +95,3 @@ static void Showcase(CollectionView<string, ISection<string>> specimen)
 	_ = specimen; // configure the documented properties for the selected matrix row
 }
 ```
-

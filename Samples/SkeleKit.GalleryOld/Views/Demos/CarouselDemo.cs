@@ -32,7 +32,7 @@ public class CarouselDemo : ContentView<CarouselDemoViewModel>
 					Layout = CollectionLayout.Carousel(itemWidth: 130, spacing: 12, snap: CarouselSnap.LeadingBoundaryPeek),
 					ItemTemplate = () => new MovieCell(),
 					ItemsSource = ViewModel.Movies,
-					SelectionCommand = ViewModel.OpenCommand,
+					ItemCommand = ViewModel.OpenCommand,
 					Height = 260,
 					HighlightsSelection = false,
 
