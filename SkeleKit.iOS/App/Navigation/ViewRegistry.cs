@@ -7,10 +7,31 @@ internal sealed class ViewRegistry
 	sealed record PageRegistration(
 		Type View,
 		Type? ViewModel,
-		Func<IServiceProvider, object?, ContentView> Create,
+		Func<IServiceProvider, object?, ContentView> Factory,
 		bool Singleton)
 	{
 		public ContentView? Instance { get; set; }
+	}
+
+
+	static ContentView Create(
+		PageRegistration registration,
+		IServiceProvider services,
+		object? viewModel = null,
+		bool recreate = false)
+	{
+		if (!recreate && registration.Singleton && registration.Instance is ContentView existing)
+			return existing;
+
+		if (registration.ViewModel is Type viewModelType && viewModel is null)
+			viewModel = services.GetRequiredService(viewModelType);
+
+		ContentView page = registration.Factory(services, viewModel);
+
+		if (registration.Singleton)
+			registration.Instance = page;
+
+		return page;
 	}
 
 
@@ -69,26 +90,6 @@ internal sealed class ViewRegistry
 	{
 		if (!byView.ContainsKey(view))
 			throw new InvalidOperationException($"'{view.Name}' is not registered. Add [Page] or register it in UsePages(...).");
-	}
-
-	ContentView Create(
-		PageRegistration registration,
-		IServiceProvider services,
-		object? viewModel = null,
-		bool recreate = false)
-	{
-		if (!recreate && registration.Singleton && registration.Instance is ContentView existing)
-			return existing;
-
-		if (registration.ViewModel is Type viewModelType && viewModel is null)
-			viewModel = services.GetRequiredService(viewModelType);
-
-		ContentView page = registration.Create(services, viewModel);
-
-		if (registration.Singleton)
-			registration.Instance = page;
-
-		return page;
 	}
 
 	public ContentView CreatePage(

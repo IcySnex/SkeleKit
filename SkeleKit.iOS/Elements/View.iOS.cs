@@ -6,6 +6,7 @@ namespace SkeleKit;
 
 public abstract partial class View
 {
+	// ReSharper disable once RedundantAssignment
 	static partial void GetApplicationTint(
 		ref Color? tint) =>
 		tint = SkeleApplication.Current?.Tint;

@@ -105,5 +105,5 @@ public static class BindableList
 	/// <returns>A list source over a copy of the items.</returns>
 	public static BindableList<TItem> Create<TItem>(
 		ReadOnlySpan<TItem> items) =>
-		new(items.ToArray());
+		new([.. items]);
 }

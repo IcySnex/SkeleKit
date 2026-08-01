@@ -326,10 +326,7 @@ public abstract partial class ContentView : Panel
 		if (Content is View content)
 		{
 			PrepareContentLayoutCore(content);
-			content.Arrange(
-				new Rect(
-					new Point(Padding.Left, Padding.Top),
-					finalSize.Deflate(Padding)));
+			content.Arrange(new(new(Padding.Left, Padding.Top), finalSize.Deflate(Padding)));
 		}
 
 		return finalSize;

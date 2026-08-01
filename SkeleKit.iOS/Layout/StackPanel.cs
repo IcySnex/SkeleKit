@@ -10,10 +10,9 @@ public class StackPanel : Panel
 	/// </summary>
 	public Orientation Orientation
 	{
-		get => orientation;
-		set => Set(ref orientation, value);
-	}
-	Orientation orientation = Orientation.Vertical;
+		get;
+		set => Set(ref field, value);
+	} = Orientation.Vertical;
 
 	/// <summary>
 	/// The gap in points inserted between consecutive visible children.

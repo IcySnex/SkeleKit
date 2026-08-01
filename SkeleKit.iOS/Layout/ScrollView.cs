@@ -23,10 +23,9 @@ public partial class ScrollView : Panel
 	/// </summary>
 	public Orientation Orientation
 	{
-		get => orientation;
-		set => Set(ref orientation, value, ApplyBehavior);
-	}
-	Orientation orientation = Orientation.Vertical;
+		get;
+		set => Set(ref field, value, ApplyBehavior);
+	} = Orientation.Vertical;
 
 	/// <summary>
 	/// Whether the content is inset so the keyboard never covers the focused control.

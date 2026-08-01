@@ -198,12 +198,17 @@ public sealed class TabsBuilder
 	{
 		foreach (Node node in nodes)
 		{
-			if (node is Leaf leaf)
-				yield return leaf.View;
-			else if (node is GroupNode group)
+			switch (node)
 			{
-				foreach (Type view in Views(group.Children))
-					yield return view;
+				case Leaf leaf:
+					yield return leaf.View;
+					break;
+				case GroupNode group:
+					{
+						foreach (Type view in Views(group.Children))
+							yield return view;
+						break;
+					}
 			}
 		}
 	}

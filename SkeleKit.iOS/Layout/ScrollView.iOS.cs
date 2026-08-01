@@ -266,7 +266,7 @@ public partial class ScrollView
 
 		double duration = UIKeyboard.AnimationDurationFromNotification(notification);
 		UIViewAnimationOptions options =
-			(UIViewAnimationOptions)((uint)UIKeyboard.AnimationCurveFromNotification(notification) << 16)
+			(UIViewAnimationOptions)(UIKeyboard.AnimationCurveFromNotification(notification) << 16)
 			| UIViewAnimationOptions.AllowUserInteraction
 			| UIViewAnimationOptions.BeginFromCurrentState;
 

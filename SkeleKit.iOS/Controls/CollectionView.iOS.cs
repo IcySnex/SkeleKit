@@ -1343,12 +1343,12 @@ internal sealed class EmptyCollectionHost : UIView
 	{
 		base.LayoutSubviews();
 
-		if (Content is not View content)
+		if (Content is not View)
 			return;
 
-		nfloat height = (nfloat)Math.Max(0, (double)(Bounds.Height - keyboardCover));
-		content.Measure(new(Bounds.Width, height));
-		content.Arrange(new(0, 0, Bounds.Width, height));
+		nfloat height = (nfloat)Math.Max(0, Bounds.Height - keyboardCover);
+		Content.Measure(new(Bounds.Width, height));
+		Content.Arrange(new(0, 0, Bounds.Width, height));
 	}
 }
 

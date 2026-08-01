@@ -298,9 +298,7 @@ public class TextField : Control
 			? Keyboards.Toolbar(this, keyboardToolbar)
 			: null;
 
-		Ui.InputAccessoryView = accessoryHost is UIView host
-			? host
-			: accessoryBar?.Bar;
+		Ui.InputAccessoryView = accessoryHost as UIView ?? accessoryBar?.Bar;
 		ReloadKeyboard();
 	}
 

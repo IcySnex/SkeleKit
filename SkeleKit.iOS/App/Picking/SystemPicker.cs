@@ -104,7 +104,7 @@ internal sealed class SystemPicker : ISystemPicker
 			PHPickerResult result = results[i];
 
 			NSData data = await result.ItemProvider.LoadDataRepresentationAsync(UTTypes.Image.Identifier);
-			assets[i] = new(data.ToArray(), result.ItemProvider.SuggestedName ?? "image");
+			assets[i] = new([.. data], result.ItemProvider.SuggestedName ?? "image");
 		}
 
 		return assets;
@@ -116,7 +116,7 @@ internal sealed class SystemPicker : ISystemPicker
 		if (Top() is not UIViewController top)
 			return null;
 
-		UTType[] types = extensions.Select(UTType.CreateFromExtension).OfType<UTType>().ToArray();
+		UTType[] types = [.. extensions.Select(UTType.CreateFromExtension).OfType<UTType>()];
 		if (types.Length == 0)
 			types = [UTTypes.Item];
 
@@ -133,6 +133,6 @@ internal sealed class SystemPicker : ISystemPicker
 			return null;
 
 		NSData data = NSData.FromUrl(url);
-		return new(data.ToArray(), url.LastPathComponent ?? "file");
+		return new([.. data], url.LastPathComponent ?? "file");
 	}
 }

@@ -178,7 +178,7 @@ public class Image : Control
 				Add(UIImageSymbolConfiguration.Create(SymbolColors[0].ToUIColor()));
 				break;
 			case > 1:
-				Add(UIImageSymbolConfiguration.Create(SymbolColors.Select(color => color.ToUIColor()).ToArray()));
+				Add(UIImageSymbolConfiguration.Create([.. SymbolColors.Select(color => color.ToUIColor())]));
 				break;
 		}
 

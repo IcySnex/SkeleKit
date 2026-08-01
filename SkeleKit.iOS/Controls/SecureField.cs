@@ -31,11 +31,13 @@ public class SecureField : TextField
 		revealButton.SetImage(glyph, UIControlState.Normal);
 
 		if (glyph is not null)
+		{
 			revealButton.Frame = new(
 				revealButton.Frame.X,
 				revealButton.Frame.Y,
 				glyph.Size.Width,
 				glyph.Size.Height);
+		}
 	}
 
 	void ToggleReveal()

@@ -188,7 +188,6 @@ public class SkeleApplication
 	readonly Type? rootView;
 	Color? tint;
 	Appearance appearance;
-	bool switchingTabs;
 
 	internal SkeleApplication(
 		SkeleApplicationBuilder builder)
@@ -224,7 +223,7 @@ public class SkeleApplication
 	AccessoryHost? footerHost;
 
 	internal bool AccessoryWanted => accessoryContent?.IsVisible.Value is true;
-	internal bool IsSwitchingTabs => switchingTabs;
+	internal bool IsSwitchingTabs { get; private set; }
 
 	internal Action? Backgrounded { get; set; }
 	internal Action? Foregrounded { get; set; }
@@ -342,7 +341,7 @@ public class SkeleApplication
 	}
 
 	void BeginTabSelection() =>
-		switchingTabs = true;
+		IsSwitchingTabs = true;
 
 	void SyncAccessory()
 	{
@@ -364,10 +363,10 @@ public class SkeleApplication
 	internal void CompleteTabSelection(
 		PageHost host)
 	{
-		if (!switchingTabs || !ReferenceEquals(CurrentStack()?.TopViewController, host))
+		if (!IsSwitchingTabs || !ReferenceEquals(CurrentStack()?.TopViewController, host))
 			return;
 
-		switchingTabs = false;
+		IsSwitchingTabs = false;
 	}
 
 	internal void NotifyBackground() =>

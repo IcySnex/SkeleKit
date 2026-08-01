@@ -126,10 +126,10 @@ internal sealed class Navigator(
 			DetentKind.Content => ContentDetent(detent, host),
 			DetentKind.Height => UISheetPresentationControllerDetent.Create(
 				CustomIdentifier(detent),
-				context => (nfloat)detent.Resolve((double)context.MaximumDetentValue)),
+				context => (nfloat)detent.Resolve(context.MaximumDetentValue)),
 			_ => UISheetPresentationControllerDetent.Create(
 				CustomIdentifier(detent),
-				context => (nfloat)detent.Resolve((double)context.MaximumDetentValue))
+				context => (nfloat)detent.Resolve(context.MaximumDetentValue))
 		};
 
 	static UISheetPresentationControllerDetent ContentDetent(

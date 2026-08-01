@@ -9,7 +9,7 @@ public class Grid : Panel
 
 
 	static IReadOnlyList<GridLength> EffectiveTracks(
-		IReadOnlyList<GridLength> declared) =>
+		GridLengthCollection declared) =>
 		declared.Count > 0 ? declared : SingleStar;
 
 	static (int Start, int Span) AxisPlacement(
