@@ -91,6 +91,7 @@ public class TextField : Control
 	}
 	string? text;
 	Binding<string?>? textBinding;
+	bool suppressNativeTextChange;
 
 	/// <summary>
 	/// Placeholder text shown when empty.
@@ -363,6 +364,9 @@ public class TextField : Control
 
 	void OnEdited()
 	{
+		if (suppressNativeTextChange)
+			return;
+
 		string? value = Ui.Text;
 
 		Set(ref text, value);
@@ -372,12 +376,30 @@ public class TextField : Control
 			textBinding.PushToSource(value);
 	}
 
+	
+	private protected void RunNativeTextUpdate(
+		Action update)
+	{
+		suppressNativeTextChange = true;
+
+		try
+		{
+			update();
+		}
+		finally
+		{
+			suppressNativeTextChange = false;
+		}
+	}
+
 	void OnEditingEnded()
 	{
+		if (suppressNativeTextChange)
+			return;
+
 		if (textBinding?.Trigger is UpdateTrigger.FocusLost)
 			textBinding.PushToSource(Ui.Text);
 	}
-
 
 	private protected override UIView CreateNative()
 	{

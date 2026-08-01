@@ -11,10 +11,6 @@ public class SecureField : TextField
 	/// <summary>
 	/// Whether a trailing eye button toggles the masking of the entered text.
 	/// </summary>
-	/// <remarks>
-	/// Owns the trailing slot, so it wins over <see cref="TextField.TrailingIcon"/>.
-	/// Toggling preserves focus; turning it off restores masking.
-	/// </remarks>
 	public bool RevealButton
 	{
 		get;
@@ -42,15 +38,64 @@ public class SecureField : TextField
 
 	void ToggleReveal()
 	{
-		Ui.SecureTextEntry = !Ui.SecureTextEntry;
-
-		if (Ui.IsFirstResponder && Ui.Text is string text)
-		{
-			Ui.Text = "";
-			Ui.Text = text;
-		}
-
+		SetSecure(!Ui.SecureTextEntry);
 		UpdateRevealGlyph();
+	}
+
+	void SetSecure(
+		bool secure)
+	{
+		if (Ui.SecureTextEntry == secure)
+			return;
+
+		string? text = Ui.Text;
+		(nint Start, nint End)? selection = SelectionOffsets();
+		bool focused = Ui.IsFirstResponder;
+
+		if (secure && focused)
+		{
+			RunNativeTextUpdate(() =>
+			{
+				bool enabled = Ui.Enabled;
+				Ui.Enabled = false;
+				Ui.SecureTextEntry = true;
+				Ui.Enabled = enabled;
+
+				if (enabled)
+					Ui.BecomeFirstResponder();
+
+				if (text is not null)
+				{
+					Ui.Text = "";
+					Ui.InsertText(text);
+				}
+
+				if (selection.HasValue)
+					RestoreSelection(selection.Value.Start, selection.Value.End);
+			});
+		}
+		else
+			Ui.SecureTextEntry = secure;
+	}
+
+	(nint Start, nint End)? SelectionOffsets()
+	{
+		if (!Ui.IsFirstResponder || Ui.SelectedTextRange is not UITextRange selection)
+			return null;
+
+		return (
+			Ui.GetOffsetFromPosition(Ui.BeginningOfDocument, selection.Start),
+			Ui.GetOffsetFromPosition(Ui.BeginningOfDocument, selection.End));
+	}
+
+	void RestoreSelection(
+		nint startOffset,
+		nint endOffset)
+	{
+		UITextPosition start = Ui.GetPosition(Ui.BeginningOfDocument, startOffset);
+		UITextPosition end = Ui.GetPosition(Ui.BeginningOfDocument, endOffset);
+
+		Ui.SelectedTextRange = Ui.GetTextRange(start, end);
 	}
 
 
@@ -66,7 +111,7 @@ public class SecureField : TextField
 	{
 		if (!RevealButton)
 		{
-			Ui.SecureTextEntry = true;
+			SetSecure(true);
 			revealButton = null;
 			base.ApplyTrailing();
 			return;
