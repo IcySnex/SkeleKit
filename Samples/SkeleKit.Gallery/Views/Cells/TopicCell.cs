@@ -89,10 +89,10 @@ internal sealed class TopicCell : ItemView<GalleryTopic>
 	protected override void OnItemChanged(
 		GalleryTopic? item)
 	{
-		if (item is not GalleryTopic topic)
+		if (item is not GalleryTopic)
 			return;
 
-		icon.Tint = topic.Accent;
-		iconBackground.Background = topic.Accent.WithAlpha(0.14);
+		icon.Tint = item.Accent;
+		iconBackground.Background = item.Accent.WithAlpha(0.14);
 	}
 }

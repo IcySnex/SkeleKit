@@ -1,8 +1,8 @@
 using SkeleKit.Gallery.Models;
-using SkeleKit.Gallery.ViewModels;
 using SkeleKit.Gallery.Views.Cells;
+using CatalogViewModel = SkeleKit.Gallery.ViewModels.Abstract.CatalogViewModel;
 
-namespace SkeleKit.Gallery.Views.Shared;
+namespace SkeleKit.Gallery.Views.Abstract;
 
 internal abstract class CatalogView<TViewModel> : TintView<TViewModel>
 	where TViewModel : CatalogViewModel

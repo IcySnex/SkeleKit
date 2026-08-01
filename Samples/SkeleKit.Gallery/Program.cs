@@ -1,22 +1,26 @@
 using Microsoft.Extensions.DependencyInjection;
 using SkeleKit;
 using SkeleKit.Gallery.Services;
+using SkeleKit.Gallery.Services.Abstract;
 using SkeleKit.Gallery.ViewModels;
 using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
 using SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 using SkeleKit.Gallery.ViewModels.Controls.TextInput;
 using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
-using SkeleKit.Gallery.Views.Pages;
+using SkeleKit.Gallery.Views;
 
 SkeleApplication.CreateBuilder()
 	.UseServices(services =>
 	{
 		services.AddSingleton<IGalleryCatalog, GalleryCatalog>();
+
 		services.AddTransient<ControlsViewModel>();
 		services.AddTransient<FrameworkViewModel>();
 		services.AddTransient<PlatformViewModel>();
 		services.AddTransient<SearchViewModel>();
+
 		services.AddTransient<AboutViewModel>();
+
 		services.AddTransient<ActivityIndicatorViewModel>();
 		services.AddTransient<ButtonViewModel>();
 		services.AddTransient<ColorWellViewModel>();

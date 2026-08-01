@@ -1,9 +1,9 @@
 using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.ViewModels;
+using SkeleKit.Gallery.Views.Abstract;
 using SkeleKit.Gallery.Views.Cells;
-using SkeleKit.Gallery.Views.Shared;
 
-namespace SkeleKit.Gallery.Views.Pages;
+namespace SkeleKit.Gallery.Views;
 
 [Page]
 internal sealed class SearchView : TintView<SearchViewModel>

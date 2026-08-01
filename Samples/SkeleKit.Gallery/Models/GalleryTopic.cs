@@ -6,7 +6,7 @@ internal sealed record GalleryTopic(
 	string Symbol,
 	Color Accent,
 	GalleryArea Area,
-	Type? Destination = null)
+	Type Destination)
 {
 	public string SearchSummary => $"{Area} · {Summary}";
 }

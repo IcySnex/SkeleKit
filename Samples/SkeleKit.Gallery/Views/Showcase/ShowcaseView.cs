@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using SkeleKit.Gallery.ViewModels.Showcase;
-using SkeleKit.Gallery.Views.Shared;
+using SkeleKit.Gallery.Views.Abstract;
 
 namespace SkeleKit.Gallery.Views.Showcase;
 

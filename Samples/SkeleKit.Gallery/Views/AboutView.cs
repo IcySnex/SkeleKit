@@ -1,7 +1,6 @@
 using SkeleKit.Gallery.ViewModels;
-using SkeleKit.Gallery.Views.Shared;
 
-namespace SkeleKit.Gallery.Views.Pages;
+namespace SkeleKit.Gallery.Views;
 
 [Page]
 internal sealed class AboutView : ContentView<AboutViewModel>
@@ -92,6 +91,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 						Icon = "arrow.up.right",
 						Kind = ButtonStyle.FilledCapsule,
 						Size = ButtonSize.Large,
+						Tint = Colors.Indigo,
 						Command = viewModel.OpenGitHubCommand
 					},
 
@@ -101,6 +101,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 						Icon = "doc.text",
 						Kind = ButtonStyle.Gray,
 						Size = ButtonSize.Large,
+						Tint = Colors.Indigo,
 						Command = Command.From(() => icon.IsVisible = !icon.IsVisible.Value)
 					}
 				}

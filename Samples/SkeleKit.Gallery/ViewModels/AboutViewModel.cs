@@ -3,18 +3,10 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed partial class AboutViewModel : ObservableObject
+internal sealed partial class AboutViewModel(
+	INavigator navigator) : ObservableObject
 {
 	const string RepositoryUrl = "https://github.com/IcySnex/SkeleKit";
-
-	readonly INavigator navigator;
-
-
-	public AboutViewModel(
-		INavigator navigator)
-	{
-		this.navigator = navigator;
-	}
 
 
 	[RelayCommand]

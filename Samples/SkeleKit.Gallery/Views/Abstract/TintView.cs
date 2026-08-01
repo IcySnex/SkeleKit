@@ -1,4 +1,4 @@
-namespace SkeleKit.Gallery.Views.Shared;
+namespace SkeleKit.Gallery.Views.Abstract;
 
 internal abstract class TintView<TViewModel> : ContentView<TViewModel>
 	where TViewModel : class

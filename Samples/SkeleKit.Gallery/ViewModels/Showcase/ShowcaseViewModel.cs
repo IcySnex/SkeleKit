@@ -6,8 +6,7 @@ namespace SkeleKit.Gallery.ViewModels.Showcase;
 internal abstract partial class ShowcaseViewModel : ObservableObject
 {
 	[ObservableProperty]
-	Appearance appearance = SkeleApplication.Current?.Appearance ?? Appearance.System;
-
+	public partial Appearance Appearance { get; set; } = SkeleApplication.Current?.Appearance ?? Appearance.System;
 
 	[RelayCommand]
 	void CycleAppearance() =>

@@ -1,11 +1,8 @@
-using SkeleKit.Gallery.Services;
+using SkeleKit.Gallery.Services.Abstract;
+using SkeleKit.Gallery.ViewModels.Abstract;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed class PlatformViewModel : CatalogViewModel
-{
-	public PlatformViewModel(
-		IGalleryCatalog catalog,
-		INavigator navigator) : base(navigator, catalog.Platform)
-	{ }
-}
+internal sealed class PlatformViewModel(
+	IGalleryCatalog catalog,
+	INavigator navigator) : CatalogViewModel(navigator, catalog.Platform);

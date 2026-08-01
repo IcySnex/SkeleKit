@@ -1,11 +1,8 @@
-using SkeleKit.Gallery.Services;
+using SkeleKit.Gallery.Services.Abstract;
+using SkeleKit.Gallery.ViewModels.Abstract;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed class ControlsViewModel : CatalogViewModel
-{
-	public ControlsViewModel(
-		IGalleryCatalog catalog,
-		INavigator navigator) : base(navigator, catalog.Controls)
-	{ }
-}
+internal sealed class ControlsViewModel(
+	IGalleryCatalog catalog,
+	INavigator navigator) : CatalogViewModel(navigator, catalog.Controls);

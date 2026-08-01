@@ -1,38 +1,28 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SkeleKit.Gallery.Models;
-using SkeleKit.Gallery.Services;
-using SkeleKit.Gallery.Views.Pages;
+using SkeleKit.Gallery.Services.Abstract;
+using SkeleKit.Gallery.Views;
 
 namespace SkeleKit.Gallery.ViewModels;
 
-internal sealed partial class SearchViewModel : ObservableObject
+internal sealed partial class SearchViewModel(
+	IGalleryCatalog catalog,
+	INavigator navigator) : ObservableObject
 {
-	readonly IGalleryCatalog catalog;
-	readonly INavigator navigator;
-
 	GalleryArea? area;
 
 
-	public SearchViewModel(
-		IGalleryCatalog catalog,
-		INavigator navigator)
-	{
-		this.catalog = catalog;
-		this.navigator = navigator;
-	}
-
-
 	[ObservableProperty]
-	List<GalleryTopic> results = [];
+	public partial List<GalleryTopic> Results { get; set; } = [];
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(EmptyTitle))]
 	[NotifyPropertyChangedFor(nameof(EmptySummary))]
-	string query = "";
+	public partial string Query { get; set; } = "";
 
 	public string EmptyTitle => string.IsNullOrWhiteSpace(Query)
-		? "Find anything in SkeleKit"
+		? "Search in SkeleKit"
 		: "No matching APIs";
 
 	public string EmptySummary => string.IsNullOrWhiteSpace(Query)
