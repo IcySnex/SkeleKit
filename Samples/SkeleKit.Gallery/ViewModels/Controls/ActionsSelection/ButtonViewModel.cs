@@ -127,7 +127,7 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 	bool isButtonEnabled = true;
 
 	[ObservableProperty]
-	string stateStatus = "Tap the button to run its command.";
+	string stateStatus = "0 taps";
 
 	int tapCount;
 
@@ -141,8 +141,7 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 				Kind = ButtonStyle.Filled,
 				IsLoading = {{Boolean(IsLoading)}},
 				IsDestructive = {{Boolean(IsDestructive)}},
-				Command = viewModel.TapCommand,
-				CommandParameter = "Button showcase"
+				Command = viewModel.TapCommand
 			};
 			""");
 
@@ -181,15 +180,13 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 
 
 	[RelayCommand(CanExecute = nameof(CanTap))]
-	void Tap(
-		string? source)
+	void Tap()
 	{
 		tapCount++;
-		StateStatus = $"Received “{source}” · {tapCount} tap{(tapCount == 1 ? "" : "s")}";
+		StateStatus = $"{tapCount} tap{(tapCount == 1 ? "" : "s")}";
 	}
 
-	bool CanTap(
-		string? source) =>
+	bool CanTap() =>
 		IsButtonEnabled;
 
 	[RelayCommand]

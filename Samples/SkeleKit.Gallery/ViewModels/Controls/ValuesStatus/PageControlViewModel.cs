@@ -42,11 +42,6 @@ internal sealed partial class PageControlViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(PageControlCode))]
 	bool allowsScrubbing = true;
 
-	[ObservableProperty]
-	string changeStatus = "PageChanged has not fired yet.";
-
-	int changeCount;
-
 	public string StateLabel =>
 		$"Page {Current + 1} of {Count}";
 
@@ -63,8 +58,7 @@ internal sealed partial class PageControlViewModel : ShowcaseViewModel
 				DotColor = Colors.Red.WithAlpha(0.25),
 				CurrentDotColor = Colors.Red,
 				HidesForSinglePage = {{Boolean(HidesForSinglePage)}},
-				AllowsScrubbing = {{Boolean(AllowsScrubbing)}},
-				PageChanged = viewModel.RecordPage
+				AllowsScrubbing = {{Boolean(AllowsScrubbing)}}
 			};
 			""")
 	];
@@ -81,14 +75,6 @@ internal sealed partial class PageControlViewModel : ShowcaseViewModel
 		Count = option.Value;
 		Current = Math.Min(Current, Count - 1);
 	}
-
-	internal void RecordPage(
-		int value)
-	{
-		changeCount++;
-		ChangeStatus = $"PageChanged · {value + 1} · {changeCount}";
-	}
-
 
 	static string Boolean(
 		bool value) =>

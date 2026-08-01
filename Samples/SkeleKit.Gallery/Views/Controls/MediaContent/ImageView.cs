@@ -22,6 +22,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 	{
 		Image image = new()
 		{
+			VerticalAlignment = VerticalAlignment.Center,
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Width = 280,
 			Height = 180,
@@ -69,6 +70,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 	{
 		Image symbol = new()
 		{
+			VerticalAlignment = VerticalAlignment.Center,
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Width = 120,
 			Height = 110,
@@ -143,6 +145,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 	{
 		Image symbol = new()
 		{
+			VerticalAlignment = VerticalAlignment.Center,
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Width = 120,
 			Height = 110,

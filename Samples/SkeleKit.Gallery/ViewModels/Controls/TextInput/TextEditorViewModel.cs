@@ -68,11 +68,6 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(BindingCode))]
 	string? text = "Build native iOS interfaces\nwith clean C# composition.";
 
-	[ObservableProperty]
-	string changeStatus = "TextChanged has not fired yet.";
-
-	int changeCount;
-
 	public string EditSummary
 	{
 		get
@@ -92,8 +87,7 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 			{
 				Text = Bind(
 					model => model.Text,
-					(model, value) => model.Text = value),
-				TextChanged = viewModel.RecordTextChanged
+					(model, value) => model.Text = value)
 			};
 			""");
 
@@ -223,14 +217,6 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 	[RelayCommand]
 	void ClearText() =>
 		Text = null;
-
-	internal void RecordTextChanged(
-		string value)
-	{
-		changeCount++;
-		ChangeStatus = $"TextChanged · {value.Length} characters · {changeCount}";
-	}
-
 
 	static IReadOnlyList<Span> Code(
 		string value) =>

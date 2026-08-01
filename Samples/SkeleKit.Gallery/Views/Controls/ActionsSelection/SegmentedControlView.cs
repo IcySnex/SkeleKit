@@ -18,10 +18,10 @@ internal sealed class SegmentedControlView : ShowcaseView<SegmentedControlViewMo
 	{
 		SegmentedControl sections = new()
 		{
+			VerticalAlignment = VerticalAlignment.Center,
 			SelectedIndex = Bind(
 				model => model.SelectedIndex,
-				static (model, value) => model.SelectedIndex = value),
-			SelectionChanged = viewModel.RecordSelection
+				static (model, value) => model.SelectedIndex = value)
 		};
 		sections.Items.Add("Overview");
 		sections.Items.Add("Details");
@@ -37,40 +37,9 @@ internal sealed class SegmentedControlView : ShowcaseView<SegmentedControlViewMo
 
 		AddShowcase(
 			"Selection & binding",
-			"Keep the selected index, visible segment and callback result synchronized.",
+			"Keep the selected index and visible segment synchronized through two-way binding.",
 			PreviewWithSettings(
-				ShowcaseBox.Canvas(
-					new StackPanel
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						VerticalAlignment = VerticalAlignment.Center,
-						MaxWidth = 320,
-						Spacing = 10,
-
-						Children =
-						{
-							sections,
-
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.SelectedTitle),
-								TextStyle = TextStyle.Subheadline,
-								FontWeight = FontWeight.Medium,
-								TextAlignment = TextAlignment.Center
-							},
-
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.SelectionStatus),
-								TextStyle = TextStyle.Footnote,
-								TextColor = Colors.SecondaryLabel,
-								TextAlignment = TextAlignment.Center
-							}
-						}
-					},
-					190),
+				ShowcaseBox.Canvas(sections, 150),
 				SettingRow("Selection", reset)),
 			ShowcaseBox.Code(Bind(model => model.SelectionCode)));
 	}

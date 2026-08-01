@@ -168,8 +168,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Kind = ButtonStyle.Filled,
 			Size = ButtonSize.Large,
 			IsLoading = Bind(model => model.IsLoading),
-			Command = viewModel.TapCommand,
-			CommandParameter = "Button showcase"
+			Command = viewModel.TapCommand
 		};
 
 		Switch loading = new()

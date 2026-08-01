@@ -26,8 +26,7 @@ internal sealed class StepperView : ShowcaseView<StepperViewModel>
 			Minimum = 0,
 			Maximum = 20,
 			Step = viewModel.SelectedStep.Value,
-			IsEnabled = viewModel.ControlEnabled,
-			ValueChanged = viewModel.RecordChange
+			IsEnabled = viewModel.ControlEnabled
 		};
 
 		Picker<ShowcaseOption<double>> increment = new()
@@ -72,8 +71,7 @@ internal sealed class StepperView : ShowcaseView<StepperViewModel>
 								TextStyle = TextStyle.Title2,
 								FontWeight = FontWeight.Semibold
 							},
-							stepper,
-							Status(Bind(model => model.ChangeStatus))
+							stepper
 						}
 					},
 					170),
@@ -91,16 +89,4 @@ internal sealed class StepperView : ShowcaseView<StepperViewModel>
 			ShowcaseBox.Code(Bind(model => model.StepperCode)));
 	}
 
-
-	static Label Status(
-		BindingExpression<string?> text) =>
-		new()
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			Text = text,
-			TextStyle = TextStyle.Footnote,
-			TextColor = Colors.SecondaryLabel,
-			MaxLines = 2,
-			TextAlignment = TextAlignment.Center
-		};
 }

@@ -73,12 +73,10 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SelectionSummary))]
 	[NotifyPropertyChangedFor(nameof(SelectionCode))]
 	int contentModeIndex = 1;
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SelectionSummary))]
 	[NotifyPropertyChangedFor(nameof(SelectionCode))]
 	bool isSelectable = true;
 
@@ -87,14 +85,7 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 	int linkColorIndex;
 
 	[ObservableProperty]
-	string interactionStatus = "Tap a link or hold it for its native menu.";
-
-	public string SelectionSummary =>
-		ContentModeIndex is 1
-			? "UIKit keeps text selectable while links are active."
-			: IsSelectable
-				? "Press and hold to select and copy the plain text."
-				: "Selection is disabled for the plain text.";
+	string interactionStatus = "Tap a link or menu action.";
 
 	public IReadOnlyList<Span> SelectionCode =>
 		Code(
@@ -244,12 +235,12 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 	[RelayCommand]
 	void OpenLink(
 		string target) =>
-		InteractionStatus = $"{target} link selected.";
+		InteractionStatus = target;
 
 	[RelayCommand]
 	void RunMenuAction(
 		string action) =>
-		InteractionStatus = $"{action} selected from the context menu.";
+		InteractionStatus = action;
 
 
 	void UpdateInteractiveSpans()

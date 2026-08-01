@@ -35,7 +35,6 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 			Capitalization = Capitalization.None,
 			Autocorrection = false,
 			RequiresText = viewModel.RequiresText,
-			TextChanged = viewModel.RecordTextChanged,
 			SubmitCommand = viewModel.SubmitCommand
 		};
 
@@ -51,7 +50,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		AddShowcase(
 			"Binding & submission",
-			"Edit a two-way value, observe every native change, and submit through the configured return key.",
+			"Edit a two-way value and submit through the configured return key.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
 					new StackPanel
@@ -91,12 +90,10 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 								}
 							},
 
-							Status(Bind(model => model.BindingSummary), FontWeight.Medium),
-							Status(Bind(model => model.ChangeStatus)),
 							Status(Bind(model => model.SubmitStatus))
 						}
 					},
-					270),
+					220),
 				SettingRow("Require text", requiresText)),
 			ShowcaseBox.Code(Bind(model => model.BindingCode)));
 	}
@@ -202,8 +199,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 						Children =
 						{
-							field,
-							Status("Changes refresh the raised keyboard immediately.")
+							field
 						}
 					},
 					170),
@@ -382,8 +378,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 						{
 							fields[0],
 							fields[1],
-							fields[2],
-							Status("Navigation follows input order; custom Done dismisses.")
+							fields[2]
 						}
 					},
 					240),
@@ -452,15 +447,4 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 			TextAlignment = TextAlignment.Center
 		};
 
-	static Label Status(
-		string text) =>
-		new()
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			Text = text,
-			TextStyle = TextStyle.Footnote,
-			TextColor = Colors.SecondaryLabel,
-			MaxLines = 2,
-			TextAlignment = TextAlignment.Center
-		};
 }

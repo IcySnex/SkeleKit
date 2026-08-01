@@ -26,8 +26,7 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 				model => model.SelectedDestination,
 				static (model, value) => model.SelectedDestination = value),
 			Placeholder = "Choose a destination",
-			ItemTitle = DestinationTitle,
-			SelectionChanged = viewModel.RecordSelection
+			ItemTitle = DestinationTitle
 		};
 
 		Button clear = new()
@@ -65,32 +64,14 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.SelectedSummary),
-								TextStyle = TextStyle.Subheadline,
-								FontWeight = FontWeight.Medium,
-								TextAlignment = TextAlignment.Center
-							},
-
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
 								Text = Bind(model => model.ItemsSummary),
 								TextStyle = TextStyle.Footnote,
-								TextColor = Colors.SecondaryLabel,
-								TextAlignment = TextAlignment.Center
-							},
-
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.SelectionStatus),
-								TextStyle = TextStyle.Caption1,
 								TextColor = Colors.SecondaryLabel,
 								TextAlignment = TextAlignment.Center
 							}
 						}
 					},
-					210),
+					180),
 				SettingRow("Selection", clear),
 				LabeledControl("Collection contents", items)),
 			ShowcaseBox.Code(Bind(model => model.PickerCode)));

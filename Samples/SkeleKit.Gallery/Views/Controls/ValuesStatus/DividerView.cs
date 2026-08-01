@@ -49,13 +49,6 @@ internal sealed class DividerView : ShowcaseView<DividerViewModel>
 							{
 								Text = "Below the divider",
 								TextStyle = TextStyle.Body
-							},
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.ColorLabel),
-								TextStyle = TextStyle.Footnote,
-								TextColor = Colors.SecondaryLabel
 							}
 						}
 					},

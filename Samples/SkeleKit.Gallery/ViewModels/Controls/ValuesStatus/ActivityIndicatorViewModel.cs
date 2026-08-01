@@ -6,17 +6,12 @@ namespace SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
 internal sealed partial class ActivityIndicatorViewModel : ShowcaseViewModel
 {
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(StateLabel))]
 	[NotifyPropertyChangedFor(nameof(IndicatorCode))]
 	bool isAnimating = true;
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(StateLabel))]
 	[NotifyPropertyChangedFor(nameof(IndicatorCode))]
 	bool isLarge;
-
-	public string StateLabel =>
-		$"{(IsLarge ? "Large" : "Medium")} · {(IsAnimating ? "animating" : "stopped · hidden")}";
 
 	public IReadOnlyList<Span> IndicatorCode =>
 	[

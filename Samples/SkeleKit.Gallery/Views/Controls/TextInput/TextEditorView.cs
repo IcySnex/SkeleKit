@@ -24,7 +24,6 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 		editor.Text = Bind(
 			model => model.Text,
 			static (model, value) => model.Text = value);
-		editor.TextChanged = viewModel.RecordTextChanged;
 
 		AddShowcase(
 			"Binding & live growth",
@@ -68,8 +67,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 								}
 							},
 
-							Status(Bind(model => model.EditSummary), FontWeight.Medium),
-							Status(Bind(model => model.ChangeStatus))
+							Status(Bind(model => model.EditSummary), FontWeight.Medium)
 						}
 					},
 					250)),
@@ -147,8 +145,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 
 						Children =
 						{
-							editor,
-							Status("Changes refresh the raised keyboard immediately.")
+							editor
 						}
 					},
 					210),
@@ -267,8 +264,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 						Children =
 						{
 							editors[0],
-							editors[1],
-							Status("Navigation follows editor order; custom Done dismisses.")
+							editors[1]
 						}
 					},
 					280),
@@ -341,15 +337,4 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 			TextAlignment = TextAlignment.Center
 		};
 
-	static Label Status(
-		string text) =>
-		new()
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			Text = text,
-			TextStyle = TextStyle.Footnote,
-			TextColor = Colors.SecondaryLabel,
-			MaxLines = 2,
-			TextAlignment = TextAlignment.Center
-		};
 }

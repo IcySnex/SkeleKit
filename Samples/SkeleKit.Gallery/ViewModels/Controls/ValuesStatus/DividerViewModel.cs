@@ -7,14 +7,10 @@ internal sealed partial class DividerViewModel : ShowcaseViewModel
 {
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(DividerColor))]
-	[NotifyPropertyChangedFor(nameof(ColorLabel))]
 	bool usesAccent;
 
 	public Color? DividerColor =>
 		UsesAccent ? Colors.Red : null;
-
-	public string ColorLabel =>
-		UsesAccent ? "Accent color" : "System separator";
 
 	public IReadOnlyList<Span> DividerCode =>
 	[

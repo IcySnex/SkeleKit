@@ -32,7 +32,7 @@ internal sealed partial class SecureFieldViewModel : ShowcaseViewModel
 	bool revealsEntry = true;
 
 	[ObservableProperty]
-	string submitStatus = "Enter a password, then press Done.";
+	string submitStatus = "Press Done to submit.";
 
 	public double Strength =>
 		Math.Min(1, (Text?.Length ?? 0) / 14d);
@@ -118,9 +118,7 @@ internal sealed partial class SecureFieldViewModel : ShowcaseViewModel
 
 	[RelayCommand]
 	void Submit() =>
-		SubmitStatus = string.IsNullOrEmpty(Text)
-			? "SubmitCommand · Empty"
-			: $"SubmitCommand · {Text.Length} characters";
+		SubmitStatus = "Submitted";
 
 
 	static IReadOnlyList<Span> Code(

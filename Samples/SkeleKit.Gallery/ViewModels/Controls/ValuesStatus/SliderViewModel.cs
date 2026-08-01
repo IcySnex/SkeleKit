@@ -43,11 +43,6 @@ internal sealed partial class SliderViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(SliderCode))]
 	bool controlEnabled = true;
 
-	[ObservableProperty]
-	string changeStatus = "ValueChanged has not fired yet.";
-
-	int changeCount;
-
 	public string ValueLabel => Number(Value);
 
 	public IReadOnlyList<Span> SliderCode =>
@@ -65,8 +60,7 @@ internal sealed partial class SliderViewModel : ShowcaseViewModel
 				Continuous = {{Boolean(Continuous)}},
 				MinIcon = {{(ShowsIcons ? "\"speaker.fill\"" : "null")}},
 				MaxIcon = {{(ShowsIcons ? "\"speaker.wave.3.fill\"" : "null")}},
-				IsEnabled = {{Boolean(ControlEnabled)}},
-				ValueChanged = viewModel.RecordChange
+				IsEnabled = {{Boolean(ControlEnabled)}}
 			};
 			""")
 	];
@@ -75,14 +69,6 @@ internal sealed partial class SliderViewModel : ShowcaseViewModel
 	[RelayCommand]
 	void ResetValue() =>
 		Value = 50;
-
-	internal void RecordChange(
-		double value)
-	{
-		changeCount++;
-		ChangeStatus = $"ValueChanged · {Number(value)} · {changeCount}";
-	}
-
 
 	static string Boolean(
 		bool value) =>

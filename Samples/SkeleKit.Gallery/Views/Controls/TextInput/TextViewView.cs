@@ -84,16 +84,6 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.SelectionSummary),
-								TextStyle = TextStyle.Footnote,
-								TextColor = Colors.SecondaryLabel,
-								MaxLines = 2,
-								TextAlignment = TextAlignment.Center
-							},
-
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
 								Text = Bind(model => model.InteractionStatus),
 								TextStyle = TextStyle.Caption1,
 								TextColor = Colors.SecondaryLabel,
@@ -102,7 +92,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 							}
 						}
 					},
-					230),
+					200),
 				LabeledControl("Content", content),
 				selectableSetting,
 				LabeledControl("Link color", linkColor)),

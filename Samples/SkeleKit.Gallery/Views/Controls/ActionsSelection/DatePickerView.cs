@@ -77,8 +77,7 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 			Mode = DatePickerMode.DateAndTime,
 			Kind = DatePickerStyle.Compact,
 			Minimum = DatePickerViewModel.MinimumDate,
-			Maximum = DatePickerViewModel.MaximumDate,
-			DateChanged = viewModel.RecordDateChanged
+			Maximum = DatePickerViewModel.MaximumDate
 		};
 
 		SegmentedControl position = new()
@@ -92,7 +91,7 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 
 		AddShowcase(
 			"Range & binding",
-			"Constrain the available interval and keep picker, ViewModel and callback output synchronized.",
+			"Constrain the available interval and keep the picker synchronized with a two-way bound value.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
 					new StackPanel
@@ -114,18 +113,9 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 								FontWeight = FontWeight.Medium,
 								TextAlignment = TextAlignment.Center
 							},
-
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.DateChangedStatus),
-								TextStyle = TextStyle.Footnote,
-								TextColor = Colors.SecondaryLabel,
-								TextAlignment = TextAlignment.Center
-							}
 						}
 					},
-					210),
+					190),
 				LabeledControl("Bound value", position)),
 			ShowcaseBox.Code(Bind(model => model.RangeCode)));
 	}

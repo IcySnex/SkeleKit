@@ -27,8 +27,7 @@ internal sealed class PageControlView : ShowcaseView<PageControlViewModel>
 			DotColor = Colors.Red.WithAlpha(0.25),
 			CurrentDotColor = Colors.Red,
 			HidesForSinglePage = viewModel.HidesForSinglePage,
-			AllowsScrubbing = viewModel.AllowsScrubbing,
-			PageChanged = viewModel.RecordPage
+			AllowsScrubbing = viewModel.AllowsScrubbing
 		};
 
 		Picker<ShowcaseOption<int>> count = new()
@@ -73,8 +72,7 @@ internal sealed class PageControlView : ShowcaseView<PageControlViewModel>
 						Children =
 						{
 							pages,
-							Status(Bind(model => model.StateLabel), FontWeight.Medium),
-							Status(Bind(model => model.ChangeStatus))
+							Status(Bind(model => model.StateLabel), FontWeight.Medium)
 						}
 					},
 					180),

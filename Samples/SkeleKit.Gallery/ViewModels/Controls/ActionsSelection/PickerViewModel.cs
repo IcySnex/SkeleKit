@@ -32,21 +32,10 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 	public ObservableCollection<PickerDestination> Destinations { get; } = [];
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SelectedSummary))]
 	PickerDestination? selectedDestination;
 
-	[ObservableProperty]
-	string selectionStatus = "SelectionChanged has not fired yet.";
-
-	int selectionCount;
-
-	public string SelectedSummary =>
-		SelectedDestination is PickerDestination destination
-			? $"{destination.Code} · {destination.City}, {destination.Country}"
-			: "No destination selected";
-
 	public string ItemsSummary =>
-		$"{Destinations.Count} items · ObservableCollection";
+		$"{Destinations.Count} items";
 
 	public IReadOnlyList<Span> PickerCode { get; } =
 	[
@@ -65,8 +54,7 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 					model => model.SelectedDestination,
 					(model, value) => model.SelectedDestination = value),
 				Placeholder = "Choose a destination",
-				ItemTitle = item => $"{item.City}, {item.Country}",
-				SelectionChanged = viewModel.RecordSelection
+				ItemTitle = item => $"{item.City}, {item.Country}"
 			};
 
 			destinations.Clear();
@@ -77,11 +65,8 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 
 
 	[RelayCommand]
-	void ClearSelection()
-	{
+	void ClearSelection() =>
 		SelectedDestination = null;
-		SelectionStatus = "Selection cleared from the ViewModel.";
-	}
 
 	internal void SetItemsState(
 		int state)
@@ -104,12 +89,5 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 			Destinations.Add(ExtraDestination);
 
 		OnPropertyChanged(nameof(ItemsSummary));
-	}
-
-	internal void RecordSelection(
-		PickerDestination destination)
-	{
-		selectionCount++;
-		SelectionStatus = $"SelectionChanged · {destination.Code} · {selectionCount}";
 	}
 }

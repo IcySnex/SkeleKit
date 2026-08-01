@@ -21,11 +21,6 @@ internal sealed partial class ColorWellViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(SelectionCode))]
 	bool supportsAlpha = true;
 
-	[ObservableProperty]
-	string selectionStatus = "SelectionChanged has not fired yet.";
-
-	int selectionCount;
-
 	public string ColorSummary =>
 		$"#{Channel(SelectedColor.Red):X2}{Channel(SelectedColor.Green):X2}{Channel(SelectedColor.Blue):X2} · {SelectedColor.Alpha:P0} opacity";
 
@@ -39,26 +34,15 @@ internal sealed partial class ColorWellViewModel : ShowcaseViewModel
 					model => model.SelectedColor,
 					(model, value) => model.SelectedColor = value),
 				Title = {{(ShowsTitle ? "\"Gallery accent\"" : "null")}},
-				SupportsAlpha = {{(SupportsAlpha ? "true" : "false")}},
-				SelectionChanged = viewModel.RecordSelection
+				SupportsAlpha = {{(SupportsAlpha ? "true" : "false")}}
 			};
 			""")
 	];
 
 
 	[RelayCommand]
-	void ResetColor()
-	{
+	void ResetColor() =>
 		SelectedColor = DefaultColor;
-		SelectionStatus = "Color reset from the ViewModel.";
-	}
-
-	internal void RecordSelection(
-		Color color)
-	{
-		selectionCount++;
-		SelectionStatus = $"SelectionChanged · {color.Alpha:P0} opacity · {selectionCount}";
-	}
 
 
 	static byte Channel(

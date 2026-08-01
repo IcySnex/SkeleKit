@@ -101,7 +101,6 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(BindingSummary))]
 	[NotifyPropertyChangedFor(nameof(BindingCode))]
 	string? text;
 
@@ -110,18 +109,7 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 	bool requiresText = true;
 
 	[ObservableProperty]
-	string changeStatus = "TextChanged has not fired yet.";
-
-	[ObservableProperty]
-	string submitStatus = "Type a value, then press Send.";
-
-	int changeCount;
-	int submitCount;
-
-	public string BindingSummary =>
-		string.IsNullOrEmpty(Text)
-			? "ViewModel value is empty"
-			: $"ViewModel · {Text}";
+	string submitStatus = "Press Send to submit.";
 
 	public IReadOnlyList<Span> BindingCode =>
 		Code(
@@ -136,7 +124,6 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 				ClearButton = ClearButton.WhileEditing,
 				ReturnKey = ReturnKeyType.Send,
 				RequiresText = {{Boolean(RequiresText)}},
-				TextChanged = viewModel.RecordTextChanged,
 				SubmitCommand = viewModel.SubmitCommand
 			};
 			""");
@@ -289,18 +276,8 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 		Text = null;
 
 	[RelayCommand]
-	void Submit()
-	{
-		submitCount++;
-		SubmitStatus = $"SubmitCommand · {Text ?? "empty"} · {submitCount}";
-	}
-
-	internal void RecordTextChanged(
-		string value)
-	{
-		changeCount++;
-		ChangeStatus = $"TextChanged · {value.Length} characters · {changeCount}";
-	}
+	void Submit() =>
+		SubmitStatus = "Submitted";
 
 
 	static IReadOnlyList<Span> Code(

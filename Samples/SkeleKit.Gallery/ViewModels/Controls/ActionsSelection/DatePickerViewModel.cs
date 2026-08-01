@@ -58,11 +58,6 @@ internal sealed partial class DatePickerViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(RangeCode))]
 	DateTime selectedDate = ExampleDate;
 
-	[ObservableProperty]
-	string dateChangedStatus = "DateChanged has not fired yet.";
-
-	int changeCount;
-
 	public string DateSummary =>
 		SelectedDate.ToString("ddd, MMM d · HH:mm", CultureInfo.CurrentCulture);
 
@@ -79,18 +74,10 @@ internal sealed partial class DatePickerViewModel : ShowcaseViewModel
 				Mode = DatePickerMode.DateAndTime,
 				Kind = DatePickerStyle.Compact,
 				Minimum = new DateTime(2026, 8, 10, 9, 0, 0),
-				Maximum = new DateTime(2026, 8, 14, 18, 0, 0),
-				DateChanged = viewModel.RecordDateChanged
+				Maximum = new DateTime(2026, 8, 14, 18, 0, 0)
 			};
 			""");
 
-
-	internal void RecordDateChanged(
-		DateTime value)
-	{
-		changeCount++;
-		DateChangedStatus = $"DateChanged · {value:MMM d, HH:mm} · {changeCount}";
-	}
 
 	internal void SetRangePosition(
 		int index)
@@ -101,7 +88,6 @@ internal sealed partial class DatePickerViewModel : ShowcaseViewModel
 			2 => MaximumDate,
 			_ => ExampleDate
 		};
-		DateChangedStatus = "Date updated from the ViewModel.";
 	}
 
 

@@ -23,8 +23,7 @@ internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 				model => model.SelectedColor,
 				static (model, value) => model.SelectedColor = value),
 			Title = "Gallery accent",
-			SupportsAlpha = viewModel.SupportsAlpha,
-			SelectionChanged = viewModel.RecordSelection
+			SupportsAlpha = viewModel.SupportsAlpha
 		};
 
 		Switch title = new()
@@ -79,15 +78,6 @@ internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 								FontWeight = FontWeight.Medium,
 								TextAlignment = TextAlignment.Center
 							},
-
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.SelectionStatus),
-								TextStyle = TextStyle.Footnote,
-								TextColor = Colors.SecondaryLabel,
-								TextAlignment = TextAlignment.Center
-							}
 						}
 					},
 					190),

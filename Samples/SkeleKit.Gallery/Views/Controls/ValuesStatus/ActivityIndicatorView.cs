@@ -43,26 +43,7 @@ internal sealed class ActivityIndicatorView : ShowcaseView<ActivityIndicatorView
 			"Loading state",
 			"Switch the native indicator between medium and large, then stop and restart its animation.",
 			PreviewWithSettings(
-				ShowcaseBox.Canvas(
-					new StackPanel
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						VerticalAlignment = VerticalAlignment.Center,
-						Spacing = 12,
-
-						Children =
-						{
-							indicator,
-							new Label
-							{
-								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.StateLabel),
-								TextStyle = TextStyle.Footnote,
-								TextColor = Colors.SecondaryLabel
-							}
-						}
-					},
-					180),
+				ShowcaseBox.Canvas(indicator, 150),
 				SettingRow("Large", size),
 				SettingRow("Animating", animating)),
 			ShowcaseBox.Code(Bind(model => model.IndicatorCode)));

@@ -15,17 +15,8 @@ internal sealed partial class SegmentedControlViewModel : ShowcaseViewModel
 
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SelectedTitle))]
 	[NotifyPropertyChangedFor(nameof(SelectionCode))]
 	int selectedIndex = 1;
-
-	[ObservableProperty]
-	string selectionStatus = "SelectionChanged has not fired yet.";
-
-	int selectionCount;
-
-	public string SelectedTitle =>
-		Sections[Math.Clamp(SelectedIndex, 0, Sections.Length - 1)];
 
 	public IReadOnlyList<Span> SelectionCode =>
 	[
@@ -35,8 +26,7 @@ internal sealed partial class SegmentedControlViewModel : ShowcaseViewModel
 			{
 				SelectedIndex = Bind(
 					model => model.SelectedIndex,
-					(model, value) => model.SelectedIndex = value),
-				SelectionChanged = viewModel.RecordSelection
+					(model, value) => model.SelectedIndex = value)
 			};
 			sections.Items.Add("Overview");
 			sections.Items.Add("Details");
@@ -45,16 +35,6 @@ internal sealed partial class SegmentedControlViewModel : ShowcaseViewModel
 	];
 
 	[RelayCommand]
-	void ResetSelection()
-	{
+	void ResetSelection() =>
 		SelectedIndex = 0;
-		SelectionStatus = "Selection reset from the ViewModel.";
-	}
-
-	internal void RecordSelection(
-		int index)
-	{
-		selectionCount++;
-		SelectionStatus = $"SelectionChanged · {Sections[index]} · {selectionCount}";
-	}
 }

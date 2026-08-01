@@ -18,12 +18,12 @@ internal sealed class SwitchView : ShowcaseView<SwitchViewModel>
 	{
 		Switch toggle = new()
 		{
+			VerticalAlignment = VerticalAlignment.Center,
 			HorizontalAlignment = HorizontalAlignment.Center,
 			IsOn = Bind(
 				model => model.IsOn,
 				static (model, value) => model.IsOn = value),
-			IsEnabled = viewModel.ControlEnabled,
-			Toggled = viewModel.RecordToggle
+			IsEnabled = viewModel.ControlEnabled
 		};
 
 		Switch enabled = new()
@@ -40,21 +40,7 @@ internal sealed class SwitchView : ShowcaseView<SwitchViewModel>
 			"State",
 			"Toggle the native control, update it from the ViewModel, and compare enabled and disabled interaction.",
 			PreviewWithSettings(
-				ShowcaseBox.Canvas(
-					new StackPanel
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						VerticalAlignment = VerticalAlignment.Center,
-						Spacing = 10,
-
-						Children =
-						{
-							toggle,
-							Status(Bind(model => model.StateSummary), FontWeight.Medium),
-							Status(Bind(model => model.ToggleStatus))
-						}
-					},
-					170),
+				ShowcaseBox.Canvas(toggle, 150),
 				SettingRow(
 					"Bound value",
 					new Button
@@ -68,18 +54,4 @@ internal sealed class SwitchView : ShowcaseView<SwitchViewModel>
 			ShowcaseBox.Code(Bind(model => model.SwitchCode)));
 	}
 
-
-	static Label Status(
-		BindingExpression<string?> text,
-		FontWeight weight = FontWeight.Regular) =>
-		new()
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			Text = text,
-			TextStyle = TextStyle.Footnote,
-			FontWeight = weight,
-			TextColor = weight is FontWeight.Regular ? Colors.SecondaryLabel : (Color?)null,
-			MaxLines = 2,
-			TextAlignment = TextAlignment.Center
-		};
 }

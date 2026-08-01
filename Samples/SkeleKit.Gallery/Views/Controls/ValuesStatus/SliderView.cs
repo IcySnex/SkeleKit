@@ -29,8 +29,7 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 			Continuous = viewModel.Continuous,
 			MinIcon = "speaker.fill",
 			MaxIcon = "speaker.wave.3.fill",
-			IsEnabled = viewModel.ControlEnabled,
-			ValueChanged = viewModel.RecordChange
+			IsEnabled = viewModel.ControlEnabled
 		};
 
 		Picker<ShowcaseOption<double>> step = new()
@@ -97,8 +96,7 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 								TextStyle = TextStyle.Title2,
 								FontWeight = FontWeight.Semibold
 							},
-							slider,
-							Status(Bind(model => model.ChangeStatus))
+							slider
 						}
 					},
 					190),
@@ -118,16 +116,4 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 			ShowcaseBox.Code(Bind(model => model.SliderCode)));
 	}
 
-
-	static Label Status(
-		BindingExpression<string?> text) =>
-		new()
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			Text = text,
-			TextStyle = TextStyle.Footnote,
-			TextColor = Colors.SecondaryLabel,
-			MaxLines = 2,
-			TextAlignment = TextAlignment.Center
-		};
 }

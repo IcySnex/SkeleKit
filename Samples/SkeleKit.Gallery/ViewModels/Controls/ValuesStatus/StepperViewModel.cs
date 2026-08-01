@@ -35,11 +35,6 @@ internal sealed partial class StepperViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(StepperCode))]
 	bool controlEnabled = true;
 
-	[ObservableProperty]
-	string changeStatus = "ValueChanged has not fired yet.";
-
-	int changeCount;
-
 	public string ValueLabel =>
 		Number(Value);
 
@@ -55,8 +50,7 @@ internal sealed partial class StepperViewModel : ShowcaseViewModel
 				Minimum = 0,
 				Maximum = 20,
 				Step = {{Number(SelectedStep.Value)}},
-				IsEnabled = {{Boolean(ControlEnabled)}},
-				ValueChanged = viewModel.RecordChange
+				IsEnabled = {{Boolean(ControlEnabled)}}
 			};
 			""")
 	];
@@ -65,14 +59,6 @@ internal sealed partial class StepperViewModel : ShowcaseViewModel
 	[RelayCommand]
 	void ResetValue() =>
 		Value = 10;
-
-	internal void RecordChange(
-		double value)
-	{
-		changeCount++;
-		ChangeStatus = $"ValueChanged · {Number(value)} · {changeCount}";
-	}
-
 
 	static string Boolean(
 		bool value) =>
