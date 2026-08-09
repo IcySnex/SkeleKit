@@ -6,6 +6,11 @@ namespace SkeleKit.Gallery.Views.Framework.StylingMotion;
 [Page]
 internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 {
+	static readonly Color CardBackground = Color.Dynamic(
+		Color.FromHex(0xF0F6F7),
+		Color.FromHex(0x263438));
+
+
 	public AnimationView(
 		AnimationViewModel viewModel) : base(viewModel, "Animation", Colors.Cyan)
 	{
@@ -28,21 +33,22 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
-			Width = viewModel.IsExpanded ? 280 : 210,
-			Height = viewModel.IsExpanded ? 132 : 96,
+			Width = viewModel.IsExpanded ? 280 : 220,
+			Height = viewModel.IsExpanded ? 128 : 100,
 			Padding = 12,
-			Background = Colors.SecondaryGroupedBackground,
-			CornerRadius = viewModel.IsExpanded ? 28 : 18,
-			Stroke = Colors.Separator,
-			StrokeThickness = 0.5,
+			Background = CardBackground,
+			CornerRadius = viewModel.IsExpanded ? 24 : 20,
+			Stroke = Colors.Cyan.WithAlpha(0.45),
+			StrokeThickness = 0.75,
 
 			Child = new Grid
 			{
+				HorizontalAlignment = HorizontalAlignment.Center,
 				ColumnSpacing = 12,
 				Columns =
 				{
 					64,
-					GridLength.Star
+					GridLength.Auto
 				},
 				Children =
 				{
@@ -57,8 +63,7 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 							new Label
 							{
 								Text = "Collection",
-								TextStyle = TextStyle.Headline,
-								MaxLines = 1
+								TextStyle = TextStyle.Headline
 							},
 
 							detail
@@ -73,7 +78,7 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			Width = 300,
-			Height = 180,
+			Height = 156,
 			Children =
 			{
 				card
@@ -86,9 +91,9 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 				model => model.TimingIndex,
 				static (model, value) => model.TimingIndex = value)
 		};
+		timing.Items.Add("Spring");
 		timing.Items.Add("Ease in/out");
 		timing.Items.Add("Ease out");
-		timing.Items.Add("Spring");
 
 		Button toggle = new()
 		{
@@ -103,9 +108,9 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 				viewModel.SelectedTiming,
 				() =>
 				{
-					card.Width = viewModel.IsExpanded ? 280 : 210;
-					card.Height = viewModel.IsExpanded ? 132 : 96;
-					card.CornerRadius = viewModel.IsExpanded ? 28 : 18;
+					card.Width = viewModel.IsExpanded ? 280 : 220;
+					card.Height = viewModel.IsExpanded ? 128 : 100;
+					card.CornerRadius = viewModel.IsExpanded ? 24 : 20;
 					detail.Opacity = viewModel.IsExpanded ? 1 : 0;
 				});
 		});
@@ -114,7 +119,7 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 			"Layout transition",
 			"Animate size, corner radius and content opacity with an easing curve or spring.",
 			PreviewWithSettings(
-				ShowcaseBox.Canvas(preview, 224),
+				ShowcaseBox.Canvas(preview, 200),
 				LabeledControl("Timing", timing),
 				SettingRow("Card", toggle)),
 			ShowcaseBox.Code(Bind(model => model.AnimationCode)));

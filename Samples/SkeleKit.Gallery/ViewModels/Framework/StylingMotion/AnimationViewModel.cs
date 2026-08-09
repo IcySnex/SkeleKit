@@ -7,9 +7,9 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 {
 	static readonly Animation[] Timings =
 	[
-		Animation.Ease(0.45, Easing.EaseInOut),
-		Animation.Ease(0.45, Easing.EaseOut),
-		Animation.Spring(0.55, damping: 0.72)
+		Animation.Spring(0.5, damping: 0.72),
+		Animation.Ease(0.3, Easing.EaseInOut),
+		Animation.Ease(0.3, Easing.EaseOut)
 	];
 
 
@@ -45,21 +45,24 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 			{
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
-				Width = 210,
-				Height = 96,
+				Width = 220,
+				Height = 100,
 				Padding = 12,
-				Background = Colors.SecondaryGroupedBackground,
-				CornerRadius = 18,
-				Stroke = Colors.Separator,
-				StrokeThickness = 0.5,
+				Background = Color.Dynamic(
+					Color.FromHex(0xF0F6F7),
+					Color.FromHex(0x263438)),
+				CornerRadius = 20,
+				Stroke = Colors.Cyan.WithAlpha(0.45),
+				StrokeThickness = 0.75,
 
 				Child = new Grid
 				{
+					HorizontalAlignment = HorizontalAlignment.Center,
 					ColumnSpacing = 12,
 					Columns =
 					{
 						64,
-						GridLength.Star
+						GridLength.Auto
 					},
 					Children =
 					{
@@ -73,8 +76,7 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 								new Label
 								{
 									Text = "Collection",
-									TextStyle = TextStyle.Headline,
-									MaxLines = 1
+									TextStyle = TextStyle.Headline
 								},
 								detail
 							}
@@ -91,9 +93,9 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 					{{TimingCode()}},
 					() =>
 					{
-						card.Width = expanded ? 280 : 210;
-						card.Height = expanded ? 132 : 96;
-						card.CornerRadius = expanded ? 28 : 18;
+						card.Width = expanded ? 280 : 220;
+						card.Height = expanded ? 128 : 100;
+						card.CornerRadius = expanded ? 24 : 20;
 						detail.Opacity = expanded ? 1 : 0;
 					});
 			}
@@ -139,8 +141,8 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 	string TimingCode() =>
 		Math.Clamp(TimingIndex, 0, Timings.Length - 1) switch
 		{
-			0 => "Animation.Ease(0.45, Easing.EaseInOut)",
-			1 => "Animation.Ease(0.45, Easing.EaseOut)",
-			_ => "Animation.Spring(0.55, damping: 0.72)"
+			0 => "Animation.Spring(0.5, damping: 0.72)",
+			1 => "Animation.Ease(0.3, Easing.EaseInOut)",
+			_ => "Animation.Ease(0.3, Easing.EaseOut)"
 		};
 }
