@@ -76,7 +76,6 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 	int contentModeIndex = 1;
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SelectionCode))]
 	bool isSelectable = true;
 
 	[ObservableProperty]
@@ -88,24 +87,57 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 
 	public IReadOnlyList<Span> SelectionCode =>
 		Code(
-			$$"""
-			ObservableCollection<Span> spans =
-			[
-				"Read the ",
-				new Link("documentation")
-				{
-					Command = viewModel.OpenLinkCommand,
-					CommandParameter = "Documentation"
-				}
-			];
+			ContentModeIndex is 0
+				? $$"""
+				  new TextView
+				  {
+				    Spans =
+				    [
+				      "This plain rich text can be selected and copied when selection is enabled."
+				    ],
+				    IsSelectable = Bind(model => model.IsSelectable),
+				    LinkColor = {{(LinkColorIndex is 0 ? "null" : "Colors.Blue")}}
+				  };
+				  """
+				: $$"""
+				  Link documentation = new("documentation")
+				  {
+				    Command = viewModel.OpenLinkCommand,
+				    CommandParameter = "Documentation"
+				  };
+				  documentation.ContextMenu.Add(new()
+				  {
+				    Text = "Open",
+				    Icon = "arrow.up.forward",
+				    Command = viewModel.RunMenuActionCommand,
+				    CommandParameter = "Open"
+				  });
+				  documentation.ContextMenu.Add(new()
+				  {
+				    Text = "Save",
+				    Icon = "bookmark",
+				    Command = viewModel.RunMenuActionCommand,
+				    CommandParameter = "Save"
+				  });
 
-			TextView text = new()
-			{
-				Spans = spans,
-				IsSelectable = {{Boolean(IsSelectable)}},
-				LinkColor = {{(LinkColorIndex is 0 ? "null" : "Colors.Blue")}}
-			};
-			""");
+				  new TextView
+				  {
+				    Spans =
+				    [
+				      "Read the ",
+				      documentation,
+				      " or inspect the ",
+				      new Link("source")
+				      {
+				        Command = viewModel.OpenLinkCommand,
+				        CommandParameter = "Source"
+				      },
+				      ". Hold documentation for more actions."
+				    ],
+				    IsSelectable = Bind(model => model.IsSelectable),
+				    LinkColor = {{(LinkColorIndex is 0 ? "null" : "Colors.Blue")}}
+				  };
+				  """);
 
 
 	[ObservableProperty]
@@ -291,10 +323,6 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 	static IReadOnlyList<Span> Code(
 		string value) =>
 		[new(value)];
-
-	static string Boolean(
-		bool value) =>
-		value ? "true" : "false";
 
 	static string Number(
 		double value) =>

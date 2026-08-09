@@ -62,7 +62,17 @@ internal sealed partial class WebViewModel : ShowcaseViewModel
 			};
 
 			string? result = await web.EvaluateAsync(
-				"document.querySelector('.card').style.background = '#0a84ff'; 'Blue';");
+				"""
+				(() => {
+					const card = document.querySelector('.card');
+					const button = document.querySelector('button');
+					const blue = card.dataset.color === 'blue';
+					card.dataset.color = blue ? 'orange' : 'blue';
+					card.style.background = blue ? 'rgba(255, 149, 0, 0.16)' : 'rgba(10, 132, 255, 0.16)';
+					button.style.background = blue ? '#ff9500' : '#0a84ff';
+					return blue ? 'Orange' : 'Blue';
+				})()
+				""");
 			"""")
 	];
 

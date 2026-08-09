@@ -124,16 +124,19 @@ internal sealed partial class MapViewModel : ShowcaseViewModel
 			MapPin ferryBuilding = new(new(37.7955, -122.3937))
 			{
 				Title = "Ferry Building",
-				Subtitle = "San Francisco",
+				Subtitle = "Marketplace and waterfront",
 				Symbol = "ferry.fill",
 				Tint = Colors.Orange,
-				Callout = BuildCallout
+				Callout = static () => BuildCallout(
+					"Ferry Building",
+					"A native marker with a custom SkeleKit callout.")
 			};
 
 			new MapView
 			{
 				Height = 320,
 				Region = MapRegion.FromRadius(new(37.7749, -122.4194), 5_000),
+				Kind = MapKind.Muted,
 				Pins = pins,
 				Overlays = overlays,
 				ClustersPins = {{Boolean(ClusterModeIndex > 0)}},
