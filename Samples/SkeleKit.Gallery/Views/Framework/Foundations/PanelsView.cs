@@ -62,7 +62,7 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 							count
 						}
 					})),
-			ShowcaseBox.Code(Bind(model => model.ChildrenCode)));
+			Code(model => model.ChildrenCode));
 	}
 
 	void AddPaddingShowcase(
@@ -115,7 +115,7 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(panel, 190),
 				LabeledSlider("Padding", Bind(model => model.PaddingLabel), padding)),
-			ShowcaseBox.Code(Bind(model => model.PaddingCode)));
+			Code(model => model.PaddingCode));
 	}
 
 	void AddBindingShowcase(
@@ -177,7 +177,7 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(panel, 200),
 				LabeledControl("Context value", value)),
-			ShowcaseBox.Code(Bind(model => model.BindingCode)));
+			Code(model => model.BindingCode));
 	}
 
 

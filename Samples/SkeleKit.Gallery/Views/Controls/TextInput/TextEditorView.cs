@@ -71,7 +71,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 						}
 					},
 					250)),
-			ShowcaseBox.Code(Bind(model => model.BindingCode)));
+			Code(model => model.BindingCode));
 	}
 
 	void AddKeyboardShowcase(
@@ -156,7 +156,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 				LabeledControl("Capitalization", capitalization),
 				SettingRow("Autocorrection", autocorrection),
 				LabeledControl("Keyboard appearance", look)),
-			ShowcaseBox.Code(Bind(model => model.KeyboardCode)));
+			Code(model => model.KeyboardCode));
 	}
 
 	void AddTypographyShowcase(
@@ -222,7 +222,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 				LabeledSlider("Font size", Bind(model => model.FontSizeLabel), size),
 				SettingRow("Weight", weight),
 				LabeledControl("Design", design)),
-			ShowcaseBox.Code(Bind(model => model.TypographyCode)));
+			Code(model => model.TypographyCode));
 	}
 
 	void AddAccessoryShowcase(
@@ -273,7 +273,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 					},
 					280),
 				LabeledControl("Accessory", mode)),
-			ShowcaseBox.Code(Bind(model => model.AccessoryCode)));
+			Code(model => model.AccessoryCode));
 	}
 
 

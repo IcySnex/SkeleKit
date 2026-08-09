@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using SkeleKit.Gallery.ViewModels.Showcase;
 using SkeleKit.Gallery.Views.Abstract;
 
@@ -51,6 +52,11 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 			Command = Command.From(() =>
 				_ = Navigator.PushViewAsync(new ShowcaseCodeView(title, source(), Tint ?? Colors.Label)))
 		});
+
+	protected static View Code(
+		Func<TViewModel, IReadOnlyList<Span>> getter,
+		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
+		ShowcaseBox.Code(Bind(getter, CSharpSyntax.Highlight, path));
 
 	protected void AddShowcase(
 		string title,

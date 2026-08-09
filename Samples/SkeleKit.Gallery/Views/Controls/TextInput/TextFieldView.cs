@@ -96,7 +96,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 					},
 					220),
 				SettingRow("Require text", requiresText)),
-			ShowcaseBox.Code(Bind(model => model.BindingCode)));
+			Code(model => model.BindingCode));
 	}
 
 	void AddKeyboardShowcase(
@@ -208,7 +208,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 				LabeledControl("Capitalization", capitalization),
 				SettingRow("Autocorrection", autocorrection),
 				LabeledControl("Keyboard appearance", look)),
-			ShowcaseBox.Code(Bind(model => model.KeyboardCode)));
+			Code(model => model.KeyboardCode));
 	}
 
 	void AddChromeShowcase(
@@ -332,7 +332,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 				LabeledSlider("Font size", Bind(model => model.FontSizeLabel), size),
 				SettingRow("Weight", weight),
 				LabeledControl("Design", design)),
-			ShowcaseBox.Code(Bind(model => model.ChromeCode)));
+			Code(model => model.ChromeCode));
 	}
 
 	void AddAccessoryShowcase(
@@ -385,7 +385,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 					},
 					240),
 				LabeledControl("Accessory", mode)),
-			ShowcaseBox.Code(Bind(model => model.AccessoryCode)));
+			Code(model => model.AccessoryCode));
 	}
 
 

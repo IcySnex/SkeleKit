@@ -48,7 +48,7 @@ internal sealed class SwitchView : ShowcaseView<SwitchViewModel>
 						Command = viewModel.ToggleFromViewModelCommand
 					}),
 				SettingRow("Enabled", enabled)),
-			ShowcaseBox.Code(Bind(model => model.SwitchCode)));
+			Code(model => model.SwitchCode));
 	}
 
 }

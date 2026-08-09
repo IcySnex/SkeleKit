@@ -48,6 +48,6 @@ internal sealed class ActivityIndicatorView : ShowcaseView<ActivityIndicatorView
 				ShowcaseBox.Canvas(indicator, 150),
 				SettingRow("Large", size),
 				SettingRow("Animating", animating)),
-			ShowcaseBox.Code(Bind(model => model.IndicatorCode)));
+			Code(model => model.IndicatorCode));
 	}
 }

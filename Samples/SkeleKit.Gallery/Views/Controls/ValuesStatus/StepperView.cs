@@ -81,7 +81,7 @@ internal sealed class StepperView : ShowcaseView<StepperViewModel>
 					}),
 				SettingRow("Increment", increment),
 				SettingRow("Enabled", enabled)),
-			ShowcaseBox.Code(Bind(model => model.StepperCode)));
+			Code(model => model.StepperCode));
 	}
 
 }

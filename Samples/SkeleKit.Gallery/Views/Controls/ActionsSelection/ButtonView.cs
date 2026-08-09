@@ -61,7 +61,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 				ShowcaseBox.Canvas(button),
 				SettingRow("Style", style),
 				LabeledControl("Size", size)),
-			ShowcaseBox.Code(Bind(model => model.ConfigurationCode)));
+			Code(model => model.ConfigurationCode));
 	}
 
 	void AddContentShowcase(
@@ -146,7 +146,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 				LabeledSlider("Icon size", Bind(model => model.IconSizeLabel), iconSize),
 				LabeledSlider("Icon spacing", Bind(model => model.IconSpacingLabel), iconSpacing),
 				LabeledSlider("Horizontal padding", Bind(model => model.PaddingLabel), padding)),
-			ShowcaseBox.Code(Bind(model => model.ContentCode)));
+			Code(model => model.ContentCode));
 	}
 
 	void AddStateShowcase(
@@ -215,7 +215,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 				SettingRow("Loading", loading),
 				SettingRow("Destructive", destructive),
 				SettingRow("Enabled", enabled)),
-			ShowcaseBox.Code(Bind(model => model.StateCode)));
+			Code(model => model.StateCode));
 	}
 
 	void AddMenuShowcase(
@@ -313,6 +313,6 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 					}
 				},
 				190),
-			ShowcaseBox.Code(Bind(model => model.MenuCode)));
+			Code(model => model.MenuCode));
 	}
 }

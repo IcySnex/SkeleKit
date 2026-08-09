@@ -48,7 +48,7 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 			"Rows & columns",
 			"Place 25 cells in five equal rows and five equal columns.",
 			ShowcaseBox.Canvas(grid, 320),
-			ShowcaseBox.Code(Bind(model => model.SimpleGridCode)));
+			Code(model => model.SimpleGridCode));
 	}
 
 	void AddGridShowcase(
@@ -153,7 +153,7 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 				LabeledSlider("Fixed column", Bind(model => model.FixedWidthLabel), fixedWidth),
 				LabeledControl("Column index", column),
 				LabeledControl("Column span", spanHost)),
-			ShowcaseBox.Code(Bind(model => model.GridCode)));
+			Code(model => model.GridCode));
 	}
 
 

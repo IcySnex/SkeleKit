@@ -100,7 +100,7 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 					},
 					280),
 				SettingRow("Reveal button", reveal)),
-			ShowcaseBox.Code(Bind(model => model.EntryCode)));
+			Code(model => model.EntryCode));
 	}
 
 	void AddIntentShowcase(
@@ -186,7 +186,7 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 				SettingRow("Reveal button", reveal),
 				SettingRow("Trailing icon", trailing),
 				SettingRow("Clear button", clear)),
-			ShowcaseBox.Code(Bind(model => model.IntentCode)));
+			Code(model => model.IntentCode));
 	}
 
 

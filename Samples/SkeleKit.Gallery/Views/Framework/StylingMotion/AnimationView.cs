@@ -122,7 +122,7 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 				ShowcaseBox.Canvas(preview, 200),
 				LabeledControl("Timing", timing),
 				SettingRow("Card", toggle)),
-			ShowcaseBox.Code(Bind(model => model.AnimationCode)));
+			Code(model => model.AnimationCode));
 	}
 
 	void AddAnimatorShowcase(
@@ -207,7 +207,7 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 			"Interactive animator",
 			"Drag the framed work, release it to settle, and grab it again while it is moving.",
 			ShowcaseBox.Canvas(stage, 200),
-			ShowcaseBox.Code(Bind(model => model.AnimatorCode)));
+			Code(model => model.AnimatorCode));
 	}
 
 

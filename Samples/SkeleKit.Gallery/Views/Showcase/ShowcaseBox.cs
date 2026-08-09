@@ -98,18 +98,26 @@ internal sealed class ShowcaseBox : Border
 		BindingExpression<IReadOnlyList<Span>?> spans) =>
 		new Border
 		{
-			Padding = 16,
 			Background = ContentBackground,
 
-			Child = new TextView
+			Child = new ScrollView
 			{
-				Spans = spans,
-				IsSelectable = true,
-				FontSize = 13,
-				FontDesign = FontDesign.Monospaced,
-				TextColor = Colors.Label,
-				LineSpacing = 2
+				Orientation = Orientation.Horizontal,
+				Padding = 16,
+				Content = CodeText(spans)
 			}
+		};
+
+	internal static TextView CodeText(
+		BindableList<Span> spans) =>
+		new()
+		{
+			Spans = spans,
+			IsSelectable = true,
+			FontSize = 13,
+			FontDesign = FontDesign.Monospaced,
+			TextColor = Colors.Label,
+			LineSpacing = 2
 		};
 
 

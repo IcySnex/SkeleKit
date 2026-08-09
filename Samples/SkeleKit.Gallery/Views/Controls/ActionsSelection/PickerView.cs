@@ -76,7 +76,7 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 					180),
 				SettingRow("Selection", clear),
 				LabeledControl("Collection contents", items)),
-			ShowcaseBox.Code(Bind(model => model.PickerCode)));
+			Code(model => model.PickerCode));
 	}
 
 

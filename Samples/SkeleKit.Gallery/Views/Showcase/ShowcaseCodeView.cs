@@ -14,19 +14,15 @@ internal sealed class ShowcaseCodeView : ContentView
 
 		Content = new ScrollView
 		{
-			Padding = 16,
 			Background = Color.Dynamic(
 				Color.FromHex(0xf9f9f9),
 				Color.FromHex(0x202020)),
 
-			Content = new TextView
+			Content = new ScrollView
 			{
-				Spans = [.. spans],
-				IsSelectable = true,
-				FontSize = 13,
-				FontDesign = FontDesign.Monospaced,
-				TextColor = Colors.Label,
-				LineSpacing = 2
+				Orientation = Orientation.Horizontal,
+				Padding = 16,
+				Content = ShowcaseBox.CodeText([.. CSharpSyntax.Highlight(spans)])
 			}
 		};
 	}

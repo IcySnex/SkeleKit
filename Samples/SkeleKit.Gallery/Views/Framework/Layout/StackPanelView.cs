@@ -61,7 +61,7 @@ internal sealed class StackPanelView : ShowcaseView<StackPanelViewModel>
 				ShowcaseBox.Canvas(stack, 260),
 				LabeledControl("Orientation", orientation),
 				LabeledSlider("Spacing", Bind(model => model.SpacingLabel), spacing)),
-			ShowcaseBox.Code(Bind(model => model.ConfigurationCode)));
+			Code(model => model.ConfigurationCode));
 	}
 
 

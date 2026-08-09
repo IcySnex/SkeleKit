@@ -138,7 +138,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 				SettingRow("Compass when rotated", compass),
 				SettingRow("Scale while zooming", scale),
 				SettingRow("Traffic", traffic)),
-			ShowcaseBox.Code(Bind(model => model.PresentationCode)));
+			Code(model => model.PresentationCode));
 	}
 
 	void AddPinsShowcase(
@@ -222,7 +222,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 					380),
 				LabeledControl("Clustering", clustering),
 				SettingRow("Overlays", showsOverlays)),
-			ShowcaseBox.Code(Bind(model => model.PinsCode)));
+			Code(model => model.PinsCode));
 	}
 
 

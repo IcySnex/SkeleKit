@@ -56,7 +56,7 @@ internal sealed class ContentViewView : ShowcaseView<ContentViewViewModel>
 				LabeledControl("Title style", titleStyle),
 				SettingRow("Show prompt", prompt),
 				SettingRow("Hide tab bar", tabBar)),
-			ShowcaseBox.Code(Bind(model => model.ChromeCode)));
+			Code(model => model.ChromeCode));
 	}
 
 	void AddSearchShowcase(
@@ -70,7 +70,7 @@ internal sealed class ContentViewView : ShowcaseView<ContentViewViewModel>
 			"Navigation search",
 			"Try typing, changing scope, submitting and cancelling in the native navigation search field.",
 			ShowcaseBox.Canvas(open, 140),
-			ShowcaseBox.Code(Bind(model => model.SearchCode)));
+			Code(model => model.SearchCode));
 	}
 
 	void AddLifecycleShowcase(
@@ -84,7 +84,7 @@ internal sealed class ContentViewView : ShowcaseView<ContentViewViewModel>
 			"Lifecycle & leave guard",
 			"Cover and uncover a page to observe its lifecycle, or enable confirmation before leaving it.",
 			ShowcaseBox.Canvas(open, 140),
-			ShowcaseBox.Code(Bind(model => model.LifecycleCode)));
+			Code(model => model.LifecycleCode));
 	}
 
 

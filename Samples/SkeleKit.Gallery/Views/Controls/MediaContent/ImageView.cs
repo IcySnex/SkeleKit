@@ -61,7 +61,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 				ShowcaseBox.Canvas(image, 230),
 				SettingRow("Source", source),
 				SettingRow("Stretch", stretch)),
-			ShowcaseBox.Code(Bind(model => model.SourceCode)));
+			Code(model => model.SourceCode));
 	}
 
 	void AddRenderingShowcase(
@@ -131,7 +131,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 				SettingRow("Weight", weight),
 				SettingRow("Scale", scale),
 				SettingRow("Multicolor", multicolor)),
-			ShowcaseBox.Code(Bind(model => model.RenderingCode)));
+			Code(model => model.RenderingCode));
 	}
 
 	void AddEffectsShowcase(
@@ -185,6 +185,6 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 						Size = ButtonSize.Small,
 						Command = new RelayCommand(() => symbol.PlaySymbolEffect(SymbolEffect.Bounce))
 					})),
-			ShowcaseBox.Code(Bind(model => model.EffectsCode)));
+			Code(model => model.EffectsCode));
 	}
 }

@@ -97,7 +97,7 @@ internal sealed class OverlayView : ShowcaseView<OverlayViewModel>
 			"Layer order",
 			"Every child shares the same space. Children added later are drawn above earlier ones.",
 			ShowcaseBox.Canvas(artwork, 250),
-			ShowcaseBox.Code(Bind(model => model.LayersCode)));
+			Code(model => model.LayersCode));
 	}
 
 	void AddAlignmentShowcase(
@@ -192,6 +192,6 @@ internal sealed class OverlayView : ShowcaseView<OverlayViewModel>
 				ShowcaseBox.Canvas(overlay, 240),
 				LabeledControl("Horizontal", horizontal),
 				LabeledControl("Vertical", vertical)),
-			ShowcaseBox.Code(Bind(model => model.AlignmentCode)));
+			Code(model => model.AlignmentCode));
 	}
 }

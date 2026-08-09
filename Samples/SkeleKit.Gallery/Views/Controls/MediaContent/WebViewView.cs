@@ -81,7 +81,7 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 						Size = ButtonSize.Small,
 						Command = evaluate
 					})),
-			ShowcaseBox.Code(Bind(model => model.HtmlCode)));
+			Code(model => model.HtmlCode));
 	}
 
 	void AddWebsiteShowcase(
@@ -129,7 +129,7 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 					},
 					350),
 				SettingRow("Navigation", navigation)),
-			ShowcaseBox.Code(Bind(model => model.WebsiteCode)));
+			Code(model => model.WebsiteCode));
 	}
 
 

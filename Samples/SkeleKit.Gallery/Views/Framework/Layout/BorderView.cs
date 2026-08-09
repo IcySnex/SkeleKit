@@ -67,6 +67,6 @@ internal sealed class BorderView : ShowcaseView<BorderViewModel>
 				ShowcaseBox.Canvas(frame, 200),
 				LabeledSlider("Corner radius", Bind(model => model.CornerRadiusLabel), cornerRadius),
 				LabeledSlider("Stroke width", Bind(model => model.StrokeLabel), stroke)),
-			ShowcaseBox.Code(Bind(model => model.FrameCode)));
+			Code(model => model.FrameCode));
 	}
 }

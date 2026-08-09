@@ -98,7 +98,7 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 						"Inspect",
 						"ruler",
 						Command.From(() => _ = viewModel.InspectLayoutAsync(card))))),
-			ShowcaseBox.Code(Bind(model => model.LayoutCode)));
+			Code(model => model.LayoutCode));
 	}
 
 	void AddVisualShowcase(
@@ -180,7 +180,7 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 				LabeledSlider("Scale", Bind(model => model.ScaleLabel), scale),
 				LabeledSlider("Opacity", Bind(model => model.OpacityLabel), opacity),
 				LabeledControl("Transform anchor", anchor)),
-			ShowcaseBox.Code(Bind(model => model.VisualCode)));
+			Code(model => model.VisualCode));
 	}
 
 	void AddInteractionShowcase(
@@ -228,7 +228,7 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 					}
 				},
 				280),
-			ShowcaseBox.Code(Bind(model => model.InteractionCode)));
+			Code(model => model.InteractionCode));
 	}
 
 	static void Pan(

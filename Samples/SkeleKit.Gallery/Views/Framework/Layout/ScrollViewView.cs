@@ -64,7 +64,7 @@ internal sealed class ScrollViewView : ShowcaseView<ScrollViewViewModel>
 						TextColor = Colors.SecondaryLabel
 					}),
 				SettingRow("Scroll indicator", indicator)),
-			ShowcaseBox.Code(Bind(model => model.VerticalCode)));
+			Code(model => model.VerticalCode));
 	}
 
 	void AddPagingShowcase(
@@ -109,7 +109,7 @@ internal sealed class ScrollViewView : ShowcaseView<ScrollViewViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(pager, 230),
 				SettingRow("Snap to pages", paging)),
-			ShowcaseBox.Code(Bind(model => model.PagingCode)));
+			Code(model => model.PagingCode));
 	}
 
 

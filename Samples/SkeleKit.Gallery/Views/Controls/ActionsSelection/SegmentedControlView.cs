@@ -41,6 +41,6 @@ internal sealed class SegmentedControlView : ShowcaseView<SegmentedControlViewMo
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(sections, 150),
 				SettingRow("Selection", reset)),
-			ShowcaseBox.Code(Bind(model => model.SelectionCode)));
+			Code(model => model.SelectionCode));
 	}
 }

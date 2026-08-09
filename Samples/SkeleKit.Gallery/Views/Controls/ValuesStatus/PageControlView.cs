@@ -91,7 +91,7 @@ internal sealed class PageControlView : ShowcaseView<PageControlViewModel>
 					}),
 				SettingRow("Hide single page", hiding),
 				SettingRow("Scrubbing", scrubbing)),
-			ShowcaseBox.Code(Bind(model => model.PageControlCode)));
+			Code(model => model.PageControlCode));
 	}
 
 

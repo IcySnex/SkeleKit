@@ -63,7 +63,7 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 				canvas,
 				LabeledControl("Mode", mode),
 				LabeledControl("Style", style)),
-			ShowcaseBox.Code(Bind(model => model.ConfigurationCode)));
+			Code(model => model.ConfigurationCode));
 	}
 
 	void AddRangeShowcase(
@@ -120,6 +120,6 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 					},
 					190),
 				LabeledControl("Bound value", position)),
-			ShowcaseBox.Code(Bind(model => model.RangeCode)));
+			Code(model => model.RangeCode));
 	}
 }

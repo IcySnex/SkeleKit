@@ -98,7 +98,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 				LabeledControl("Content", content),
 				selectableSetting,
 				LabeledControl("Link color", linkColor)),
-			ShowcaseBox.Code(Bind(model => model.SelectionCode)));
+			Code(model => model.SelectionCode));
 	}
 
 	void AddTypographyShowcase(
@@ -216,7 +216,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 				SettingRow("Weight", weight),
 				LabeledControl("Design", design),
 				LabeledControl("Text color", color)),
-			ShowcaseBox.Code(Bind(model => model.TypographyCode)));
+			Code(model => model.TypographyCode));
 	}
 
 	void AddContainerShowcase(
@@ -300,6 +300,6 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 				LabeledControl("Text alignment", alignment),
 				LabeledSlider("Line spacing", Bind(model => model.LineSpacingLabel), lineSpacing),
 				LabeledSlider("Letter spacing", Bind(model => model.LetterSpacingLabel), letterSpacing)),
-			ShowcaseBox.Code(Bind(model => model.ContainerCode)));
+			Code(model => model.ContainerCode));
 	}
 }

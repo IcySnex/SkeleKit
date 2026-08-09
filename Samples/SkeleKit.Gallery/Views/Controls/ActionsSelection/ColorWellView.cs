@@ -86,6 +86,6 @@ internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 				SettingRow("Picker title", title),
 				SettingRow("Opacity slider", alpha),
 				SettingRow("Bound value", reset)),
-			ShowcaseBox.Code(Bind(model => model.SelectionCode)));
+			Code(model => model.SelectionCode));
 	}
 }

@@ -55,6 +55,6 @@ internal sealed class DividerView : ShowcaseView<DividerViewModel>
 					},
 					180),
 				SettingRow("Accent color", accent)),
-			ShowcaseBox.Code(Bind(model => model.DividerCode)));
+			Code(model => model.DividerCode));
 	}
 }

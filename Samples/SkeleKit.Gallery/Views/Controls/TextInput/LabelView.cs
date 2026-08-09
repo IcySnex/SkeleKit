@@ -153,7 +153,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 				sizeSetting,
 				SettingRow("Weight", weight),
 				LabeledControl("Design", design)),
-			ShowcaseBox.Code(Bind(model => model.TypographyCode)));
+			Code(model => model.TypographyCode));
 	}
 
 	void AddFlowShowcase(
@@ -223,7 +223,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 				LabeledControl("Text alignment", alignment),
 				SettingRow("Truncation", truncation),
 				SettingRow("Shrink to fit", shrink)),
-			ShowcaseBox.Code(Bind(model => model.FlowCode)));
+			Code(model => model.FlowCode));
 	}
 
 	void AddAttributedShowcase(
@@ -303,6 +303,6 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 				LabeledSlider("Letter spacing", Bind(model => model.LetterSpacingLabel), letterSpacing),
 				SettingRow("Underline all", underline),
 				SettingRow("Strike all", strike)),
-			ShowcaseBox.Code(Bind(model => model.AttributedCode)));
+			Code(model => model.AttributedCode));
 	}
 }

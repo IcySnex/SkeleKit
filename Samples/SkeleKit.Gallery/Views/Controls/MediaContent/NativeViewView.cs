@@ -47,6 +47,6 @@ internal sealed class NativeView : ShowcaseView<NativeViewModel>
 					},
 					300),
 				SettingRow("Drawing", clear)),
-			ShowcaseBox.Code(Bind(model => model.CanvasCode)));
+			Code(model => model.CanvasCode));
 	}
 }

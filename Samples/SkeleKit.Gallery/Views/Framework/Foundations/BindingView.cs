@@ -64,7 +64,7 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 					},
 					170),
 				LabeledSlider("Source value", Bind(model => model.OneWayValueLabel), source)),
-			ShowcaseBox.Code(Bind(model => model.OneWayCode)));
+			Code(model => model.OneWayCode));
 	}
 
 	void AddTwoWayShowcase(
@@ -138,7 +138,7 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 					},
 					220),
 				SettingRow("Update source", updateSource)),
-			ShowcaseBox.Code(Bind(model => model.TwoWayCode)));
+			Code(model => model.TwoWayCode));
 	}
 
 	void AddListShowcase(
@@ -220,6 +220,6 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 							add
 						}
 					})),
-			ShowcaseBox.Code(Bind(model => model.ListCode)));
+			Code(model => model.ListCode));
 	}
 }

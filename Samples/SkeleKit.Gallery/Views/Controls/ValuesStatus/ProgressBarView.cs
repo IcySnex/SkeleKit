@@ -58,6 +58,6 @@ internal sealed class ProgressBarView : ShowcaseView<ProgressBarViewModel>
 					},
 					160),
 				SettingRow("Progress", progress)),
-			ShowcaseBox.Code(Bind(model => model.ProgressBarCode)));
+			Code(model => model.ProgressBarCode));
 	}
 }

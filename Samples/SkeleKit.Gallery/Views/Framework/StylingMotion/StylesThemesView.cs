@@ -50,7 +50,7 @@ internal sealed class StylesThemesView : ShowcaseView<StylesThemesViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(preview, 224),
 				LabeledControl("Applied source", mode)),
-			ShowcaseBox.Code(Bind(model => model.StyleCode)));
+			Code(model => model.StyleCode));
 	}
 
 

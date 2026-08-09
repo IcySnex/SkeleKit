@@ -110,7 +110,7 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 				SettingRow("Continuous updates", continuous),
 				SettingRow("Endpoint symbols", icons),
 				SettingRow("Enabled", enabled)),
-			ShowcaseBox.Code(Bind(model => model.SliderCode)));
+			Code(model => model.SliderCode));
 	}
 
 }

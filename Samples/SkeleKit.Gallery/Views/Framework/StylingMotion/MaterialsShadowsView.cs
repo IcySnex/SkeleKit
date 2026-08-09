@@ -131,7 +131,7 @@ internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewMo
 				SettingRow("Surface", surfacePicker),
 				LabeledControl("Depth", depth),
 				SettingRow("Clip content", clip)),
-			ShowcaseBox.Code(Bind(model => model.CompositionCode)));
+			Code(model => model.CompositionCode));
 	}
 
 
