@@ -40,6 +40,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<CollectionInteractionsViewModel>();
 		services.AddTransient<ColorsBrushesViewModel>();
 		services.AddTransient<MaterialsShadowsViewModel>();
+		services.AddTransient<StylesThemesViewModel>();
 
 		services.AddTransient<ActivityIndicatorViewModel>();
 		services.AddTransient<ButtonViewModel>();
@@ -63,6 +64,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<MapViewModel>();
 		services.AddTransient<NativeViewModel>();
 	})
+	.UseTheme(theme => theme.Style(GalleryStyles.ImplicitCard))
 	.UseTint(Colors.Indigo)
 	.Tabs(tabs => tabs
 		.LargeTitles()

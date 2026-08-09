@@ -135,7 +135,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				"Styling & Motion",
 				Topic("Colors & Brushes", "Semantic colors, gradients and interpolation.", "paintbrush.fill", Colors.Cyan, GalleryArea.Framework, typeof(ColorsBrushesViewModel)),
 				Topic("Surfaces & Shadows", "Solid, gradient and material surfaces with clipping and depth.", "circle.lefthalf.filled", Colors.Cyan, GalleryArea.Framework, typeof(MaterialsShadowsViewModel)),
-				Topic("Styles & Themes", "Reusable setters and implicit application themes.", "swatchpalette.fill", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)),
+				Topic("Styles & Themes", "Reusable setters, inheritance and implicit application themes.", "swatchpalette.fill", Colors.Cyan, GalleryArea.Framework, typeof(StylesThemesViewModel)),
 				Topic("Animation", "Curves, springs and layout transitions.", "waveform.path", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)),
 				Topic("Animator", "Pause, scrub, reverse and continue interactive motion.", "timeline.selection", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)))
 		];
