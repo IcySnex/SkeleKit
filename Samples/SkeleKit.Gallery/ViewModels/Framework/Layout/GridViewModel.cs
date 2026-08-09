@@ -18,18 +18,33 @@ internal sealed partial class GridViewModel : ShowcaseViewModel
 	int spanIndex = 1;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(MaxSpan))]
+	[NotifyPropertyChangedFor(nameof(SpanCount))]
+	[NotifyPropertyChangedFor(nameof(SpanLabel))]
 	[NotifyPropertyChangedFor(nameof(GridCode))]
 	int columnIndex;
 
 
+	internal int MaxSpan =>
+		3 - Math.Clamp(ColumnIndex, 0, 2);
+
 	internal int SpanCount =>
-		Math.Clamp(SpanIndex + 1, 1, 3);
+		Math.Clamp(SpanIndex + 1, 1, MaxSpan);
 
 	public string FixedWidthLabel =>
 		$"{Number(FixedColumnWidth)} pt";
 
 	public string SpanLabel =>
 		$"Span {SpanCount}";
+
+	partial void OnColumnIndexChanged(
+		int value)
+	{
+		int maxSpanIndex = 2 - Math.Clamp(value, 0, 2);
+
+		if (SpanIndex > maxSpanIndex)
+			SpanIndex = maxSpanIndex;
+	}
 
 	public IReadOnlyList<Span> SimpleGridCode { get; } =
 		Code(
@@ -53,7 +68,7 @@ internal sealed partial class GridViewModel : ShowcaseViewModel
 				for (int column = 0; column < 5; column++)
 				{
 					grid.Children.Add(
-						Cell(row * 5 + column + 1)
+						SimpleCell(row * 5 + column + 1)
 							.Row(row)
 							.Column(column));
 				}
@@ -88,8 +103,6 @@ internal sealed partial class GridViewModel : ShowcaseViewModel
 				{
 					GridLength.Auto,
 					{{Number(FixedColumnWidth)}},
-					GridLength.Star,
-					GridLength.Star,
 					GridLength.Star
 				},
 				Rows =
@@ -101,11 +114,15 @@ internal sealed partial class GridViewModel : ShowcaseViewModel
 				{
 					Cell("Auto").Column(0).Row(0),
 					Cell("{{FixedWidthLabel}}").Column(1).Row(0),
-					Cell("Star").Column(2).Row(0).ColumnSpan(3),
+					Cell("Star").Column(2).Row(0),
 					Cell("{{SpanLabel}}", filled: true)
 						.Column({{ColumnIndex}}).Row(1).ColumnSpan({{SpanCount}})
 				}
 			};
+
+			SegmentedControl span = new();
+			for (int value = 1; value <= grid.Columns.Count - {{ColumnIndex}}; value++)
+				span.Items.Add(value.ToString());
 
 			static Border Cell(string text, bool filled = false) =>
 				new()

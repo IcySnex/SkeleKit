@@ -76,8 +76,6 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 			{
 				GridLength.Auto,
 				viewModel.FixedColumnWidth,
-				GridLength.Star,
-				GridLength.Star,
 				GridLength.Star
 			},
 			Rows =
@@ -89,7 +87,7 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 			{
 				Cell("Auto").Column(0).Row(0),
 				Cell(Bind(model => model.FixedWidthLabel)).Column(1).Row(0),
-				Cell("Star").Column(2).Row(0).ColumnSpan(3),
+				Cell("Star").Column(2).Row(0),
 				spanningCell
 			}
 		};
@@ -105,20 +103,29 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 			ValueChanged = value => grid.Columns[1] = value
 		};
 
-		SegmentedControl span = new()
+		Border spanHost = new();
+
+		SegmentedControl CreateSpanControl()
 		{
-			SelectedIndex = Bind(
-				model => model.SpanIndex,
-				static (model, value) => model.SpanIndex = value),
-			SelectionChanged = index =>
+			SegmentedControl control = new()
 			{
-				spanningCell.ColumnSpan(index + 1);
-				grid.InvalidateMeasure();
-			}
-		};
-		span.Items.Add("1");
-		span.Items.Add("2");
-		span.Items.Add("3");
+				SelectedIndex = Bind(
+					model => model.SpanIndex,
+					static (model, value) => model.SpanIndex = value),
+				SelectionChanged = index =>
+				{
+					spanningCell.ColumnSpan(index + 1);
+					grid.InvalidateMeasure();
+				}
+			};
+
+			for (int value = 1; value <= viewModel.MaxSpan; value++)
+				control.Items.Add(value.ToString());
+
+			return control;
+		}
+
+		spanHost.Child = CreateSpanControl();
 
 		SegmentedControl column = new()
 		{
@@ -127,8 +134,11 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 				static (model, value) => model.ColumnIndex = value),
 			SelectionChanged = index =>
 			{
-				spanningCell.Column(index);
+				spanningCell
+					.Column(index)
+					.ColumnSpan(viewModel.SpanCount);
 				grid.InvalidateMeasure();
+				spanHost.Child = CreateSpanControl();
 			}
 		};
 		column.Items.Add("0");
@@ -142,7 +152,7 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 				ShowcaseBox.Canvas(grid, 220),
 				LabeledSlider("Fixed column", Bind(model => model.FixedWidthLabel), fixedWidth),
 				LabeledControl("Column index", column),
-				LabeledControl("Column span", span)),
+				LabeledControl("Column span", spanHost)),
 			ShowcaseBox.Code(Bind(model => model.GridCode)));
 	}
 
