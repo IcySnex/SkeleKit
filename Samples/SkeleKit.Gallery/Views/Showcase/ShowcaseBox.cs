@@ -5,6 +5,9 @@ internal sealed class ShowcaseBox : Border
 	static readonly Color ContentBackground = Color.Dynamic(
 		Color.FromHex(0xf9f9f9),
 		Color.FromHex(0x202020));
+	static readonly Color CodeForeground = Color.Dynamic(
+		Color.FromHex(0x1E1E1E),
+		Color.FromHex(0xD4D4D4));
 
 
 	readonly View code;
@@ -116,7 +119,7 @@ internal sealed class ShowcaseBox : Border
 			IsSelectable = true,
 			FontSize = 13,
 			FontDesign = FontDesign.Monospaced,
-			TextColor = Colors.Label,
+			TextColor = CodeForeground,
 			LineSpacing = 2
 		};
 

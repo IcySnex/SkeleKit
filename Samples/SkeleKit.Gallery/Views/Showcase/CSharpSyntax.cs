@@ -13,20 +13,24 @@ internal static class CSharpSyntax
 	}
 
 	static readonly Color KeywordColor = Color.Dynamic(
-		Color.FromHex(0x9B2393),
-		Color.FromHex(0xFC5FA3));
+		Color.FromHex(0x0000FF),
+		Color.FromHex(0x569CD6));
 
 	static readonly Color SymbolColor = Color.Dynamic(
-		Color.FromHex(0x0B4F79),
-		Color.FromHex(0x5DD8FF));
+		Color.FromHex(0x2B91AF),
+		Color.FromHex(0x4EC9B0));
 
 	static readonly Color StringColor = Color.Dynamic(
-		Color.FromHex(0xC41A16),
-		Color.FromHex(0xFC6A5D));
+		Color.FromHex(0xA31515),
+		Color.FromHex(0xCE9178));
 
 	static readonly Color NumberColor = Color.Dynamic(
-		Color.FromHex(0x1C00CF),
-		Color.FromHex(0xD0BF69));
+		Color.FromHex(0x098658),
+		Color.FromHex(0xB5CEA8));
+
+	static readonly Color CommentColor = Color.Dynamic(
+		Color.FromHex(0x008000),
+		Color.FromHex(0x6A9955));
 
 	static readonly HashSet<string> Keywords = new(StringComparer.Ordinal)
 	{
@@ -158,7 +162,7 @@ internal static class CSharpSyntax
 				TokenKind.Symbol => SymbolColor,
 				TokenKind.String => StringColor,
 				TokenKind.Number => NumberColor,
-				TokenKind.Comment => Colors.SecondaryLabel,
+				TokenKind.Comment => CommentColor,
 				_ => null
 			}
 		});
