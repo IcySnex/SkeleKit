@@ -134,6 +134,12 @@ internal sealed class ShowcaseBox : Border
 		double currentHeight = content.ArrangedBounds.Height > 0
 			? content.ArrangedBounds.Height
 			: outgoing.DesiredSize.Height;
+		double availableWidth = content.ArrangedBounds.Width > 0
+			? content.ArrangedBounds.Width
+			: content.DesiredSize.Width;
+
+		incoming.InvalidateMeasure();
+		incoming.Measure(new(availableWidth, double.PositiveInfinity));
 		double incomingHeight = incoming.DesiredSize.Height;
 
 		outgoing.IsEnabled = false;

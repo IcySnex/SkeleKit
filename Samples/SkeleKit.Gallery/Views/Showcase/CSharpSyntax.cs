@@ -6,7 +6,8 @@ internal static class CSharpSyntax
 	{
 		Plain,
 		Keyword,
-		Symbol,
+		Type,
+		Member,
 		String,
 		Number,
 		Comment
@@ -16,9 +17,13 @@ internal static class CSharpSyntax
 		Color.FromHex(0x0000FF),
 		Color.FromHex(0x569CD6));
 
-	static readonly Color SymbolColor = Color.Dynamic(
+	static readonly Color TypeColor = Color.Dynamic(
 		Color.FromHex(0x2B91AF),
 		Color.FromHex(0x4EC9B0));
+
+	static readonly Color MemberColor = Color.Dynamic(
+		Color.FromHex(0x001080),
+		Color.FromHex(0x9CDCFE));
 
 	static readonly Color StringColor = Color.Dynamic(
 		Color.FromHex(0xA31515),
@@ -116,7 +121,7 @@ internal static class CSharpSyntax
 				string identifier = code[start..index];
 				TokenKind kind = Keywords.Contains(identifier)
 					? TokenKind.Keyword
-					: char.IsUpper(identifier[0]) ? TokenKind.Symbol : TokenKind.Plain;
+					: IdentifierKind(code, start, index, identifier);
 
 				Add(result, kinds, identifier, kind);
 				continue;
@@ -159,7 +164,8 @@ internal static class CSharpSyntax
 			TextColor = kind switch
 			{
 				TokenKind.Keyword => KeywordColor,
-				TokenKind.Symbol => SymbolColor,
+				TokenKind.Type => TypeColor,
+				TokenKind.Member => MemberColor,
 				TokenKind.String => StringColor,
 				TokenKind.Number => NumberColor,
 				TokenKind.Comment => CommentColor,
@@ -167,6 +173,49 @@ internal static class CSharpSyntax
 			}
 		});
 		kinds.Add(kind);
+	}
+
+	static TokenKind IdentifierKind(
+		string code,
+		int start,
+		int end,
+		string identifier)
+	{
+		if (!char.IsUpper(identifier[0]))
+			return TokenKind.Plain;
+
+		char previous = PreviousNonWhitespace(code, start);
+		char next = NextNonWhitespace(code, end);
+
+		return previous == '.' || next == '='
+			? TokenKind.Member
+			: TokenKind.Type;
+	}
+
+	static char PreviousNonWhitespace(
+		string code,
+		int start)
+	{
+		for (int index = start - 1; index >= 0; index--)
+		{
+			if (!char.IsWhiteSpace(code[index]))
+				return code[index];
+		}
+
+		return '\0';
+	}
+
+	static char NextNonWhitespace(
+		string code,
+		int end)
+	{
+		for (int index = end; index < code.Length; index++)
+		{
+			if (!char.IsWhiteSpace(code[index]))
+				return code[index];
+		}
+
+		return '\0';
 	}
 
 	static bool TryString(
