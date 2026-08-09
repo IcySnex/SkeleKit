@@ -168,6 +168,7 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 		animator.Fraction = 0;
 
 		const double distance = 176;
+		const double maxReleaseVelocity = 4;
 		double grabbedAt = 0;
 		double panStart = 0;
 		artwork.Panned = pan =>
@@ -194,7 +195,10 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 						: animator.Fraction >= 0.5;
 
 					animator.IsReversed = !towardEnd;
-					animator.Continue(velocity / distance);
+					animator.Continue(Math.Clamp(
+						velocity / distance,
+						-maxReleaseVelocity,
+						maxReleaseVelocity));
 					break;
 			}
 		};
@@ -214,11 +218,11 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 			VerticalAlignment = VerticalAlignment.Center,
 			Width = 64,
 			Height = 64,
-			Padding = 5,
+			Padding = 8,
 			ColumnSpacing = 4,
 			RowSpacing = 4,
 			Background = Colors.SecondaryBackground,
-			CornerRadius = 14,
+			CornerRadius = 8,
 			Columns =
 			{
 				GridLength.Star,
