@@ -58,7 +58,7 @@ internal sealed class ScrollViewView : ShowcaseView<ScrollViewViewModel>
 						VerticalAlignment = VerticalAlignment.Center,
 						Text = Bind(model => model.OffsetLabel),
 						TextStyle = TextStyle.Subheadline,
-						FontDesign = FontDesign.Monospaced,
+						FontWeight = FontWeight.Medium,
 						TextAlignment = TextAlignment.Trailing,
 						TextColor = Colors.SecondaryLabel
 					}),

@@ -30,7 +30,7 @@ internal sealed partial class ScrollViewViewModel : ShowcaseViewModel
 				Width = 64,
 				Text = "0",
 				TextStyle = TextStyle.Subheadline,
-				FontDesign = FontDesign.Monospaced,
+				FontWeight = FontWeight.Medium,
 				TextAlignment = TextAlignment.Trailing,
 				TextColor = Colors.SecondaryLabel
 			};
