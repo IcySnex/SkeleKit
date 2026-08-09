@@ -119,7 +119,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				Topic("Grid", "Rows, columns, track sizing and spans.", "grid", Colors.Blue, GalleryArea.Framework, typeof(GridViewModel)),
 				Topic("Overlay", "Layered children aligned in one shared space.", "square.3.layers.3d", Colors.Blue, GalleryArea.Framework, typeof(OverlayViewModel)),
 				Topic("ScrollView", "Vertical content, live offsets and horizontal paging.", "scroll", Colors.Blue, GalleryArea.Framework, typeof(ScrollViewViewModel)),
-				Topic("StackPanel", "Horizontal and vertical linear layout.", "rectangle.stack", Colors.Blue, GalleryArea.Framework, typeof(AboutViewModel))),
+				Topic("StackPanel", "Horizontal and vertical linear layout.", "rectangle.stack", Colors.Blue, GalleryArea.Framework, typeof(StackPanelViewModel))),
 
 			Section(
 				"Collections",
