@@ -39,6 +39,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<SectionsViewModel>();
 		services.AddTransient<CollectionInteractionsViewModel>();
 		services.AddTransient<ColorsBrushesViewModel>();
+		services.AddTransient<MaterialsShadowsViewModel>();
 
 		services.AddTransient<ActivityIndicatorViewModel>();
 		services.AddTransient<ButtonViewModel>();
