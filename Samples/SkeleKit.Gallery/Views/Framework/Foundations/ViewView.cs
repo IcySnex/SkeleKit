@@ -7,15 +7,11 @@ namespace SkeleKit.Gallery.Views.Framework.Foundations;
 [Page]
 internal sealed class ViewView : ShowcaseView<ViewViewModel>
 {
-	static readonly Shadow CardShadow = new(opacity: 0.22, radius: 10, offsetY: 5);
-
-
 	public ViewView(
 		ViewViewModel viewModel) : base(viewModel, "View", Colors.Indigo)
 	{
 		AddLayoutShowcase(viewModel);
 		AddVisualShowcase(viewModel);
-		AddBrushShowcase(viewModel);
 		AddInteractionShowcase(viewModel);
 	}
 
@@ -185,102 +181,6 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 				LabeledSlider("Opacity", Bind(model => model.OpacityLabel), opacity),
 				LabeledControl("Transform anchor", anchor)),
 			ShowcaseBox.Code(Bind(model => model.VisualCode)));
-	}
-
-	void AddBrushShowcase(
-		ViewViewModel viewModel)
-	{
-		Border surface = new()
-		{
-			HorizontalAlignment = HorizontalAlignment.Stretch,
-			VerticalAlignment = VerticalAlignment.Stretch,
-			Background = viewModel.SelectedBrush,
-			CornerRadius = 18,
-			Shadow = viewModel.CastsShadow ? CardShadow : null,
-
-			Child = new Label
-			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
-				Text = "Brush",
-				TextStyle = TextStyle.Title3,
-				FontWeight = FontWeight.Bold,
-				TextColor = Colors.White
-			}
-		};
-
-		Border edge = new()
-		{
-			HorizontalAlignment = HorizontalAlignment.End,
-			VerticalAlignment = VerticalAlignment.Start,
-			Width = 50,
-			Height = 26,
-			Translation = new(14, -10),
-			Background = Colors.White,
-			CornerRadius = 13,
-
-			Child = new Label
-			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
-				Text = "Edge",
-				TextStyle = TextStyle.Caption1,
-				FontWeight = FontWeight.Semibold,
-				TextColor = Colors.Indigo
-			}
-		};
-
-		Grid preview = new()
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center,
-			Width = 180,
-			Height = 96,
-			ClipsToBounds = viewModel.ClipsContent,
-
-			Children =
-			{
-				surface,
-				edge
-			}
-		};
-
-		SegmentedControl brush = new()
-		{
-			SelectedIndex = Bind(
-				model => model.BrushIndex,
-				static (model, value) => model.BrushIndex = value),
-			SelectionChanged = index => surface.Background = viewModel.SelectedBrush
-		};
-		brush.Items.Add("Solid");
-		brush.Items.Add("Gradient");
-		brush.Items.Add("Material");
-
-		Switch shadow = new()
-		{
-			IsOn = Bind(
-				model => model.CastsShadow,
-				static (model, value) => model.CastsShadow = value),
-			Toggled = enabled => surface.Shadow = enabled ? CardShadow : null
-		};
-
-		Switch clip = new()
-		{
-			IsOn = Bind(
-				model => model.ClipsContent,
-				static (model, value) => model.ClipsContent = value),
-			Toggled = enabled => preview.ClipsToBounds = enabled
-		};
-
-		AddShowcase(
-			"Brushes, shadow & clipping",
-			"Compare solid, gradient and material backgrounds, then control overflow independently from the shadow.",
-			PreviewWithSettings(
-				ShowcaseBox.Canvas(preview, 220),
-				LabeledControl("Background brush", brush),
-				SettingRow("Shadow", shadow),
-				SettingRow("Clip to bounds", clip)),
-			ShowcaseBox.Code(Bind(model => model.BrushCode)));
 	}
 
 	void AddInteractionShowcase(

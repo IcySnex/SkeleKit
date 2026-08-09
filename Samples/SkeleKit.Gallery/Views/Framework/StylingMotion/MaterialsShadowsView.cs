@@ -6,11 +6,8 @@ namespace SkeleKit.Gallery.Views.Framework.StylingMotion;
 [Page]
 internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewModel>
 {
-	static readonly Shadow SurfaceShadow = new(opacity: 0.24, radius: 14, offsetY: 8);
-
-
 	public MaterialsShadowsView(
-		MaterialsShadowsViewModel viewModel) : base(viewModel, "Materials & Shadows", Colors.Cyan)
+		MaterialsShadowsViewModel viewModel) : base(viewModel, "Surfaces & Shadows", Colors.Cyan)
 	{
 		AddCompositionShowcase(viewModel);
 	}
@@ -52,24 +49,26 @@ internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewMo
 			}
 		};
 
-		Border material = new()
+		Label surfaceLabel = new()
+		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Text = Bind(model => model.SurfaceName),
+			TextStyle = TextStyle.Title3,
+			FontWeight = FontWeight.Semibold,
+			TextColor = viewModel.SurfaceTextColor
+		};
+
+		Border surface = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			Width = 224,
 			Height = 120,
-			Background = viewModel.SelectedMaterial,
+			Background = viewModel.SurfaceBrush,
 			CornerRadius = 22,
-			Shadow = viewModel.CastsShadow ? SurfaceShadow : null,
-
-			Child = new Label
-			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
-				Text = Bind(model => model.MaterialName),
-				TextStyle = TextStyle.Title3,
-				FontWeight = FontWeight.Semibold
-			}
+			Shadow = viewModel.SelectedShadow,
+			Child = surfaceLabel
 		};
 
 		Overlay scene = new()
@@ -84,30 +83,37 @@ internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewMo
 			Children =
 			{
 				Backdrop(),
-				material,
+				surface,
 				overflowHost
 			}
 		};
 
-		SegmentedControl kind = new()
+		Picker<SurfaceOption> surfacePicker = new()
+		{
+			MinWidth = 180,
+			ItemsSource = Bind(model => model.SurfaceOptions),
+			SelectedItem = Bind(
+				model => model.SelectedSurface,
+				static (model, value) => model.SelectedSurface = value),
+			ItemTitle = option => option.Title,
+			SelectionChanged = option =>
+			{
+				surface.Background = option.Brush;
+				surfaceLabel.TextColor = option.TextColor;
+			}
+		};
+
+		SegmentedControl depth = new()
 		{
 			SelectedIndex = Bind(
-				model => model.MaterialIndex,
-				static (model, value) => model.MaterialIndex = value),
-			SelectionChanged = _ => material.Background = viewModel.SelectedMaterial
+				model => model.DepthIndex,
+				static (model, value) => model.DepthIndex = value),
+			SelectionChanged = _ => surface.Shadow = viewModel.SelectedShadow
 		};
-		kind.Items.Add("Thin");
-		kind.Items.Add("Regular");
-		kind.Items.Add("Thick");
-		kind.Items.Add("Glass");
-
-		Switch shadow = new()
-		{
-			IsOn = Bind(
-				model => model.CastsShadow,
-				static (model, value) => model.CastsShadow = value),
-			Toggled = enabled => material.Shadow = enabled ? SurfaceShadow : null
-		};
+		depth.Items.Add("None");
+		depth.Items.Add("Low");
+		depth.Items.Add("Medium");
+		depth.Items.Add("High");
 
 		Switch clip = new()
 		{
@@ -118,12 +124,12 @@ internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewMo
 		};
 
 		AddShowcase(
-			"Material, depth & overflow",
-			"Change the blur material, shadow and clipping independently in one layered composition.",
+			"Surface, depth & clipping",
+			"Compare solid, gradient and native material brushes, then adjust elevation and overflow.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(scene, 252),
-				LabeledControl("Material", kind),
-				SettingRow("Shadow", shadow),
+				SettingRow("Surface", surfacePicker),
+				LabeledControl("Depth", depth),
 				SettingRow("Clip content", clip)),
 			ShowcaseBox.Code(Bind(model => model.CompositionCode)));
 	}

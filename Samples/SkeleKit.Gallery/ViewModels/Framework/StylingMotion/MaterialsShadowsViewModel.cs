@@ -5,65 +5,102 @@ namespace SkeleKit.Gallery.ViewModels.Framework.StylingMotion;
 
 internal sealed partial class MaterialsShadowsViewModel : ShowcaseViewModel
 {
-	static readonly MaterialKind[] Materials =
+	static readonly SurfaceOption[] Surfaces =
 	[
-		MaterialKind.Thin,
-		MaterialKind.Regular,
-		MaterialKind.Thick,
-		MaterialKind.Glass
+		new(
+			"Solid",
+			Color.FromHex(0x356B74),
+			"Color.FromHex(0x356B74)",
+			Colors.White,
+			"Colors.White"),
+		new(
+			"Gradient",
+			LinearGradient.Vertical(
+				Color.FromHex(0x315E68),
+				Color.FromHex(0x748894)),
+			"LinearGradient.Vertical(Color.FromHex(0x315E68), Color.FromHex(0x748894))",
+			Colors.White,
+			"Colors.White"),
+		Material("Thin material", MaterialKind.Thin),
+		Material("Regular material", MaterialKind.Regular),
+		Material("Thick material", MaterialKind.Thick),
+		Material("Glass material", MaterialKind.Glass)
 	];
 
+	static readonly Shadow?[] Depths =
+	[
+		null,
+		new(opacity: 0.12, radius: 6, offsetY: 2),
+		new(opacity: 0.22, radius: 12, offsetY: 6),
+		new(opacity: 0.3, radius: 20, offsetY: 10)
+	];
+
+	public IReadOnlyList<SurfaceOption> SurfaceOptions =>
+		Surfaces;
 
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SelectedMaterial))]
-	[NotifyPropertyChangedFor(nameof(MaterialName))]
+	[NotifyPropertyChangedFor(nameof(SurfaceBrush))]
+	[NotifyPropertyChangedFor(nameof(SurfaceName))]
+	[NotifyPropertyChangedFor(nameof(SurfaceTextColor))]
 	[NotifyPropertyChangedFor(nameof(CompositionCode))]
-	int materialIndex = 1;
+	SurfaceOption? selectedSurface = Surfaces[3];
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SelectedShadow))]
 	[NotifyPropertyChangedFor(nameof(CompositionCode))]
-	bool castsShadow = true;
+	int depthIndex = 2;
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(CompositionCode))]
 	bool clipsContent;
 
-	internal Material SelectedMaterial =>
-		new(Materials[Math.Clamp(MaterialIndex, 0, Materials.Length - 1)]);
+	SurfaceOption CurrentSurface =>
+		SelectedSurface ?? Surfaces[0];
 
-	public string MaterialName =>
-		Materials[Math.Clamp(MaterialIndex, 0, Materials.Length - 1)].ToString();
+	internal Brush SurfaceBrush =>
+		CurrentSurface.Brush;
+
+	internal Color SurfaceTextColor =>
+		CurrentSurface.TextColor;
+
+	internal Shadow? SelectedShadow =>
+		Depths[Math.Clamp(DepthIndex, 0, Depths.Length - 1)];
+
+	public string SurfaceName =>
+		CurrentSurface.Title;
 
 	public IReadOnlyList<Span> CompositionCode =>
 		Code(
 			$$"""
-			Border material = new()
+			Border surface = new()
 			{
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
 				Width = 224,
 				Height = 120,
-				Background = new Material(MaterialKind.{{MaterialName}}),
+				Background = {{CurrentSurface.Code}},
 				CornerRadius = 22,
-				Shadow = {{(CastsShadow ? "new(opacity: 0.24, radius: 14, offsetY: 8)" : "null")}},
+				Shadow = {{ShadowCode()}},
 
 				Child = new Label
 				{
 					HorizontalAlignment = HorizontalAlignment.Center,
 					VerticalAlignment = VerticalAlignment.Center,
-					Text = "{{MaterialName}}",
+					Text = "{{SurfaceName}}",
 					TextStyle = TextStyle.Title3,
-					FontWeight = FontWeight.Semibold
+					FontWeight = FontWeight.Semibold,
+					TextColor = {{CurrentSurface.TextColorCode}}
 				}
 			};
 
 			Overlay overflowHost = new()
 			{
-				Width = 224,
-				Height = 120,
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
+				Width = 224,
+				Height = 120,
 				ClipsToBounds = {{Bool(ClipsContent)}},
+
 				Children =
 				{
 					new Border
@@ -101,7 +138,7 @@ internal sealed partial class MaterialsShadowsViewModel : ShowcaseViewModel
 				Children =
 				{
 					Backdrop(),
-					material,
+					surface,
 					overflowHost
 				}
 			};
@@ -142,6 +179,25 @@ internal sealed partial class MaterialsShadowsViewModel : ShowcaseViewModel
 			""");
 
 
+	string ShadowCode() =>
+		Math.Clamp(DepthIndex, 0, Depths.Length - 1) switch
+		{
+			0 => "null",
+			1 => "new(opacity: 0.12, radius: 6, offsetY: 2)",
+			2 => "new(opacity: 0.22, radius: 12, offsetY: 6)",
+			_ => "new(opacity: 0.3, radius: 20, offsetY: 10)"
+		};
+
+	static SurfaceOption Material(
+		string title,
+		MaterialKind kind) =>
+		new(
+			title,
+			new Material(kind),
+			$"new Material(MaterialKind.{kind})",
+			Colors.Label,
+			"Colors.Label");
+
 	static IReadOnlyList<Span> Code(
 		string value) =>
 		[new(value)];
@@ -150,3 +206,10 @@ internal sealed partial class MaterialsShadowsViewModel : ShowcaseViewModel
 		bool value) =>
 		value ? "true" : "false";
 }
+
+internal sealed record SurfaceOption(
+	string Title,
+	Brush Brush,
+	string Code,
+	Color TextColor,
+	string TextColorCode);

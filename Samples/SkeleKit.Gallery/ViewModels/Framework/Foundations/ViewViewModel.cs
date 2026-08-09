@@ -120,70 +120,6 @@ internal sealed partial class ViewViewModel(
 			""");
 
 
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SelectedBrush))]
-	[NotifyPropertyChangedFor(nameof(BrushCode))]
-	int brushIndex = 1;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(BrushCode))]
-	bool castsShadow = true;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(BrushCode))]
-	bool clipsContent;
-
-	internal Brush SelectedBrush =>
-		BrushIndex switch
-		{
-			0 => Colors.Indigo,
-			1 => LinearGradient.Vertical(
-				Colors.Indigo,
-				Colors.Indigo.WithAlpha(0.7)),
-			_ => new Material(MaterialKind.Regular)
-		};
-
-	public IReadOnlyList<Span> BrushCode
-	{
-		get
-		{
-			string brush = BrushIndex switch
-			{
-				0 => "Colors.Indigo",
-				1 => "LinearGradient.Vertical(Colors.Indigo, Colors.Indigo.WithAlpha(0.7))",
-				_ => "new Material(MaterialKind.Regular)"
-			};
-
-			return Code(
-				$$"""
-				Border surface = new()
-				{
-					Background = {{brush}},
-					CornerRadius = 18,
-					Shadow = {{(CastsShadow ? "new(opacity: 0.22, radius: 10, offsetY: 5)" : "null")}}
-				};
-
-				Grid preview = new()
-				{
-					Width = 180,
-					Height = 96,
-					ClipsToBounds = {{Bool(ClipsContent)}},
-					Children =
-					{
-						surface,
-						new Border
-						{
-							Width = 50,
-							Height = 26,
-							Translation = new(14, -10)
-						}
-					}
-				};
-				""");
-		}
-	}
-
-
 	public IReadOnlyList<Span> InteractionCode { get; } =
 		Code(
 			"""
@@ -283,10 +219,6 @@ internal sealed partial class ViewViewModel(
 	static string Number(
 		double value) =>
 		value.ToString("0.##", CultureInfo.InvariantCulture);
-
-	static string Bool(
-		bool value) =>
-		value ? "true" : "false";
 
 	static string Point(
 		Point value) =>

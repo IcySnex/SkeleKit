@@ -110,7 +110,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Foundations",
-				Topic("View", "Layout, visibility, styling and interaction shared by every element.", "square.dashed", Colors.Indigo, GalleryArea.Framework, typeof(ViewViewModel)),
+				Topic("View", "Layout, visibility, transforms and interaction shared by every element.", "square.dashed", Colors.Indigo, GalleryArea.Framework, typeof(ViewViewModel)),
 				Topic("ContentView", "Page composition, chrome, search and lifecycle.", "rectangle.portrait", Colors.Indigo, GalleryArea.Framework, typeof(ContentViewViewModel)),
 				Topic("Panels", "Child collections, padding and binding inheritance.", "square.stack.3d.up.fill", Colors.Indigo, GalleryArea.Framework, typeof(PanelsViewModel)),
 				Topic("Binding", "Compiled one-way, two-way and list bindings.", "arrow.trianglehead.2.clockwise.rotate.90", Colors.Indigo, GalleryArea.Framework, typeof(BindingViewModel))),
@@ -134,7 +134,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 			Section(
 				"Styling & Motion",
 				Topic("Colors & Brushes", "Semantic colors, gradients and interpolation.", "paintbrush.fill", Colors.Cyan, GalleryArea.Framework, typeof(ColorsBrushesViewModel)),
-				Topic("Materials & Shadows", "Native blur materials, clipping and depth.", "circle.lefthalf.filled", Colors.Cyan, GalleryArea.Framework, typeof(MaterialsShadowsViewModel)),
+				Topic("Surfaces & Shadows", "Solid, gradient and material surfaces with clipping and depth.", "circle.lefthalf.filled", Colors.Cyan, GalleryArea.Framework, typeof(MaterialsShadowsViewModel)),
 				Topic("Styles & Themes", "Reusable setters and implicit application themes.", "swatchpalette.fill", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)),
 				Topic("Animation", "Curves, springs and layout transitions.", "waveform.path", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)),
 				Topic("Animator", "Pause, scrub, reverse and continue interactive motion.", "timeline.selection", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)))
