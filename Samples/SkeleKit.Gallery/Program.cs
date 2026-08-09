@@ -10,6 +10,7 @@ using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
 using SkeleKit.Gallery.ViewModels.Framework.Collections;
 using SkeleKit.Gallery.ViewModels.Framework.Foundations;
 using SkeleKit.Gallery.ViewModels.Framework.Layout;
+using SkeleKit.Gallery.ViewModels.Framework.StylingMotion;
 using SkeleKit.Gallery.Views;
 
 SkeleApplication.CreateBuilder()
@@ -37,6 +38,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<CarouselsViewModel>();
 		services.AddTransient<SectionsViewModel>();
 		services.AddTransient<CollectionInteractionsViewModel>();
+		services.AddTransient<ColorsBrushesViewModel>();
 
 		services.AddTransient<ActivityIndicatorViewModel>();
 		services.AddTransient<ButtonViewModel>();

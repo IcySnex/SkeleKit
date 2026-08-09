@@ -8,6 +8,7 @@ using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
 using SkeleKit.Gallery.ViewModels.Framework.Collections;
 using SkeleKit.Gallery.ViewModels.Framework.Foundations;
 using SkeleKit.Gallery.ViewModels.Framework.Layout;
+using SkeleKit.Gallery.ViewModels.Framework.StylingMotion;
 
 namespace SkeleKit.Gallery.Services;
 
@@ -132,7 +133,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Styling & Motion",
-				Topic("Colors & Brushes", "Semantic colors, gradients and interpolation.", "paintbrush.fill", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)),
+				Topic("Colors & Brushes", "Semantic colors, gradients and interpolation.", "paintbrush.fill", Colors.Cyan, GalleryArea.Framework, typeof(ColorsBrushesViewModel)),
 				Topic("Materials & Shadows", "Native blur materials, clipping and depth.", "circle.lefthalf.filled", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)),
 				Topic("Styles & Themes", "Reusable setters and implicit application themes.", "swatchpalette.fill", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)),
 				Topic("Animation", "Curves, springs and layout transitions.", "waveform.path", Colors.Cyan, GalleryArea.Framework, typeof(AboutViewModel)),
