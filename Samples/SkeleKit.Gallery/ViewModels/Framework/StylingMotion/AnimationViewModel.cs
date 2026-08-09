@@ -34,6 +34,8 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 			bool expanded = false;
 
 			Grid artwork = Artwork();
+			artwork.HorizontalAlignment = HorizontalAlignment.Start;
+			artwork.Margin = new(10, 0, 0, 0);
 
 			StackPanel details = new()
 			{
@@ -69,7 +71,16 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 				Background = Colors.SecondaryGroupedBackground,
 				CornerRadius = 20,
 				Stroke = Colors.Separator,
-				StrokeThickness = 0.5
+				StrokeThickness = 0.5,
+
+				Child = new Overlay
+				{
+					Children =
+					{
+						artwork,
+						details
+					}
+				}
 			};
 			artwork.Scale = 0.82;
 
@@ -79,9 +90,7 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 				Height = 156,
 				Children =
 				{
-					card,
-					artwork,
-					details
+					card
 				}
 			};
 
@@ -96,7 +105,7 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 						card.Width = expanded ? 280 : 84;
 						card.Height = expanded ? 128 : 84;
 						card.CornerRadius = expanded ? 22 : 20;
-						artwork.Translation = expanded ? new(-60, 0) : Point.Zero;
+						artwork.Margin = expanded ? new(48, 0, 0, 0) : new(10, 0, 0, 0);
 						artwork.Scale = expanded ? 1 : 0.82;
 						details.Translation = expanded ? new(44, 0) : new(24, 0);
 						details.Opacity = expanded ? 1 : 0;
@@ -138,6 +147,122 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 				new()
 				{
 					Background = color,
+					CornerRadius = 4
+				};
+			""")];
+
+	public IReadOnlyList<Span> AnimatorCode =>
+		[new(
+			"""
+			Border artwork = FramedArtwork();
+			artwork.Translation = new(-88, 0);
+			artwork.Scale = 0.86;
+			artwork.Opacity = 0.7;
+
+			Overlay stage = new()
+			{
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Center,
+				Width = 280,
+				Height = 120,
+				Children =
+				{
+					new Border
+					{
+						HorizontalAlignment = HorizontalAlignment.Center,
+						VerticalAlignment = VerticalAlignment.Center,
+						Width = 232,
+						Height = 2,
+						Background = Colors.Separator,
+						CornerRadius = 1
+					},
+					PositionMarker(-88),
+					PositionMarker(88),
+					artwork
+				}
+			};
+
+			Animator animator = Animator.Create(
+				Animation.Spring(0.5, damping: 0.72),
+				() =>
+				{
+					artwork.Translation = new(88, 0);
+					artwork.Scale = 1;
+					artwork.Opacity = 1;
+				});
+
+			// Materialize both endpoints and return to the captured start.
+			animator.Fraction = 0;
+
+			const double distance = 176;
+			double grabbedAt = 0;
+			double panStart = 0;
+			artwork.Panned = pan =>
+			{
+				switch (pan.State)
+				{
+					case GestureState.Began:
+						animator.Pause();
+						grabbedAt = animator.Fraction;
+						panStart = pan.Translation.X;
+						break;
+
+					case GestureState.Changed:
+						animator.Fraction = Math.Clamp(
+							grabbedAt + (pan.Translation.X - panStart) / distance,
+							0,
+							1);
+						break;
+
+					default:
+						double velocity = pan.Velocity.X;
+						bool towardEnd = Math.Abs(velocity) > 600
+							? velocity > 0
+							: animator.Fraction >= 0.5;
+
+						animator.IsReversed = !towardEnd;
+						animator.Continue(velocity / distance);
+						break;
+				}
+			};
+
+			static Border FramedArtwork() =>
+				new()
+				{
+					HorizontalAlignment = HorizontalAlignment.Center,
+					VerticalAlignment = VerticalAlignment.Center,
+					Width = 70,
+					Height = 84,
+					Padding = 7,
+					Background = Colors.SecondaryGroupedBackground,
+					CornerRadius = 12,
+					Stroke = Colors.Separator,
+					StrokeThickness = 0.5,
+					Child = new Border
+					{
+						Background = Colors.Cyan.WithAlpha(0.18),
+						CornerRadius = 7,
+						Child = new Label
+						{
+							HorizontalAlignment = HorizontalAlignment.Center,
+							VerticalAlignment = VerticalAlignment.Center,
+							Text = "03",
+							TextStyle = TextStyle.Title2,
+							FontWeight = FontWeight.Semibold,
+							TextColor = Colors.Cyan
+						}
+					}
+				};
+
+			static Border PositionMarker(double x) =>
+				new()
+				{
+					HorizontalAlignment = HorizontalAlignment.Center,
+					VerticalAlignment = VerticalAlignment.Center,
+					Width = 8,
+					Height = 8,
+					Translation = new(x, 0),
+					Background = Colors.Separator,
 					CornerRadius = 4
 				};
 			""")];
