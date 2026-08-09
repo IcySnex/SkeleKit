@@ -22,7 +22,7 @@ internal sealed class SectionsView : ShowcaseView<SectionsViewModel>
 			{
 				CollectionLayoutKind.Carousel => CollectionLayout.Carousel(
 					itemWidth: 248,
-					spacing: 12,
+					spacing: 8,
 					snap: CarouselSnap.ItemPeek),
 				_ => CollectionLayout.List()
 			},
@@ -44,27 +44,12 @@ internal sealed class SectionCell : ItemView<SectionEntry>
 			Height = 72,
 			Padding = new Thickness(14, 0),
 
-			Child = new StackPanel
+			Child = new Label
 			{
 				VerticalAlignment = VerticalAlignment.Center,
-				Spacing = 2,
-
-				Children =
-				{
-					new Label
-					{
-						Text = Bind(item => item.Title),
-						TextStyle = TextStyle.Body,
-						FontWeight = FontWeight.Semibold
-					},
-
-					new Label
-					{
-						Text = Bind(item => item.Layout),
-						TextStyle = TextStyle.Footnote,
-						TextColor = Colors.SecondaryLabel
-					}
-				}
+				Text = Bind(item => item.Title),
+				TextStyle = TextStyle.Body,
+				FontWeight = FontWeight.Semibold
 			}
 		};
 
@@ -87,25 +72,47 @@ internal sealed class SectionCell : ItemView<SectionEntry>
 
 internal sealed class CollectionHeader : ItemView<CollectionSection>
 {
-	readonly Label label;
+	readonly Grid container;
 
 
 	public CollectionHeader()
 	{
-		label = new()
+		container = new()
 		{
-			Text = Bind(section => section.Title),
-			TextStyle = TextStyle.Headline,
-			FontWeight = FontWeight.Semibold
+			Columns =
+			{
+				GridLength.Star,
+				GridLength.Auto
+			},
+
+			Children =
+			{
+				new Label
+				{
+					Text = Bind(section => section.Title),
+					TextStyle = TextStyle.Headline,
+					FontWeight = FontWeight.Semibold
+				},
+
+				new Label
+				{
+					VerticalAlignment = VerticalAlignment.Center,
+					Text = Bind<CollectionLayoutKind, string>(
+						section => section.Layout,
+						layout => layout is CollectionLayoutKind.Carousel ? "Carousel" : "List"),
+					TextStyle = TextStyle.Footnote,
+					TextColor = Colors.SecondaryLabel
+				}.Column(1)
+			}
 		};
-		Content = label;
+		Content = container;
 	}
 
 
 	protected override void OnItemChanged(
 		CollectionSection? section) =>
-		label.Margin = section?.Layout is CollectionLayoutKind.Carousel
-			? new(0, 8, 0, 5)
+		container.Margin = section?.Layout is CollectionLayoutKind.Carousel
+			? new(0, 8, 8, 5)
 			: new(16, 8, 16, 5);
 }
 

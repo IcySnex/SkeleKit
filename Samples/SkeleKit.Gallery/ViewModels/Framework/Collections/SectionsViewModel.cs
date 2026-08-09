@@ -4,7 +4,6 @@ namespace SkeleKit.Gallery.ViewModels.Framework.Collections;
 
 internal sealed record SectionEntry(
 	string Title,
-	string Layout,
 	bool IsFeatured);
 
 internal sealed record CollectionSection(
@@ -16,10 +15,8 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 {
 	public IReadOnlyList<CollectionSection> Sections { get; } =
 	[
-		new("Featured", CollectionLayoutKind.Carousel, Entries(1, 6, "Carousel item", true)),
-		new("Recent", CollectionLayoutKind.List, Entries(7, 7, "List item", false)),
-		new("Recommended", CollectionLayoutKind.Carousel, Entries(14, 6, "Carousel item", true)),
-		new("Archive", CollectionLayoutKind.List, Entries(20, 12, "List item", false))
+		new("Featured", CollectionLayoutKind.Carousel, Entries(1, 6, true)),
+		new("Recent", CollectionLayoutKind.List, Entries(7, 7, false))
 	];
 
 	public IReadOnlyList<Span> SectionsCode { get; } =
@@ -36,7 +33,7 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 				{
 					CollectionLayoutKind.Carousel => CollectionLayout.Carousel(
 						itemWidth: 248,
-						spacing: 12,
+						spacing: 8,
 						snap: CarouselSnap.ItemPeek),
 					_ => CollectionLayout.List()
 				},
@@ -46,7 +43,6 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 
 			sealed record SectionEntry(
 				string Title,
-				string Layout,
 				bool IsFeatured);
 
 			sealed record CollectionSection(
@@ -56,20 +52,17 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 
 			IReadOnlyList<CollectionSection> Sections { get; } =
 			[
-				new("Featured", CollectionLayoutKind.Carousel, Entries(1, 6, "Carousel item", true)),
-				new("Recent", CollectionLayoutKind.List, Entries(7, 7, "List item", false)),
-				new("Recommended", CollectionLayoutKind.Carousel, Entries(14, 6, "Carousel item", true)),
-				new("Archive", CollectionLayoutKind.List, Entries(20, 12, "List item", false))
+				new("Featured", CollectionLayoutKind.Carousel, Entries(1, 6, true)),
+				new("Recent", CollectionLayoutKind.List, Entries(7, 7, false))
 			];
 
 			static IReadOnlyList<SectionEntry> Entries(
 				int first,
 				int count,
-				string layout,
 				bool featured) =>
 				[
 					.. Enumerable.Range(first, count).Select(
-						index => new SectionEntry($"Item {index}", layout, featured))
+						index => new SectionEntry($"Item {index}", featured))
 				];
 
 			sealed class SectionCell : ItemView<SectionEntry>
@@ -82,25 +75,12 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 					{
 						Height = 72,
 						Padding = new Thickness(14, 0),
-						Child = new StackPanel
+						Child = new Label
 						{
 							VerticalAlignment = VerticalAlignment.Center,
-							Spacing = 2,
-							Children =
-							{
-								new Label
-								{
-									Text = Bind(item => item.Title),
-									TextStyle = TextStyle.Body,
-									FontWeight = FontWeight.Semibold
-								},
-								new Label
-								{
-									Text = Bind(item => item.Layout),
-									TextStyle = TextStyle.Footnote,
-									TextColor = Colors.SecondaryLabel
-								}
-							}
+							Text = Bind(item => item.Title),
+							TextStyle = TextStyle.Body,
+							FontWeight = FontWeight.Semibold
 						}
 					};
 
@@ -121,22 +101,42 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 
 			sealed class CollectionHeader : ItemView<CollectionSection>
 			{
-				readonly Label label;
+				readonly Grid container;
 
 				public CollectionHeader()
 				{
-					label = new()
+					container = new()
 					{
-						Text = Bind(section => section.Title),
-						TextStyle = TextStyle.Headline,
-						FontWeight = FontWeight.Semibold
+						Columns =
+						{
+							GridLength.Star,
+							GridLength.Auto
+						},
+						Children =
+						{
+							new Label
+							{
+								Text = Bind(section => section.Title),
+								TextStyle = TextStyle.Headline,
+								FontWeight = FontWeight.Semibold
+							},
+							new Label
+							{
+								VerticalAlignment = VerticalAlignment.Center,
+								Text = Bind<CollectionLayoutKind, string>(
+									section => section.Layout,
+									layout => layout is CollectionLayoutKind.Carousel ? "Carousel" : "List"),
+								TextStyle = TextStyle.Footnote,
+								TextColor = Colors.SecondaryLabel
+							}.Column(1)
+						}
 					};
-					Content = label;
+					Content = container;
 				}
 
 				protected override void OnItemChanged(CollectionSection? section) =>
-					label.Margin = section?.Layout is CollectionLayoutKind.Carousel
-						? new(0, 8, 0, 5)
+					container.Margin = section?.Layout is CollectionLayoutKind.Carousel
+						? new(0, 8, 8, 5)
 						: new(16, 8, 16, 5);
 			}
 
@@ -168,11 +168,10 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 	static IReadOnlyList<SectionEntry> Entries(
 		int first,
 		int count,
-		string layout,
 		bool featured) =>
 		[
 			.. Enumerable.Range(first, count).Select(
-				index => new SectionEntry($"Item {index}", layout, featured))
+				index => new SectionEntry($"Item {index}", featured))
 		];
 
 	static IReadOnlyList<Span> Code(
