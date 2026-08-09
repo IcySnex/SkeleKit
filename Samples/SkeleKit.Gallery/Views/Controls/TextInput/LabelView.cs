@@ -8,7 +8,7 @@ namespace SkeleKit.Gallery.Views.Controls.TextInput;
 internal sealed class LabelView : ShowcaseView<LabelViewModel>
 {
 	public LabelView(
-		LabelViewModel viewModel) : base(viewModel, "Label", Colors.Pink)
+		LabelViewModel viewModel) : base(viewModel, "Label", Colors.Purple)
 	{
 		AddTypographyShowcase(viewModel);
 		AddFlowShowcase(viewModel);
@@ -28,7 +28,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			MaxFontSize = double.NaN,
 			FontWeight = viewModel.SelectedWeight.Value,
 			FontDesign = viewModel.SelectedDesign.Value,
-			TextColor = Colors.Pink,
+			TextColor = Colors.Purple,
 			MaxLines = 2,
 			TextAlignment = TextAlignment.Center
 		};

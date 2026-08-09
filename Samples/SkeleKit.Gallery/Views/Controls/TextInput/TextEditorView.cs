@@ -8,7 +8,7 @@ namespace SkeleKit.Gallery.Views.Controls.TextInput;
 internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 {
 	public TextEditorView(
-		TextEditorViewModel viewModel) : base(viewModel, "Text Editor", Colors.Pink)
+		TextEditorViewModel viewModel) : base(viewModel, "Text Editor", Colors.Purple)
 	{
 		AddBindingShowcase(viewModel);
 		AddKeyboardShowcase(viewModel);

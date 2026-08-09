@@ -7,7 +7,7 @@ namespace SkeleKit.Gallery.Views.Controls.ActionsSelection;
 internal sealed class SegmentedControlView : ShowcaseView<SegmentedControlViewModel>
 {
 	public SegmentedControlView(
-		SegmentedControlViewModel viewModel) : base(viewModel, "Segmented Control", Colors.Purple)
+		SegmentedControlViewModel viewModel) : base(viewModel, "Segmented Control", Colors.Pink)
 	{
 		AddSelectionShowcase(viewModel);
 	}

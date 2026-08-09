@@ -8,7 +8,7 @@ namespace SkeleKit.Gallery.Views.Controls.TextInput;
 internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 {
 	public TextViewView(
-		TextViewViewModel viewModel) : base(viewModel, "Text View", Colors.Pink)
+		TextViewViewModel viewModel) : base(viewModel, "Text View", Colors.Purple)
 	{
 		AddSelectionShowcase(viewModel);
 		AddTypographyShowcase(viewModel);

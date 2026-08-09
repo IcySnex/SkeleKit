@@ -8,7 +8,7 @@ namespace SkeleKit.Gallery.Views.Controls.TextInput;
 internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 {
 	public TextFieldView(
-		TextFieldViewModel viewModel) : base(viewModel, "Text Field", Colors.Pink)
+		TextFieldViewModel viewModel) : base(viewModel, "Text Field", Colors.Purple)
 	{
 		AddBindingShowcase(viewModel);
 		AddKeyboardShowcase(viewModel);

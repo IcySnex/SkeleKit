@@ -8,7 +8,7 @@ namespace SkeleKit.Gallery.Views.Controls.ActionsSelection;
 internal sealed class PickerView : ShowcaseView<PickerViewModel>
 {
 	public PickerView(
-		PickerViewModel viewModel) : base(viewModel, "Picker", Colors.Purple)
+		PickerViewModel viewModel) : base(viewModel, "Picker", Colors.Pink)
 	{
 		AddPickerShowcase(viewModel);
 	}

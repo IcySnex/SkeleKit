@@ -117,7 +117,7 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 				MaxFontSize = {{(!UsesExplicitSize && CapsDynamicType ? "24" : "double.NaN")}},
 				FontWeight = FontWeight.{{SelectedWeight.Value}},
 				FontDesign = FontDesign.{{SelectedDesign.Value}},
-				TextColor = Colors.Pink,
+				TextColor = Colors.Purple,
 				TextAlignment = TextAlignment.Center
 			};
 
@@ -205,7 +205,7 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 		"Mix ",
 		new("weight") { Bold = true },
 		", ",
-		new("color") { TextColor = Colors.Pink },
+		new("color") { TextColor = Colors.Purple },
 		" and ",
 		new("design") { FontWeight = FontWeight.Light, FontDesign = FontDesign.Serif },
 		".\n",

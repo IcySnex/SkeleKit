@@ -8,7 +8,7 @@ namespace SkeleKit.Gallery.Views.Controls.TextInput;
 internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 {
 	public SecureFieldView(
-		SecureFieldViewModel viewModel) : base(viewModel, "Secure Field", Colors.Pink)
+		SecureFieldViewModel viewModel) : base(viewModel, "Secure Field", Colors.Purple)
 	{
 		AddEntryShowcase(viewModel);
 		AddIntentShowcase(viewModel);

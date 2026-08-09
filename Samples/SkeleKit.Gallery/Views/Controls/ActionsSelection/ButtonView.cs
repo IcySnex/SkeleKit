@@ -8,7 +8,7 @@ namespace SkeleKit.Gallery.Views.Controls.ActionsSelection;
 internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 {
 	public ButtonView(
-		ButtonViewModel viewModel) : base(viewModel, "Button", Colors.Purple)
+		ButtonViewModel viewModel) : base(viewModel, "Button", Colors.Pink)
 	{
 		AddConfigurationShowcase(viewModel);
 		AddContentShowcase(viewModel);

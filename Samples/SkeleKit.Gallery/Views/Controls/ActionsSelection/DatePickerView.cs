@@ -7,7 +7,7 @@ namespace SkeleKit.Gallery.Views.Controls.ActionsSelection;
 internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 {
 	public DatePickerView(
-		DatePickerViewModel viewModel) : base(viewModel, "Date Picker", Colors.Purple)
+		DatePickerViewModel viewModel) : base(viewModel, "Date Picker", Colors.Pink)
 	{
 		AddConfigurationShowcase(viewModel);
 		AddRangeShowcase(viewModel);

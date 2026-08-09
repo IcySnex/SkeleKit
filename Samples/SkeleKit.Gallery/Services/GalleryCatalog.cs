@@ -70,19 +70,19 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Actions & Selection",
-				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Purple, GalleryArea.Controls, typeof(ButtonViewModel)),
-				Topic("Picker", "Menu selection, custom labels and live items.", "dial.medium", Colors.Purple, GalleryArea.Controls, typeof(PickerViewModel)),
-				Topic("SegmentedControl", "Compact selection, binding and content density.", "rectangle.split.3x1", Colors.Purple, GalleryArea.Controls, typeof(SegmentedControlViewModel)),
-				Topic("DatePicker", "Dates, times, ranges and presentation styles.", "calendar", Colors.Purple, GalleryArea.Controls, typeof(DatePickerViewModel)),
-				Topic("ColorWell", "System color selection with alpha support.", "paintpalette.fill", Colors.Purple, GalleryArea.Controls, typeof(ColorWellViewModel))),
+				Topic("Button", "Native button configurations, menus and commands.", "button.programmable", Colors.Pink, GalleryArea.Controls, typeof(ButtonViewModel)),
+				Topic("Picker", "Menu selection, custom labels and live items.", "dial.medium", Colors.Pink, GalleryArea.Controls, typeof(PickerViewModel)),
+				Topic("SegmentedControl", "Compact selection, binding and content density.", "rectangle.split.3x1", Colors.Pink, GalleryArea.Controls, typeof(SegmentedControlViewModel)),
+				Topic("DatePicker", "Dates, times, ranges and presentation styles.", "calendar", Colors.Pink, GalleryArea.Controls, typeof(DatePickerViewModel)),
+				Topic("ColorWell", "System color selection with alpha support.", "paintpalette.fill", Colors.Pink, GalleryArea.Controls, typeof(ColorWellViewModel))),
 
 			Section(
 				"Text & Input",
-				Topic("Label", "Plain and attributed text with Dynamic Type.", "textformat", Colors.Pink, GalleryArea.Controls, typeof(LabelViewModel)),
-				Topic("TextView", "Selectable rich text with links and menus.", "doc.richtext", Colors.Pink, GalleryArea.Controls, typeof(TextViewViewModel)),
-				Topic("TextField", "Single-line text entry and keyboard behavior.", "character.cursor.ibeam", Colors.Pink, GalleryArea.Controls, typeof(TextFieldViewModel)),
-				Topic("SecureField", "Password entry with reveal and validation states.", "lock.fill", Colors.Pink, GalleryArea.Controls, typeof(SecureFieldViewModel)),
-				Topic("TextEditor", "Multi-line editing, live growth and keyboard behavior.", "square.and.pencil", Colors.Pink, GalleryArea.Controls, typeof(TextEditorViewModel))),
+				Topic("Label", "Plain and attributed text with Dynamic Type.", "textformat", Colors.Purple, GalleryArea.Controls, typeof(LabelViewModel)),
+				Topic("TextView", "Selectable rich text with links and menus.", "doc.richtext", Colors.Purple, GalleryArea.Controls, typeof(TextViewViewModel)),
+				Topic("TextField", "Single-line text entry and keyboard behavior.", "character.cursor.ibeam", Colors.Purple, GalleryArea.Controls, typeof(TextFieldViewModel)),
+				Topic("SecureField", "Password entry with reveal and validation states.", "lock.fill", Colors.Purple, GalleryArea.Controls, typeof(SecureFieldViewModel)),
+				Topic("TextEditor", "Multi-line editing, live growth and keyboard behavior.", "square.and.pencil", Colors.Purple, GalleryArea.Controls, typeof(TextEditorViewModel))),
 
 			Section(
 				"Values & Status",

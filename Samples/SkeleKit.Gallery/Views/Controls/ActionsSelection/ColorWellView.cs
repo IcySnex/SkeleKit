@@ -7,7 +7,7 @@ namespace SkeleKit.Gallery.Views.Controls.ActionsSelection;
 internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 {
 	public ColorWellView(
-		ColorWellViewModel viewModel) : base(viewModel, "Color Well", Colors.Purple)
+		ColorWellViewModel viewModel) : base(viewModel, "Color Well", Colors.Pink)
 	{
 		AddSelectionShowcase(viewModel);
 	}
