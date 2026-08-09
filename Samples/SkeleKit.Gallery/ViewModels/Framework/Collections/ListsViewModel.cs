@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SkeleKit.Gallery.ViewModels.Showcase;
 
@@ -10,55 +9,27 @@ internal sealed record ListEntry(
 
 internal sealed partial class ListsViewModel : ShowcaseViewModel
 {
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(ItemCountLabel))]
-	[NotifyPropertyChangedFor(nameof(ListCode))]
-	double itemCount = 4;
-
-	[ObservableProperty]
-	string selectedTitle = "None";
-
+	int nextItem = 13;
 
 	public ObservableCollection<ListEntry> Items { get; } = [];
 
-	public string ItemCountLabel
-	{
-		get
-		{
-			int count = (int)Math.Round(ItemCount);
-			return $"{count} {(count == 1 ? "item" : "items")}";
-		}
-	}
-
-	public IReadOnlyList<Span> ListCode =>
+	public IReadOnlyList<Span> ListCode { get; } =
 		Code(
-			$$"""
-			ObservableCollection<ListEntry> items = [];
-			for (int index = 1; index <= {{(int)Math.Round(ItemCount)}}; index++)
-				items.Add(new($"Item {index}"));
-
-			Label selected = new()
-			{
-				Width = 100,
-				Height = 20,
-				Text = "None",
-				TextStyle = TextStyle.Subheadline,
-				TextAlignment = TextAlignment.Trailing,
-				TextColor = Colors.SecondaryLabel
-			};
-
+			"""
 			CollectionView<ListEntry> list = new()
 			{
-				Width = 300,
-				Height = 248,
-				ItemsSource = items,
+				ItemsSource = viewModel.Items,
 				ItemTemplate = static () => new ListCell(),
 				Layout = CollectionLayout.List(),
-				ItemCommand = Command.From<ListEntry>(
-					item => selected.Text = item.Title),
+				ItemCommand = viewModel.SelectCommand,
 				ShowsSeparators = true,
-				Background = Colors.SecondaryBackground,
-				CornerRadius = 16
+				EmptyView = new Label
+				{
+					HorizontalAlignment = HorizontalAlignment.Center,
+					VerticalAlignment = VerticalAlignment.Center,
+					Text = "No items",
+					TextColor = Colors.SecondaryLabel
+				}
 			};
 
 			sealed record ListEntry(string Title);
@@ -78,41 +49,59 @@ internal sealed partial class ListsViewModel : ShowcaseViewModel
 						}
 					};
 			}
+
+			int nextItem = 13;
+
+			ObservableCollection<ListEntry> Items { get; } =
+			[
+				.. Enumerable.Range(1, 12).Select(
+					index => new ListEntry($"Item {index}"))
+			];
+
+			void Add() =>
+				Items.Insert(0, new($"Item {nextItem++}"));
+
+			void Remove()
+			{
+				if (Items.Count > 0)
+					Items.RemoveAt(0);
+			}
+
+			void Select(ListEntry item) =>
+				Haptics.Selection();
 			""");
 
 
 	public ListsViewModel()
 	{
-		SetItemCount((int)ItemCount);
+		for (int index = 1; index <= 12; index++)
+			Items.Add(new($"Item {index}"));
 	}
 
 
-	partial void OnItemCountChanged(
-		double value) =>
-		SetItemCount((int)Math.Round(value));
+	bool CanRemove() =>
+		Items.Count > 0;
 
 	[RelayCommand]
-	void Select(
-		ListEntry item) =>
-		SelectedTitle = item.Title;
-
-	void SetItemCount(
-		int count)
+	void Add()
 	{
-		count = Math.Clamp(count, 1, 6);
-
-		while (Items.Count < count)
-			Items.Add(new($"Item {Items.Count + 1}"));
-
-		while (Items.Count > count)
-		{
-			ListEntry removed = Items[^1];
-			Items.RemoveAt(Items.Count - 1);
-
-			if (SelectedTitle == removed.Title)
-				SelectedTitle = "None";
-		}
+		Items.Insert(0, new($"Item {nextItem++}"));
+		RemoveCommand.NotifyCanExecuteChanged();
 	}
+
+	[RelayCommand(CanExecute = nameof(CanRemove))]
+	void Remove()
+	{
+		if (Items.Count > 0)
+			Items.RemoveAt(0);
+
+		RemoveCommand.NotifyCanExecuteChanged();
+	}
+
+	[RelayCommand]
+	static void Select(
+		ListEntry item) =>
+		Haptics.Selection();
 
 	static IReadOnlyList<Span> Code(
 		string value) =>

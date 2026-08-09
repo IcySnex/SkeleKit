@@ -42,6 +42,16 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 	protected StackPanel Sections { get; }
 
 
+	protected void AddCodePage(
+		string title,
+		Func<IReadOnlyList<Span>> source) =>
+		ToolbarItems.Add(new ToolbarItem
+		{
+			Icon = "chevron.left.forwardslash.chevron.right",
+			Command = Command.From(() =>
+				_ = Navigator.PushViewAsync(new ShowcaseCodeView(title, source(), Tint ?? Colors.Label)))
+		});
+
 	protected void AddShowcase(
 		string title,
 		string summary,

@@ -9,75 +9,43 @@ internal sealed class ListsView : ShowcaseView<ListsViewModel>
 	public ListsView(
 		ListsViewModel viewModel) : base(viewModel, "Lists", Colors.Teal)
 	{
-		AddListShowcase(viewModel);
-	}
+		AddCodePage("Lists code", () => viewModel.ListCode);
 
-
-	void AddListShowcase(
-		ListsViewModel viewModel)
-	{
-		CollectionView<ListEntry> list = new()
+		ToolbarItems.Add(new ToolbarItem
 		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center,
-			Width = 300,
-			Height = 248,
+			Icon = "ellipsis.circle",
+			Menu =
+			{
+				new MenuAction
+				{
+					Text = "Add item",
+					Command = viewModel.AddCommand
+				},
+				new MenuAction
+				{
+					Text = "Remove first item",
+					Command = viewModel.RemoveCommand
+				}
+			}
+		});
+
+		Content = new CollectionView<ListEntry>
+		{
 			ItemsSource = viewModel.Items,
 			ItemTemplate = static () => new ListCell(),
 			Layout = CollectionLayout.List(),
 			ItemCommand = viewModel.SelectCommand,
 			ShowsSeparators = true,
-			Background = Colors.SecondaryBackground,
-			CornerRadius = 16
+
+			EmptyView = new Label
+			{
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Center,
+				Text = "No items",
+				TextStyle = TextStyle.Headline,
+				TextColor = Colors.SecondaryLabel
+			}
 		};
-
-		Stepper count = new()
-		{
-			Minimum = 1,
-			Maximum = 6,
-			Step = 1,
-			Value = Bind(
-				model => model.ItemCount,
-				static (model, value) => model.ItemCount = value)
-		};
-
-		AddShowcase(
-			"Items & selection",
-			"Change the observable source, then tap a native list row to select it.",
-			PreviewWithSettings(
-				ShowcaseBox.Canvas(list, 300),
-				SettingRow(
-					"Items",
-					new StackPanel
-					{
-						Orientation = Orientation.Horizontal,
-						Spacing = 10,
-
-						Children =
-						{
-							new Label
-							{
-								VerticalAlignment = VerticalAlignment.Center,
-								Text = Bind(model => model.ItemCountLabel),
-								TextStyle = TextStyle.Subheadline,
-								TextColor = Colors.SecondaryLabel
-							},
-							count
-						}
-					}),
-				SettingRow(
-					"Selected",
-					new Label
-					{
-						Width = 100,
-						Height = 20,
-						VerticalAlignment = VerticalAlignment.Center,
-						Text = Bind(model => model.SelectedTitle),
-						TextStyle = TextStyle.Subheadline,
-						TextAlignment = TextAlignment.Trailing,
-						TextColor = Colors.SecondaryLabel
-					})),
-			ShowcaseBox.Code(Bind(model => model.ListCode)));
 	}
 }
 
