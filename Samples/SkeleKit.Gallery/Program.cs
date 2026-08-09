@@ -28,6 +28,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<ViewViewModel>();
 		services.AddTransient<BorderViewModel>();
 		services.AddTransient<GridViewModel>();
+		services.AddTransient<OverlayViewModel>();
 
 		services.AddTransient<ActivityIndicatorViewModel>();
 		services.AddTransient<ButtonViewModel>();

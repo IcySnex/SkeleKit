@@ -86,6 +86,7 @@ internal sealed class ShowcaseBox : Border
 
 					new Border
 					{
+						ClipsToBounds = true,
 						Padding = 20,
 						Child = content
 					}
