@@ -64,20 +64,24 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 			{
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
-				Width = 112,
-				Height = 112,
+				Width = 84,
+				Height = 84,
 				Background = Colors.SecondaryGroupedBackground,
-				CornerRadius = 26,
+				CornerRadius = 20,
 				Stroke = Colors.Separator,
-				StrokeThickness = 0.5,
+				StrokeThickness = 0.5
+			};
+			artwork.Scale = 0.82;
 
-				Child = new Overlay
+			Overlay preview = new()
+			{
+				Width = 300,
+				Height = 156,
+				Children =
 				{
-					Children =
-					{
-						artwork,
-						details
-					}
+					card,
+					artwork,
+					details
 				}
 			};
 
@@ -89,10 +93,11 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 					{{TimingCode()}},
 					() =>
 					{
-						card.Width = expanded ? 280 : 112;
-						card.Height = expanded ? 128 : 112;
-						card.CornerRadius = expanded ? 22 : 26;
+						card.Width = expanded ? 280 : 84;
+						card.Height = expanded ? 128 : 84;
+						card.CornerRadius = expanded ? 22 : 20;
 						artwork.Translation = expanded ? new(-60, 0) : Point.Zero;
+						artwork.Scale = expanded ? 1 : 0.82;
 						details.Translation = expanded ? new(44, 0) : new(24, 0);
 						details.Opacity = expanded ? 1 : 0;
 					});

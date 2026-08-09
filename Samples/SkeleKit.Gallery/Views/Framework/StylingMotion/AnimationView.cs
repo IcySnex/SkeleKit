@@ -45,26 +45,18 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 			}
 		};
 		artwork.Translation = viewModel.IsExpanded ? new(-60, 0) : Point.Zero;
+		artwork.Scale = viewModel.IsExpanded ? 1 : 0.82;
 
 		Border card = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
-			Width = viewModel.IsExpanded ? 280 : 112,
-			Height = viewModel.IsExpanded ? 128 : 112,
+			Width = viewModel.IsExpanded ? 280 : 84,
+			Height = viewModel.IsExpanded ? 128 : 84,
 			Background = Colors.SecondaryGroupedBackground,
-			CornerRadius = viewModel.IsExpanded ? 22 : 26,
+			CornerRadius = viewModel.IsExpanded ? 22 : 20,
 			Stroke = Colors.Separator,
-			StrokeThickness = 0.5,
-
-			Child = new Overlay
-			{
-				Children =
-				{
-					artwork,
-					details
-				}
-			}
+			StrokeThickness = 0.5
 		};
 
 		Overlay preview = new()
@@ -75,7 +67,9 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 			Height = 156,
 			Children =
 			{
-				card
+				card,
+				artwork,
+				details
 			}
 		};
 
@@ -102,10 +96,11 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 				viewModel.SelectedTiming,
 				() =>
 				{
-					card.Width = viewModel.IsExpanded ? 280 : 112;
-					card.Height = viewModel.IsExpanded ? 128 : 112;
-					card.CornerRadius = viewModel.IsExpanded ? 22 : 26;
+					card.Width = viewModel.IsExpanded ? 280 : 84;
+					card.Height = viewModel.IsExpanded ? 128 : 84;
+					card.CornerRadius = viewModel.IsExpanded ? 22 : 20;
 					artwork.Translation = viewModel.IsExpanded ? new(-60, 0) : Point.Zero;
+					artwork.Scale = viewModel.IsExpanded ? 1 : 0.82;
 					details.Translation = viewModel.IsExpanded ? new(44, 0) : new(24, 0);
 					details.Opacity = viewModel.IsExpanded ? 1 : 0;
 				});
