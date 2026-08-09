@@ -28,6 +28,7 @@ internal sealed partial class ScrollViewViewModel : ShowcaseViewModel
 			Label offset = new()
 			{
 				Width = 64,
+				Height = 20,
 				Text = "0",
 				TextStyle = TextStyle.Subheadline,
 				FontWeight = FontWeight.Medium,

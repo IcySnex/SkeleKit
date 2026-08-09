@@ -55,6 +55,7 @@ internal sealed class ScrollViewView : ShowcaseView<ScrollViewViewModel>
 					new Label
 					{
 						Width = 64,
+						Height = 20,
 						VerticalAlignment = VerticalAlignment.Center,
 						Text = Bind(model => model.OffsetLabel),
 						TextStyle = TextStyle.Subheadline,

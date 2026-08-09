@@ -15,7 +15,7 @@ public class Label : Control
 	public Bindable<string?> Text
 	{
 		get => text;
-		set => textBinding = Register(textBinding, value, value => Set(ref text, value, ApplyText));
+		set => textBinding = Register(textBinding, value, SetText);
 	}
 	string? text;
 	Binding<string?>? textBinding;
@@ -191,6 +191,14 @@ public class Label : Control
 	}
 	double maxFontSize = double.NaN;
 
+
+	void SetText(
+		string? value) =>
+		Set(
+			ref text,
+			value,
+			ApplyText,
+			affectsMeasure: double.IsNaN(Width) || double.IsNaN(Height));
 
 	void ApplyText()
 	{
