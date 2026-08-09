@@ -7,6 +7,7 @@ using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
 using SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 using SkeleKit.Gallery.ViewModels.Controls.TextInput;
 using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
+using SkeleKit.Gallery.ViewModels.Framework.Collections;
 using SkeleKit.Gallery.ViewModels.Framework.Foundations;
 using SkeleKit.Gallery.ViewModels.Framework.Layout;
 using SkeleKit.Gallery.Views;
@@ -31,6 +32,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<OverlayViewModel>();
 		services.AddTransient<ScrollViewViewModel>();
 		services.AddTransient<StackPanelViewModel>();
+		services.AddTransient<ListsViewModel>();
 
 		services.AddTransient<ActivityIndicatorViewModel>();
 		services.AddTransient<ButtonViewModel>();

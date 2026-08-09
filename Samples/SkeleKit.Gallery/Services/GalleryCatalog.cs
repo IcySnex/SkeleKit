@@ -5,6 +5,7 @@ using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
 using SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 using SkeleKit.Gallery.ViewModels.Controls.TextInput;
 using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
+using SkeleKit.Gallery.ViewModels.Framework.Collections;
 using SkeleKit.Gallery.ViewModels.Framework.Foundations;
 using SkeleKit.Gallery.ViewModels.Framework.Layout;
 
@@ -123,7 +124,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Collections",
-				Topic("Lists", "Native lists with diffable updates and selection.", "list.bullet", Colors.Teal, GalleryArea.Framework, typeof(AboutViewModel)),
+				Topic("Lists", "Native lists with diffable updates and selection.", "list.bullet", Colors.Teal, GalleryArea.Framework, typeof(ListsViewModel)),
 				Topic("Grids", "Adaptive multi-column collection layouts.", "square.grid.2x2", Colors.Teal, GalleryArea.Framework, typeof(AboutViewModel)),
 				Topic("Carousels", "Horizontal snapping and peeking content.", "rectangle.on.rectangle.angled", Colors.Teal, GalleryArea.Framework, typeof(AboutViewModel)),
 				Topic("Sections", "Headers, footers and mixed section layouts.", "list.bullet.rectangle", Colors.Teal, GalleryArea.Framework, typeof(AboutViewModel)),
