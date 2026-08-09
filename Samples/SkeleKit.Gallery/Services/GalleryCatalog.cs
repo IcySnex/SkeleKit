@@ -128,7 +128,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				Topic("Grids", "Equal-width multi-column collection layouts.", "square.grid.2x2", Colors.Teal, GalleryArea.Framework, typeof(GridsViewModel)),
 				Topic("Carousels", "Horizontal scrolling with configurable snapping.", "rectangle.on.rectangle.angled", Colors.Teal, GalleryArea.Framework, typeof(CarouselsViewModel)),
 				Topic("Sections", "Headers, footers and mixed section layouts.", "list.bullet.rectangle", Colors.Teal, GalleryArea.Framework, typeof(SectionsViewModel)),
-				Topic("Collection Interactions", "Refresh, menus, swipe, reorder and prefetch.", "hand.draw.fill", Colors.Teal, GalleryArea.Framework, typeof(AboutViewModel))),
+				Topic("Collection Interactions", "Refresh, swipe actions, context menus and reordering.", "hand.draw.fill", Colors.Teal, GalleryArea.Framework, typeof(CollectionInteractionsViewModel))),
 
 			Section(
 				"Styling & Motion",
