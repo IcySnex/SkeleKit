@@ -33,54 +33,50 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 			$$"""
 			bool expanded = false;
 
-			Label detail = new()
+			Grid artwork = Artwork();
+
+			StackPanel details = new()
 			{
-				Text = "12 works",
-				TextStyle = TextStyle.Footnote,
-				TextColor = Colors.SecondaryLabel,
-				Opacity = 0
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Center,
+				Width = 110,
+				Spacing = 3,
+				Translation = new(24, 0),
+				Opacity = 0,
+				Children =
+				{
+					new Label
+					{
+						Text = "Collection",
+						TextStyle = TextStyle.Headline,
+						FontWeight = FontWeight.Semibold
+					},
+					new Label
+					{
+						Text = "12 works",
+						TextStyle = TextStyle.Footnote,
+						TextColor = Colors.SecondaryLabel
+					}
+				}
 			};
 
 			Border card = new()
 			{
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
-				Width = 220,
-				Height = 100,
-				Padding = 12,
-				Background = Color.Dynamic(
-					Color.FromHex(0xF0F6F7),
-					Color.FromHex(0x263438)),
-				CornerRadius = 20,
-				Stroke = Colors.Cyan.WithAlpha(0.45),
-				StrokeThickness = 0.75,
+				Width = 112,
+				Height = 112,
+				Background = Colors.SecondaryGroupedBackground,
+				CornerRadius = 26,
+				Stroke = Colors.Separator,
+				StrokeThickness = 0.5,
 
-				Child = new Grid
+				Child = new Overlay
 				{
-					HorizontalAlignment = HorizontalAlignment.Center,
-					ColumnSpacing = 12,
-					Columns =
-					{
-						64,
-						GridLength.Auto
-					},
 					Children =
 					{
-						Artwork(),
-						new StackPanel
-						{
-							VerticalAlignment = VerticalAlignment.Center,
-							Spacing = 3,
-							Children =
-							{
-								new Label
-								{
-									Text = "Collection",
-									TextStyle = TextStyle.Headline
-								},
-								detail
-							}
-						}.Column(1)
+						artwork,
+						details
 					}
 				}
 			};
@@ -93,16 +89,20 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 					{{TimingCode()}},
 					() =>
 					{
-						card.Width = expanded ? 280 : 220;
-						card.Height = expanded ? 128 : 100;
-						card.CornerRadius = expanded ? 24 : 20;
-						detail.Opacity = expanded ? 1 : 0;
+						card.Width = expanded ? 280 : 112;
+						card.Height = expanded ? 128 : 112;
+						card.CornerRadius = expanded ? 22 : 26;
+						artwork.Translation = expanded ? new(-60, 0) : Point.Zero;
+						details.Translation = expanded ? new(44, 0) : new(24, 0);
+						details.Opacity = expanded ? 1 : 0;
 					});
 			}
 
 			static Grid Artwork() =>
 				new()
 				{
+					HorizontalAlignment = HorizontalAlignment.Center,
+					VerticalAlignment = VerticalAlignment.Center,
 					Width = 64,
 					Height = 64,
 					Padding = 5,

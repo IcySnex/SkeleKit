@@ -6,11 +6,6 @@ namespace SkeleKit.Gallery.Views.Framework.StylingMotion;
 [Page]
 internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 {
-	static readonly Color CardBackground = Color.Dynamic(
-		Color.FromHex(0xF0F6F7),
-		Color.FromHex(0x263438));
-
-
 	public AnimationView(
 		AnimationViewModel viewModel) : base(viewModel, "Animation", Colors.Cyan)
 	{
@@ -21,54 +16,53 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 	void AddTransitionShowcase(
 		AnimationViewModel viewModel)
 	{
-		Label detail = new()
+		Grid artwork = Artwork();
+
+		StackPanel details = new()
 		{
-			Text = "12 works",
-			TextStyle = TextStyle.Footnote,
-			TextColor = Colors.SecondaryLabel,
-			Opacity = viewModel.IsExpanded ? 1 : 0
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Width = 110,
+			Spacing = 3,
+			Translation = viewModel.IsExpanded ? new(44, 0) : new(24, 0),
+			Opacity = viewModel.IsExpanded ? 1 : 0,
+
+			Children =
+			{
+				new Label
+				{
+					Text = "Collection",
+					TextStyle = TextStyle.Headline,
+					FontWeight = FontWeight.Semibold
+				},
+
+				new Label
+				{
+					Text = "12 works",
+					TextStyle = TextStyle.Footnote,
+					TextColor = Colors.SecondaryLabel
+				}
+			}
 		};
+		artwork.Translation = viewModel.IsExpanded ? new(-60, 0) : Point.Zero;
 
 		Border card = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
-			Width = viewModel.IsExpanded ? 280 : 220,
-			Height = viewModel.IsExpanded ? 128 : 100,
-			Padding = 12,
-			Background = CardBackground,
-			CornerRadius = viewModel.IsExpanded ? 24 : 20,
-			Stroke = Colors.Cyan.WithAlpha(0.45),
-			StrokeThickness = 0.75,
+			Width = viewModel.IsExpanded ? 280 : 112,
+			Height = viewModel.IsExpanded ? 128 : 112,
+			Background = Colors.SecondaryGroupedBackground,
+			CornerRadius = viewModel.IsExpanded ? 22 : 26,
+			Stroke = Colors.Separator,
+			StrokeThickness = 0.5,
 
-			Child = new Grid
+			Child = new Overlay
 			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				ColumnSpacing = 12,
-				Columns =
-				{
-					64,
-					GridLength.Auto
-				},
 				Children =
 				{
-					Artwork(),
-
-					new StackPanel
-					{
-						VerticalAlignment = VerticalAlignment.Center,
-						Spacing = 3,
-						Children =
-						{
-							new Label
-							{
-								Text = "Collection",
-								TextStyle = TextStyle.Headline
-							},
-
-							detail
-						}
-					}.Column(1)
+					artwork,
+					details
 				}
 			}
 		};
@@ -108,16 +102,18 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 				viewModel.SelectedTiming,
 				() =>
 				{
-					card.Width = viewModel.IsExpanded ? 280 : 220;
-					card.Height = viewModel.IsExpanded ? 128 : 100;
-					card.CornerRadius = viewModel.IsExpanded ? 24 : 20;
-					detail.Opacity = viewModel.IsExpanded ? 1 : 0;
+					card.Width = viewModel.IsExpanded ? 280 : 112;
+					card.Height = viewModel.IsExpanded ? 128 : 112;
+					card.CornerRadius = viewModel.IsExpanded ? 22 : 26;
+					artwork.Translation = viewModel.IsExpanded ? new(-60, 0) : Point.Zero;
+					details.Translation = viewModel.IsExpanded ? new(44, 0) : new(24, 0);
+					details.Opacity = viewModel.IsExpanded ? 1 : 0;
 				});
 		});
 
 		AddShowcase(
-			"Layout transition",
-			"Animate size, corner radius and content opacity with an easing curve or spring.",
+			"Card expansion",
+			"Expand centered artwork into a details card with an easing curve or spring.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(preview, 200),
 				LabeledControl("Timing", timing),
@@ -129,6 +125,8 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 	static Grid Artwork() =>
 		new()
 		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
 			Width = 64,
 			Height = 64,
 			Padding = 5,
