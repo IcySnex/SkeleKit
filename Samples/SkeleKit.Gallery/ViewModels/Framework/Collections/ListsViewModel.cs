@@ -27,8 +27,7 @@ internal sealed partial class ListsViewModel : ShowcaseViewModel
 				{
 					HorizontalAlignment = HorizontalAlignment.Center,
 					VerticalAlignment = VerticalAlignment.Center,
-					Text = "No items",
-					TextColor = Colors.SecondaryLabel
+					Text = "No items"
 				}
 			};
 
@@ -40,35 +39,9 @@ internal sealed partial class ListsViewModel : ShowcaseViewModel
 					Content = new Border
 					{
 						Height = 52,
-						Child = new Label
-						{
-							Margin = new Thickness(16, 0),
-							VerticalAlignment = VerticalAlignment.Center,
-							Text = Bind(item => item.Title),
-							TextStyle = TextStyle.Body
-						}
+						Child = new Label { Text = Bind(item => item.Title) }
 					};
 			}
-
-			int nextItem = 13;
-
-			ObservableCollection<ListEntry> Items { get; } =
-			[
-				.. Enumerable.Range(1, 12).Select(
-					index => new ListEntry($"Item {index}"))
-			];
-
-			void Add() =>
-				Items.Insert(0, new($"Item {nextItem++}"));
-
-			void Remove()
-			{
-				if (Items.Count > 0)
-					Items.RemoveAt(0);
-			}
-
-			void Select(ListEntry item) =>
-				Haptics.Selection();
 			""");
 
 

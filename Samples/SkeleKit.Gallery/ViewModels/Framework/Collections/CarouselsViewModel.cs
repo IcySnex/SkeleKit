@@ -22,10 +22,7 @@ internal sealed partial class CarouselsViewModel : ShowcaseViewModel
 	public IReadOnlyList<Span> CarouselCode { get; } =
 		Code(
 			"""
-			Border carouselHost = new();
-
-			CollectionView<CarouselEntry> CreateCarousel(
-				CarouselSnap snap) =>
+			CollectionView<CarouselEntry> CreateCarousel(CarouselSnap snap) =>
 				new()
 				{
 					ItemsSource = viewModel.Items,
@@ -37,15 +34,15 @@ internal sealed partial class CarouselsViewModel : ShowcaseViewModel
 					HighlightsSelection = false
 				};
 
-			carouselHost.Child = CreateCarousel(SnapFor(viewModel.SnapIndex));
+			Border host = new()
+			{
+				Child = CreateCarousel(CarouselSnap.ItemPeek)
+			};
 
 			SegmentedControl snapping = new()
 			{
-				SelectedIndex = Bind(
-					model => model.SnapIndex,
-					static (model, value) => model.SnapIndex = value),
 				SelectionChanged = index =>
-					carouselHost.Child = CreateCarousel(SnapFor(index))
+					host.Child = CreateCarousel(SnapFor(index))
 			};
 			snapping.Items.Add("Free");
 			snapping.Items.Add("Peek");
@@ -61,42 +58,15 @@ internal sealed partial class CarouselsViewModel : ShowcaseViewModel
 
 			sealed record CarouselEntry(string Number, string Title);
 
-			ObservableCollection<CarouselEntry> Items { get; } =
-			[
-				.. Enumerable.Range(1, 8).Select(
-					index => new CarouselEntry(index.ToString("00"), $"Card {index}"))
-			];
-
 			sealed class CarouselCell : ItemView<CarouselEntry>
 			{
 				public CarouselCell() =>
-					Content = new Border
+					Content = new StackPanel
 					{
-						Height = 320,
-						VerticalAlignment = VerticalAlignment.Center,
-						Background = Colors.Teal.WithAlpha(0.14),
-						CornerRadius = 24,
-						Child = new StackPanel
+						Children =
 						{
-							HorizontalAlignment = HorizontalAlignment.Center,
-							VerticalAlignment = VerticalAlignment.Center,
-							Spacing = 4,
-							Children =
-							{
-								new Label
-								{
-									Text = Bind(item => item.Number),
-									TextStyle = TextStyle.LargeTitle,
-									FontWeight = FontWeight.Bold,
-									TextColor = Colors.Teal
-								},
-								new Label
-								{
-									Text = Bind(item => item.Title),
-									TextStyle = TextStyle.Body,
-									TextColor = Colors.SecondaryLabel
-								}
-							}
+							new Label { Text = Bind(item => item.Number) },
+							new Label { Text = Bind(item => item.Title) }
 						}
 					};
 			}

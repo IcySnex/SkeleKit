@@ -41,126 +41,40 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 				ShowsSeparators = false
 			};
 
-			sealed record SectionEntry(
-				string Title,
-				bool IsFeatured);
+			sealed record SectionEntry(string Title, bool IsFeatured);
 
 			sealed record CollectionSection(
 				string Title,
 				CollectionLayoutKind Layout,
 				IReadOnlyList<SectionEntry> Items) : ISection<SectionEntry>;
 
-			IReadOnlyList<CollectionSection> Sections { get; } =
-			[
-				new("Featured", CollectionLayoutKind.Carousel, Entries(1, 6, true)),
-				new("Recent", CollectionLayoutKind.List, Entries(7, 7, false))
-			];
-
-			static IReadOnlyList<SectionEntry> Entries(
-				int first,
-				int count,
-				bool featured) =>
-				[
-					.. Enumerable.Range(first, count).Select(
-						index => new SectionEntry($"Item {index}", featured))
-				];
-
 			sealed class SectionCell : ItemView<SectionEntry>
 			{
-				readonly Border container;
-
-				public SectionCell()
-				{
-					container = new()
+				public SectionCell() =>
+					Content = new Label
 					{
-						Height = 72,
-						Padding = new Thickness(14, 0),
-						Child = new Label
-						{
-							VerticalAlignment = VerticalAlignment.Center,
-							Text = Bind(item => item.Title),
-							TextStyle = TextStyle.Body,
-							FontWeight = FontWeight.Semibold
-						}
+						Text = Bind(item => item.Title)
 					};
-
-					Content = container;
-				}
-
-				protected override void OnItemChanged(SectionEntry? item)
-				{
-					bool featured = item?.IsFeatured is true;
-					container.Height = featured ? 76 : 64;
-					container.Margin = featured ? Thickness.Zero : new(16, 3);
-					container.Background = featured
-						? Colors.Teal.WithAlpha(0.14)
-						: Colors.SecondaryGroupedBackground;
-					container.CornerRadius = 14;
-				}
 			}
 
 			sealed class CollectionHeader : ItemView<CollectionSection>
 			{
-				readonly Grid container;
-
-				public CollectionHeader()
-				{
-					container = new()
+				public CollectionHeader() =>
+					Content = new Label
 					{
-						Columns =
-						{
-							GridLength.Star,
-							GridLength.Auto
-						},
-						Children =
-						{
-							new Label
-							{
-								Text = Bind(section => section.Title),
-								TextStyle = TextStyle.Headline,
-								FontWeight = FontWeight.Semibold
-							},
-							new Label
-							{
-								VerticalAlignment = VerticalAlignment.Center,
-								Text = Bind<CollectionLayoutKind, string>(
-									section => section.Layout,
-									layout => layout is CollectionLayoutKind.Carousel ? "Carousel" : "List"),
-								TextStyle = TextStyle.Footnote,
-								TextColor = Colors.SecondaryLabel
-							}.Column(1)
-						}
+						Text = Bind(section => section.Title)
 					};
-					Content = container;
-				}
-
-				protected override void OnItemChanged(CollectionSection? section) =>
-					container.Margin = section?.Layout is CollectionLayoutKind.Carousel
-						? new(0, 8, 8, 5)
-						: new(16, 8, 16, 5);
 			}
 
 			sealed class CollectionFooter : ItemView<CollectionSection>
 			{
-				readonly Label label;
-
-				public CollectionFooter()
-				{
-					label = new()
+				public CollectionFooter() =>
+					Content = new Label
 					{
 						Text = Bind<IReadOnlyList<SectionEntry>, string>(
 							section => section.Items,
-							items => $"{items.Count} items"),
-						TextStyle = TextStyle.Footnote,
-						TextColor = Colors.SecondaryLabel
+							items => $"{items.Count} items")
 					};
-					Content = label;
-				}
-
-				protected override void OnItemChanged(CollectionSection? section) =>
-					label.Margin = section?.Layout is CollectionLayoutKind.Carousel
-						? new(0, 3, 0, 3)
-						: new(16, 3, 16, 3);
 			}
 			""");
 
