@@ -123,10 +123,7 @@ internal sealed partial class ViewViewModel(
 	public IReadOnlyList<Span> InteractionCode { get; } =
 		Code(
 			"""
-			Label status = new()
-			{
-				Text = "Tap, double-tap, hold, drag, pinch or rotate."
-			};
+			Label status = new();
 			void Record(string interaction) =>
 				status.Text = interaction;
 
@@ -139,66 +136,19 @@ internal sealed partial class ViewViewModel(
 				LongPressDuration = 0.7
 			};
 
-			Border gestureCard = new()
-			{
-				PointerEffect = PointerEffect.Automatic
-			};
+			Border gestureCard = new();
 			gestureCard.ContextMenu.Add(new()
 			{
 				Text = "Copy",
 				Command = Command.From(() => Record("Copy"))
 			});
-			gestureCard.ContextMenu.Add(new()
-			{
-				Text = "Share",
-				Command = Command.From(() => Record("Share"))
-			});
 
-			gestureCard.Panned = gesture =>
-			{
-				if (gesture.State is GestureState.Changed)
-				{
-					gestureCard.Translation = new(
-						Math.Clamp(gesture.Translation.X, -70, 70),
-						Math.Clamp(gesture.Translation.Y, -36, 36));
-				}
-				else if (gesture.State is GestureState.Ended or GestureState.Canceled)
-				{
-					Record("Pan");
-					ReturnHome(gestureCard);
-				}
-			};
-			gestureCard.Pinched = gesture =>
-			{
-				if (gesture.State is GestureState.Changed)
-					gestureCard.Scale = Math.Clamp(gesture.Scale, 0.7, 1.45);
-				else if (gesture.State is GestureState.Ended or GestureState.Canceled)
-				{
-					Record("Pinch");
-					ReturnHome(gestureCard);
-				}
-			};
-			gestureCard.Rotated = gesture =>
-			{
-				if (gesture.State is GestureState.Changed)
-					gestureCard.Rotation = Math.Clamp(gesture.Degrees, -35, 35);
-				else if (gesture.State is GestureState.Ended or GestureState.Canceled)
-				{
-					Record("Rotation");
-					ReturnHome(gestureCard);
-				}
-			};
+			gestureCard.Panned = gesture => HandlePan(gestureCard, gesture);
+			gestureCard.Pinched = gesture => HandlePinch(gestureCard, gesture);
+			gestureCard.Rotated = gesture => HandleRotation(gestureCard, gesture);
 
-			static void ReturnHome(View card) =>
-				View.Animate(
-					Animation.Spring(0.42, damping: 0.72),
-					() =>
-					{
-						card.Translation = Point.Zero;
-						card.Scale = 1;
-						card.Rotation = 0;
-						card.Opacity = 1;
-					});
+			// The handlers update Translation, Scale or Rotation while changed,
+			// then animate the card back when the gesture ends.
 			""");
 
 

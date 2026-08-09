@@ -34,29 +34,11 @@ internal sealed partial class StackPanelViewModel : ShowcaseViewModel
 				Spacing = {{Number(Spacing)}},
 				Children =
 				{
-					Item("One"),
-					Item("Two"),
-					Item("Three")
+					new Label { Text = "One" },
+					new Label { Text = "Two" },
+					new Label { Text = "Three" }
 				}
 			};
-
-			static Border Item(string text) =>
-				new()
-				{
-					Width = 72,
-					Height = 56,
-					Background = Colors.Blue,
-					CornerRadius = 12,
-					Child = new Label
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						VerticalAlignment = VerticalAlignment.Center,
-						Text = text,
-						TextStyle = TextStyle.Subheadline,
-						FontWeight = FontWeight.Semibold,
-						TextColor = Colors.White
-					}
-				};
 			""");
 
 

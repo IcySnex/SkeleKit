@@ -74,33 +74,23 @@ internal sealed partial class MaterialsShadowsViewModel : ShowcaseViewModel
 			$$"""
 			Border surface = new()
 			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
 				Width = 224,
 				Height = 120,
 				Background = {{CurrentSurface.Code}},
 				CornerRadius = 22,
 				Shadow = {{ShadowCode()}},
-
 				Child = new Label
 				{
-					HorizontalAlignment = HorizontalAlignment.Center,
-					VerticalAlignment = VerticalAlignment.Center,
 					Text = "{{SurfaceName}}",
-					TextStyle = TextStyle.Title3,
-					FontWeight = FontWeight.Semibold,
 					TextColor = {{CurrentSurface.TextColorCode}}
 				}
 			};
 
 			Overlay overflowHost = new()
 			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
 				Width = 224,
 				Height = 120,
 				ClipsToBounds = {{Bool(ClipsContent)}},
-
 				Children =
 				{
 					new Border
@@ -112,70 +102,19 @@ internal sealed partial class MaterialsShadowsViewModel : ShowcaseViewModel
 						Translation = new(14, -10),
 						Background = Colors.Cyan,
 						CornerRadius = 14,
-
-						Child = new Label
-						{
-							HorizontalAlignment = HorizontalAlignment.Center,
-							VerticalAlignment = VerticalAlignment.Center,
-							Text = "Outside",
-							TextStyle = TextStyle.Caption1,
-							FontWeight = FontWeight.Semibold,
-							TextColor = Colors.White
-						}
+						Child = new Label { Text = "Outside" }
 					}
 				}
 			};
 
 			Overlay scene = new()
 			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
-				Width = 300,
-				Height = 210,
-				CornerRadius = 24,
-				ClipsToBounds = true,
-
 				Children =
 				{
-					Backdrop(),
 					surface,
 					overflowHost
 				}
 			};
-
-			static Grid Backdrop() =>
-				new()
-				{
-					Padding = 14,
-					ColumnSpacing = 10,
-					RowSpacing = 10,
-					Background = Colors.SecondaryBackground,
-					Columns =
-					{
-						GridLength.Star,
-						GridLength.Star
-					},
-					Rows =
-					{
-						GridLength.Star,
-						GridLength.Star
-					},
-
-					Children =
-					{
-						Tile(Colors.Cyan.WithAlpha(0.28)).Row(0).Column(0),
-						Tile(Colors.Blue.WithAlpha(0.22)).Row(0).Column(1),
-						Tile(Colors.Teal.WithAlpha(0.2)).Row(1).Column(0),
-						Tile(Colors.Indigo.WithAlpha(0.16)).Row(1).Column(1)
-					}
-				};
-
-			static Border Tile(Color color) =>
-				new()
-				{
-					Background = color,
-					CornerRadius = 16
-				};
 			""");
 
 

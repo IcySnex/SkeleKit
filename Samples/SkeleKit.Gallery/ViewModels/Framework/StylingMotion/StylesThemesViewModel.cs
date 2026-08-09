@@ -36,31 +36,6 @@ internal sealed partial class StylesThemesViewModel : ShowcaseViewModel
 
 		SkeleApplication.CreateBuilder()
 			.UseTheme(theme => theme.Style(GalleryStyles.ImplicitCard));
-
-		static StackPanel CardContent(string title, string detail) =>
-			new()
-			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
-				Spacing = 4,
-				Children =
-				{
-					new Label
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						Text = title,
-						TextStyle = TextStyle.Title3,
-						FontWeight = FontWeight.Semibold
-					},
-					new Label
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						Text = detail,
-						TextStyle = TextStyle.Footnote,
-						TextColor = Colors.SecondaryLabel
-					}
-				}
-			};
 		""";
 
 	static readonly string[] Titles =
@@ -108,7 +83,7 @@ internal sealed partial class StylesThemesViewModel : ShowcaseViewModel
 				{
 					Width = 240,
 					Height = 120,
-					Child = CardContent("Implicit theme", "Applied during construction")
+					Child = new Label { Text = "Implicit theme" }
 				};
 				""",
 
@@ -119,7 +94,7 @@ internal sealed partial class StylesThemesViewModel : ShowcaseViewModel
 					Style = GalleryStyles.Card,
 					Width = 240,
 					Height = 120,
-					Child = CardContent("Explicit style", "Style = GalleryStyles.Card")
+					Child = new Label { Text = "Explicit style" }
 				};
 				""",
 
@@ -130,7 +105,7 @@ internal sealed partial class StylesThemesViewModel : ShowcaseViewModel
 					Style = GalleryStyles.ElevatedCard,
 					Width = 240,
 					Height = 120,
-					Child = CardContent("BasedOn style", "Card plus elevation")
+					Child = new Label { Text = "BasedOn style" }
 				};
 				""",
 
@@ -142,7 +117,7 @@ internal sealed partial class StylesThemesViewModel : ShowcaseViewModel
 					CornerRadius = 6,
 					Width = 240,
 					Height = 120,
-					Child = CardContent("Local override", "CornerRadius = 6")
+					Child = new Label { Text = "Local override" }
 				};
 				"""
 		};

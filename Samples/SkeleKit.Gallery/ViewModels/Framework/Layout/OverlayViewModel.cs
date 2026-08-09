@@ -50,60 +50,25 @@ internal sealed partial class OverlayViewModel : ShowcaseViewModel
 					{
 						Background = Colors.Blue.WithAlpha(0.1)
 					},
-
-					new Border
+					new Label
 					{
-						Width = 168,
-						Height = 112,
 						HorizontalAlignment = HorizontalAlignment.Center,
 						VerticalAlignment = VerticalAlignment.Center,
-						Background = Colors.Blue.WithAlpha(0.2),
-						CornerRadius = 16,
-						Child = new Label
-						{
-							HorizontalAlignment = HorizontalAlignment.Center,
-							VerticalAlignment = VerticalAlignment.Center,
-							Text = "Artwork",
-							TextStyle = TextStyle.Headline,
-							FontWeight = FontWeight.Semibold,
-							TextColor = Colors.Blue
-						}
+						Text = "Artwork"
 					},
-
 					new Border
 					{
 						Height = 58,
 						VerticalAlignment = VerticalAlignment.End,
 						Background = Colors.Blue.WithAlpha(0.82),
-						Child = new Label
-						{
-							Margin = new Thickness(16, 0),
-							VerticalAlignment = VerticalAlignment.Center,
-							Text = "Caption",
-							TextStyle = TextStyle.Subheadline,
-							FontWeight = FontWeight.Semibold,
-							TextColor = Colors.White
-						}
+						Child = new Label { Text = "Caption" }
 					},
-
-					new Border
+					new Label
 					{
-						Width = 42,
-						Height = 30,
 						Margin = 12,
 						HorizontalAlignment = HorizontalAlignment.End,
 						VerticalAlignment = VerticalAlignment.Start,
-						Background = Colors.Blue,
-						CornerRadius = 15,
-						Child = new Label
-						{
-							HorizontalAlignment = HorizontalAlignment.Center,
-							VerticalAlignment = VerticalAlignment.Center,
-							Text = "3",
-							TextStyle = TextStyle.Footnote,
-							FontWeight = FontWeight.Bold,
-							TextColor = Colors.White
-						}
+						Text = "3"
 					}
 				}
 			};
@@ -112,25 +77,6 @@ internal sealed partial class OverlayViewModel : ShowcaseViewModel
 	public IReadOnlyList<Span> AlignmentCode =>
 		Code(
 			$$"""
-			Border child = new()
-			{
-				Width = 88,
-				Height = 44,
-				HorizontalAlignment = HorizontalAlignment.{{ChildHorizontalAlignment}},
-				VerticalAlignment = VerticalAlignment.{{ChildVerticalAlignment}},
-				Background = Colors.Blue,
-				CornerRadius = 12,
-				Child = new Label
-				{
-					HorizontalAlignment = HorizontalAlignment.Center,
-					VerticalAlignment = VerticalAlignment.Center,
-					Text = "Child",
-					TextStyle = TextStyle.Subheadline,
-					FontWeight = FontWeight.Semibold,
-					TextColor = Colors.White
-				}
-			};
-
 			Overlay overlay = new()
 			{
 				Width = 280,
@@ -142,17 +88,13 @@ internal sealed partial class OverlayViewModel : ShowcaseViewModel
 				{
 					new Border
 					{
-						Width = 1,
-						HorizontalAlignment = HorizontalAlignment.Center,
-						Background = Colors.Blue.WithAlpha(0.22)
-					},
-					new Border
-					{
-						Height = 1,
-						VerticalAlignment = VerticalAlignment.Center,
-						Background = Colors.Blue.WithAlpha(0.22)
-					},
-					child
+						Width = 88,
+						Height = 44,
+						HorizontalAlignment = HorizontalAlignment.{{ChildHorizontalAlignment}},
+						VerticalAlignment = VerticalAlignment.{{ChildVerticalAlignment}},
+						Background = Colors.Blue,
+						Child = new Label { Text = "Child" }
+					}
 				}
 			};
 			""");

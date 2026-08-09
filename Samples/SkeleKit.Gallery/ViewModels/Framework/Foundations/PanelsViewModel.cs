@@ -37,33 +37,25 @@ internal sealed partial class PanelsViewModel : ShowcaseViewModel
 			StackPanel row = new()
 			{
 				Orientation = Orientation.Horizontal,
-				Spacing = 8
-			};
-			SetChildCount(row, 3);
-
-			static void SetChildCount(StackPanel panel, int count)
-			{
-				count = Math.Clamp(count, 1, 5);
-
-				while (panel.Children.Count < count)
-					panel.Children.Add(ChildCard(panel.Children.Count + 1));
-
-				while (panel.Children.Count > count)
+				Spacing = 8,
+				Children =
 				{
-					View last = panel.Children[panel.Children.Count - 1];
-					panel.Children.Remove(last);
+					ChildCard(1),
+					ChildCard(2),
+					ChildCard(3)
 				}
-			}
+			};
 
 			static Border ChildCard(int number) =>
 				new()
 				{
 					Width = 44,
 					Height = 56,
-					Background = Colors.Indigo,
-					CornerRadius = 12,
 					Child = new Label { Text = number.ToString() }
 				};
+
+			row.Children.Add(ChildCard(4));
+			row.Children.Remove(row.Children[^1]);
 			""");
 
 	public IReadOnlyList<Span> PaddingCode =>
@@ -95,18 +87,13 @@ internal sealed partial class PanelsViewModel : ShowcaseViewModel
 			StackPanel panel = new()
 			{
 				BindingContext = viewModel,
-				Width = 300,
-
 				Children =
 				{
-					new Border
+					new Label
 					{
-						Child = new Label
-						{
-							Text = BindingFactory.Bind(
-								(PanelsViewModel model) => model.InheritedText,
-								text => $"Child reads: {text}")
-						}
+						Text = Bind(
+							(PanelsViewModel model) => model.InheritedText,
+							text => $"Child reads: {text}")
 					}
 				}
 			};

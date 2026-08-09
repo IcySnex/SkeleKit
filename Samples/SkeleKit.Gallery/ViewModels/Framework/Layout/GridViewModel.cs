@@ -54,44 +54,37 @@ internal sealed partial class GridViewModel : ShowcaseViewModel
 				Width = 280,
 				Height = 280,
 				ColumnSpacing = 6,
-				RowSpacing = 6
+				RowSpacing = 6,
+				Columns =
+				{
+					GridLength.Star, GridLength.Star, GridLength.Star,
+					GridLength.Star, GridLength.Star
+				},
+				Rows =
+				{
+					GridLength.Star, GridLength.Star, GridLength.Star,
+					GridLength.Star, GridLength.Star
+				}
 			};
 
-			for (int index = 0; index < 5; index++)
+			for (int index = 0; index < 25; index++)
 			{
-				grid.Columns.Add(GridLength.Star);
-				grid.Rows.Add(GridLength.Star);
-			}
-
-			for (int row = 0; row < 5; row++)
-			{
-				for (int column = 0; column < 5; column++)
+				grid.Children.Add(
+					new Border
 				{
-					grid.Children.Add(
-						SimpleCell(row * 5 + column + 1)
-							.Row(row)
-							.Column(column));
-				}
-			}
-
-			static Border SimpleCell(int number) =>
-				new()
-				{
-					Background = Colors.Blue.WithAlpha(0.18),
-					CornerRadius = 8,
-					Child = new Label
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						VerticalAlignment = VerticalAlignment.Center,
-						Text = number.ToString(),
-						TextColor = Colors.Blue
+						Child = new Label { Text = (index + 1).ToString() }
 					}
-				};
+					.Row(index / 5)
+					.Column(index % 5));
+			}
 			""");
 
 	public IReadOnlyList<Span> GridCode =>
 		Code(
 			$$"""
+			int column = {{ColumnIndex}};
+			int span = {{SpanCount}};
+
 			Grid grid = new()
 			{
 				Width = 300,
@@ -112,33 +105,18 @@ internal sealed partial class GridViewModel : ShowcaseViewModel
 				},
 				Children =
 				{
-					Cell("Auto").Column(0).Row(0),
-					Cell("{{FixedWidthLabel}}").Column(1).Row(0),
-					Cell("Star").Column(2).Row(0),
-					Cell("{{SpanLabel}}", filled: true)
-						.Column({{ColumnIndex}}).Row(1).ColumnSpan({{SpanCount}})
+					new Label { Text = "Auto" }.Column(0).Row(0),
+					new Label { Text = "{{FixedWidthLabel}}" }.Column(1).Row(0),
+					new Label { Text = "Star" }.Column(2).Row(0),
+					new Border { Child = new Label { Text = "{{SpanLabel}}" } }
+						.Column(column).Row(1).ColumnSpan(span)
 				}
 			};
 
-			SegmentedControl span = new();
-			for (int value = 1; value <= grid.Columns.Count - {{ColumnIndex}}; value++)
-				span.Items.Add(value.ToString());
-
-			static Border Cell(string text, bool filled = false) =>
-				new()
-				{
-					Background = filled
-						? Colors.Blue
-						: Colors.Blue.WithAlpha(0.18),
-					CornerRadius = 10,
-					Child = new Label
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						VerticalAlignment = VerticalAlignment.Center,
-						Text = text,
-						TextColor = filled ? Colors.White : Colors.Blue
-					}
-				};
+			int maximumSpan = grid.Columns.Count - column;
+			SegmentedControl spanPicker = new();
+			for (int value = 1; value <= maximumSpan; value++)
+				spanPicker.Items.Add(value.ToString());
 			""");
 
 

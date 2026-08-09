@@ -31,68 +31,17 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 	public IReadOnlyList<Span> AnimationCode =>
 		[new(
 			$$"""
-			bool expanded = false;
-
-			Grid artwork = Artwork();
-			artwork.HorizontalAlignment = HorizontalAlignment.Start;
-			artwork.Margin = new(10, 0, 0, 0);
-
-			StackPanel details = new()
-			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
-				Width = 110,
-				Spacing = 3,
-				Translation = new(24, 0),
-				Opacity = 0,
-				Children =
-				{
-					new Label
-					{
-						Text = "Collection",
-						TextStyle = TextStyle.Headline,
-						FontWeight = FontWeight.Semibold
-					},
-					new Label
-					{
-						Text = "12 works",
-						TextStyle = TextStyle.Footnote,
-						TextColor = Colors.SecondaryLabel
-					}
-				}
-			};
-
+			View artwork = new Border { Margin = new(10, 0, 0, 0), Scale = 0.82 };
+			View details = new Label { Text = "Collection", Translation = new(24, 0), Opacity = 0 };
 			Border card = new()
 			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
 				Width = 84,
 				Height = 84,
-				Background = Colors.SecondaryGroupedBackground,
 				CornerRadius = 20,
-				Stroke = Colors.Separator,
-				StrokeThickness = 0.5,
-
-				Child = new Overlay
-				{
-					Children =
-					{
-						artwork,
-						details
-					}
-				}
+				Child = new Overlay { Children = { artwork, details } }
 			};
-			artwork.Scale = 0.82;
 
-			Overlay preview = new()
-			{
-				Width = 300,
-				Height = 156,
-				Children =
-				{
-					card
-				}
-			};
+			bool expanded = false;
 
 			void Toggle()
 			{
@@ -111,76 +60,13 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 						details.Opacity = expanded ? 1 : 0;
 					});
 			}
-
-			static Grid Artwork() =>
-				new()
-				{
-					HorizontalAlignment = HorizontalAlignment.Center,
-					VerticalAlignment = VerticalAlignment.Center,
-					Width = 64,
-					Height = 64,
-					Padding = 8,
-					ColumnSpacing = 4,
-					RowSpacing = 4,
-					Background = Colors.SecondaryBackground,
-					CornerRadius = 8,
-					Columns =
-					{
-						GridLength.Star,
-						GridLength.Star
-					},
-					Rows =
-					{
-						GridLength.Star,
-						GridLength.Star
-					},
-					Children =
-					{
-						Tile(Colors.Cyan.WithAlpha(0.34)).Row(0).Column(0),
-						Tile(Colors.Blue.WithAlpha(0.28)).Row(0).Column(1),
-						Tile(Colors.Teal.WithAlpha(0.26)).Row(1).Column(0),
-						Tile(Colors.Indigo.WithAlpha(0.2)).Row(1).Column(1)
-					}
-				};
-
-			static Border Tile(Color color) =>
-				new()
-				{
-					Background = color,
-					CornerRadius = 4
-				};
 			""")];
 
 	public IReadOnlyList<Span> AnimatorCode =>
 		[new(
 			"""
-			Border artwork = FramedArtwork();
+			Border artwork = new();
 			artwork.Translation = new(-88, 0);
-			artwork.Scale = 0.86;
-			artwork.Opacity = 0.7;
-
-			Overlay stage = new()
-			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
-				Width = 280,
-				Height = 120,
-				Children =
-				{
-					new Border
-					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						VerticalAlignment = VerticalAlignment.Center,
-						Width = 232,
-						Height = 2,
-						Background = Colors.Separator,
-						CornerRadius = 1
-					},
-					PositionMarker(-88),
-					PositionMarker(88),
-					artwork
-				}
-			};
 
 			Animator animator = Animator.Create(
 				Animation.Spring(0.5, damping: 0.72),
@@ -190,8 +76,6 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 					artwork.Scale = 1;
 					artwork.Opacity = 1;
 				});
-
-			// Materialize both endpoints and return to the captured start.
 			animator.Fraction = 0;
 
 			const double distance = 176;
@@ -229,46 +113,6 @@ internal sealed partial class AnimationViewModel : ShowcaseViewModel
 						break;
 				}
 			};
-
-			static Border FramedArtwork() =>
-				new()
-				{
-					HorizontalAlignment = HorizontalAlignment.Center,
-					VerticalAlignment = VerticalAlignment.Center,
-					Width = 70,
-					Height = 84,
-					Padding = 7,
-					Background = Colors.SecondaryGroupedBackground,
-					CornerRadius = 12,
-					Stroke = Colors.Separator,
-					StrokeThickness = 0.5,
-					Child = new Border
-					{
-						Background = Colors.Cyan.WithAlpha(0.18),
-						CornerRadius = 7,
-						Child = new Label
-						{
-							HorizontalAlignment = HorizontalAlignment.Center,
-							VerticalAlignment = VerticalAlignment.Center,
-							Text = "03",
-							TextStyle = TextStyle.Title2,
-							FontWeight = FontWeight.Semibold,
-							TextColor = Colors.Cyan
-						}
-					}
-				};
-
-			static Border PositionMarker(double x) =>
-				new()
-				{
-					HorizontalAlignment = HorizontalAlignment.Center,
-					VerticalAlignment = VerticalAlignment.Center,
-					Width = 8,
-					Height = 8,
-					Translation = new(x, 0),
-					Background = Colors.Separator,
-					CornerRadius = 4
-				};
 			""")];
 
 
