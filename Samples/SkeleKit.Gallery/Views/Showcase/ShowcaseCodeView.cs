@@ -12,14 +12,14 @@ internal sealed class ShowcaseCodeView : ContentView
 		BarTint = tint;
 		BackgroundStyle = PageBackground.Default;
 
-		Content = new Border
+		Content = new ScrollView
 		{
 			Padding = 16,
 			Background = Color.Dynamic(
 				Color.FromHex(0xf9f9f9),
 				Color.FromHex(0x202020)),
 
-			Child = new TextView
+			Content = new TextView
 			{
 				Spans = [.. spans],
 				IsSelectable = true,
