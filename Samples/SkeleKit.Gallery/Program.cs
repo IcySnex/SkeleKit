@@ -7,6 +7,8 @@ using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
 using SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 using SkeleKit.Gallery.ViewModels.Controls.TextInput;
 using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
+using SkeleKit.Gallery.ViewModels.Framework.Foundations;
+using SkeleKit.Gallery.ViewModels.Framework.Layout;
 using SkeleKit.Gallery.Views;
 
 SkeleApplication.CreateBuilder()
@@ -20,6 +22,12 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<SearchViewModel>();
 
 		services.AddTransient<AboutViewModel>();
+		services.AddTransient<BindingViewModel>();
+		services.AddTransient<ContentViewViewModel>();
+		services.AddTransient<PanelsViewModel>();
+		services.AddTransient<ViewViewModel>();
+		services.AddTransient<BorderViewModel>();
+		services.AddTransient<GridViewModel>();
 
 		services.AddTransient<ActivityIndicatorViewModel>();
 		services.AddTransient<ButtonViewModel>();

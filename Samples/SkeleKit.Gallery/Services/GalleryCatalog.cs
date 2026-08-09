@@ -5,6 +5,8 @@ using SkeleKit.Gallery.ViewModels.Controls.ActionsSelection;
 using SkeleKit.Gallery.ViewModels.Controls.MediaContent;
 using SkeleKit.Gallery.ViewModels.Controls.TextInput;
 using SkeleKit.Gallery.ViewModels.Controls.ValuesStatus;
+using SkeleKit.Gallery.ViewModels.Framework.Foundations;
+using SkeleKit.Gallery.ViewModels.Framework.Layout;
 
 namespace SkeleKit.Gallery.Services;
 
@@ -106,15 +108,15 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Foundations",
-				Topic("View", "Layout, visibility, styling and interaction shared by every element.", "square.dashed", Colors.Indigo, GalleryArea.Framework, typeof(AboutViewModel)),
-				Topic("ContentView", "Page composition, chrome, search and lifecycle.", "rectangle.portrait", Colors.Indigo, GalleryArea.Framework, typeof(AboutViewModel)),
-				Topic("Panels", "Child collections, padding and binding inheritance.", "square.stack.3d.up.fill", Colors.Indigo, GalleryArea.Framework, typeof(AboutViewModel)),
-				Topic("Binding", "Compiled one-way, two-way and list bindings.", "arrow.trianglehead.2.clockwise.rotate.90", Colors.Indigo, GalleryArea.Framework, typeof(AboutViewModel))),
+				Topic("View", "Layout, visibility, styling and interaction shared by every element.", "square.dashed", Colors.Indigo, GalleryArea.Framework, typeof(ViewViewModel)),
+				Topic("ContentView", "Page composition, chrome, search and lifecycle.", "rectangle.portrait", Colors.Indigo, GalleryArea.Framework, typeof(ContentViewViewModel)),
+				Topic("Panels", "Child collections, padding and binding inheritance.", "square.stack.3d.up.fill", Colors.Indigo, GalleryArea.Framework, typeof(PanelsViewModel)),
+				Topic("Binding", "Compiled one-way, two-way and list bindings.", "arrow.trianglehead.2.clockwise.rotate.90", Colors.Indigo, GalleryArea.Framework, typeof(BindingViewModel))),
 
 			Section(
 				"Layout",
-				Topic("Border", "Padding, strokes and single-child composition.", "square", Colors.Blue, GalleryArea.Framework, typeof(AboutViewModel)),
-				Topic("Grid", "Auto, pixel and star tracks with spans.", "grid", Colors.Blue, GalleryArea.Framework, typeof(AboutViewModel)),
+				Topic("Border", "Corner radius, stroke width and wrapped content.", "square", Colors.Blue, GalleryArea.Framework, typeof(BorderViewModel)),
+				Topic("Grid", "Rows, columns, track sizing and spans.", "grid", Colors.Blue, GalleryArea.Framework, typeof(GridViewModel)),
 				Topic("Overlay", "Layered children aligned in one shared space.", "square.3.layers.3d", Colors.Blue, GalleryArea.Framework, typeof(AboutViewModel)),
 				Topic("ScrollView", "Scrolling, keyboard avoidance and paging.", "scroll", Colors.Blue, GalleryArea.Framework, typeof(AboutViewModel)),
 				Topic("StackPanel", "Horizontal and vertical linear layout.", "rectangle.stack", Colors.Blue, GalleryArea.Framework, typeof(AboutViewModel))),
