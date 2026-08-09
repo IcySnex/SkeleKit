@@ -21,12 +21,13 @@ internal sealed class SectionsView : ShowcaseView<SectionsViewModel>
 			SectionLayout = section => section.Layout switch
 			{
 				CollectionLayoutKind.Carousel => CollectionLayout.Carousel(
-					itemWidth: 220,
+					itemWidth: 248,
 					spacing: 12,
 					snap: CarouselSnap.ItemPeek),
 				_ => CollectionLayout.List()
 			},
-			HighlightsSelection = false
+			HighlightsSelection = false,
+			ShowsSeparators = false
 		};
 	}
 }
@@ -40,7 +41,7 @@ internal sealed class SectionCell : ItemView<SectionEntry>
 	{
 		container = new()
 		{
-			Height = 68,
+			Height = 72,
 			Padding = new Thickness(14, 0),
 
 			Child = new StackPanel
@@ -74,33 +75,62 @@ internal sealed class SectionCell : ItemView<SectionEntry>
 	protected override void OnItemChanged(
 		SectionEntry? item)
 	{
-		container.Background = item?.IsFeatured is true
+		bool featured = item?.IsFeatured is true;
+		container.Height = featured ? 76 : 64;
+		container.Margin = featured ? Thickness.Zero : new(16, 3);
+		container.Background = featured
 			? Colors.Teal.WithAlpha(0.14)
-			: null;
-		container.CornerRadius = item?.IsFeatured is true ? 14 : 0;
+			: Colors.SecondaryGroupedBackground;
+		container.CornerRadius = 14;
 	}
 }
 
 internal sealed class CollectionHeader : ItemView<CollectionSection>
 {
-	public CollectionHeader() =>
-		Content = new Label
+	readonly Label label;
+
+
+	public CollectionHeader()
+	{
+		label = new()
 		{
-			Margin = new Thickness(16, 12, 16, 6),
 			Text = Bind(section => section.Title),
 			TextStyle = TextStyle.Headline,
 			FontWeight = FontWeight.Semibold
 		};
+		Content = label;
+	}
+
+
+	protected override void OnItemChanged(
+		CollectionSection? section) =>
+		label.Margin = section?.Layout is CollectionLayoutKind.Carousel
+			? new(0, 8, 0, 5)
+			: new(16, 8, 16, 5);
 }
 
 internal sealed class CollectionFooter : ItemView<CollectionSection>
 {
-	public CollectionFooter() =>
-		Content = new Label
+	readonly Label label;
+
+
+	public CollectionFooter()
+	{
+		label = new()
 		{
-			Margin = new Thickness(16, 6, 16, 12),
-			Text = Bind(section => section.Footer),
+			Text = Bind<IReadOnlyList<SectionEntry>, string>(
+				section => section.Items,
+				items => $"{items.Count} items"),
 			TextStyle = TextStyle.Footnote,
 			TextColor = Colors.SecondaryLabel
 		};
+		Content = label;
+	}
+
+
+	protected override void OnItemChanged(
+		CollectionSection? section) =>
+		label.Margin = section?.Layout is CollectionLayoutKind.Carousel
+			? new(0, 3, 0, 3)
+			: new(16, 3, 16, 3);
 }
