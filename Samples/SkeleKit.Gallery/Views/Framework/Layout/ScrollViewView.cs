@@ -51,12 +51,15 @@ internal sealed class ScrollViewView : ShowcaseView<ScrollViewViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(scroll, 280),
 				SettingRow(
-					"Position",
+					"Offset",
 					new Label
 					{
+						Width = 64,
 						VerticalAlignment = VerticalAlignment.Center,
 						Text = Bind(model => model.OffsetLabel),
 						TextStyle = TextStyle.Subheadline,
+						FontDesign = FontDesign.Monospaced,
+						TextAlignment = TextAlignment.Trailing,
 						TextColor = Colors.SecondaryLabel
 					}),
 				SettingRow("Scroll indicator", indicator)),

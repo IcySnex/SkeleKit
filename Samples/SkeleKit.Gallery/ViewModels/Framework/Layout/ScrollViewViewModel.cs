@@ -20,15 +20,18 @@ internal sealed partial class ScrollViewViewModel : ShowcaseViewModel
 
 
 	public string OffsetLabel =>
-		$"Offset {Number(ScrollOffset)}";
+		Number(ScrollOffset);
 
 	public IReadOnlyList<Span> VerticalCode =>
 		Code(
 			$$"""
 			Label offset = new()
 			{
-				Text = "Offset 0",
+				Width = 64,
+				Text = "0",
 				TextStyle = TextStyle.Subheadline,
+				FontDesign = FontDesign.Monospaced,
+				TextAlignment = TextAlignment.Trailing,
 				TextColor = Colors.SecondaryLabel
 			};
 
@@ -38,7 +41,7 @@ internal sealed partial class ScrollViewViewModel : ShowcaseViewModel
 				Height = 220,
 				Padding = 12,
 				ShowsIndicator = {{Boolean(ShowsIndicator)}},
-				Scrolled = value => offset.Text = $"Offset {value:0}",
+				Scrolled = value => offset.Text = value.ToString("0"),
 
 				Content = new StackPanel
 				{
