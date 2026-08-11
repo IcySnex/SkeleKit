@@ -437,8 +437,7 @@ internal sealed class PageHost : UIViewController
 		if (page.TitleStyle is TitleStyle.Large && NavigationController is UINavigationController stack)
 			stack.NavigationBar.PrefersLargeTitles = true;
 
-		if (page.TitleColor is not null || page.LargeTitleColor is not null)
-			ApplyBarAppearance(page);
+		ApplyBarAppearance(page);
 
 		ApplyToolbar(page);
 		ApplySearch(page);
@@ -457,26 +456,28 @@ internal sealed class PageHost : UIViewController
 
 		UINavigationBar? bar = NavigationController?.NavigationBar;
 		UINavigationBarAppearance standard = bar?.StandardAppearance.Copy() as UINavigationBarAppearance ?? new();
+		UINavigationBarAppearance edge = page.ScrollsUnderBars
+			? bar?.ScrollEdgeAppearance?.Copy() as UINavigationBarAppearance ?? Transparent()
+			: standard.Copy() as UINavigationBarAppearance ?? new();
 
-		UINavigationBarAppearance edge = bar?.ScrollEdgeAppearance?.Copy() as UINavigationBarAppearance ?? Transparent();
-
-		if (page.TitleColor is Color title)
+		UIStringAttributes titleAttributes = new()
 		{
-			UIStringAttributes attributes = new() { ForegroundColor = title.ToUIColor() };
-			standard.TitleTextAttributes = attributes;
-			edge.TitleTextAttributes = attributes;
-		}
+			ForegroundColor = page.TitleColor?.ToUIColor() ?? UIColor.Label
+		};
+		standard.TitleTextAttributes = titleAttributes;
+		edge.TitleTextAttributes = titleAttributes;
 
-		if (page.LargeTitleColor is Color large)
+		UIStringAttributes largeTitleAttributes = new()
 		{
-			UIStringAttributes attributes = new() { ForegroundColor = large.ToUIColor() };
-			standard.LargeTitleTextAttributes = attributes;
-			edge.LargeTitleTextAttributes = attributes;
-		}
+			ForegroundColor = page.LargeTitleColor?.ToUIColor() ?? UIColor.Label
+		};
+		standard.LargeTitleTextAttributes = largeTitleAttributes;
+		edge.LargeTitleTextAttributes = largeTitleAttributes;
 
 		NavigationItem.StandardAppearance = standard;
 		NavigationItem.ScrollEdgeAppearance = edge;
-		NavigationItem.CompactAppearance = standard;
+		NavigationItem.CompactAppearance = standard.Copy() as UINavigationBarAppearance ?? standard;
+		NavigationItem.CompactScrollEdgeAppearance = edge.Copy() as UINavigationBarAppearance ?? edge;
 	}
 
 	void ApplyKeyboard(
@@ -561,7 +562,10 @@ internal sealed class PageHost : UIViewController
 		NavigationItem.RightBarButtonItems = [.. trailing];
 
 		if (page.BottomToolbarItems.Count == 0)
+		{
+			ApplyToolbarTint(page);
 			return;
+		}
 
 		List<UIBarButtonItem> bottom = [];
 
@@ -578,6 +582,59 @@ internal sealed class PageHost : UIViewController
 		}
 
 		SetToolbarItems([.. bottom], false);
+		ApplyToolbarTint(page);
+	}
+
+	static void TintButtonAppearance(
+		UIBarButtonItemAppearance appearance,
+		UIColor tint)
+	{
+		NSDictionary<NSString, NSObject> attributes = new(
+			new NSString("NSForegroundColorAttributeName"),
+			tint);
+		appearance.Normal.TitleTextAttributes = attributes;
+		appearance.Highlighted.TitleTextAttributes = attributes;
+	}
+
+	static UIToolbarAppearance TintToolbarAppearance(
+		UIToolbarAppearance source,
+		UIColor tint)
+	{
+		UIToolbarAppearance appearance = source.Copy() as UIToolbarAppearance ?? new();
+		TintButtonAppearance(appearance.ButtonAppearance, tint);
+
+		if (OperatingSystem.IsIOSVersionAtLeast(26))
+			TintButtonAppearance(appearance.ProminentButtonAppearance, tint);
+		else
+			TintButtonAppearance(appearance.DoneButtonAppearance, tint);
+
+		return appearance;
+	}
+
+	void ApplyToolbarTint(
+		ContentView page)
+	{
+		if (NavigationController?.Toolbar is not UIToolbar toolbar)
+			return;
+
+		if (page.BarTint is not Color tint)
+		{
+			toolbar.TintColor = null;
+			return;
+		}
+
+		UIColor color = tint.ToUIColor();
+		toolbar.TintColor = color;
+		toolbar.StandardAppearance = TintToolbarAppearance(toolbar.StandardAppearance, color);
+
+		if (toolbar.CompactAppearance is UIToolbarAppearance compact)
+			toolbar.CompactAppearance = TintToolbarAppearance(compact, color);
+
+		if (toolbar.ScrollEdgeAppearance is UIToolbarAppearance scrollEdge)
+			toolbar.ScrollEdgeAppearance = TintToolbarAppearance(scrollEdge, color);
+
+		if (toolbar.CompactScrollEdgeAppearance is UIToolbarAppearance compactScrollEdge)
+			toolbar.CompactScrollEdgeAppearance = TintToolbarAppearance(compactScrollEdge, color);
 	}
 
 	void ApplySearch(
@@ -623,6 +680,7 @@ internal sealed class PageHost : UIViewController
 			}
 		}
 
+		NavigationItem.PreferredSearchBarPlacement = UINavigationItemSearchBarPlacement.Stacked;
 		NavigationItem.SearchController = search;
 		NavigationItem.HidesSearchBarWhenScrolling = page.HidesSearchBarWhenScrolling;
 
@@ -838,7 +896,7 @@ internal sealed class PageHost : UIViewController
 
 		// bar-wide, so every page restores it; null falls back to the app tint
 		NavigationController?.NavigationBar.TintColor = Page.BarTint?.ToUIColor();
-		NavigationController?.Toolbar.TintColor = Page.BarTint?.ToUIColor();
+		ApplyToolbarTint(Page);
 
 		// here and not ViewDidLoad: whether back has anywhere to go needs the containment settled
 		ApplyBackGuard();
@@ -855,6 +913,9 @@ internal sealed class PageHost : UIViewController
 
 		SkeleApplication.Current?.CompleteTabSelection(this);
 		Page?.NotifyAppeared();
+
+		if (Page is ContentView page)
+			ApplyToolbarTint(page);
 	}
 
 	public override void ViewWillDisappear(
