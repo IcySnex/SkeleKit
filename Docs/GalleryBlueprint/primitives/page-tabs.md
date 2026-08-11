@@ -390,6 +390,7 @@ A button in the page's navigation bar.
 | Property | `SkeleKit.ToolbarItem.IsVisible` | public get/set | true | No | No automatic invalidation | Whether the item is in the bar at all. Contextual actions toggle it live, like a Delete that only exists in edit mode. |
 | Property | `SkeleKit.ToolbarItem.Side` | public get/set | ToolbarSide.Trailing | No | No automatic invalidation | Which side of the bar the item sits on. |
 | Property | `SkeleKit.ToolbarItem.IsPrimary` | public get/set | false | No | No automatic invalidation | Whether the item is rendered as the prominent action. |
+| Property | `SkeleKit.ToolbarItem.Tint` | public get/set | null; inherits the page or app tint | No | Visual/interaction only | The item's tint. Setting it updates the bar live. |
 | Property | `SkeleKit.ToolbarItem.Menu` | public get | [] | No | No automatic invalidation | Menu entries shown on tap instead of invoking `ToolbarItem.Command`. Empty for a plain item. |
 | Property | `SkeleKit.ToolbarItem.Command` | public get/set | null | No | No automatic invalidation | Invoked when the item is tapped; its CanExecute drives the enabled state. |
 | Property | `SkeleKit.ToolbarItem.CommandParameter` | public get/set | null | No | No automatic invalidation | The parameter passed to `ToolbarItem.Command`. |
@@ -398,4 +399,3 @@ A button in the page's navigation bar.
 ### Gallery treatment
 
 Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
-

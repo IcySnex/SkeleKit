@@ -152,7 +152,7 @@ Every documented exported type in the compiled iOS XML baseline appears exactly 
 | `Theme` | [shared/styling-animation.md](shared/styling-animation.md) | Non-gallery | 2 |
 | `Thickness` | [primitives/geometry-layout.md](primitives/geometry-layout.md) | Visual | 19 |
 | `TitleStyle` | [primitives/page-tabs.md](primitives/page-tabs.md) | Non-gallery | 3 |
-| `ToolbarItem` | [primitives/page-tabs.md](primitives/page-tabs.md) | Non-gallery | 9 |
+| `ToolbarItem` | [primitives/page-tabs.md](primitives/page-tabs.md) | Non-gallery | 10 |
 | `ToolbarSide` | [primitives/page-tabs.md](primitives/page-tabs.md) | Non-gallery | 3 |
 | `Truncation` | [primitives/typography-text.md](primitives/typography-text.md) | Visual | 5 |
 | `UpdateTrigger` | [shared/binding.md](shared/binding.md) | Non-gallery | 4 |

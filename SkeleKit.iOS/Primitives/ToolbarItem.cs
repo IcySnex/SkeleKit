@@ -84,6 +84,22 @@ public sealed class ToolbarItem
 	public bool IsPrimary { get; set; }
 
 	/// <summary>
+	/// The item's tint, or null to follow the page or app tint.
+	/// </summary>
+	/// <remarks>
+	/// Setting it updates the bar live.
+	/// </remarks>
+	public Color? Tint
+	{
+		get;
+		set
+		{
+			field = value;
+			Changed?.Invoke();
+		}
+	}
+
+	/// <summary>
 	/// Menu entries shown on tap instead of invoking <see cref="Command"/>. Empty for a plain item.
 	/// </summary>
 	public IList<MenuAction> Menu { get; } = [];

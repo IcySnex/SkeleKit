@@ -169,6 +169,7 @@ internal sealed class PageHost : UIViewController
 	// ReSharper disable once CollectionNeverQueried.Local
 	readonly List<UIAction> menuActions = [];
 	readonly List<ToolbarItem> observedItems = [];
+	readonly Dictionary<UIBarButtonItem, ToolbarItem> nativeToolbarItems = [];
 
 	UITapGestureRecognizer? dismissKeyboard;
 	UIView? keyboardFocus;
@@ -346,9 +347,6 @@ internal sealed class PageHost : UIViewController
 	UIBarButtonItem Bar(
 		ToolbarItem item)
 	{
-		if (item.IsPrimary && OperatingSystem.IsIOSVersionAtLeast(26))
-			return ProminentBar(item);
-
 		if (item.Menu.Count > 0)
 			return MenuBar(item);
 
@@ -370,54 +368,16 @@ internal sealed class PageHost : UIViewController
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
-		native.TintColor = EffectiveBarTint(Page);
+		nativeToolbarItems[native] = item;
+		native.TintColor = EffectiveBarTint(Page, item);
 
 		return native;
 	}
 
-	[System.Runtime.Versioning.SupportedOSPlatform("ios26.0")]
-	UIBarButtonItem ProminentBar(
-		ToolbarItem item)
-	{
-		UIButtonConfiguration configuration = UIButtonConfiguration.ProminentGlassButtonConfiguration;
-		configuration.Title = item.Text ?? "";
-
-		if (item.Icon is string icon && UIImage.GetSystemImage(icon) is UIImage image)
-			configuration.Image = image;
-
-		if (item.Text is not null && item.Icon is not null)
-			configuration.ImagePadding = 6;
-
-		if (EffectiveBarTint(Page) is UIColor tint)
-			configuration.BaseBackgroundColor = tint;
-
-		UIButton button = new(UIButtonType.System)
-		{
-			Configuration = configuration,
-			Enabled = item.Command?.CanExecute(item.CommandParameter) ?? true
-		};
-
-		if (item.Menu.Count > 0)
-		{
-			button.Menu = BuildMenu(item);
-			button.ShowsMenuAsPrimaryAction = true;
-		}
-		else
-		{
-			button.TouchUpInside += (_, _) =>
-			{
-				if (item.Command is ICommand command && command.CanExecute(item.CommandParameter))
-					command.Execute(item.CommandParameter);
-			};
-		}
-
-		button.SizeToFit();
-		return new(button);
-	}
-
 	static UIColor? EffectiveBarTint(
-		ContentView? page) =>
-		(page?.BarTint ?? SkeleApplication.Current?.Tint)?.ToUIColor();
+		ContentView? page,
+		ToolbarItem? item = null) =>
+		(item?.Tint ?? page?.BarTint ?? SkeleApplication.Current?.Tint)?.ToUIColor();
 
 	UIMenu BuildMenu(
 		ToolbarItem item)
@@ -459,7 +419,8 @@ internal sealed class PageHost : UIViewController
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
-		native.TintColor = EffectiveBarTint(Page);
+		nativeToolbarItems[native] = item;
+		native.TintColor = EffectiveBarTint(Page, item);
 
 		return native;
 	}
@@ -501,21 +462,38 @@ internal sealed class PageHost : UIViewController
 	void ApplyBarAppearance(
 		ContentView page)
 	{
-		if (NavigationController?.NavigationBar is not UINavigationBar bar)
-			return;
+		static UINavigationBarAppearance Transparent()
+		{
+			UINavigationBarAppearance appearance = new();
+			appearance.ConfigureWithTransparentBackground();
 
-		// Keep scroll-edge rendering native. ScrollsUnderBars only controls the page's layout.
-		NavigationItem.StandardAppearance = null;
-		NavigationItem.ScrollEdgeAppearance = null;
-		NavigationItem.CompactAppearance = null;
-		NavigationItem.CompactScrollEdgeAppearance = null;
+			return appearance;
+		}
 
-		bar.TitleTextAttributes = page.TitleColor is Color title
-			? new() { ForegroundColor = title.ToUIColor() }
-			: new();
-		bar.LargeTitleTextAttributes = page.LargeTitleColor is Color large
-			? new() { ForegroundColor = large.ToUIColor() }
-			: new();
+		UINavigationBar? bar = NavigationController?.NavigationBar;
+		UINavigationBarAppearance standard = bar?.StandardAppearance.Copy() as UINavigationBarAppearance ?? new();
+		UINavigationBarAppearance edge = page.ScrollsUnderBars
+			? bar?.ScrollEdgeAppearance?.Copy() as UINavigationBarAppearance ?? Transparent()
+			: standard.Copy() as UINavigationBarAppearance ?? new();
+
+		UIStringAttributes titleAttributes = new()
+		{
+			ForegroundColor = page.TitleColor?.ToUIColor() ?? UIColor.Label
+		};
+		standard.TitleTextAttributes = titleAttributes;
+		edge.TitleTextAttributes = titleAttributes;
+
+		UIStringAttributes largeTitleAttributes = new()
+		{
+			ForegroundColor = page.LargeTitleColor?.ToUIColor() ?? UIColor.Label
+		};
+		standard.LargeTitleTextAttributes = largeTitleAttributes;
+		edge.LargeTitleTextAttributes = largeTitleAttributes;
+
+		NavigationItem.StandardAppearance = standard;
+		NavigationItem.ScrollEdgeAppearance = edge;
+		NavigationItem.CompactAppearance = standard.Copy() as UINavigationBarAppearance ?? standard;
+		NavigationItem.CompactScrollEdgeAppearance = edge.Copy() as UINavigationBarAppearance ?? edge;
 	}
 
 	void ApplyNavigationTint(
@@ -585,6 +563,7 @@ internal sealed class PageHost : UIViewController
 	{
 		// a rebuild replaces every native item, so the old menus' actions can go too
 		menuActions.Clear();
+		nativeToolbarItems.Clear();
 		ObserveToolbar(page);
 
 		List<UIBarButtonItem> leading = [];
@@ -633,27 +612,13 @@ internal sealed class PageHost : UIViewController
 	void ApplyToolbarTint(
 		ContentView page)
 	{
+		foreach ((UIBarButtonItem native, ToolbarItem item) in nativeToolbarItems)
+			native.TintColor = EffectiveBarTint(page, item);
+
 		if (NavigationController?.Toolbar is not UIToolbar toolbar)
 			return;
 
-		UIColor? tint = EffectiveBarTint(page);
-		toolbar.TintColor = tint;
-
-		if (toolbar.Items is { } tintedItems)
-		{
-			foreach (UIBarButtonItem item in tintedItems)
-			{
-				item.TintColor = tint;
-
-				if (tint is not null
-					&& item.CustomView is UIButton button
-					&& button.Configuration is UIButtonConfiguration configuration)
-				{
-					configuration.BaseBackgroundColor = tint;
-					button.Configuration = configuration;
-				}
-			}
-		}
+		toolbar.TintColor = EffectiveBarTint(page);
 
 		toolbar.SetNeedsLayout();
 		toolbar.LayoutIfNeeded();
