@@ -112,7 +112,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 			Section(
 				"Foundations",
 				Topic("View", "Layout, visibility, transforms and interaction shared by every element.", "square.dashed", Colors.Indigo, GalleryArea.Framework, typeof(ViewViewModel)),
-				Topic("ContentView", "Page composition, chrome, search and lifecycle.", "rectangle.portrait", Colors.Indigo, GalleryArea.Framework, typeof(ContentViewViewModel)),
+				Topic("ContentView", "Page composition and lifecycle.", "rectangle.portrait", Colors.Indigo, GalleryArea.Framework, typeof(ContentViewViewModel)),
 				Topic("Panels", "Child collections, padding and binding inheritance.", "square.stack.3d.up.fill", Colors.Indigo, GalleryArea.Framework, typeof(PanelsViewModel)),
 				Topic("Binding", "Compiled one-way, two-way and list bindings.", "arrow.trianglehead.2.clockwise.rotate.90", Colors.Indigo, GalleryArea.Framework, typeof(BindingViewModel))),
 
@@ -145,7 +145,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 			Section(
 				"Application",
 				Topic("Navigation", "ViewModel-first stack, modal, tab and system handoffs.", "arrow.left.arrow.right", Colors.Green, GalleryArea.Platform, typeof(NavigationViewModel)),
-				Topic("Page Chrome", "Titles, search, toolbars, badges and status bars.", "platter.filled.top.iphone", Colors.Green, GalleryArea.Platform, typeof(AboutViewModel)),
+				Topic("Page Chrome", "Titles, search, toolbars, badges and status bars.", "platter.filled.top.iphone", Colors.Green, GalleryArea.Platform, typeof(PageChromeViewModel)),
 				Topic("Tabs & iPad", "Bottom tabs, search bubbles and sidebar arrangements.", "sidebar.left", Colors.Green, GalleryArea.Platform, typeof(AboutViewModel)),
 				Topic("Lifecycle & DI", "Application services and foreground transitions.", "app.badge.checkmark", Colors.Green, GalleryArea.Platform, typeof(AboutViewModel))),
 
