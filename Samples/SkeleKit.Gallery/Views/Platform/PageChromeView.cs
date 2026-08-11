@@ -101,6 +101,10 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 		Switch collapsing = Toggle(
 			model => model.HidesSearchBarWhenScrolling,
 			static (model, value) => model.HidesSearchBarWhenScrolling = value);
+		Switch startsCollapsed = Toggle(
+			model => model.StartsSearchCollapsed,
+			static (model, value) => model.StartsSearchCollapsed = value);
+		startsCollapsed.IsEnabled = Bind(model => model.HidesSearchBarWhenScrolling);
 
 		Button open = ActionButton(
 			"Open search page",
@@ -112,7 +116,8 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 			"Search field, scopes and callbacks.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(open, 140),
-				SettingRow("Collapse while scrolling", collapsing)),
+				SettingRow("Collapse while scrolling", collapsing),
+				SettingRow("Start collapsed", startsCollapsed)),
 			Code(model => model.SearchCode));
 	}
 
@@ -308,6 +313,7 @@ internal sealed class PageChromeDemo : ContentView
 
 internal sealed class PageChromeSearchDemo : ContentView
 {
+	readonly ScrollView scroll;
 	readonly Label status = new()
 	{
 		Text = "Ready",
@@ -316,6 +322,7 @@ internal sealed class PageChromeSearchDemo : ContentView
 		TextAlignment = TextAlignment.Center,
 		MaxLines = 3
 	};
+	bool startsCollapsed;
 
 
 	public PageChromeSearchDemo(
@@ -326,6 +333,7 @@ internal sealed class PageChromeSearchDemo : ContentView
 		BackgroundStyle = PageBackground.Grouped;
 		SearchPlaceholder = "Search gallery";
 		HidesSearchBarWhenScrolling = configuration.HidesSearchBarWhenScrolling;
+		startsCollapsed = configuration.StartsCollapsed;
 
 		SearchScopes.Add("All");
 		SearchScopes.Add("Recent");
@@ -340,7 +348,7 @@ internal sealed class PageChromeSearchDemo : ContentView
 		SearchCanceled = () =>
 			status.Text = "Search cancelled";
 
-		Content = new ScrollView
+		scroll = new()
 		{
 			Content = new StackPanel
 			{
@@ -361,5 +369,18 @@ internal sealed class PageChromeSearchDemo : ContentView
 				}
 			}
 		};
+		Content = scroll;
+	}
+
+
+	protected override void OnAppeared()
+	{
+		base.OnAppeared();
+
+		if (!startsCollapsed)
+			return;
+
+		startsCollapsed = false;
+		scroll.ScrollTo(0, animated: false);
 	}
 }

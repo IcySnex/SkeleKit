@@ -89,6 +89,10 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(SearchCode))]
 	bool hidesSearchBarWhenScrolling;
 
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(SearchCode))]
+	bool startsSearchCollapsed;
+
 	public List<PageChromeTitleOption> TitleStyles =>
 		TitleOptions;
 
@@ -120,7 +124,8 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 
 	internal PageChromeSearchConfiguration SearchConfiguration =>
 		new(
-			HidesSearchBarWhenScrolling);
+			HidesSearchBarWhenScrolling,
+			StartsSearchCollapsed);
 
 	public IReadOnlyList<Span> PageCode =>
 	[
@@ -150,6 +155,8 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	[
 		new(
 			$$"""
+			ScrollView scroll = new() { Content = status };
+
 			ContentView page = new()
 			{
 				Title = "Search",
@@ -158,14 +165,22 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 				SearchChanged = query => status.Text = $"Typing: {query}",
 				SearchCommand = Command.From<string>(query => status.Text = $"Submitted: {query}"),
 				SearchCanceled = () => status.Text = "Search cancelled",
-				Content = status
+				Content = scroll
 			};
 
 			page.SearchScopes.Add("All");
 			page.SearchScopes.Add("Recent");
 			page.SearchScopes.Add("Saved");
+			{{(StartsSearchCollapsed ? "scroll.ScrollTo(0, animated: false);" : "")}}
 			""")
 	];
+
+	partial void OnHidesSearchBarWhenScrollingChanged(
+		bool value)
+	{
+		if (!value)
+			StartsSearchCollapsed = false;
+	}
 
 	string ToolbarCode =>
 		$$"""
@@ -220,4 +235,5 @@ internal sealed record PageChromeConfiguration(
 	bool HasBottomToolbar);
 
 internal sealed record PageChromeSearchConfiguration(
-	bool HidesSearchBarWhenScrolling);
+	bool HidesSearchBarWhenScrolling,
+	bool StartsCollapsed);
