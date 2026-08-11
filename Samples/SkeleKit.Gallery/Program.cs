@@ -11,6 +11,7 @@ using SkeleKit.Gallery.ViewModels.Framework.Collections;
 using SkeleKit.Gallery.ViewModels.Framework.Foundations;
 using SkeleKit.Gallery.ViewModels.Framework.Layout;
 using SkeleKit.Gallery.ViewModels.Framework.StylingMotion;
+using SkeleKit.Gallery.ViewModels.Platform;
 using SkeleKit.Gallery.Views;
 
 SkeleApplication.CreateBuilder()
@@ -20,6 +21,7 @@ SkeleApplication.CreateBuilder()
 
 		services.AddTransient<ControlsViewModel>();
 		services.AddTransient<FrameworkViewModel>();
+		services.AddTransient<NavigationViewModel>();
 		services.AddTransient<PlatformViewModel>();
 		services.AddTransient<SearchViewModel>();
 

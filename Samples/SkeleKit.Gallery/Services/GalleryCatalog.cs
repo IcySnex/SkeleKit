@@ -9,6 +9,7 @@ using SkeleKit.Gallery.ViewModels.Framework.Collections;
 using SkeleKit.Gallery.ViewModels.Framework.Foundations;
 using SkeleKit.Gallery.ViewModels.Framework.Layout;
 using SkeleKit.Gallery.ViewModels.Framework.StylingMotion;
+using SkeleKit.Gallery.ViewModels.Platform;
 
 namespace SkeleKit.Gallery.Services;
 
@@ -143,7 +144,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 		[
 			Section(
 				"Application",
-				Topic("Navigation", "ViewModel-first push, pop and tab selection.", "arrow.left.arrow.right", Colors.Green, GalleryArea.Platform, typeof(AboutViewModel)),
+				Topic("Navigation", "ViewModel-first stack, modal, tab and system handoffs.", "arrow.left.arrow.right", Colors.Green, GalleryArea.Platform, typeof(NavigationViewModel)),
 				Topic("Page Chrome", "Titles, search, toolbars, badges and status bars.", "platter.filled.top.iphone", Colors.Green, GalleryArea.Platform, typeof(AboutViewModel)),
 				Topic("Tabs & iPad", "Bottom tabs, search bubbles and sidebar arrangements.", "sidebar.left", Colors.Green, GalleryArea.Platform, typeof(AboutViewModel)),
 				Topic("Lifecycle & DI", "Application services and foreground transitions.", "app.badge.checkmark", Colors.Green, GalleryArea.Platform, typeof(AboutViewModel))),
