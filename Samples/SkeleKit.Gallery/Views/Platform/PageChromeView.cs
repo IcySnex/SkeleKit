@@ -65,7 +65,6 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 		};
 
 		Switch prompt = Toggle(model => model.ShowsPrompt, static (model, value) => model.ShowsPrompt = value);
-		Switch scrolling = Toggle(model => model.ScrollsUnderBars, static (model, value) => model.ScrollsUnderBars = value);
 		Switch navigationBar = Toggle(model => model.HidesNavigationBar, static (model, value) => model.HidesNavigationBar = value);
 		Switch tabBar = Toggle(model => model.HidesTabBar, static (model, value) => model.HidesTabBar = value);
 		Switch toolbar = Toggle(model => model.HasToolbar, static (model, value) => model.HasToolbar = value);
@@ -87,7 +86,6 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 				SettingRow("Status bar", statusBar),
 				SettingRow("Accent colors", accent),
 				SettingRow("Safe area", safeArea),
-				SettingRow("Scroll under bars", scrolling),
 				SettingRow("Hide navigation bar", navigationBar),
 				SettingRow("Hide tab bar", tabBar),
 				SettingRow("Toolbar actions", toolbar),
@@ -101,10 +99,6 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 		Switch collapsing = Toggle(
 			model => model.HidesSearchBarWhenScrolling,
 			static (model, value) => model.HidesSearchBarWhenScrolling = value);
-		Switch startsCollapsed = Toggle(
-			model => model.StartsSearchCollapsed,
-			static (model, value) => model.StartsSearchCollapsed = value);
-		startsCollapsed.IsEnabled = Bind(model => model.HidesSearchBarWhenScrolling);
 
 		Button open = ActionButton(
 			"Open search page",
@@ -116,8 +110,7 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 			"Search field, scopes and callbacks.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(open, 140),
-				SettingRow("Collapse while scrolling", collapsing),
-				SettingRow("Start collapsed", startsCollapsed)),
+				SettingRow("Collapse while scrolling", collapsing)),
 			Code(model => model.SearchCode));
 	}
 
@@ -151,9 +144,8 @@ internal sealed class PageChromeDemo : ContentView
 {
 	readonly Label status = new()
 	{
-		Text = "Ready",
+		Text = "No action pressed yet",
 		TextStyle = TextStyle.Headline,
-		FontWeight = FontWeight.Semibold,
 		TextAlignment = TextAlignment.Center,
 		MaxLines = 2
 	};
@@ -166,7 +158,6 @@ internal sealed class PageChromeDemo : ContentView
 		TitleStyle = configuration.TitleStyle;
 		Prompt = configuration.ShowsPrompt ? "ContentView" : null;
 		SafeAreaEdges = configuration.SafeAreaEdges;
-		ScrollsUnderBars = configuration.ScrollsUnderBars;
 		HidesNavigationBar = configuration.HidesNavigationBar;
 		BackgroundStyle = configuration.BackgroundStyle;
 		StatusBar = configuration.StatusBar;
@@ -192,7 +183,7 @@ internal sealed class PageChromeDemo : ContentView
 					new MenuAction
 					{
 						Text = "Reset status",
-						Command = Command.From(() => status.Text = "Ready")
+						Command = Command.From(() => status.Text = "No action pressed yet")
 					}
 				}
 			});
@@ -212,6 +203,7 @@ internal sealed class PageChromeDemo : ContentView
 				Text = "Done",
 				Icon = "checkmark",
 				IsPrimary = true,
+				Tint = Colors.Green,
 				Command = Command.From(() => status.Text = "Bottom action tapped")
 			});
 		}
@@ -225,13 +217,6 @@ internal sealed class PageChromeDemo : ContentView
 
 				Children =
 				{
-					new Label
-					{
-						Text = "Page-owned chrome",
-						TextStyle = TextStyle.Title2,
-						FontWeight = FontWeight.Bold
-					},
-
 					status,
 
 					ConfigurationCard(
@@ -313,7 +298,6 @@ internal sealed class PageChromeDemo : ContentView
 
 internal sealed class PageChromeSearchDemo : ContentView
 {
-	readonly ScrollView scroll;
 	readonly Label status = new()
 	{
 		Text = "Ready",
@@ -322,7 +306,6 @@ internal sealed class PageChromeSearchDemo : ContentView
 		TextAlignment = TextAlignment.Center,
 		MaxLines = 3
 	};
-	bool startsCollapsed;
 
 
 	public PageChromeSearchDemo(
@@ -333,7 +316,6 @@ internal sealed class PageChromeSearchDemo : ContentView
 		BackgroundStyle = PageBackground.Grouped;
 		SearchPlaceholder = "Search gallery";
 		HidesSearchBarWhenScrolling = configuration.HidesSearchBarWhenScrolling;
-		startsCollapsed = configuration.StartsCollapsed;
 
 		SearchScopes.Add("All");
 		SearchScopes.Add("Recent");
@@ -348,7 +330,7 @@ internal sealed class PageChromeSearchDemo : ContentView
 		SearchCanceled = () =>
 			status.Text = "Search cancelled";
 
-		scroll = new()
+		Content = new ScrollView
 		{
 			Content = new StackPanel
 			{
@@ -369,18 +351,5 @@ internal sealed class PageChromeSearchDemo : ContentView
 				}
 			}
 		};
-		Content = scroll;
-	}
-
-
-	protected override void OnAppeared()
-	{
-		base.OnAppeared();
-
-		if (!startsCollapsed)
-			return;
-
-		startsCollapsed = false;
-		scroll.ScrollTo(0, animated: false);
 	}
 }

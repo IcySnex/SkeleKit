@@ -67,10 +67,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
-	bool scrollsUnderBars = true;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(PageCode))]
 	bool hidesNavigationBar;
 
 	[ObservableProperty]
@@ -88,10 +84,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(SearchCode))]
 	bool hidesSearchBarWhenScrolling;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SearchCode))]
-	bool startsSearchCollapsed;
 
 	public List<PageChromeTitleOption> TitleStyles =>
 		TitleOptions;
@@ -113,7 +105,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 			SelectedTitleStyle.Value,
 			ShowsPrompt,
 			SelectedSafeArea.Value,
-			ScrollsUnderBars,
 			HidesNavigationBar,
 			SelectedBackground.Value,
 			SelectedStatusBar.Value,
@@ -124,8 +115,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 
 	internal PageChromeSearchConfiguration SearchConfiguration =>
 		new(
-			HidesSearchBarWhenScrolling,
-			StartsSearchCollapsed);
+			HidesSearchBarWhenScrolling);
 
 	public IReadOnlyList<Span> PageCode =>
 	[
@@ -137,7 +127,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 				TitleStyle = {{SelectedTitleStyle.Code}},
 				Prompt = {{(ShowsPrompt ? "\"ContentView\"" : "null")}},
 				SafeAreaEdges = {{SelectedSafeArea.Code}},
-				ScrollsUnderBars = {{Bool(ScrollsUnderBars)}},
 				HidesNavigationBar = {{Bool(HidesNavigationBar)}},
 				BackgroundStyle = {{SelectedBackground.Code}},
 				StatusBar = {{SelectedStatusBar.Code}},
@@ -155,8 +144,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	[
 		new(
 			$$"""
-			ScrollView scroll = new() { Content = status };
-
 			ContentView page = new()
 			{
 				Title = "Search",
@@ -165,22 +152,14 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 				SearchChanged = query => status.Text = $"Typing: {query}",
 				SearchCommand = Command.From<string>(query => status.Text = $"Submitted: {query}"),
 				SearchCanceled = () => status.Text = "Search cancelled",
-				Content = scroll
+				Content = status
 			};
 
 			page.SearchScopes.Add("All");
 			page.SearchScopes.Add("Recent");
 			page.SearchScopes.Add("Saved");
-			{{(StartsSearchCollapsed ? "scroll.ScrollTo(0, animated: false);" : "")}}
 			""")
 	];
-
-	partial void OnHidesSearchBarWhenScrollingChanged(
-		bool value)
-	{
-		if (!value)
-			StartsSearchCollapsed = false;
-	}
 
 	string ToolbarCode =>
 		$$"""
@@ -188,7 +167,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 			page.ToolbarItems.Add(new ToolbarItem { Icon = "plus", IsPrimary = true });
 
 		if ({{Bool(HasBottomToolbar)}})
-			page.BottomToolbarItems.Add(new ToolbarItem { Text = "Refresh", Icon = "arrow.clockwise" });
+			page.BottomToolbarItems.Add(new ToolbarItem { Text = "Done", Icon = "checkmark", IsPrimary = true, Tint = Colors.Green });
 		""";
 
 	static string Bool(
@@ -225,7 +204,6 @@ internal sealed record PageChromeConfiguration(
 	TitleStyle TitleStyle,
 	bool ShowsPrompt,
 	SafeAreaEdges SafeAreaEdges,
-	bool ScrollsUnderBars,
 	bool HidesNavigationBar,
 	PageBackground BackgroundStyle,
 	StatusBarStyle StatusBar,
@@ -235,5 +213,4 @@ internal sealed record PageChromeConfiguration(
 	bool HasBottomToolbar);
 
 internal sealed record PageChromeSearchConfiguration(
-	bool HidesSearchBarWhenScrolling,
-	bool StartsCollapsed);
+	bool HidesSearchBarWhenScrolling);

@@ -13,7 +13,8 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 
 		ToolbarItems.Add(new()
 		{
-			Text = "Done",
+			Icon = "xmark",
+			Tint = Colors.Indigo,
 			Command = viewModel.DismissCommand
 		});
 
