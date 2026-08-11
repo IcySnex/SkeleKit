@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using SkeleKit.Gallery.ViewModels.Platform;
 using SkeleKit.Gallery.Views.Showcase;
@@ -138,10 +139,11 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 
 	static Switch Toggle(
 		Func<PageChromeViewModel, bool> getter,
-		Action<PageChromeViewModel, bool> setter) =>
+		Action<PageChromeViewModel, bool> setter,
+		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
 		new()
 		{
-			IsOn = Bind(getter, setter)
+			IsOn = Bind(getter, setter, path)
 		};
 
 	static Button ActionButton(
