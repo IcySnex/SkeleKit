@@ -174,7 +174,6 @@ internal sealed class PageChromeDemo : ContentView
 		{
 			ToolbarItems.Add(new ToolbarItem
 			{
-				Text = "Action",
 				Icon = "plus",
 				IsPrimary = true,
 				Command = Command.From(() => status.Text = "Top action tapped")

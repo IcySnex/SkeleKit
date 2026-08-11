@@ -170,7 +170,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	string ToolbarCode =>
 		$$"""
 		if ({{Bool(HasToolbar)}})
-			page.ToolbarItems.Add(new ToolbarItem { Text = "Action", IsPrimary = true });
+			page.ToolbarItems.Add(new ToolbarItem { Icon = "plus", IsPrimary = true });
 
 		if ({{Bool(HasBottomToolbar)}})
 			page.BottomToolbarItems.Add(new ToolbarItem { Text = "Refresh", Icon = "arrow.clockwise" });
