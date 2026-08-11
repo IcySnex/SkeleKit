@@ -620,21 +620,40 @@ internal sealed class PageHost : UIViewController
 		if (page.BarTint is not Color tint)
 		{
 			toolbar.TintColor = null;
+
+			if (toolbar.Items is { } items)
+			{
+				foreach (UIBarButtonItem item in items)
+					item.TintColor = null;
+			}
+
 			return;
 		}
 
 		UIColor color = tint.ToUIColor();
 		toolbar.TintColor = color;
-		toolbar.StandardAppearance = TintToolbarAppearance(toolbar.StandardAppearance, color);
 
-		if (toolbar.CompactAppearance is UIToolbarAppearance compact)
-			toolbar.CompactAppearance = TintToolbarAppearance(compact, color);
+		if (toolbar.Items is { } tintedItems)
+		{
+			foreach (UIBarButtonItem item in tintedItems)
+				item.TintColor = color;
+		}
 
-		if (toolbar.ScrollEdgeAppearance is UIToolbarAppearance scrollEdge)
-			toolbar.ScrollEdgeAppearance = TintToolbarAppearance(scrollEdge, color);
+		UIToolbarAppearance standard = TintToolbarAppearance(toolbar.StandardAppearance, color);
+		UIToolbarAppearance compact = toolbar.CompactAppearance is UIToolbarAppearance compactSource
+			? TintToolbarAppearance(compactSource, color)
+			: standard.Copy() as UIToolbarAppearance ?? standard;
+		UIToolbarAppearance scrollEdge = toolbar.ScrollEdgeAppearance is UIToolbarAppearance scrollEdgeSource
+			? TintToolbarAppearance(scrollEdgeSource, color)
+			: standard.Copy() as UIToolbarAppearance ?? standard;
+		UIToolbarAppearance compactScrollEdge = toolbar.CompactScrollEdgeAppearance is UIToolbarAppearance compactScrollEdgeSource
+			? TintToolbarAppearance(compactScrollEdgeSource, color)
+			: scrollEdge.Copy() as UIToolbarAppearance ?? scrollEdge;
 
-		if (toolbar.CompactScrollEdgeAppearance is UIToolbarAppearance compactScrollEdge)
-			toolbar.CompactScrollEdgeAppearance = TintToolbarAppearance(compactScrollEdge, color);
+		toolbar.StandardAppearance = standard;
+		toolbar.CompactAppearance = compact;
+		toolbar.ScrollEdgeAppearance = scrollEdge;
+		toolbar.CompactScrollEdgeAppearance = compactScrollEdge;
 	}
 
 	void ApplySearch(
@@ -681,7 +700,16 @@ internal sealed class PageHost : UIViewController
 		}
 
 		NavigationItem.PreferredSearchBarPlacement = UINavigationItemSearchBarPlacement.Stacked;
+		NavigationItem.HidesSearchBarWhenScrolling = page.HidesSearchBarWhenScrolling;
+
+		if (OperatingSystem.IsIOSVersionAtLeast(26))
+		{
+			NavigationItem.SearchBarPlacementAllowsToolbarIntegration = false;
+			NavigationItem.SearchBarPlacementAllowsExternalIntegration = false;
+		}
+
 		NavigationItem.SearchController = search;
+		NavigationItem.PreferredSearchBarPlacement = UINavigationItemSearchBarPlacement.Stacked;
 		NavigationItem.HidesSearchBarWhenScrolling = page.HidesSearchBarWhenScrolling;
 
 		DefinesPresentationContext = true;
@@ -915,7 +943,15 @@ internal sealed class PageHost : UIViewController
 		Page?.NotifyAppeared();
 
 		if (Page is ContentView page)
+		{
 			ApplyToolbarTint(page);
+
+			CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() =>
+			{
+				if (Page is ContentView current)
+					ApplyToolbarTint(current);
+			});
+		}
 	}
 
 	public override void ViewWillDisappear(
