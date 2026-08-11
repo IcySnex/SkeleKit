@@ -11,13 +11,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 		new("Inline", TitleStyle.Inline, "TitleStyle.Inline")
 	];
 
-	static readonly List<PageChromeBackButtonOption> BackButtonOptions =
-	[
-		new("Default", BackButtonStyle.Default, "BackButtonStyle.Default"),
-		new("Generic", BackButtonStyle.Generic, "BackButtonStyle.Generic"),
-		new("Minimal", BackButtonStyle.Minimal, "BackButtonStyle.Minimal")
-	];
-
 	static readonly List<PageChromeBackgroundOption> BackgroundOptions =
 	[
 		new("Default", PageBackground.Default, "PageBackground.Default"),
@@ -54,10 +47,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
-	PageChromeBackButtonOption selectedBackButton = BackButtonOptions[1];
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(PageCode))]
 	PageChromeBackgroundOption selectedBackground = BackgroundOptions[1];
 
 	[ObservableProperty]
@@ -90,10 +79,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
-	bool showsTabBadge;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(PageCode))]
 	bool hasToolbar = true;
 
 	[ObservableProperty]
@@ -104,20 +89,8 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(SearchCode))]
 	bool hidesSearchBarWhenScrolling;
 
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SearchCode))]
-	bool searchObscuresBackground;
-
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(SearchCode))]
-	bool hidesSearchScopesWhenEmpty;
-
-
 	public List<PageChromeTitleOption> TitleStyles =>
 		TitleOptions;
-
-	public List<PageChromeBackButtonOption> BackButtons =>
-		BackButtonOptions;
 
 	public List<PageChromeBackgroundOption> Backgrounds =>
 		BackgroundOptions;
@@ -139,19 +112,29 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 			ScrollsUnderBars,
 			HidesNavigationBar,
 			SelectedBackground.Value,
-			SelectedBackButton.Value,
 			SelectedStatusBar.Value,
 			SelectedAccentColors.Value,
 			HidesTabBar,
-			ShowsTabBadge,
 			HasToolbar,
 			HasBottomToolbar);
 
 	internal PageChromeSearchConfiguration SearchConfiguration =>
 		new(
-			HidesSearchBarWhenScrolling,
-			SearchObscuresBackground,
-			HidesSearchScopesWhenEmpty);
+			HidesSearchBarWhenScrolling);
+
+	partial void OnHasBottomToolbarChanged(
+		bool value)
+	{
+		if (value)
+			HidesTabBar = true;
+	}
+
+	partial void OnHidesTabBarChanged(
+		bool value)
+	{
+		if (!value)
+			HasBottomToolbar = false;
+	}
 
 	public IReadOnlyList<Span> PageCode =>
 	[
@@ -166,15 +149,11 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 				ScrollsUnderBars = {{Bool(ScrollsUnderBars)}},
 				HidesNavigationBar = {{Bool(HidesNavigationBar)}},
 				BackgroundStyle = {{SelectedBackground.Code}},
-				BackButtonTitle = "Gallery",
-				BackButtonStyle = {{SelectedBackButton.Code}},
 				StatusBar = {{SelectedStatusBar.Code}},
 				BarTint = {{SelectedAccentColors.Code}},
 				TitleColor = {{SelectedAccentColors.Code}},
 				LargeTitleColor = {{SelectedAccentColors.Code}},
-				HidesTabBar = {{Bool(HidesTabBar)}},
-				TabBadge = {{(ShowsTabBadge ? "\"3\"" : "null")}},
-				TabBadgeColor = {{SelectedAccentColors.Code}}
+				HidesTabBar = {{Bool(HidesTabBar)}}
 			};
 
 			{{ToolbarCode}}
@@ -190,8 +169,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 				Title = "Search",
 				SearchPlaceholder = "Search gallery",
 				HidesSearchBarWhenScrolling = {{Bool(HidesSearchBarWhenScrolling)}},
-				SearchObscuresBackground = {{Bool(SearchObscuresBackground)}},
-				HidesSearchScopesWhenEmpty = {{Bool(HidesSearchScopesWhenEmpty)}},
 				SearchChanged = query => status.Text = $"Typing: {query}",
 				SearchCommand = Command.From<string>(query => status.Text = $"Submitted: {query}"),
 				SearchCanceled = () => status.Text = "Search cancelled",
@@ -223,11 +200,6 @@ internal sealed record PageChromeTitleOption(
 	TitleStyle Value,
 	string Code);
 
-internal sealed record PageChromeBackButtonOption(
-	string Title,
-	BackButtonStyle Value,
-	string Code);
-
 internal sealed record PageChromeBackgroundOption(
 	string Title,
 	PageBackground Value,
@@ -255,15 +227,11 @@ internal sealed record PageChromeConfiguration(
 	bool ScrollsUnderBars,
 	bool HidesNavigationBar,
 	PageBackground BackgroundStyle,
-	BackButtonStyle BackButtonStyle,
 	StatusBarStyle StatusBar,
 	Color? AccentColor,
 	bool HidesTabBar,
-	bool ShowsTabBadge,
 	bool HasToolbar,
 	bool HasBottomToolbar);
 
 internal sealed record PageChromeSearchConfiguration(
-	bool HidesSearchBarWhenScrolling,
-	bool SearchObscuresBackground,
-	bool HidesSearchScopesWhenEmpty);
+	bool HidesSearchBarWhenScrolling);

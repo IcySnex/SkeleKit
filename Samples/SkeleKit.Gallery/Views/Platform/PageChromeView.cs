@@ -28,15 +28,6 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 			ItemTitle = static option => option.Title
 		};
 
-		Picker<PageChromeBackButtonOption> back = new()
-		{
-			ItemsSource = viewModel.BackButtons,
-			SelectedItem = Bind(
-				model => model.SelectedBackButton,
-				static (model, value) => model.SelectedBackButton = value!),
-			ItemTitle = static option => option.Title
-		};
-
 		Picker<PageChromeBackgroundOption> background = new()
 		{
 			ItemsSource = viewModel.Backgrounds,
@@ -77,7 +68,6 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 		Switch scrolling = Toggle(model => model.ScrollsUnderBars, static (model, value) => model.ScrollsUnderBars = value);
 		Switch navigationBar = Toggle(model => model.HidesNavigationBar, static (model, value) => model.HidesNavigationBar = value);
 		Switch tabBar = Toggle(model => model.HidesTabBar, static (model, value) => model.HidesTabBar = value);
-		Switch badge = Toggle(model => model.ShowsTabBadge, static (model, value) => model.ShowsTabBadge = value);
 		Switch toolbar = Toggle(model => model.HasToolbar, static (model, value) => model.HasToolbar = value);
 		Switch bottomToolbar = Toggle(model => model.HasBottomToolbar, static (model, value) => model.HasBottomToolbar = value);
 
@@ -88,21 +78,19 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 
 		AddShowcase(
 			"Navigation shell",
-			"Apply page-owned chrome to a real pushed page, then scroll it to inspect the native bars and title behavior.",
+			"Page-owned navigation, status and toolbar chrome.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(open, 140),
 				SettingRow("Title", title),
 				SettingRow("Prompt", prompt),
-				SettingRow("Back button", back),
 				SettingRow("Background", background),
 				SettingRow("Status bar", statusBar),
 				SettingRow("Accent colors", accent),
 				SettingRow("Safe area", safeArea),
-					SettingRow("Scroll under bars", scrolling),
-					SettingRow("Hide navigation bar", navigationBar),
-					SettingRow("Hide tab bar", tabBar),
-					SettingRow("Tab badge", badge),
-					SettingRow("Toolbar actions", toolbar),
+				SettingRow("Scroll under bars", scrolling),
+				SettingRow("Hide navigation bar", navigationBar),
+				SettingRow("Hide tab bar", tabBar),
+				SettingRow("Toolbar actions", toolbar),
 				SettingRow("Bottom toolbar", bottomToolbar)),
 			Code(model => model.PageCode));
 	}
@@ -113,12 +101,6 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 		Switch collapsing = Toggle(
 			model => model.HidesSearchBarWhenScrolling,
 			static (model, value) => model.HidesSearchBarWhenScrolling = value);
-		Switch obscures = Toggle(
-			model => model.SearchObscuresBackground,
-			static (model, value) => model.SearchObscuresBackground = value);
-		Switch scopes = Toggle(
-			model => model.HidesSearchScopesWhenEmpty,
-			static (model, value) => model.HidesSearchScopesWhenEmpty = value);
 
 		Button open = ActionButton(
 			"Open search page",
@@ -127,12 +109,10 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 
 		AddShowcase(
 			"Search chrome",
-			"Configure the navigation search field, scopes and callbacks on a real page.",
+			"Search field, scopes and callbacks.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(open, 140),
-				SettingRow("Collapse while scrolling", collapsing),
-				SettingRow("Obscure background", obscures),
-				SettingRow("Hide empty scopes", scopes)),
+				SettingRow("Collapse while scrolling", collapsing)),
 			Code(model => model.SearchCode));
 	}
 
@@ -184,22 +164,18 @@ internal sealed class PageChromeDemo : ContentView
 		ScrollsUnderBars = configuration.ScrollsUnderBars;
 		HidesNavigationBar = configuration.HidesNavigationBar;
 		BackgroundStyle = configuration.BackgroundStyle;
-		BackButtonTitle = "Gallery";
-		BackButtonStyle = configuration.BackButtonStyle;
 		StatusBar = configuration.StatusBar;
 		BarTint = configuration.AccentColor;
 		TitleColor = configuration.AccentColor;
 		LargeTitleColor = configuration.AccentColor;
 		HidesTabBar = configuration.HidesTabBar;
-		TabBadge = configuration.ShowsTabBadge ? "3" : null;
-		TabBadgeColor = configuration.AccentColor;
 
 		if (configuration.HasToolbar)
 		{
 			ToolbarItems.Add(new ToolbarItem
 			{
 				Text = "Action",
-				Icon = "sparkles",
+				Icon = "plus",
 				IsPrimary = true,
 				Command = Command.From(() => status.Text = "Top action tapped")
 			});
@@ -232,7 +208,7 @@ internal sealed class PageChromeDemo : ContentView
 				Text = "Done",
 				Icon = "checkmark",
 				IsPrimary = true,
-				Command = Command.From(() => status.Text = "Done action tapped")
+				Command = Command.From(() => status.Text = "Bottom action tapped")
 			});
 		}
 
@@ -252,14 +228,6 @@ internal sealed class PageChromeDemo : ContentView
 						FontWeight = FontWeight.Bold
 					},
 
-					new Label
-					{
-						Text = "Scroll this page to see large-title collapse and the configured navigation shell.",
-						TextStyle = TextStyle.Subheadline,
-						TextColor = Colors.SecondaryLabel,
-						MaxLines = 3
-					},
-
 					status,
 
 					ConfigurationCard(
@@ -267,32 +235,14 @@ internal sealed class PageChromeDemo : ContentView
 						("Prompt", configuration.ShowsPrompt ? "Visible" : "Hidden"),
 						("Background", configuration.BackgroundStyle.ToString()),
 						("Safe area", configuration.SafeAreaEdges.ToString()),
-						("Tab bar", configuration.HidesTabBar ? "Hidden" : "Visible"),
-						("Badge", configuration.ShowsTabBadge ? "3" : "None")),
-
-					new Label
-					{
-						Text = "The same ContentView properties work on pushed pages, tab roots and modal pages.",
-						TextStyle = TextStyle.Body,
-						TextColor = Colors.SecondaryLabel,
-						MaxLines = 3
-					},
+						("Tab bar", configuration.HidesTabBar ? "Hidden" : "Visible")),
 
 					new Border
 					{
-						Height = 260,
+						Height = 360,
 						Padding = 16,
 						Background = Colors.SecondaryBackground,
-						CornerRadius = 16,
-						Child = new Label
-						{
-							VerticalAlignment = VerticalAlignment.Center,
-							Text = "Additional content keeps the page scrollable so the native bars have room to react.",
-							TextStyle = TextStyle.Headline,
-							TextAlignment = TextAlignment.Center,
-							TextColor = Colors.SecondaryLabel,
-							MaxLines = 4
-						}
+						CornerRadius = 16
 					}
 				}
 			}
@@ -361,7 +311,7 @@ internal sealed class PageChromeSearchDemo : ContentView
 {
 	readonly Label status = new()
 	{
-		Text = "Activate search to begin.",
+		Text = "Ready",
 		TextStyle = TextStyle.Headline,
 		FontWeight = FontWeight.Semibold,
 		TextAlignment = TextAlignment.Center,
@@ -377,8 +327,6 @@ internal sealed class PageChromeSearchDemo : ContentView
 		BackgroundStyle = PageBackground.Grouped;
 		SearchPlaceholder = "Search gallery";
 		HidesSearchBarWhenScrolling = configuration.HidesSearchBarWhenScrolling;
-		SearchObscuresBackground = configuration.SearchObscuresBackground;
-		HidesSearchScopesWhenEmpty = configuration.HidesSearchScopesWhenEmpty;
 
 		SearchScopes.Add("All");
 		SearchScopes.Add("Recent");
@@ -397,39 +345,21 @@ internal sealed class PageChromeSearchDemo : ContentView
 		{
 			Content = new StackPanel
 			{
-				HorizontalAlignment = HorizontalAlignment.Center,
-				Padding = 20,
+				Padding = new(16, 20, 16, 32),
 				Spacing = 14,
 
 				Children =
 				{
 					status,
 
-					new Label
-					{
-						Text = "The text reflects the native search callbacks and selected scope.",
-						TextStyle = TextStyle.Subheadline,
-						TextColor = Colors.SecondaryLabel,
-						TextAlignment = TextAlignment.Center,
-						MaxLines = 3
-					},
-
 					new Border
 					{
-						Height = 320,
-						MaxWidth = 320,
+						HorizontalAlignment = HorizontalAlignment.Center,
+						Width = 320,
+						Height = 360,
 						Padding = 16,
 						Background = Colors.SecondaryBackground,
-						CornerRadius = 16,
-						Child = new Label
-						{
-							VerticalAlignment = VerticalAlignment.Center,
-							Text = "Scroll to test the search bar's collapse behavior.",
-							TextStyle = TextStyle.Headline,
-							TextAlignment = TextAlignment.Center,
-							TextColor = Colors.SecondaryLabel,
-							MaxLines = 3
-						}
+						CornerRadius = 16
 					}
 				}
 			}
