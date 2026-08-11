@@ -9,68 +9,23 @@ internal sealed class ContentViewView : ShowcaseView<ContentViewViewModel>
 	public ContentViewView(
 		ContentViewViewModel viewModel) : base(viewModel, "ContentView", Colors.Indigo)
 	{
-		AddChromeShowcase(viewModel);
-		AddSearchShowcase(viewModel);
+		AddCompositionShowcase(viewModel);
 		AddLifecycleShowcase(viewModel);
 	}
 
 
-	void AddChromeShowcase(
-		ContentViewViewModel viewModel)
-	{
-		SegmentedControl titleStyle = new()
-		{
-			SelectedIndex = Bind(
-				model => model.TitleStyleIndex,
-				static (model, value) => model.TitleStyleIndex = value)
-		};
-		titleStyle.Items.Add("Large");
-		titleStyle.Items.Add("Inline");
-
-		Switch prompt = new()
-		{
-			IsOn = Bind(
-				model => model.ShowsPrompt,
-				static (model, value) => model.ShowsPrompt = value)
-		};
-
-		Switch tabBar = new()
-		{
-			IsOn = Bind(
-				model => model.HidesTabBar,
-				static (model, value) => model.HidesTabBar = value)
-		};
-
-		Button open = DemoButton(
-			"Open chrome page",
-			() => _ = Navigator.PushViewAsync(new ContentViewChromeDemo(
-				viewModel.SelectedTitleStyle,
-				viewModel.ShowsPrompt,
-				viewModel.HidesTabBar)));
-
-		AddShowcase(
-			"Composition & chrome",
-			"See how the selected title, prompt and tab-bar options affect a real page.",
-			PreviewWithSettings(
-				ShowcaseBox.Canvas(open, 140),
-				LabeledControl("Title style", titleStyle),
-				SettingRow("Show prompt", prompt),
-				SettingRow("Hide tab bar", tabBar)),
-			Code(model => model.ChromeCode));
-	}
-
-	void AddSearchShowcase(
+	void AddCompositionShowcase(
 		ContentViewViewModel viewModel)
 	{
 		Button open = DemoButton(
-			"Open search page",
-			() => _ = Navigator.PushViewAsync(new ContentViewSearchDemo()));
+			"Open content page",
+			() => _ = Navigator.PushViewAsync(new ContentViewCompositionDemo()));
 
 		AddShowcase(
-			"Navigation search",
-			"Try typing, changing scope, submitting and cancelling in the native navigation search field.",
+			"Content composition",
+			"Build a page by assigning a view tree to Content and let ContentView host it in the app shell.",
 			ShowcaseBox.Canvas(open, 140),
-			Code(model => model.SearchCode));
+			Code(model => model.CompositionCode));
 	}
 
 	void AddLifecycleShowcase(
@@ -102,26 +57,12 @@ internal sealed class ContentViewView : ShowcaseView<ContentViewViewModel>
 		};
 }
 
-internal sealed class ContentViewChromeDemo : ContentView
+internal sealed class ContentViewCompositionDemo : ContentView
 {
-	public ContentViewChromeDemo() : this(
-		TitleStyle.Large,
-		showsPrompt: false,
-		hidesTabBar: true)
-	{ }
-
-	public ContentViewChromeDemo(
-		TitleStyle titleStyle,
-		bool showsPrompt,
-		bool hidesTabBar)
+	public ContentViewCompositionDemo()
 	{
-		Title = "Page chrome";
-		TitleStyle = titleStyle;
-		Prompt = showsPrompt ? "ContentView" : null;
-		HidesTabBar = hidesTabBar;
+		Title = "Content";
 		BackgroundStyle = PageBackground.Grouped;
-		BackButtonStyle = BackButtonStyle.Generic;
-		ScrollsUnderBars = true;
 
 		Content = new ScrollView
 		{
@@ -134,140 +75,45 @@ internal sealed class ContentViewChromeDemo : ContentView
 				{
 					new Label
 					{
-						Text = "Selected options",
+						Text = "ContentView owns the page tree.",
 						TextStyle = TextStyle.Title2,
 						FontWeight = FontWeight.Bold
 					},
 
 					new Label
 					{
-						Text = "These match the options on the previous screen.",
+						Text = "Compose any SkeleKit view hierarchy in Content, then let the navigation shell host it.",
 						TextStyle = TextStyle.Subheadline,
 						TextColor = Colors.SecondaryLabel,
-						MaxLines = 2
+						MaxLines = 3
 					},
 
-					ConfigurationCard(
-						("Title style", titleStyle.ToString()),
-						("Prompt", showsPrompt ? "Visible" : "Hidden"),
-						("Tab bar", hidesTabBar ? "Hidden" : "Visible"))
-				}
-			}
-		};
-	}
+					new Border
+					{
+						Padding = 16,
+						Background = Colors.SecondaryBackground,
+						CornerRadius = 16,
+						Child = new StackPanel
+						{
+							Spacing = 8,
+							Children =
+							{
+								new Label
+								{
+									Text = "Content",
+									TextStyle = TextStyle.Headline,
+									FontWeight = FontWeight.Semibold
+								},
 
-
-	static Border ConfigurationCard(
-		params (string Name, string Value)[] values)
-	{
-		StackPanel rows = new()
-		{
-			Spacing = 12
-		};
-
-		for (int index = 0; index < values.Length; index++)
-		{
-			(string name, string value) = values[index];
-			rows.Children.Add(ConfigurationRow(name, value));
-
-			if (index < values.Length - 1)
-				rows.Children.Add(new Divider());
-		}
-
-		return new()
-		{
-			Padding = 16,
-			Background = Colors.SecondaryBackground,
-			CornerRadius = 16,
-			Child = rows
-		};
-	}
-
-	static Grid ConfigurationRow(
-		string name,
-		string value) =>
-		new()
-		{
-			ColumnSpacing = 16,
-			Columns =
-			{
-				GridLength.Star,
-				GridLength.Auto
-			},
-
-			Children =
-			{
-				new Label
-				{
-					Text = name,
-					TextStyle = TextStyle.Subheadline,
-					FontWeight = FontWeight.Medium
-				},
-
-				new Label
-				{
-					Text = value,
-					TextStyle = TextStyle.Subheadline,
-					TextColor = Colors.SecondaryLabel
-				}.Column(1)
-			}
-		};
-}
-
-internal sealed class ContentViewSearchDemo : ContentView
-{
-	readonly Label status = new()
-	{
-		Text = "Activate search to begin.",
-		TextStyle = TextStyle.Headline,
-		FontWeight = FontWeight.Semibold,
-		TextAlignment = TextAlignment.Center,
-		MaxLines = 3
-	};
-
-
-	public ContentViewSearchDemo()
-	{
-		Title = "Search";
-		TitleStyle = TitleStyle.Large;
-		BackgroundStyle = PageBackground.Grouped;
-		SearchPlaceholder = "Search gallery";
-		HidesSearchBarWhenScrolling = false;
-		SearchObscuresBackground = false;
-		HidesSearchScopesWhenEmpty = false;
-
-		SearchScopes.Add("All");
-		SearchScopes.Add("Recent");
-		SearchScopes.Add("Saved");
-
-		SearchChanged = query =>
-			status.Text = string.IsNullOrWhiteSpace(query) ? "Type a search term." : $"Typing: {query}";
-		SearchScopeChanged = index =>
-			status.Text = $"Scope: {SearchScopes[index]}";
-		SearchCommand = Command.From<string>(query =>
-			status.Text = $"Submitted: {query}");
-		SearchCanceled = () =>
-			status.Text = "Search cancelled";
-
-		Content = new StackPanel
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center,
-			MaxWidth = 300,
-			Padding = 20,
-			Spacing = 8,
-
-			Children =
-			{
-				status,
-
-				new Label
-				{
-					Text = "The text reflects the native search callbacks.",
-					TextStyle = TextStyle.Subheadline,
-					TextColor = Colors.SecondaryLabel,
-					TextAlignment = TextAlignment.Center,
-					MaxLines = 2
+								new Label
+								{
+									Text = "A StackPanel inside a ScrollView inside this page.",
+									TextStyle = TextStyle.Subheadline,
+									TextColor = Colors.SecondaryLabel
+								}
+							}
+						}
+					}
 				}
 			}
 		};
