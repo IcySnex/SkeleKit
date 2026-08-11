@@ -122,20 +122,6 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 		new(
 			HidesSearchBarWhenScrolling);
 
-	partial void OnHasBottomToolbarChanged(
-		bool value)
-	{
-		if (value)
-			HidesTabBar = true;
-	}
-
-	partial void OnHidesTabBarChanged(
-		bool value)
-	{
-		if (!value)
-			HasBottomToolbar = false;
-	}
-
 	public IReadOnlyList<Span> PageCode =>
 	[
 		new(

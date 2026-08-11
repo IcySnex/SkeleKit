@@ -354,9 +354,7 @@ internal sealed class PageChromeSearchDemo : ContentView
 
 					new Border
 					{
-						HorizontalAlignment = HorizontalAlignment.Center,
-						Width = 320,
-						Height = 360,
+						Height = 640,
 						Padding = 16,
 						Background = Colors.SecondaryBackground,
 						CornerRadius = 16
