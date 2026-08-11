@@ -585,32 +585,6 @@ internal sealed class PageHost : UIViewController
 		ApplyToolbarTint(page);
 	}
 
-	static void TintButtonAppearance(
-		UIBarButtonItemAppearance appearance,
-		UIColor tint)
-	{
-		NSDictionary<NSString, NSObject> attributes = new(
-			new NSString("NSForegroundColorAttributeName"),
-			tint);
-		appearance.Normal.TitleTextAttributes = attributes;
-		appearance.Highlighted.TitleTextAttributes = attributes;
-	}
-
-	static UIToolbarAppearance TintToolbarAppearance(
-		UIToolbarAppearance source,
-		UIColor tint)
-	{
-		UIToolbarAppearance appearance = source.Copy() as UIToolbarAppearance ?? new();
-		TintButtonAppearance(appearance.ButtonAppearance, tint);
-
-		if (OperatingSystem.IsIOSVersionAtLeast(26))
-			TintButtonAppearance(appearance.ProminentButtonAppearance, tint);
-		else
-			TintButtonAppearance(appearance.DoneButtonAppearance, tint);
-
-		return appearance;
-	}
-
 	void ApplyToolbarTint(
 		ContentView page)
 	{
@@ -627,6 +601,8 @@ internal sealed class PageHost : UIViewController
 					item.TintColor = null;
 			}
 
+			toolbar.SetNeedsLayout();
+			toolbar.LayoutIfNeeded();
 			return;
 		}
 
@@ -639,21 +615,8 @@ internal sealed class PageHost : UIViewController
 				item.TintColor = color;
 		}
 
-		UIToolbarAppearance standard = TintToolbarAppearance(toolbar.StandardAppearance, color);
-		UIToolbarAppearance compact = toolbar.CompactAppearance is UIToolbarAppearance compactSource
-			? TintToolbarAppearance(compactSource, color)
-			: standard.Copy() as UIToolbarAppearance ?? standard;
-		UIToolbarAppearance scrollEdge = toolbar.ScrollEdgeAppearance is UIToolbarAppearance scrollEdgeSource
-			? TintToolbarAppearance(scrollEdgeSource, color)
-			: standard.Copy() as UIToolbarAppearance ?? standard;
-		UIToolbarAppearance compactScrollEdge = toolbar.CompactScrollEdgeAppearance is UIToolbarAppearance compactScrollEdgeSource
-			? TintToolbarAppearance(compactScrollEdgeSource, color)
-			: scrollEdge.Copy() as UIToolbarAppearance ?? scrollEdge;
-
-		toolbar.StandardAppearance = standard;
-		toolbar.CompactAppearance = compact;
-		toolbar.ScrollEdgeAppearance = scrollEdge;
-		toolbar.CompactScrollEdgeAppearance = compactScrollEdge;
+		toolbar.SetNeedsLayout();
+		toolbar.LayoutIfNeeded();
 	}
 
 	void ApplySearch(
@@ -908,6 +871,7 @@ internal sealed class PageHost : UIViewController
 		}
 
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
+		ApplyBarAppearance(Page);
 
 		// a bottom toolbar and the floating tab bar share the same edge: the toolbar only shows when
 		// the tab bar is gone — a page that wants one sets HidesTabBar
@@ -924,7 +888,7 @@ internal sealed class PageHost : UIViewController
 
 		// bar-wide, so every page restores it; null falls back to the app tint
 		NavigationController?.NavigationBar.TintColor = Page.BarTint?.ToUIColor();
-		ApplyToolbarTint(Page);
+		ApplyToolbar(Page);
 
 		// here and not ViewDidLoad: whether back has anywhere to go needs the containment settled
 		ApplyBackGuard();
@@ -944,13 +908,10 @@ internal sealed class PageHost : UIViewController
 
 		if (Page is ContentView page)
 		{
-			ApplyToolbarTint(page);
-
-			CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() =>
-			{
-				if (Page is ContentView current)
-					ApplyToolbarTint(current);
-			});
+			ApplyBarAppearance(page);
+			ApplyToolbar(page);
+			NavigationController?.NavigationBar.SetNeedsLayout();
+			NavigationController?.NavigationBar.LayoutIfNeeded();
 		}
 	}
 
