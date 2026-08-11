@@ -153,6 +153,22 @@ public interface INavigator
 	Task OpenUrlAsync(
 		string url);
 
+	/// <summary>
+	/// Opens a web address in an in-app Safari browser with custom presentation and browser options.
+	/// </summary>
+	/// <param name="url">The <c>http</c> or <c>https</c> address to open.</param>
+	/// <param name="style">The modal style and sheet detents used to present the browser.</param>
+	/// <param name="entersReaderIfAvailable">Whether Safari should enter Reader mode when it is available.</param>
+	/// <param name="barCollapsingEnabled">Whether Safari's bars may collapse while browsing.</param>
+	/// <param name="dismissButtonStyle">The style of the browser's dismiss button.</param>
+	/// <returns>A task that completes once the browser is presented.</returns>
+	Task OpenUrlAsync(
+		string url,
+		ModalStyle style,
+		bool entersReaderIfAvailable = false,
+		bool barCollapsingEnabled = true,
+		SafariDismissButtonStyle dismissButtonStyle = SafariDismissButtonStyle.Close);
+
 
 	/// <summary>
 	/// Displays an alert dialog with a single button to dismiss it.

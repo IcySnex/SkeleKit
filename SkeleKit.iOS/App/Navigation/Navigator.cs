@@ -72,8 +72,70 @@ internal sealed class Navigator(
 			return Task.CompletedTask;
 
 		UINavigationController wrapper = new(host);
+		IReadOnlyList<Detent> detents = style.Detents ?? [Detent.Large];
+		ConfigurePresentation(wrapper, style, detents, host);
 
-		wrapper.ModalPresentationStyle = style.Presentation switch
+		presenter.PresentViewController(wrapper, true, null);
+
+		return Task.CompletedTask;
+	}
+
+	static Task PresentSafari(
+		SFSafariViewController browser,
+		ModalStyle style)
+	{
+		if (Top() is not UIViewController presenter)
+			return Task.CompletedTask;
+
+		ModalStyle safariStyle = SafariStyle(style);
+		IReadOnlyList<Detent> detents = safariStyle.Detents ?? [Detent.Large];
+		ConfigurePresentation(browser, safariStyle, detents, null);
+
+		TaskCompletionSource completion = new();
+		presenter.PresentViewController(browser, true, completion.SetResult);
+
+		return completion.Task;
+	}
+
+	static void ConfigurePresentation(
+		UIViewController controller,
+		ModalStyle style,
+		IReadOnlyList<Detent> detents,
+		PageHost? host)
+	{
+		controller.ModalPresentationStyle = NativePresentation(style);
+
+		if (style.Presentation is ModalPresentation.PageSheet
+			&& controller.SheetPresentationController is UISheetPresentationController sheet)
+		{
+			if (host is not null && detents.Any(detent => detent.Kind == DetentKind.Content))
+				host.AttachContentDetent();
+
+			sheet.Detents = [.. detents.Select(detent => NativeDetent(detent, host))];
+
+			if (Identifier(detents[0]) is UISheetPresentationControllerDetentIdentifier identifier)
+				sheet.SelectedDetentIdentifier = identifier;
+
+			// the handle is the affordance for dragging, so it only earns its place on a sheet that resizes
+			sheet.PrefersGrabberVisible = detents.Count > 1;
+		}
+
+		if (style.Presentation is ModalPresentation.Popover
+			&& style.Anchor is { IsRealized: true } anchor
+			&& controller.PopoverPresentationController is UIPopoverPresentationController popover)
+		{
+			popover.SourceView = anchor.Native;
+			popover.SourceRect = anchor.Native.Bounds;
+			popover.PermittedArrowDirections = Directions(style.Arrows);
+
+			// UIKit would adapt the bubble into a full sheet on iPhone
+			popover.Delegate = Stay;
+		}
+	}
+
+	static UIModalPresentationStyle NativePresentation(
+		ModalStyle style) =>
+		style.Presentation switch
 		{
 			ModalPresentation.FullScreen => UIModalPresentationStyle.FullScreen,
 			ModalPresentation.FormSheet => UIModalPresentationStyle.FormSheet,
@@ -85,45 +147,23 @@ internal sealed class Navigator(
 			_ => UIModalPresentationStyle.Automatic
 		};
 
-		if (style.Presentation is ModalPresentation.PageSheet && wrapper.SheetPresentationController is UISheetPresentationController sheet)
-		{
-			if (style.Detents.Any(detent => detent.Kind == DetentKind.Content))
-				host.AttachContentDetent();
-
-			sheet.Detents = [.. style.Detents.Select(detent => NativeDetent(detent, host))];
-
-			if (Identifier(style.Detents[0]) is UISheetPresentationControllerDetentIdentifier identifier)
-				sheet.SelectedDetentIdentifier = identifier;
-
-			// the handle is the affordance for dragging, so it only earns its place on a sheet that resizes
-			sheet.PrefersGrabberVisible = style.Detents.Count > 1;
-		}
-
-		if (style.Presentation is ModalPresentation.Popover
-			&& style.Anchor is { IsRealized: true } anchor
-			&& wrapper.PopoverPresentationController is UIPopoverPresentationController popover)
-		{
-			popover.SourceView = anchor.Native;
-			popover.SourceRect = anchor.Native.Bounds;
-			popover.PermittedArrowDirections = Directions(style.Arrows);
-
-			// UIKit would adapt the bubble into a full sheet on iPhone
-			popover.Delegate = Stay;
-		}
-
-		presenter.PresentViewController(wrapper, true, null);
-
-		return Task.CompletedTask;
-	}
+	static ModalStyle SafariStyle(
+		ModalStyle style) =>
+		style.Presentation is ModalPresentation.PageSheet
+			&& style.Detents is { } detents
+			&& detents.Any(detent => detent.Kind is DetentKind.Content)
+			? ModalStyle.FullScreen
+			: style;
 
 	static UISheetPresentationControllerDetent NativeDetent(
 		Detent detent,
-		PageHost host) =>
+		PageHost? host) =>
 		detent.Kind switch
 		{
 			DetentKind.Medium => UISheetPresentationControllerDetent.CreateMediumDetent(),
 			DetentKind.Large => UISheetPresentationControllerDetent.CreateLargeDetent(),
-			DetentKind.Content => ContentDetent(detent, host),
+			DetentKind.Content when host is PageHost page => ContentDetent(detent, page),
+			DetentKind.Content => UISheetPresentationControllerDetent.CreateLargeDetent(),
 			DetentKind.Height => UISheetPresentationControllerDetent.Create(
 				CustomIdentifier(detent),
 				context => (nfloat)detent.Resolve(context.MaximumDetentValue)),
@@ -180,6 +220,15 @@ internal sealed class Navigator(
 
 		return native == 0 ? UIPopoverArrowDirection.Any : native;
 	}
+
+	static SFSafariViewControllerDismissButtonStyle NativeDismissButtonStyle(
+		SafariDismissButtonStyle style) =>
+		style switch
+		{
+			SafariDismissButtonStyle.Done => SFSafariViewControllerDismissButtonStyle.Done,
+			SafariDismissButtonStyle.Cancel => SFSafariViewControllerDismissButtonStyle.Cancel,
+			_ => SFSafariViewControllerDismissButtonStyle.Close
+		};
 
 	static UITab? Find(
 		UITab[] tabs,
@@ -361,18 +410,31 @@ internal sealed class Navigator(
 
 	public Task OpenUrlAsync(
 		string url)
+		=> OpenUrlAsync(url, ModalStyle.Automatic);
+
+
+	public Task OpenUrlAsync(
+		string url,
+		ModalStyle style,
+		bool entersReaderIfAvailable = false,
+		bool barCollapsingEnabled = true,
+		SafariDismissButtonStyle dismissButtonStyle = SafariDismissButtonStyle.Close)
 	{
 		if (NSUrl.FromString(url) is not { Scheme: "http" or "https" } address)
 			throw new ArgumentException($"'{url}' is not an http or https address.", nameof(url));
 
-		TaskCompletionSource completion = new();
+		SFSafariViewControllerConfiguration configuration = new()
+		{
+			EntersReaderIfAvailable = entersReaderIfAvailable,
+			BarCollapsingEnabled = barCollapsingEnabled
+		};
 
-		if (Top() is UIViewController top)
-			top.PresentViewController(new SFSafariViewController(address), true, completion.SetResult);
-		else
-			completion.SetResult();
+		SFSafariViewController browser = new(address, configuration)
+		{
+			DismissButtonStyle = NativeDismissButtonStyle(dismissButtonStyle)
+		};
 
-		return completion.Task;
+		return PresentSafari(browser, style);
 	}
 
 

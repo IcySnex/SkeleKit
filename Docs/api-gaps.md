@@ -80,7 +80,9 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   `NSPhotoLibraryAddUsageDescription` in the app plist or it crashes on tap. Split off the navigator on
   purpose, to grow later (excluded activities, a result, file/data items).
 - ~~★ **Open URL in-app**~~ — **done** (`INavigator.OpenUrlAsync(url)` presents an `SFSafariViewController`
-  from the top controller; rejects a non-`http`/`https` address, completes once presented).
+	from the top controller; the overload accepts `ModalStyle`, Reader mode, collapsing bars and dismiss-button
+	style; Content detents fall back to full height because Safari has no app content to measure; rejects a
+	non-`http`/`https` address and completes once presented).
 - ~~◆ **Alert with text input**~~ — **done** (`INavigator.PromptAsync`, returns the typed string or
   null when cancelled).
 
