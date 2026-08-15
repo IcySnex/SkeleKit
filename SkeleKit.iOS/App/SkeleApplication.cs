@@ -189,6 +189,7 @@ public class SkeleApplication
 	readonly Type? rootView;
 	Color? tint;
 	Appearance appearance;
+	TabBarMinimize tabBarMinimizeBehavior;
 
 	internal SkeleApplication(
 		SkeleApplicationBuilder builder)
@@ -200,6 +201,7 @@ public class SkeleApplication
 		rootView = builder.RootView;
 		tint = builder.Tint;
 		appearance = builder.Appearance;
+		tabBarMinimizeBehavior = tabsBuilder?.Minimize ?? TabBarMinimize.Never;
 
 		Backgrounded = builder.LifecycleBackground;
 		Foregrounded = builder.LifecycleForeground;
@@ -292,6 +294,28 @@ public class SkeleApplication
 		}
 	}
 
+	/// <summary>
+	/// When the app's tab bar minimizes as the selected content scrolls.
+	/// </summary>
+	/// <remarks>
+	/// Applies to tab shells on iOS 26 and later. The value configured by
+	/// <see cref="TabsBuilder.Minimizes(TabBarMinimize)"/> is the initial value.
+	/// </remarks>
+	public TabBarMinimize TabBarMinimizeBehavior
+	{
+		get => tabBarMinimizeBehavior;
+		set
+		{
+			if (tabBarMinimizeBehavior == value)
+				return;
+
+			tabBarMinimizeBehavior = value;
+
+			if (Current == this)
+				ApplyTabBarMinimize();
+		}
+	}
+
 
 	void ApplyTint()
 	{
@@ -339,6 +363,24 @@ public class SkeleApplication
 			.OfType<UIWindowScene>()
 			.SelectMany(scene => scene.Windows))
 			window.OverrideUserInterfaceStyle = UserInterfaceStyle;
+	}
+
+	void ApplyTabBarMinimize(
+		UITabBarController? controller = null)
+	{
+		if (!OperatingSystem.IsIOSVersionAtLeast(26))
+			return;
+
+		controller ??= CurrentTabs();
+		if (controller is null)
+			return;
+
+		controller.TabBarMinimizeBehavior = tabBarMinimizeBehavior switch
+		{
+			TabBarMinimize.OnScrollDown => UITabBarMinimizeBehavior.OnScrollDown,
+			TabBarMinimize.OnScrollUp => UITabBarMinimizeBehavior.OnScrollUp,
+			_ => UITabBarMinimizeBehavior.Never
+		};
 	}
 
 	void BeginTabSelection() =>
@@ -559,12 +601,7 @@ public class SkeleApplication
 				if (iPad?.UseSidebar is true)
 					controller.Mode = UITabBarControllerMode.TabSidebar;
 
-				if (tabsBuilder?.Minimize is TabBarMinimize minimize and not TabBarMinimize.Never && OperatingSystem.IsIOSVersionAtLeast(26))
-				{
-					controller.TabBarMinimizeBehavior = minimize is TabBarMinimize.OnScrollUp
-						? UITabBarMinimizeBehavior.OnScrollUp
-						: UITabBarMinimizeBehavior.OnScrollDown;
-				}
+				ApplyTabBarMinimize(controller);
 
 				if (tabsBuilder?.AccessoryFactory is Func<View> accessory && OperatingSystem.IsIOSVersionAtLeast(26))
 				{

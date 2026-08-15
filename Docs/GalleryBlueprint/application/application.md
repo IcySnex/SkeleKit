@@ -489,8 +489,9 @@ The core application instance that handles DI, navigation setup, and the app lif
 | Property | `SkeleKit.SkeleApplication.Services` | public get | C# default | No | No automatic invalidation | The built-in service provider for resolving dependencies. |
 | Property | `SkeleKit.SkeleApplication.Tint` | public get/set | Initial builder tint; null uses the system default | No | Visual/interaction only | The app-wide tint inherited by windows, chrome, and views. Runtime changes animate together unless Reduce Motion is enabled. |
 | Property | `SkeleKit.SkeleApplication.Appearance` | public get/set | Initial builder appearance; `Appearance.System` by default | No | Visual/interaction only | The app-wide light or dark appearance. Runtime changes update every app window; system resumes following iOS. |
+| Property | `SkeleKit.SkeleApplication.TabBarMinimizeBehavior` | public get/set | Initial `TabsBuilder.Minimizes` value; `TabBarMinimize.Never` by default | No | Visual/interaction only | Changes how the tab bar minimizes as selected content scrolls on iOS 26 and later. |
 | Method | `SkeleKit.SkeleApplication.Run(System.String[])` | public | n/a | n/a | n/a | Starts the native iOS main loop. |
 
 ### Gallery treatment
 
-Use the app-tint and app-appearance labs above for the observable properties. Keep application construction, service resolution, and startup as code-only reference entries.
+Use the app-tint, app-appearance, and tab-shell labs above for the observable properties. Keep application construction, service resolution, and startup as code-only reference entries.

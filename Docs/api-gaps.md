@@ -324,7 +324,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
   morphs the bar into the field; the shell now builds on `UITab`/`SetTabs`, and `TabBadge` routes
   through `UITab.BadgeValue` — UITab has no badge *color*, so `TabBadgeColor` only applies on
   item-based bars).
-- ~~★ **Tab bar minimize**~~ — **done** (`Tabs.Minimizes()`, iOS 26; the accessory docks inline
+- ~~★ **Tab bar minimize**~~ — **done** (`Tabs.Minimizes()` supplies the initial value and
+  `SkeleApplication.TabBarMinimizeBehavior` changes it live; iOS 26; the accessory docks inline
   automatically).
 - ~~★ **Tab customization control**~~ — **done**, reshaped by ADR-014: placements live in
   `OnIPad(pad => pad.PlaceTab<TView>(TabPlacement.Locked))`, iPad-only destinations via

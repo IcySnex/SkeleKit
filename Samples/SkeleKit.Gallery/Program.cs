@@ -24,6 +24,8 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<NavigationViewModel>();
 		services.AddTransient<PlatformViewModel>();
 		services.AddTransient<SearchViewModel>();
+		services.AddSingleton<TabsIpadViewModel>();
+		services.AddSingleton<LifecycleDiViewModel>();
 
 		services.AddTransient<AboutViewModel>();
 		services.AddTransient<PageChromeViewModel>();
@@ -70,8 +72,16 @@ SkeleApplication.CreateBuilder()
 	})
 	.UseTheme(theme => theme.Style(GalleryStyles.ImplicitCard))
 	.UseTint(Colors.Indigo)
+	.UseLifecycle(
+		background: () => SkeleApplication.Current?.Services
+			.GetRequiredService<LifecycleDiViewModel>()
+			.EnteredBackground(),
+		foreground: () => SkeleApplication.Current?.Services
+			.GetRequiredService<LifecycleDiViewModel>()
+			.EnteredForeground())
 	.Tabs(tabs => tabs
 		.LargeTitles()
+		.Accessory<GalleryTabAccessory>()
 		.Tab<FrameworkView>("Framework", "square.stack.3d.up")
 		.Tab<ControlsView>("Controls", "switch.2")
 		.Tab<PlatformView>("Platform", "iphone")

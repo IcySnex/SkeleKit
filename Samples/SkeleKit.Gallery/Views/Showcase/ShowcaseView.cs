@@ -99,6 +99,52 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 		});
 	}
 
+	protected void AddCodeShowcase(
+		string title,
+		string summary,
+		View code)
+	{
+		Sections.Children.Add(new StackPanel
+		{
+			Spacing = 10,
+
+			Children =
+			{
+				new StackPanel
+				{
+					Padding = new(4, 0),
+					Spacing = 3,
+
+					Children =
+					{
+						new Label
+						{
+							Text = title,
+							TextStyle = TextStyle.Headline,
+							FontWeight = FontWeight.Semibold
+						},
+
+						new Label
+						{
+							Text = summary,
+							TextStyle = TextStyle.Subheadline,
+							TextColor = Colors.SecondaryLabel,
+							MaxLines = 3
+						}
+					}
+				},
+
+				new Border
+				{
+					Background = Colors.SecondaryGroupedBackground,
+					CornerRadius = 16,
+					ClipsToBounds = true,
+					Child = code
+				}
+			}
+		});
+	}
+
 	protected static View PreviewWithSettings(
 		View canvas,
 		params View[] settings)
