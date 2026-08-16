@@ -9,7 +9,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 | Lab | APIs | Action | Expected observable behavior |
 | --- | --- | --- | --- |
 | Modal presentations | `INavigator.Present*`, `ModalStyle`, `ModalPresentation`, `Detent`, `PopoverArrow` | Present automatic, full-screen, sheet, and anchored popover variants; exercise system, fixed-height, fractional, and content-fitting detents; add, remove, resize, and restyle content while its sheet is visible; rotate while a fractional or content-fitting sheet is visible; drag between detents and attempt guarded dismissal. | Correct iPhone/iPad presentation, fixed heights clamp to available space, fractional heights adapt to the new maximum, content-fitting sheets animate with their measured content and become scrollable at the maximum, arrow selection and anchor behavior remain correct, and `ConfirmLeave` can veto dismissal. |
-| Dialogs | `AlertAsync`, `ConfirmAsync`, `PromptAsync`, `SelectAsync` | Trigger success, cancel, destructive, empty-input, and long-option states. | Awaited result matches the chosen action; iPad presentation remains anchored and keyboard/focus behavior is stable. |
+| Dialogs | `AlertAsync`, `ConfirmAsync`, `PromptAsync`, `SelectAsync`, `DialogOption` | Trigger success, cancel, destructive, empty-input, and long-option states. | Awaited result matches the chosen action; iPad presentation remains anchored and keyboard/focus behavior is stable. |
 | Sharing and picking | `ISharer`, `ShareContent`, `ISystemPicker`, `PickedAsset` | Share text/URL/image and pick image/file; cancel each picker once. | Share sheet contains only supplied content; pickers return deterministic name/data or null on cancel. Permission denial is explained, never represented as an empty successful result. |
 | Haptics | `Haptics`, `HapticEvent`, `HapticStyle`, `HapticsNotification` | Trigger impact strengths, selection, notification outcomes, and a short custom pattern on a physical device. | Each action is perceivable without changing layout; simulator limitations are called out. |
 | Navigation | `Push*`, `Pop*`, `Present*`, `DismissAsync`, `SelectTabAsync`, `OpenUrlAsync` | Exercise ViewModel-first and view-first overload families, cancellation/guard paths, tab selection, and an invalid URL fallback. | Stack/modal state and awaited completion match the call; overloads remain code-reference entries rather than fake visual controls. |
@@ -258,6 +258,31 @@ Loads remote images for `Image`.
 
 Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
 
+## DialogOption
+
+A selectable action shown in a dialog.
+
+- Source: `SkeleKit.iOS/App/Navigation/DialogOption.cs`
+- Inheritance/shape: `readonly record struct DialogOption`
+- Native counterpart: `UIAlertAction`
+- Gallery role: Interactive lab
+
+| Kind | API / exact documentation ID | Access | Default / semantics | Bindable | Layout | Behavior |
+| --- | --- | --- | --- | --- | --- | --- |
+| Constructor | `SkeleKit.DialogOption.#ctor(System.String,System.Boolean)` | public | `isDestructive = false` | No | No automatic invalidation | Creates an option with a title and optional destructive styling. |
+| Property | `SkeleKit.DialogOption.Text` | public get | Constructor value | No | No automatic invalidation | The option's title. |
+| Property | `SkeleKit.DialogOption.IsDestructive` | public get | Constructor value | No | No automatic invalidation | Whether the option uses the destructive action style. |
+| Method | `SkeleKit.DialogOption.ToString` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.DialogOption.op_Inequality(SkeleKit.DialogOption,SkeleKit.DialogOption)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.DialogOption.op_Equality(SkeleKit.DialogOption,SkeleKit.DialogOption)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.DialogOption.GetHashCode` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.DialogOption.Equals(System.Object)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+| Method | `SkeleKit.DialogOption.Equals(SkeleKit.DialogOption)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
+
+### Gallery treatment
+
+Use the dialogs lab below. Present standard and destructive options together and verify the selected typed option is returned while cancellation remains a separate cancel action.
+
 ## Detent
 
 A height where a modal sheet may rest.
@@ -316,12 +341,13 @@ Manages application navigation, modal presentations, and native dialogs from a v
 | Method | `SkeleKit.INavigator.OpenUrlAsync(System.String,SkeleKit.ModalStyle,System.Boolean,System.Boolean,SkeleKit.SafariDismissButtonStyle)` | public interface member | n/a | n/a | n/a | Opens an in-app Safari browser with modal presentation, sheet detents, Reader mode, collapsing bars and dismiss-button options. |
 | Method | `SkeleKit.INavigator.AlertAsync(System.String,System.String,System.String)` | public interface member | n/a | n/a | n/a | Displays an alert dialog with a single button to dismiss it. |
 | Method | `SkeleKit.INavigator.ConfirmAsync(System.String,System.String,System.String,System.String,System.Boolean)` | public interface member | n/a | n/a | n/a | Displays a confirmation dialog with accept and cancel actions. |
-| Method | `SkeleKit.INavigator.PromptAsync(System.String,System.String,System.String,System.String,System.String,System.String)` | public interface member | n/a | n/a | n/a | Displays an alert with a single text field, for a name or another short answer. |
+| Method | `SkeleKit.INavigator.PromptAsync(System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean)` | public interface member | n/a | n/a | n/a | Displays an alert with a single text field and optional destructive accept action, for a name or another short answer. |
 | Method | `SkeleKit.INavigator.SelectAsync(System.String,System.String,System.String[])` | public interface member | n/a | n/a | n/a | Displays an action sheet layout with multiple choices. |
+| Method | `SkeleKit.INavigator.SelectAsync(System.String,System.String,System.Collections.Generic.IReadOnlyList{SkeleKit.DialogOption})` | public interface member | n/a | n/a | n/a | Displays an action sheet layout with individually styled choices. |
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+Use the dialogs lab above. Compare standard and destructive prompt acceptance, select standard and destructive typed options, and verify the cancel action remains semantically separate.
 
 ## ModalPresentation
 

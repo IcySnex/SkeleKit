@@ -477,7 +477,8 @@ internal sealed class Navigator(
 		string placeholder = "",
 		string text = "",
 		string accept = "OK",
-		string cancel = "Cancel")
+		string cancel = "Cancel",
+		bool destructive = false)
 	{
 		TaskCompletionSource<string?> completion = new();
 
@@ -490,7 +491,7 @@ internal sealed class Navigator(
 		});
 
 		alert.AddAction(UIAlertAction.Create(cancel, UIAlertActionStyle.Cancel, _ => completion.SetResult(null)));
-		alert.AddAction(UIAlertAction.Create(accept, UIAlertActionStyle.Default, _ =>
+		alert.AddAction(UIAlertAction.Create(accept, destructive ? UIAlertActionStyle.Destructive : UIAlertActionStyle.Default, _ =>
 			completion.SetResult(alert.TextFields.FirstOrDefault()?.Text ?? "")));
 
 		Present(alert, completion);
@@ -498,17 +499,40 @@ internal sealed class Navigator(
 		return completion.Task;
 	}
 
-	public Task<string?> SelectAsync(
+	public async Task<string?> SelectAsync(
 		string title,
 		string cancel = "Cancel",
 		params string[] options)
 	{
-		TaskCompletionSource<string?> completion = new();
+		DialogOption[] styledOptions =
+		[
+			.. options.Select(static option => new DialogOption(option))
+		];
+
+		DialogOption? selection = await SelectAsync(
+			title,
+			cancel,
+			styledOptions);
+
+		return selection is DialogOption option
+			? option.Text
+			: null;
+	}
+
+	public Task<DialogOption?> SelectAsync(
+		string title,
+		string cancel,
+		IReadOnlyList<DialogOption> options)
+	{
+		TaskCompletionSource<DialogOption?> completion = new();
 
 		UIAlertController sheet = UIAlertController.Create(title, null, UIAlertControllerStyle.ActionSheet);
 
-		foreach (string option in options)
-			sheet.AddAction(UIAlertAction.Create(option, UIAlertActionStyle.Default, _ => completion.SetResult(option)));
+		foreach (DialogOption option in options)
+			sheet.AddAction(UIAlertAction.Create(
+				option.Text,
+				option.IsDestructive ? UIAlertActionStyle.Destructive : UIAlertActionStyle.Default,
+				_ => completion.SetResult(option)));
 
 		sheet.AddAction(UIAlertAction.Create(cancel, UIAlertActionStyle.Cancel, _ => completion.SetResult(null)));
 

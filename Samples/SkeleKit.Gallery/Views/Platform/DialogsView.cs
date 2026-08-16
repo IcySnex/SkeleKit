@@ -64,14 +64,30 @@ internal sealed class DialogsView : ShowcaseView<DialogsViewModel>
 	void AddPromptShowcase(
 		DialogsViewModel viewModel)
 	{
+		Button show = DialogButton(
+			"Show text prompt",
+			"character.cursor.ibeam",
+			viewModel.ShowPromptCommand);
+		show.IsDestructive = viewModel.DestructivePrompt;
+
+		Switch destructive = new()
+		{
+			IsOn = Bind(
+				model => model.DestructivePrompt,
+				static (model, value) => model.DestructivePrompt = value),
+			Toggled = value => show.IsDestructive = value
+		};
+
 		AddShowcase(
 			"Text prompt",
-			"Enter a value, submit an empty field, or cancel and observe the awaited string result.",
-			DialogCanvas(
-				"Show text prompt",
-				"character.cursor.ibeam",
-				viewModel.ShowPromptCommand,
-				Bind(model => model.PromptResult)),
+			"Enter a value, submit an empty field, or compare standard and destructive accept actions.",
+			PreviewWithSettings(
+				ShowcaseBox.Canvas(
+					DialogContent(
+						show,
+						Bind(model => model.PromptResult)),
+					170),
+				SettingRow("Destructive action", destructive)),
 			Code(model => model.PromptCode));
 	}
 
@@ -80,7 +96,7 @@ internal sealed class DialogsView : ShowcaseView<DialogsViewModel>
 	{
 		AddShowcase(
 			"Action selection",
-			"Choose a short or long option, or cancel, and observe the awaited string result.",
+			"Choose a standard, long, or destructive option, or cancel, and observe the awaited result.",
 			DialogCanvas(
 				"Show selection",
 				"list.bullet",

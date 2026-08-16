@@ -21,6 +21,10 @@ internal sealed partial class DialogsViewModel(
 	string promptResult = "No result";
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(PromptCode))]
+	bool destructivePrompt;
+
+	[ObservableProperty]
 	string selectionResult = "No result";
 
 	public IReadOnlyList<Span> AlertCode { get; } =
@@ -47,14 +51,15 @@ internal sealed partial class DialogsViewModel(
 			""")
 	];
 
-	public IReadOnlyList<Span> PromptCode { get; } =
+	public IReadOnlyList<Span> PromptCode =>
 	[
 		new(
-			"""
+			$$"""
 			string? value = await navigator.PromptAsync(
 				"Text prompt",
 				"Enter a value.",
-				placeholder: "Value");
+				placeholder: "Value",
+				destructive: {{Boolean(DestructivePrompt)}});
 			""")
 	];
 
@@ -62,12 +67,18 @@ internal sealed partial class DialogsViewModel(
 	[
 		new(
 			"""
-			string? option = await navigator.SelectAsync(
+			DialogOption[] options =
+			[
+				new("First option"),
+				new("Second option"),
+				new("A longer option title that demonstrates shrinking"),
+				new("Destructive option", isDestructive: true)
+			];
+
+			DialogOption? option = await navigator.SelectAsync(
 				"Select an option",
 				"Cancel",
-				"First option",
-				"Second option",
-				"A longer option title that demonstrates wrapping");
+				options);
 			""")
 	];
 
@@ -106,7 +117,8 @@ internal sealed partial class DialogsViewModel(
 		string? response = await navigator.PromptAsync(
 			"Text prompt",
 			"Enter a value.",
-			placeholder: "Value");
+			placeholder: "Value",
+			destructive: DestructivePrompt);
 
 		PromptResult = response switch
 		{
@@ -119,15 +131,21 @@ internal sealed partial class DialogsViewModel(
 	[RelayCommand]
 	async Task ShowSelectionAsync()
 	{
-		string? selection = await navigator.SelectAsync(
+		DialogOption[] options =
+		[
+			new("First option"),
+			new("Second option"),
+			new("A longer option title that demonstrates shrinking"),
+			new("Destructive option", isDestructive: true)
+		];
+
+		DialogOption? selection = await navigator.SelectAsync(
 			"Select an option",
 			"Cancel",
-			"First option",
-			"Second option",
-			"A longer option title that demonstrates shrinking");
+			options);
 
-		SelectionResult = selection is string option
-			? option
+		SelectionResult = selection is DialogOption option
+			? option.Text
 			: "Canceled";
 	}
 

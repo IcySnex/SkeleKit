@@ -84,7 +84,8 @@ Legend: ★ quick win (hours, additive) · ◆ medium (a day-ish, some design) �
 	style; Content detents fall back to full height because Safari has no app content to measure; rejects a
 	non-`http`/`https` address and completes once presented).
 - ~~◆ **Alert with text input**~~ — **done** (`INavigator.PromptAsync`, returns the typed string or
-  null when cancelled).
+  null when canceled; its accept action may be destructive. `SelectAsync` also accepts typed
+  `DialogOption` choices when individual destructive styling is needed).
 
 ## View (every element)
 

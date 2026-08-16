@@ -207,6 +207,7 @@ public interface INavigator
 	/// <param name="text">The text the field starts with.</param>
 	/// <param name="accept">The text for the confirming button.</param>
 	/// <param name="cancel">The text for the canceling button.</param>
+	/// <param name="destructive">Whether the confirming button is styled as destructive.</param>
 	/// <returns>A task containing what was typed, or null if the alert was canceled.</returns>
 	Task<string?> PromptAsync(
 		string title,
@@ -214,7 +215,8 @@ public interface INavigator
 		string placeholder = "",
 		string text = "",
 		string accept = "OK",
-		string cancel = "Cancel");
+		string cancel = "Cancel",
+		bool destructive = false);
 
 	/// <summary>
 	/// Displays an action sheet layout with multiple choices.
@@ -227,4 +229,16 @@ public interface INavigator
 		string title,
 		string cancel = "Cancel",
 		params string[] options);
+
+	/// <summary>
+	/// Displays an action sheet layout with individually styled choices.
+	/// </summary>
+	/// <param name="title">The action sheet's title.</param>
+	/// <param name="cancel">The cancel button's text.</param>
+	/// <param name="options">The options to choose from.</param>
+	/// <returns>A task containing the chosen option, or null if the action sheet was canceled.</returns>
+	Task<DialogOption?> SelectAsync(
+		string title,
+		string cancel,
+		IReadOnlyList<DialogOption> options);
 }
