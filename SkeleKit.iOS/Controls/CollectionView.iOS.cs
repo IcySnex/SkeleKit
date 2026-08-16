@@ -4,7 +4,7 @@ using ObjCRuntime;
 
 namespace SkeleKit;
 
-public partial class CollectionView<TItem, TSection>
+public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 {
 	internal const string CellId = "SkeleCell";
 	internal const string HeaderId = "SkeleHeader";
@@ -18,6 +18,7 @@ public partial class CollectionView<TItem, TSection>
 	EmptyCollectionHost? emptyHost;
 
 	bool snapshotQueued;
+	bool usesSystemContentInsets;
 	nfloat keyboardCover;
 
 	private protected override UIView CreateNative()
@@ -31,7 +32,8 @@ public partial class CollectionView<TItem, TSection>
 			AlwaysBounceVertical = !carousel,
 			AlwaysBounceHorizontal = carousel,
 
-			ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never
+			ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never,
+			AutomaticallyAdjustsScrollIndicatorInsets = false
 		};
 
 		collection.RegisterClassForCell(typeof(SkeleCell), CellId);
@@ -59,6 +61,18 @@ public partial class CollectionView<TItem, TSection>
 		ApplyReorder(collection);
 
 		return collection;
+	}
+
+	bool ISystemInsetScroll.UseSystemContentInsets()
+	{
+		if (Layout.Kind is CollectionLayoutKind.Carousel)
+			return false;
+
+		usesSystemContentInsets = true;
+		Ui.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Automatic;
+		Ui.AutomaticallyAdjustsScrollIndicatorInsets = true;
+		SyncInsets();
+		return true;
 	}
 
 	UIRefreshControl? refresh;
@@ -135,8 +149,8 @@ public partial class CollectionView<TItem, TSection>
 		FlushSnapshot();
 	}
 
-	void EndNativeRefresh() =>
-		FlushSnapshot(() =>
+	void EndNativeRefresh()
+		=> FlushSnapshot(() =>
 		{
 			refresh?.EndRefreshing();
 			SyncInsets();
@@ -785,8 +799,12 @@ public partial class CollectionView<TItem, TSection>
 			return;
 
 		Ui.ContentInset = insets;
-		Ui.VerticalScrollIndicatorInsets = insets;
-		Ui.HorizontalScrollIndicatorInsets = insets;
+
+		if (!usesSystemContentInsets)
+		{
+			Ui.VerticalScrollIndicatorInsets = insets;
+			Ui.HorizontalScrollIndicatorInsets = insets;
+		}
 	}
 
 	void SyncEmptyState()
@@ -1293,7 +1311,6 @@ internal sealed class CollectionHost : UICollectionView
 
 		element?.SyncEmptyState();
 	}
-
 
 	protected override void Dispose(
 		bool disposing)

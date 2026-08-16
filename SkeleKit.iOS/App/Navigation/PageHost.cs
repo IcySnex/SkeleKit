@@ -174,6 +174,7 @@ internal sealed class PageHost : UIViewController
 	UITapGestureRecognizer? dismissKeyboard;
 	UIView? keyboardFocus;
 	nfloat keyboardCover;
+	bool usesSystemScrollInsets;
 	IUITraitChangeRegistration? themeChange;
 	UISearchController? search;
 	UIAction? backAction;
@@ -314,7 +315,13 @@ internal sealed class PageHost : UIViewController
 
 		ApplyChrome(page);
 
-		View!.AddSubview(page.Realize());
+		UIView native = page.Realize();
+		usesSystemScrollInsets = page.ScrollsUnderBars
+			&& page.SafeAreaEdges == SafeAreaEdges.All
+			&& page.AutomaticScrollBleed is ISystemInsetScroll scrolling
+			&& scrolling.UseSystemContentInsets();
+
+		View!.AddSubview(native);
 
 		if (FindScrolling(page)?.Native is UIScrollView scroll)
 			SetContentScrollView(scroll, NSDirectionalRectEdge.Top | NSDirectionalRectEdge.Bottom);
@@ -944,9 +951,15 @@ internal sealed class PageHost : UIViewController
 			return;
 
 		UIEdgeInsets safe = View!.SafeAreaInsets;
-		Page.PageSafeArea = new(safe.Left, safe.Top, safe.Right, safe.Bottom);
+		Page.PageSafeArea = usesSystemScrollInsets
+			? Thickness.Zero
+			: new(safe.Left, safe.Top, safe.Right, safe.Bottom);
 
-		CGRect frame = Inset(View.Bounds, safe, Page.SafeAreaEdges);
+		// UIKit can only keep a root scroller's adjusted inset synchronized with navigation bars,
+		// tab bars and refresh controls when the scroller actually spans the controller.
+		CGRect frame = usesSystemScrollInsets
+			? View.Bounds
+			: Inset(View.Bounds, safe, Page.SafeAreaEdges);
 		nfloat chrome = (nfloat)ChromeHeight(Page);
 
 		if (contentWidth != frame.Width || contentChrome != chrome)

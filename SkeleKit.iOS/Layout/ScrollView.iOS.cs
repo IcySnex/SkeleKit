@@ -2,7 +2,7 @@ using ObjCRuntime;
 
 namespace SkeleKit;
 
-public partial class ScrollView
+public partial class ScrollView : ISystemInsetScroll
 {
 	static UIView? FirstResponder(
 		UIView view)
@@ -30,6 +30,7 @@ public partial class ScrollView
 	nfloat keyboardCover;
 	UIRefreshControl? refresh;
 	bool endsAfterDrag;
+	bool usesSystemContentInsets;
 
 
 	void ApplyIndicatorInsets(
@@ -42,6 +43,20 @@ public partial class ScrollView
 
 		host.VerticalScrollIndicatorInsets = insets;
 		host.HorizontalScrollIndicatorInsets = insets;
+	}
+
+	bool ISystemInsetScroll.UseSystemContentInsets()
+	{
+		if (Orientation is not Orientation.Vertical)
+			return false;
+
+		usesSystemContentInsets = true;
+
+		UIScrollView host = (UIScrollView)Native;
+		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Automatic;
+		host.AutomaticallyAdjustsScrollIndicatorInsets = IndicatorInsets is null;
+		ApplyContentInsets();
+		return true;
 	}
 
 	void ApplyRefresh(
@@ -83,17 +98,22 @@ public partial class ScrollView
 		if (host.ContentInset == insets)
 			return;
 
-		bool atTop = host.ContentOffset.Y <= -host.ContentInset.Top + 1;
+		UIEdgeInsets oldAdjusted = host.AdjustedContentInset;
+		bool atTop = host.ContentOffset.Y <= -oldAdjusted.Top + 1;
 		bool atBottom = Orientation == Orientation.Vertical
-			&& host.ContentOffset.Y >= MaximumOffset(host, host.ContentInset) - 1;
+			&& host.ContentOffset.Y >= MaximumOffset(host, oldAdjusted) - 1;
 
 		host.ContentInset = insets;
-		ApplyIndicatorInsets(host, insets);
+
+		if (!usesSystemContentInsets || IndicatorInsets is not null)
+			ApplyIndicatorInsets(host, insets);
+
+		UIEdgeInsets newAdjusted = host.AdjustedContentInset;
 
 		if (atTop && Orientation == Orientation.Vertical)
-			host.ContentOffset = new(host.ContentOffset.X, -insets.Top);
+			host.ContentOffset = new(host.ContentOffset.X, -newAdjusted.Top);
 		else if (atBottom)
-			host.ContentOffset = new(host.ContentOffset.X, MaximumOffset(host, insets));
+			host.ContentOffset = new(host.ContentOffset.X, MaximumOffset(host, newAdjusted));
 	}
 
 	partial void ApplyRefreshingCore()
@@ -145,8 +165,10 @@ public partial class ScrollView
 			_ => UIScrollViewIndicatorStyle.Default
 		};
 
-		host.AutomaticallyAdjustsScrollIndicatorInsets = false;
-		ApplyIndicatorInsets(host, host.ContentInset);
+		host.AutomaticallyAdjustsScrollIndicatorInsets = usesSystemContentInsets && IndicatorInsets is null;
+
+		if (!host.AutomaticallyAdjustsScrollIndicatorInsets)
+			ApplyIndicatorInsets(host, host.ContentInset);
 	}
 
 	partial void ArrangeContent(

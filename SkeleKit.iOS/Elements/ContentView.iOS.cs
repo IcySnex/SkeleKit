@@ -9,6 +9,8 @@ public abstract partial class ContentView
 
 	View? automaticScrollBleed;
 
+	internal View? AutomaticScrollBleed => automaticScrollBleed;
+
 
 #pragma warning disable CA1822
 	/// <summary>
