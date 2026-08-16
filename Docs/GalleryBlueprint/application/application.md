@@ -436,7 +436,7 @@ Presents the system photo and document pickers.
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+Use the system picking lab above. Exercise image limits and file-extension filters, then verify successful selections and cancellation both produce distinct results.
 
 ## PickedAsset
 
@@ -454,7 +454,7 @@ A file or an image chosen from the device.
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+Use the system picking lab above. Preview picked image data and show each selected asset's name and byte size.
 
 ## ISharer
 

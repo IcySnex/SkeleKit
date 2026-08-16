@@ -153,7 +153,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				"Presentation",
 				Topic("Dialogs", "Alerts, confirmations, prompts and selections.", "exclamationmark.bubble.fill", Colors.Mint, GalleryArea.Platform, typeof(DialogsViewModel)),
 				Topic("Sharing", "Text, links and images through the share sheet.", "square.and.arrow.up", Colors.Mint, GalleryArea.Platform, typeof(SharingViewModel)),
-				Topic("System Picking", "Photos and files with cancel and permission states.", "photo.badge.plus", Colors.Mint, GalleryArea.Platform, typeof(AboutViewModel))),
+				Topic("System Picking", "Photos and files with limits, filters and cancellation.", "photo.badge.plus", Colors.Mint, GalleryArea.Platform, typeof(SystemPickingViewModel))),
 
 			Section(
 				"Device",
