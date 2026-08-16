@@ -1,6 +1,6 @@
 # Escape hatches
 
-These APIs deliberately cross the framework boundary. Keep them in an **Advanced** gallery section and show the lifetime/platform consequences next to the sample.
+These APIs deliberately cross the framework boundary. Keep their guidance in the Native View page's advanced code-only section and show the lifetime/platform consequences next to the sample.
 
 | Escape hatch | Use | Contract and pitfall |
 | --- | --- | --- |

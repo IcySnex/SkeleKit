@@ -13,6 +13,7 @@ internal sealed class NativeView : ShowcaseView<NativeViewModel>
 		NativeViewModel viewModel) : base(viewModel, "Native View", Colors.Orange)
 	{
 		AddCanvasShowcase();
+		AddDirectAccessShowcase();
 	}
 
 
@@ -48,5 +49,13 @@ internal sealed class NativeView : ShowcaseView<NativeViewModel>
 					300),
 				SettingRow("Drawing", clear)),
 			Code(model => model.CanvasCode));
+	}
+
+	void AddDirectAccessShowcase()
+	{
+		AddCodeShowcase(
+			"Direct native access",
+			"Inspect a realized UIKit peer or hosted controller only when no SkeleKit API covers the requirement. Accessing Native realizes the view immediately, and direct mutations bypass framework state.",
+			Code(model => model.DirectAccessCode));
 	}
 }

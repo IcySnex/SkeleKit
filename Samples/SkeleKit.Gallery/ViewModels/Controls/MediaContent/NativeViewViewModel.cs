@@ -27,4 +27,23 @@ internal sealed class NativeViewModel : ShowcaseViewModel
 			canvas.Drawing = new PKDrawing();
 			""")
 	];
+
+	public IReadOnlyList<Span> DirectAccessCode { get; } =
+	[
+		new(
+			"""
+			Button button = new() { Text = "Action" };
+
+			bool wasRealized = button.IsRealized;
+			UIButton native = (UIButton)button.Native;
+			bool isRealized = button.IsRealized;
+
+			// Direct UIKit mutations bypass SkeleKit property replay,
+			// binding, styling, layout, and appearance updates.
+			native.Layer.BorderWidth = 1;
+
+			// A page controller is available only after the page is hosted.
+			UIViewController? controller = Controller;
+			""")
+	];
 }

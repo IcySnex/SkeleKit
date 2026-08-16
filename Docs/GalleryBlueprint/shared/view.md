@@ -9,6 +9,8 @@ This is the canonical declaration inventory for the types below. Inherited `View
 Keep inherited behavior in one gallery area with tabs for layout/visibility, fills and transforms, gestures/commands, accessibility/focus, realization/native access, and animation. Use nested colored frames so margin, explicit/automatic size, min/max, alignment, safe-area bleed, clipping, shadow, transform anchor, and desired/arranged output are visible. An event log records tap, double-tap, long-press, press, pan, pinch, rotate, focus, and animation completion.
 
 The Platform accessibility lab owns the accessibility/focus subset: spoken labels, hints, dynamic values, additive traits, element grouping, UI-test identifiers, and explicit input focus.
+
+The Native View page owns the native-access subset: realization through `View.Native`, hosted `ContentView.Controller` access, and the consequences of mutating UIKit state outside SkeleKit.
 ## View
 
 Base of every SkeleKit element: owns one lazily-created native view and takes part in the measure/arrange engine.
