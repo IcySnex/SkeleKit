@@ -33,34 +33,20 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 						Width = 86,
 						Height = 86,
 						CornerRadius = 22,
-						Background = LinearGradient.Horizontal(Colors.Indigo, Colors.Purple),
 
 						Child = new Image
 						{
-							HorizontalAlignment = HorizontalAlignment.Center,
-							VerticalAlignment = VerticalAlignment.Center,
-							Source = ImageSource.Symbol("square.stack.3d.up.fill"),
-							SymbolSize = 40,
-							SymbolWeight = FontWeight.Semibold,
-							Tint = Colors.White
+							Source = ImageSource.Bundle("AppIcon60x60")
 						}
 					},
 
 					new Label
 					{
+						Margin = new(0, 0, 0, 4),
 						Text = "SkeleKit",
 						TextStyle = TextStyle.Title1,
 						FontWeight = FontWeight.Bold,
 						TextAlignment = TextAlignment.Center
-					},
-
-					new Label
-					{
-						Text = "Native iOS experiences from clean, composable C#.",
-						TextStyle = TextStyle.Body,
-						TextColor = Colors.SecondaryLabel,
-						TextAlignment = TextAlignment.Center,
-						MaxLines = 2
 					},
 
 					new Border
@@ -72,11 +58,21 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 
 						Child = new Label
 						{
-							Text = "NATIVE UI · MVVM · NO XAML",
-							TextStyle = TextStyle.Caption1,
+							Text = "C# UI FRAMEWORK FOR NATIVE IOS",
+							TextStyle = TextStyle.Footnote,
 							FontWeight = FontWeight.Semibold,
 							TextColor = Colors.Indigo
 						}
+					},
+
+					new Label
+					{
+						Margin = new(0, -8, 0, 0),
+						Text = "Real UIKit controls, no storyboards or constraints, zero boilerplate.",
+						TextStyle = TextStyle.Callout,
+						TextColor = Colors.SecondaryLabel,
+						TextAlignment = TextAlignment.Center,
+						MaxLines = 3
 					},
 
 					new Divider
@@ -88,7 +84,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 					{
 						Text = "View on GitHub",
 						Icon = "arrow.up.right",
-						Kind = ButtonStyle.FilledCapsule,
+						Kind = ButtonStyle.Filled,
 						Size = ButtonSize.Large,
 						Tint = Colors.Indigo,
 						Command = viewModel.OpenGitHubCommand
