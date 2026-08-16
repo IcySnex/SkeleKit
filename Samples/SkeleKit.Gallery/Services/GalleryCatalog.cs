@@ -151,8 +151,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Presentation",
-				Topic("Modals", "Sheets, detents, popovers and guarded dismissal.", "rectangle.portrait.bottomhalf.filled", Colors.Mint, GalleryArea.Platform, typeof(AboutViewModel)),
-				Topic("Dialogs", "Alerts, confirmations, prompts and selections.", "exclamationmark.bubble.fill", Colors.Mint, GalleryArea.Platform, typeof(AboutViewModel)),
+				Topic("Dialogs", "Alerts, confirmations, prompts and selections.", "exclamationmark.bubble.fill", Colors.Mint, GalleryArea.Platform, typeof(DialogsViewModel)),
 				Topic("Sharing", "Text, links and images through the share sheet.", "square.and.arrow.up", Colors.Mint, GalleryArea.Platform, typeof(AboutViewModel)),
 				Topic("System Picking", "Photos and files with cancel and permission states.", "photo.badge.plus", Colors.Mint, GalleryArea.Platform, typeof(AboutViewModel))),
 

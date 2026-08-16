@@ -196,7 +196,7 @@ public interface INavigator
 		string message,
 		string accept = "OK",
 		string cancel = "Cancel",
-		bool destructive = false);
+		bool destructive = true);
 
 	/// <summary>
 	/// Displays an alert with a single text field, for a name or another short answer.

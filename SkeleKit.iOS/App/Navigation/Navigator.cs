@@ -458,7 +458,7 @@ internal sealed class Navigator(
 		string message,
 		string accept = "OK",
 		string cancel = "Cancel",
-		bool destructive = false)
+		bool destructive = true)
 	{
 		TaskCompletionSource<bool> completion = new();
 
