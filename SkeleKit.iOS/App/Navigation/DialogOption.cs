@@ -6,6 +6,16 @@ namespace SkeleKit;
 public readonly record struct DialogOption
 {
 	/// <summary>
+	/// Converts a string into a standard dialog option.
+	/// </summary>
+	/// <param name="text">The option's title.</param>
+	/// <returns>A standard dialog option with the supplied title.</returns>
+	public static implicit operator DialogOption(
+		string text) =>
+		new(text);
+
+
+	/// <summary>
 	/// Creates a dialog option.
 	/// </summary>
 	/// <param name="text">The option's title.</param>

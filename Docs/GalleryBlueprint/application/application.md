@@ -272,6 +272,7 @@ A selectable action shown in a dialog.
 | Constructor | `SkeleKit.DialogOption.#ctor(System.String,System.Boolean)` | public | `isDestructive = false` | No | No automatic invalidation | Creates an option with a title and optional destructive styling. |
 | Property | `SkeleKit.DialogOption.Text` | public get | Constructor value | No | No automatic invalidation | The option's title. |
 | Property | `SkeleKit.DialogOption.IsDestructive` | public get | Constructor value | No | No automatic invalidation | Whether the option uses the destructive action style. |
+| Conversion | `SkeleKit.DialogOption.op_Implicit(System.String)~SkeleKit.DialogOption` | public static | n/a | n/a | n/a | Converts a string into a standard dialog option. |
 | Method | `SkeleKit.DialogOption.ToString` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 | Method | `SkeleKit.DialogOption.op_Inequality(SkeleKit.DialogOption,SkeleKit.DialogOption)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
 | Method | `SkeleKit.DialogOption.op_Equality(SkeleKit.DialogOption,SkeleKit.DialogOption)` | public (compiled) | n/a | n/a | n/a | _Exported in compiled metadata but absent from the XML documentation baseline._ |
@@ -342,12 +343,11 @@ Manages application navigation, modal presentations, and native dialogs from a v
 | Method | `SkeleKit.INavigator.AlertAsync(System.String,System.String,System.String)` | public interface member | n/a | n/a | n/a | Displays an alert dialog with a single button to dismiss it. |
 | Method | `SkeleKit.INavigator.ConfirmAsync(System.String,System.String,System.String,System.String,System.Boolean)` | public interface member | n/a | n/a | n/a | Displays a confirmation dialog with accept and cancel actions. |
 | Method | `SkeleKit.INavigator.PromptAsync(System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean)` | public interface member | n/a | n/a | n/a | Displays an alert with a single text field and optional destructive accept action, for a name or another short answer. |
-| Method | `SkeleKit.INavigator.SelectAsync(System.String,System.String,System.String[])` | public interface member | n/a | n/a | n/a | Displays an action sheet layout with multiple choices. |
-| Method | `SkeleKit.INavigator.SelectAsync(System.String,System.String,System.Collections.Generic.IReadOnlyList{SkeleKit.DialogOption})` | public interface member | n/a | n/a | n/a | Displays an action sheet layout with individually styled choices. |
+| Method | `SkeleKit.INavigator.SelectAsync(System.String,System.String,SkeleKit.DialogOption[])` | public interface member | n/a | n/a | n/a | Displays an action sheet layout with individually styled choices and returns the chosen option's text. |
 
 ### Gallery treatment
 
-Use the dialogs lab above. Compare standard and destructive prompt acceptance, select standard and destructive typed options, and verify the cancel action remains semantically separate.
+Use the dialogs lab above. Compare standard and destructive prompt acceptance, mix implicit string options with an explicitly destructive option, and verify the cancel action remains semantically separate.
 
 ## ModalPresentation
 

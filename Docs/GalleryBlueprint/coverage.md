@@ -41,7 +41,7 @@ Every documented exported type in the compiled iOS XML baseline appears exactly 
 | `DatePicker` | [controls/actions-selection/actions-selection.md](controls/actions-selection/actions-selection.md) | Lab | 7 |
 | `DatePickerMode` | [primitives/page-tabs.md](primitives/page-tabs.md) | Non-gallery | 4 |
 | `DatePickerStyle` | [primitives/page-tabs.md](primitives/page-tabs.md) | Non-gallery | 4 |
-| `DialogOption` | [application/application.md](application/application.md) | Lab | 9 |
+| `DialogOption` | [application/application.md](application/application.md) | Lab | 10 |
 | `Detent` | [application/application.md](application/application.md) | Lab | 11 |
 | `Divider` | [controls/values-status/values-status.md](controls/values-status/values-status.md) | Visual | 3 |
 | `Easing` | [shared/styling-animation.md](shared/styling-animation.md) | Non-gallery | 5 |
@@ -68,7 +68,7 @@ Every documented exported type in the compiled iOS XML baseline appears exactly 
 | `Image` | [controls/media-content/media-content.md](controls/media-content/media-content.md) | Visual | 14 |
 | `ImageSource` | [primitives/images-maps-collections.md](primitives/images-maps-collections.md) | Visual | 8 |
 | `ImageSourceKind` | [primitives/images-maps-collections.md](primitives/images-maps-collections.md) | Visual | 6 |
-| `INavigator` | [application/application.md](application/application.md) | Non-gallery | 22 |
+| `INavigator` | [application/application.md](application/application.md) | Non-gallery | 21 |
 | `IndicatorStyle` | [primitives/images-maps-collections.md](primitives/images-maps-collections.md) | Visual | 4 |
 | `ISection<T>` | [primitives/images-maps-collections.md](primitives/images-maps-collections.md) | Visual | 1 |
 | `ISharer` | [application/application.md](application/application.md) | Non-gallery | 1 |

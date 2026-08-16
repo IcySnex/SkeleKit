@@ -196,7 +196,7 @@ public interface INavigator
 		string message,
 		string accept = "OK",
 		string cancel = "Cancel",
-		bool destructive = true);
+		bool destructive = false);
 
 	/// <summary>
 	/// Displays an alert with a single text field, for a name or another short answer.
@@ -219,26 +219,14 @@ public interface INavigator
 		bool destructive = false);
 
 	/// <summary>
-	/// Displays an action sheet layout with multiple choices.
-	/// </summary>
-	/// <param name="title">The action sheet's title.</param>
-	/// <param name="cancel">The cancel button's text.</param>
-	/// <param name="options">The options to choose from.</param>
-	/// <returns>A task containing the chosen string option, or null if the action sheet was canceled.</returns>
-	Task<string?> SelectAsync(
-		string title,
-		string cancel = "Cancel",
-		params string[] options);
-
-	/// <summary>
 	/// Displays an action sheet layout with individually styled choices.
 	/// </summary>
 	/// <param name="title">The action sheet's title.</param>
 	/// <param name="cancel">The cancel button's text.</param>
 	/// <param name="options">The options to choose from.</param>
-	/// <returns>A task containing the chosen option, or null if the action sheet was canceled.</returns>
-	Task<DialogOption?> SelectAsync(
+	/// <returns>A task containing the chosen option's text, or null if the action sheet was canceled.</returns>
+	Task<string?> SelectAsync(
 		string title,
-		string cancel,
-		IReadOnlyList<DialogOption> options);
+		string cancel = "Cancel",
+		params DialogOption[] options);
 }

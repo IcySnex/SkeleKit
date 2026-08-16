@@ -458,7 +458,7 @@ internal sealed class Navigator(
 		string message,
 		string accept = "OK",
 		string cancel = "Cancel",
-		bool destructive = true)
+		bool destructive = false)
 	{
 		TaskCompletionSource<bool> completion = new();
 
@@ -499,32 +499,12 @@ internal sealed class Navigator(
 		return completion.Task;
 	}
 
-	public async Task<string?> SelectAsync(
+	public Task<string?> SelectAsync(
 		string title,
 		string cancel = "Cancel",
-		params string[] options)
+		params DialogOption[] options)
 	{
-		DialogOption[] styledOptions =
-		[
-			.. options.Select(static option => new DialogOption(option))
-		];
-
-		DialogOption? selection = await SelectAsync(
-			title,
-			cancel,
-			styledOptions);
-
-		return selection is DialogOption option
-			? option.Text
-			: null;
-	}
-
-	public Task<DialogOption?> SelectAsync(
-		string title,
-		string cancel,
-		IReadOnlyList<DialogOption> options)
-	{
-		TaskCompletionSource<DialogOption?> completion = new();
+		TaskCompletionSource<string?> completion = new();
 
 		UIAlertController sheet = UIAlertController.Create(title, null, UIAlertControllerStyle.ActionSheet);
 
@@ -532,7 +512,7 @@ internal sealed class Navigator(
 			sheet.AddAction(UIAlertAction.Create(
 				option.Text,
 				option.IsDestructive ? UIAlertActionStyle.Destructive : UIAlertActionStyle.Default,
-				_ => completion.SetResult(option)));
+				_ => completion.SetResult(option.Text)));
 
 		sheet.AddAction(UIAlertAction.Create(cancel, UIAlertActionStyle.Cancel, _ => completion.SetResult(null)));
 

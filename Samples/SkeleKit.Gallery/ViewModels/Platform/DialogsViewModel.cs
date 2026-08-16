@@ -12,7 +12,7 @@ internal sealed partial class DialogsViewModel(
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(ConfirmationCode))]
-	bool destructiveConfirmation = true;
+	bool destructiveConfirmation;
 
 	[ObservableProperty]
 	string confirmationResult = "No result";
@@ -67,18 +67,15 @@ internal sealed partial class DialogsViewModel(
 	[
 		new(
 			"""
-			DialogOption[] options =
-			[
-				new("First option"),
-				new("Second option"),
-				new("A longer option title that demonstrates shrinking"),
-				new("Destructive option", isDestructive: true)
-			];
-
-			DialogOption? option = await navigator.SelectAsync(
+			string? option = await navigator.SelectAsync(
 				"Select an option",
 				"Cancel",
-				options);
+				[
+					"First option",
+					"Second option",
+					"A longer option title that demonstrates shrinking",
+					new("Destructive option", true)
+				]);
 			""")
 	];
 
@@ -131,22 +128,17 @@ internal sealed partial class DialogsViewModel(
 	[RelayCommand]
 	async Task ShowSelectionAsync()
 	{
-		DialogOption[] options =
-		[
-			new("First option"),
-			new("Second option"),
-			new("A longer option title that demonstrates shrinking"),
-			new("Destructive option", isDestructive: true)
-		];
-
-		DialogOption? selection = await navigator.SelectAsync(
+		string? selection = await navigator.SelectAsync(
 			"Select an option",
 			"Cancel",
-			options);
+			[
+				"First option",
+				"Second option",
+				"A longer option title that demonstrates shrinking",
+				new("Destructive option", true)
+			]);
 
-		SelectionResult = selection is DialogOption option
-			? option.Text
-			: "Canceled";
+		SelectionResult = selection ?? "Canceled";
 	}
 
 
