@@ -40,6 +40,7 @@ internal sealed partial class SharingViewModel(
 	[
 		new(
 			"""
+			// "Save Image" requires NSPhotoLibraryAddUsageDescription in Info.plist.
 			await sharer.ShareAsync(
 				ImageSource.Symbol("photo"));
 			""")
