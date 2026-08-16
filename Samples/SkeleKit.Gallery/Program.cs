@@ -30,6 +30,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<AboutViewModel>();
 		services.AddTransient<DialogsViewModel>();
 		services.AddTransient<PageChromeViewModel>();
+		services.AddTransient<SharingViewModel>();
 		services.AddTransient<BindingViewModel>();
 		services.AddTransient<ContentViewViewModel>();
 		services.AddTransient<PanelsViewModel>();
