@@ -177,7 +177,7 @@ A single moment in a custom haptic pattern played through `Haptics.Play`.
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+Use the haptics lab above. Combine timed taps and continuous events, adjust intensity and sharpness, and test the resulting pattern on supported physical hardware.
 
 ## Haptics
 
@@ -197,7 +197,7 @@ Provides access to native device haptic feedback.
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+Use the haptics lab above. Trigger impact, selection, notification, and custom feedback independently, with simulator limitations stated beside the specimens.
 
 ## HapticsNotification
 
@@ -217,7 +217,7 @@ The type of notification event for haptic feedback.
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+Use the notification specimen in the haptics lab above. Compare the success, warning, and error feedback types.
 
 ## HapticStyle
 
@@ -239,7 +239,7 @@ The weight and sharpness of haptic feedback.
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+Use the impact specimen in the haptics lab above. Compare light, medium, heavy, soft, and rigid styles on supported physical hardware.
 
 ## IImageLoader
 

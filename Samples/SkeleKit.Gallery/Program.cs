@@ -29,6 +29,7 @@ SkeleApplication.CreateBuilder()
 
 		services.AddTransient<AboutViewModel>();
 		services.AddTransient<DialogsViewModel>();
+		services.AddTransient<HapticsViewModel>();
 		services.AddTransient<PageChromeViewModel>();
 		services.AddTransient<SharingViewModel>();
 		services.AddTransient<SystemPickingViewModel>();

@@ -157,7 +157,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 
 			Section(
 				"Device",
-				Topic("Haptics", "Impact, selection, notification and custom patterns.", "waveform", Colors.Teal, GalleryArea.Platform, typeof(AboutViewModel)),
+				Topic("Haptics", "Impact, selection, notification and custom patterns.", "waveform", Colors.Teal, GalleryArea.Platform, typeof(HapticsViewModel)),
 				Topic("Image Loading", "Remote loading, cancellation and custom loaders.", "arrow.down.circle.fill", Colors.Teal, GalleryArea.Platform, typeof(AboutViewModel)),
 				Topic("Accessibility", "VoiceOver labels, traits, values and focus.", "accessibility", Colors.Teal, GalleryArea.Platform, typeof(AboutViewModel)),
 				Topic("Native Access", "UIKit views, controllers and gesture escape hatches.", "apple.terminal.fill", Colors.Teal, GalleryArea.Platform, typeof(AboutViewModel)))
