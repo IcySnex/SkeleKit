@@ -28,6 +28,7 @@ SkeleApplication.CreateBuilder()
 		services.AddSingleton<LifecycleDiViewModel>();
 
 		services.AddTransient<AboutViewModel>();
+		services.AddTransient<AccessibilityViewModel>();
 		services.AddTransient<DialogsViewModel>();
 		services.AddTransient<HapticsViewModel>();
 		services.AddTransient<PageChromeViewModel>();

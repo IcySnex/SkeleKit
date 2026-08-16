@@ -32,7 +32,7 @@ How VoiceOver describes and treats a view.
 
 ### Gallery treatment
 
-Non-gallery/reference entry. Exercise this API through the application, tooling, or code-only labs described by its behavior rather than inventing a visual specimen.
+Use the accessibility lab. Verify header, image, and selected traits with VoiceOver or Accessibility Inspector, including traits added to controls with their own native semantics.
 
 ## ButtonStyle
 
