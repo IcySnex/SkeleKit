@@ -31,8 +31,16 @@ export default defineNuxtConfig({
     baseURL,
     head: {
       link: [{ rel: 'icon', type: 'image/png', href: `${baseURL}favicon.png` }],
-      meta: [{ name: 'theme-color', content: '#7c3aed' }],
+      meta: [
+        { name: 'theme-color', content: '#09090b', media: '(prefers-color-scheme: dark)' },
+        { name: 'theme-color', content: '#ffffff', media: '(prefers-color-scheme: light)' },
+      ],
     },
+  },
+  colorMode: {
+    preference: 'dark',
+    fallback: 'dark',
+    storageKey: 'skelekit-color-mode',
   },
   site: {
     url: siteOrigin,
@@ -55,7 +63,21 @@ export default defineNuxtConfig({
         'lucide:circle-dot',
         'lucide:clipboard',
         'lucide:square-pen',
+        'lucide:app-window-mac',
+        'lucide:book-open',
+        'lucide:braces',
+        'lucide:boxes',
+        'lucide:github',
+        'lucide:layout-grid',
+        'lucide:rocket',
+        'lucide:shield-check',
+        'lucide:sparkles',
       ],
+    },
+  },
+  content: {
+    highlight: {
+      preload: ['csharp'],
     },
   },
   ogImage: {

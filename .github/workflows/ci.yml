@@ -6,7 +6,17 @@ on:
       - main
     tags:
       - "v*"
+    paths-ignore:
+      - "Docs/**"
+      - "Assets/icon/**"
+      - "**/*.md"
+      - ".github/workflows/docs.yml"
   pull_request:
+    paths-ignore:
+      - "Docs/**"
+      - "Assets/icon/**"
+      - "**/*.md"
+      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:

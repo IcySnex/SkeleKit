@@ -13,4 +13,5 @@ function copySvg(source, destination) {
 
 copySvg(join(iconDirectory, 'bare_light.svg'), join(publicDirectory, 'logo.svg'));
 copySvg(join(iconDirectory, 'bare_dark.svg'), join(publicDirectory, 'logo-dark.svg'));
+copyFileSync(join(iconDirectory, 'transparent.png'), join(publicDirectory, 'logo-transparent.png'));
 copyFileSync(join(iconDirectory, 'transparent.png'), join(publicDirectory, 'favicon.png'));

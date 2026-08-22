@@ -4,15 +4,20 @@ The Markdown documentation website for SkeleKit, built with [shadcn-docs-nuxt](h
 
 ## Setup
 
+From the repository root:
+
 ```bash
-npm ci
+npm --prefix Docs ci
 ```
 
 ## Development
 
 ```bash
-npm run dev
+npm --prefix Docs run dev
 ```
+
+Then open `http://localhost:3000/`. Nuxt watches the Markdown, theme config and
+site files, so saved changes appear without rebuilding the site.
 
 The development and static-build commands copy the current SkeleKit logo and
 favicon from `../Assets/icon` into `public` before starting.
@@ -22,13 +27,13 @@ favicon from `../Assets/icon` into `public` before starting.
 Build the static site:
 
 ```bash
-npm run generate
+npm --prefix Docs run generate
 ```
 
 Build it with the GitHub Pages repository base path:
 
 ```bash
-NUXT_APP_BASE_URL=/SkeleKit/ npm run generate:pages
+NUXT_APP_BASE_URL=/SkeleKit/ npm --prefix Docs run generate:pages
 ```
 
 The repository workflow builds pull requests and deploys `main` to

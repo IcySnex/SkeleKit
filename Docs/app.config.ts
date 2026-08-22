@@ -12,13 +12,14 @@ export default defineAppConfig({
       },
     },
     theme: {
-      customizable: true,
-      color: 'violet',
-      radius: 0.625,
+      customizable: false,
+      color: 'zinc',
+      radius: 0.5,
     },
     header: {
       title: 'SkeleKit',
       showTitle: true,
+      showTitleInMobile: true,
       border: false,
       darkModeToggle: true,
       languageSwitcher: {
@@ -27,15 +28,28 @@ export default defineAppConfig({
         dropdownType: 'select',
       },
       logo: {
-        light: '/logo.svg',
-        dark: '/logo-dark.svg',
+        light: '/logo-transparent.png',
+        dark: '/logo-transparent.png',
       },
       nav: [
         {
           title: 'Guides',
-          to: '/guides/application',
-          target: '_self',
-          showLinkIcon: false,
+          links: [
+            {
+              title: 'Getting started',
+              description: 'Install SkeleKit and build your first native iOS app.',
+              icon: 'lucide:rocket',
+              to: '/getting-started/introduction',
+              target: '_self',
+            },
+            {
+              title: 'Guides',
+              description: 'Learn application structure, layout, and MVVM bindings.',
+              icon: 'lucide:book-open',
+              to: '/guides/application',
+              target: '_self',
+            },
+          ],
         },
         {
           title: 'API Reference',
