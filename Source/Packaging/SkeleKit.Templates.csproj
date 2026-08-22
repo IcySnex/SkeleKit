@@ -6,7 +6,7 @@
         <PackageId>SkeleKit.Templates</PackageId>
         <PackageVersion>$(SkeleKitPackageVersion)</PackageVersion>
         <Title>SkeleKit project templates</Title>
-        <Authors>SkeleKit</Authors>
+        <Authors>IcySnex</Authors>
         <Company>SkeleKit</Company>
         <Description>dotnet new templates for creating native SkeleKit iOS applications with .NET 10.</Description>
         <PackageProjectUrl>https://github.com/IcySnex/SkeleKit</PackageProjectUrl>
@@ -18,7 +18,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Initial SkeleKit iOS application template.</PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-        <Copyright>Copyright © SkeleKit contributors</Copyright>
+        <Copyright>Copyright © IcySnex</Copyright>
 
         <PackageType>Template</PackageType>
         <IncludeContentInPack>true</IncludeContentInPack>
@@ -35,6 +35,6 @@
                  Pack="true"
                  PackagePath="content/SkeleKit.iOS/" />
         <None Include="../../README.md" Pack="true" PackagePath="/" Link="README.md" />
-        <None Include="../Samples/SkeleKit.Gallery/Assets.xcassets/AppIcon.appiconset/Icon120.png" Pack="true" PackagePath="package-icon.png" />
+        <None Include="../../Assets/icon/package.png" Pack="true" PackagePath="package-icon.png" />
     </ItemGroup>
 </Project>

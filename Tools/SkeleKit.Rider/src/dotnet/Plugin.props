@@ -6,7 +6,7 @@
 
     <Title>SkeleKit</Title>
     <Description>Hot reload and breakpoints together for SkeleKit.iOS apps on the iOS simulator.</Description>
-    <Authors>SkeleKit</Authors>
+    <Authors>IcySnex</Authors>
     <PackageTags>rider plugin skelekit ios hot-reload</PackageTags>
   </PropertyGroup>
 

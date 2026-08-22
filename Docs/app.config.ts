@@ -91,7 +91,7 @@ export default defineAppConfig({
     },
     footer: {
       border: true,
-      credits: 'Copyright © 2026 SkeleKit contributors',
+      credits: 'Copyright © 2026 IcySnex',
       links: [
         {
           icon: 'lucide:box',

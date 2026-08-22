@@ -9,7 +9,7 @@
         <PackageId>SkeleKit.iOS</PackageId>
         <Version>$(SkeleKitPackageVersion)</Version>
         <Title>SkeleKit for iOS</Title>
-        <Authors>SkeleKit</Authors>
+        <Authors>IcySnex</Authors>
         <Company>SkeleKit</Company>
         <Description>Native, code-first UI framework for .NET for iOS. Build UIKit apps with C# object initializers, AOT-safe MVVM bindings, layout, navigation, and controls—without MAUI or XAML.</Description>
         <PackageProjectUrl>https://github.com/IcySnex/SkeleKit</PackageProjectUrl>
@@ -21,7 +21,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Initial preview release of SkeleKit for .NET for iOS.</PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-        <Copyright>Copyright © SkeleKit contributors</Copyright>
+        <Copyright>Copyright © IcySnex</Copyright>
 
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -34,7 +34,7 @@
 
     <ItemGroup>
         <None Include="../../../README.md" Pack="true" PackagePath="/" />
-        <None Include="../../Samples/SkeleKit.Gallery/Assets.xcassets/AppIcon.appiconset/Icon120.png" Pack="true" PackagePath="package-icon.png" />
+        <None Include="../../../Assets/icon/package.png" Pack="true" PackagePath="package-icon.png" />
         <None Include="build/SkeleKit.iOS.targets" Pack="true" PackagePath="buildTransitive/SkeleKit.iOS.targets" />
         <None Include="../SkeleKit.Generators/bin/$(Configuration)/netstandard2.0/SkeleKit.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
