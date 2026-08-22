@@ -140,7 +140,7 @@ static class Styles
 {
     public static readonly Style<Label> Caption = new(label =>
     {
-        label.FontSize = 12,
+        label.FontSize = 12;
         label.TextColor = Colors.SecondaryLabel;
     });
 
