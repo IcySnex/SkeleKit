@@ -556,9 +556,12 @@ public class SkeleApplication
 				if (tabsBuilder?.SearchView is Type searchView)
 				{
 					UINavigationController stack = Stack(searchView, tabsBuilder.UseLargeTitles);
+					PageHost root = (PageHost)stack.ViewControllers![0];
 
 					UISearchTab search = new(_ => stack);
-					((PageHost)stack.ViewControllers![0]).Tab = search;
+					root.Tab = search;
+
+					root.LoadViewIfNeeded();
 
 					tabs.Add(search);
 				}
