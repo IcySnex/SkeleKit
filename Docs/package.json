@@ -1,0 +1,22 @@
+{
+  "name": "skelekit-docs",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "predev": "node scripts/sync-brand-assets.mjs",
+    "dev": "nuxt dev",
+    "pregenerate": "node scripts/sync-brand-assets.mjs",
+    "generate": "nuxt generate",
+    "pregenerate:pages": "node scripts/sync-brand-assets.mjs",
+    "generate:pages": "nuxt build --preset github_pages",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "nuxt": "4.5.2",
+    "shadcn-docs-nuxt": "1.2.2",
+    "vue": "3.5.41",
+    "vue-router": "5.2.0"
+  }
+}
