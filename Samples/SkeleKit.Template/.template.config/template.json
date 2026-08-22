@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json.schemastore.org/template",
+  "author": "SkeleKit",
+  "classifications": [
+    "iOS",
+    "Mobile",
+    "C#"
+  ],
+  "identity": "SkeleKit.Templates.iOS.Application",
+  "name": "SkeleKit iOS Application",
+  "shortName": "skelekit-ios",
+  "sourceName": "SkeleKit.Template",
+  "defaultName": "SkeleKitApp",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "primaryOutputs": [
+    {
+      "path": "SkeleKit.Template.csproj"
+    }
+  ],
+  "symbols": {
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Skip restoring the generated project."
+    }
+  },
+  "postActions": [
+    {
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages required by this project.",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'."
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

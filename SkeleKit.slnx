@@ -8,6 +8,9 @@
     <Project Path="Samples/SkeleKit.Gallery/SkeleKit.Gallery.csproj" />
     <Project Path="Samples/SkeleKit.Template/SkeleKit.Template.csproj" />
   </Folder>
+  <Folder Name="/Packaging/">
+    <Project Path="Templates/SkeleKit.Templates.csproj" />
+  </Folder>
   <Project Path="SkeleKit.Generators/SkeleKit.Generators.csproj" />
   <Project Path="SkeleKit.iOS/SkeleKit.iOS.csproj" />
   <Project Path="SkeleKit.Tests/SkeleKit.Tests.csproj" />

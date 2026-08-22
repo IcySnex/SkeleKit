@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+
+        <PackageId>SkeleKit.Templates</PackageId>
+        <PackageVersion>$(SkeleKitPackageVersion)</PackageVersion>
+        <Title>SkeleKit project templates</Title>
+        <Authors>SkeleKit</Authors>
+        <Company>SkeleKit</Company>
+        <Description>dotnet new templates for creating native SkeleKit iOS applications with .NET 10.</Description>
+        <PackageProjectUrl>https://github.com/IcySnex/SkeleKit</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/IcySnex/SkeleKit</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageTags>dotnet-new;templates;skelekit;ios;uikit;dotnet-ios;csharp</PackageTags>
+        <PackageIcon>package-icon.png</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageReleaseNotes>Initial SkeleKit iOS application template.</PackageReleaseNotes>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <Copyright>Copyright © SkeleKit contributors</Copyright>
+
+        <PackageType>Template</PackageType>
+        <IncludeContentInPack>true</IncludeContentInPack>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <ContentTargetFolders>content</ContentTargetFolders>
+        <NoDefaultExcludes>true</NoDefaultExcludes>
+        <NoWarn>$(NoWarn);NU5128</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="**/*" />
+        <Content Include="../Samples/SkeleKit.Template/**/*"
+                 Exclude="../Samples/SkeleKit.Template/bin/**/*;../Samples/SkeleKit.Template/obj/**/*"
+                 Pack="true"
+                 PackagePath="content/SkeleKit.iOS/" />
+        <None Include="../README.md" Pack="true" PackagePath="/" Link="README.md" />
+        <None Include="../Samples/SkeleKit.Gallery/Assets.xcassets/AppIcon.appiconset/Icon120.png" Pack="true" PackagePath="package-icon.png" />
+    </ItemGroup>
+</Project>

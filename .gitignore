@@ -6,6 +6,7 @@ obj/
 .idea/
 *.binlog
 TestResults/
+artifacts/
 .claude/
 cscargs.json
 

@@ -8,6 +8,8 @@
         <TrimMode Condition="'$(Configuration)' == 'Release'">full</TrimMode>
 
         <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
+
+		<SkeleKitPackageVersion Condition="'$(SkeleKitPackageVersion)' == ''">0.1.0</SkeleKitPackageVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -21,9 +23,13 @@
         <DeviceSpecificBuild>true</DeviceSpecificBuild>
     </PropertyGroup>
 
-    <Import Project="..\..\SkeleKit.iOS\build\SkeleKit.iOS.targets" />
-    <ItemGroup>
+    <Import Project="..\..\SkeleKit.iOS\build\SkeleKit.iOS.targets" Condition="'$(SkeleKitUseProjectReferences)' == 'true'" />
+    <ItemGroup Condition="'$(SkeleKitUseProjectReferences)' == 'true'">
         <ProjectReference Include="..\..\SkeleKit.Generators\SkeleKit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\..\SkeleKit.iOS\SkeleKit.iOS.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(SkeleKitUseProjectReferences)' != 'true'">
+        <PackageReference Include="SkeleKit.iOS" Version="$(SkeleKitPackageVersion)" />
     </ItemGroup>
 </Project>

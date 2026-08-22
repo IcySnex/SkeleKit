@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  validate:
+    name: Build, test, and pack
+    runs-on: macos-26
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Install iOS workload
+        run: dotnet workload install ios
+
+      - name: Read and validate package version
+        id: version
+        shell: bash
+        run: |
+          package_version="$(dotnet msbuild SkeleKit.iOS/SkeleKit.iOS.csproj -getProperty:PackageVersion -p:TargetFramework=net10.0-ios | jq -r '.Properties.PackageVersion')"
+          template_version="$(sed -nE 's/.*<SkeleKitPackageVersion Condition=.*>([^<]+)<.*/\1/p' Samples/SkeleKit.Template/SkeleKit.Template.csproj)"
+
+          if [[ -z "$package_version" || "$package_version" == "null" ]]; then
+            echo "Could not determine the package version."
+            exit 1
+          fi
+
+          if [[ "$template_version" != "$package_version" ]]; then
+            echo "Template package reference $template_version does not match package version $package_version."
+            exit 1
+          fi
+
+          if [[ "${GITHUB_REF_TYPE}" == "tag" && "${GITHUB_REF_NAME}" != "v${package_version}" ]]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package version ${package_version}."
+            exit 1
+          fi
+
+          echo "package_version=$package_version" >> "$GITHUB_OUTPUT"
+
+      - name: Restore
+        run: dotnet restore SkeleKit.slnx
+
+      - name: Run unit tests
+        run: dotnet test SkeleKit.Tests/SkeleKit.Tests.csproj --configuration Release --no-restore
+
+      - name: Build gallery for the simulator
+        run: dotnet build Samples/SkeleKit.Gallery/SkeleKit.Gallery.csproj --configuration Debug --runtime iossimulator-arm64
+
+      - name: Build template sample for the simulator
+        run: dotnet build Samples/SkeleKit.Template/SkeleKit.Template.csproj --configuration Debug --runtime iossimulator-arm64
+
+      - name: Pack NuGet packages
+        run: |
+          dotnet pack SkeleKit.iOS/SkeleKit.iOS.csproj --configuration Release --no-restore --output artifacts/packages
+          dotnet pack Templates/SkeleKit.Templates.csproj --configuration Release --no-restore --output artifacts/packages
+
+      - name: Install and instantiate packaged template
+        run: |
+          dotnet new install "artifacts/packages/SkeleKit.Templates.${{ steps.version.outputs.package_version }}.nupkg"
+          dotnet new skelekit-ios --name SkeleKit.CiApp --output "${RUNNER_TEMP}/SkeleKit.CiApp" --skipRestore true
+
+      - name: Build generated app against packed NuGet
+        run: |
+          dotnet restore "${RUNNER_TEMP}/SkeleKit.CiApp/SkeleKit.CiApp.csproj" --runtime iossimulator-arm64 --source "${GITHUB_WORKSPACE}/artifacts/packages" --source https://api.nuget.org/v3/index.json
+          dotnet build "${RUNNER_TEMP}/SkeleKit.CiApp/SkeleKit.CiApp.csproj" --configuration Debug --runtime iossimulator-arm64 --no-restore
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: nuget-packages
+          path: artifacts/packages/*.*nupkg
+          if-no-files-found: error
+
+  publish:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Download validated packages
+        uses: actions/download-artifact@v8
+        with:
+          name: nuget-packages
+          path: artifacts/packages
+
+      - name: Log in to NuGet.org with trusted publishing
+        id: nuget
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Publish to NuGet.org
+        shell: bash
+        run: |
+          for package in artifacts/packages/*.nupkg; do
+            dotnet nuget push "$package" --api-key "${{ steps.nuget.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" artifacts/packages/* --verify-tag --generate-notes --title "SkeleKit ${GITHUB_REF_NAME#v}"
