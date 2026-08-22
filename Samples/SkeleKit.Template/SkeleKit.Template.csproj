@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net10.0-ios</TargetFramework>
-        <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
         <OutputType>Exe</OutputType>
-        <ApplicationId>com.skelekit.template</ApplicationId>
-
         <Nullable>enable</Nullable>
         <ImplicitUsings>true</ImplicitUsings>
+
+        <TrimMode Condition="'$(Configuration)' == 'Release'">full</TrimMode>
+
+        <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -22,7 +23,7 @@
 
     <Import Project="..\..\SkeleKit.iOS\build\SkeleKit.iOS.targets" />
     <ItemGroup>
-      <ProjectReference Include="..\..\SkeleKit.Generators\SkeleKit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-      <ProjectReference Include="..\..\SkeleKit.iOS\SkeleKit.iOS.csproj" />
+        <ProjectReference Include="..\..\SkeleKit.Generators\SkeleKit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\..\SkeleKit.iOS\SkeleKit.iOS.csproj" />
     </ItemGroup>
 </Project>

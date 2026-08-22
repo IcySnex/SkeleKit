@@ -3,47 +3,34 @@ namespace SkeleKit.Template;
 [Page]
 public class MainView : ContentView
 {
-	int count = 1;
+	int count;
+
 
 	public MainView()
 	{
 		Label counterLabel;
 
-		Content = new Grid()
+
+		Content = new StackPanel()
 		{
 			VerticalAlignment = VerticalAlignment.Center,
-
-			Rows =
-			{
-				GridLength.Auto,
-				GridLength.Auto
-			},
-			RowSpacing = 4,
+			Spacing = 4,
 
 			Children =
 			{
 				(counterLabel = new Label
 				{
 					HorizontalAlignment = HorizontalAlignment.Center,
-
-					Text = "Count: 0",
-
-					Shadow = new(1, 4, 2)
-					{
-						Color = Colors.Blue
-					}
-				}).Row(0),
+					Text = "Count: 0"
+				}),
 
 				new Button
 				{
 					HorizontalAlignment = HorizontalAlignment.Center,
-					Padding = new Thickness(24, 8),
-
 					Text = "Click me",
-					Kind = ButtonStyle.ProminentGlass,
 
-					Command = Command.From(() => counterLabel.Text = $"Count: {count++}")
-				}.Row(1)
+					Command = Command.From(() => counterLabel.Text = $"Count: {++count}")
+				}
 			}
 		};
 	}
