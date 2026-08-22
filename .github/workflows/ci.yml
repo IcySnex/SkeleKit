@@ -39,7 +39,7 @@ jobs:
         id: version
         shell: bash
         run: |
-          package_version="$(dotnet msbuild Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj -getProperty:PackageVersion -p:TargetFramework=net10.0-ios | jq -r '.Properties.PackageVersion')"
+          package_version="$(dotnet msbuild Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj -getProperty:PackageVersion -p:TargetFramework=net10.0-ios -nologo -verbosity:quiet)"
           template_version="$(sed -nE 's/.*<SkeleKitPackageVersion Condition=.*>([^<]+)<.*/\1/p' Source/Samples/SkeleKit.Template/SkeleKit.Template.csproj)"
 
           if [[ -z "$package_version" || "$package_version" == "null" ]]; then
