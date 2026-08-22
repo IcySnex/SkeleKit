@@ -175,9 +175,9 @@ Replace the event-swallowing in the ported `Read`/`IsEncEvent` with a symbol-ser
 - **Ported:** the prototype's bridge, debugger connection, Roslyn differ, baseline, project, and
   compiler-invocation logic → `Tools/SkeleKit.Rider/src/dotnet/SkeleKit.Rider.Backend/HotReload/`.
   The originals were deleted after the port was verified.
-- **Retained:** the minimal app-side reload signal (`SkeleKit.iOS/App/HotReload.cs`,
+- **Retained:** the minimal app-side reload signal (`Source/Framework/SkeleKit.iOS/App/HotReload.cs`,
   `PageHost.ReloadLive`) and the `EnableHotReload` MSBuild gates, now in
-  `SkeleKit.iOS/build/SkeleKit.iOS.targets`.
+  `Source/Framework/SkeleKit.iOS/build/SkeleKit.iOS.targets`.
 
 ## Verification
 

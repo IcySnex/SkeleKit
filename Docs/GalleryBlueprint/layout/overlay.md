@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 A z-stack: children are drawn atop one another, each given full bounds and placed by its own alignment.
 
-- Source: `SkeleKit.iOS/Layout/Overlay.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Layout/Overlay.cs`
 - Inheritance/shape: `class Overlay : Panel`
 - Inherited API: [`View`](../shared/view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer

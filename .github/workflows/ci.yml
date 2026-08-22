@@ -39,8 +39,8 @@ jobs:
         id: version
         shell: bash
         run: |
-          package_version="$(dotnet msbuild SkeleKit.iOS/SkeleKit.iOS.csproj -getProperty:PackageVersion -p:TargetFramework=net10.0-ios | jq -r '.Properties.PackageVersion')"
-          template_version="$(sed -nE 's/.*<SkeleKitPackageVersion Condition=.*>([^<]+)<.*/\1/p' Samples/SkeleKit.Template/SkeleKit.Template.csproj)"
+          package_version="$(dotnet msbuild Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj -getProperty:PackageVersion -p:TargetFramework=net10.0-ios | jq -r '.Properties.PackageVersion')"
+          template_version="$(sed -nE 's/.*<SkeleKitPackageVersion Condition=.*>([^<]+)<.*/\1/p' Source/Samples/SkeleKit.Template/SkeleKit.Template.csproj)"
 
           if [[ -z "$package_version" || "$package_version" == "null" ]]; then
             echo "Could not determine the package version."
@@ -60,21 +60,21 @@ jobs:
           echo "package_version=$package_version" >> "$GITHUB_OUTPUT"
 
       - name: Restore
-        run: dotnet restore SkeleKit.slnx
+        run: dotnet restore Source/SkeleKit.slnx
 
       - name: Run unit tests
-        run: dotnet test SkeleKit.Tests/SkeleKit.Tests.csproj --configuration Release --no-restore
+        run: dotnet test Source/Tests/SkeleKit.Tests/SkeleKit.Tests.csproj --configuration Release --no-restore
 
       - name: Build gallery for the simulator
-        run: dotnet build Samples/SkeleKit.Gallery/SkeleKit.Gallery.csproj --configuration Debug --runtime iossimulator-arm64
+        run: dotnet build Source/Samples/SkeleKit.Gallery/SkeleKit.Gallery.csproj --configuration Debug --runtime iossimulator-arm64
 
       - name: Build template sample for the simulator
-        run: dotnet build Samples/SkeleKit.Template/SkeleKit.Template.csproj --configuration Debug --runtime iossimulator-arm64
+        run: dotnet build Source/Samples/SkeleKit.Template/SkeleKit.Template.csproj --configuration Debug --runtime iossimulator-arm64
 
       - name: Pack NuGet packages
         run: |
-          dotnet pack SkeleKit.iOS/SkeleKit.iOS.csproj --configuration Release --no-restore --output artifacts/packages
-          dotnet pack Templates/SkeleKit.Templates.csproj --configuration Release --no-restore --output artifacts/packages
+          dotnet pack Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj --configuration Release --no-restore --output artifacts/packages
+          dotnet pack Source/Packaging/SkeleKit.Templates.csproj --configuration Release --no-restore --output artifacts/packages
 
       - name: Install and instantiate packaged template
         run: |

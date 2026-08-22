@@ -15,7 +15,7 @@ The Native View page owns the native-access subset: realization through `View.Na
 
 Base of every SkeleKit element: owns one lazily-created native view and takes part in the measure/arrange engine.
 
-- Source: `SkeleKit.iOS/Elements/View.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Elements/View.cs`
 - Inheritance/shape: `class View`
 - Native counterpart: `UIView` (lazy native peer)
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.

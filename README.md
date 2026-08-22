@@ -184,12 +184,16 @@ Precedence (each source beats the previous): control defaults → theme (base ty
 
 | Path | What |
 |---|---|
-| `SkeleKit.iOS/` | The library (multi-targets a `net10.0` shim so the layout engine unit-tests without a simulator) |
-| `SkeleKit.Tests/` | xunit tests for the layout + binding engines |
-| `Samples/SkeleKit.Gallery/` | Gallery app: every control and layout, MVVM end to end |
-| `Samples/SkeleKit.Template/` | Minimal app that is also the source for `dotnet new skelekit-ios` |
-| `Templates/` | NuGet template-pack project |
+| `Source/SkeleKit.slnx` | Main .NET solution |
+| `Source/Framework/SkeleKit.iOS/` | The library (multi-targets a `net10.0` shim so the layout engine unit-tests without a simulator) |
+| `Source/Framework/SkeleKit.Generators/` | Source generators embedded in the `SkeleKit.iOS` package |
+| `Source/Tests/SkeleKit.Tests/` | xunit tests for the layout + binding engines |
+| `Source/Samples/SkeleKit.Gallery/` | Gallery app: every control and layout, MVVM end to end |
+| `Source/Samples/SkeleKit.Template/` | Minimal app that is also the source for `dotnet new skelekit-ios` |
+| `Source/Packaging/` | NuGet template-pack project |
+| `Tools/` | Developer tooling, including the Rider plugin |
 | `Docs/` | Architecture, API sketch, ADRs |
+| `Assets/` | Brand and design source assets |
 
 ## Escape hatches
 

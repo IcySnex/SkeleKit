@@ -11,7 +11,7 @@ Use a local ViewModel implementing `INotifyPropertyChanged`. Demonstrate one-way
 
 A control property that takes either a literal or a `Bind(...)` expression.
 
-- Source: `SkeleKit.iOS/Binding/Bindable.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Binding/Bindable.cs`
 - Inheritance/shape: `struct Bindable<T>`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -33,7 +33,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Creates `Bindable`1` values from literals.
 
-- Source: `SkeleKit.iOS/Binding/Bindable.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Binding/Bindable.cs`
 - Inheritance/shape: `class Bindable`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -50,7 +50,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A list source: any list literal, or a `Bind(...)` expression.
 
-- Source: `SkeleKit.iOS/Binding/BindableList.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Binding/BindableList.cs`
 - Inheritance/shape: `struct BindableList<T>`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -80,7 +80,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Builds `BindableList`1` values from collection expressions (`[a, b, c]`).
 
-- Source: `SkeleKit.iOS/Binding/BindableList.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Binding/BindableList.cs`
 - Inheritance/shape: `class BindableList`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -97,7 +97,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A binding described by `Bind(...)`, not yet attached to a source.
 
-- Source: `SkeleKit.iOS/Binding/BindingExpression.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Binding/BindingExpression.cs`
 - Inheritance/shape: `class BindingExpression<T>`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -115,7 +115,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Builds `BindingExpression`1` values.
 
-- Source: `SkeleKit.iOS/Binding/BindingExpression.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Binding/BindingExpression.cs`
 - Inheritance/shape: `class BindingFactory`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -140,7 +140,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Which way values flow between the binding source and the control.
 
-- Source: `SkeleKit.iOS/Binding/BindingMode.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Binding/BindingMode.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -161,7 +161,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 When a two-way binding pushes the control's value back to the source.
 
-- Source: `SkeleKit.iOS/Binding/UpdateTrigger.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Binding/UpdateTrigger.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference

@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 Stacks its children in a single line, vertically (default) or horizontally, with optional spacing.
 
-- Source: `SkeleKit.iOS/Layout/StackPanel.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Layout/StackPanel.cs`
 - Inheritance/shape: `class StackPanel : Panel`
 - Inherited API: [`View`](../shared/view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer

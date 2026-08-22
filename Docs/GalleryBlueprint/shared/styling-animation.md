@@ -11,7 +11,7 @@ Show theme, `Style<T>`, `BasedOn`, local override ordering, light/dark factories
 
 How to animate a change: a duration with an easing curve, or a spring.
 
-- Source: `SkeleKit.iOS/Animation/Animation.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Animation/Animation.cs`
 - Inheritance/shape: `record Animation`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -43,7 +43,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A running animation that can be paused, scrubbed by a gesture, reversed, or interrupted mid-flight.
 
-- Source: `SkeleKit.iOS/Animation/Animator.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Animation/Animator.cs`
 - Inheritance/shape: `class Animator : IDisposable`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -71,7 +71,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 How an animation's speed is distributed over its duration.
 
-- Source: `SkeleKit.iOS/Animation/Easing.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Animation/Easing.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -92,7 +92,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A reusable block of property setters for one view type.
 
-- Source: `SkeleKit.iOS/Styling/IStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Styling/IStyle.cs`
 - Inheritance/shape: `interface IStyle`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -110,7 +110,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A named, reusable set of property setters for views of type `T`.
 
-- Source: `SkeleKit.iOS/Styling/Style.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Styling/Style.cs`
 - Inheritance/shape: `class Style<T> : IStyle`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -130,7 +130,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 The app's implicit styles.
 
-- Source: `SkeleKit.iOS/Styling/Theme.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Styling/Theme.cs`
 - Inheritance/shape: `class Theme`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference

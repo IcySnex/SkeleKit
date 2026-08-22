@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 A single-line text input.
 
-- Source: `SkeleKit.iOS/Controls/TextField.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/TextField.cs`
 - Inheritance/shape: `class TextField : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UITextField`

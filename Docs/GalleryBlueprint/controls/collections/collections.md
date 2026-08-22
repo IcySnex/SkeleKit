@@ -13,7 +13,7 @@ Each callback must write its last payload into an on-screen event log. Expected 
 
 A data-driven list, grid, or carousel.
 
-- Source: `SkeleKit.iOS/Controls/CollectionView.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/CollectionView.cs`
 - Inheritance/shape: `class CollectionView<T> : CollectionView<TItem, ISection<TItem>>`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UICollectionView` with diffable data source
@@ -41,7 +41,7 @@ static void Showcase(CollectionView<string> specimen)
 
 A data-driven list, grid, or carousel whose groups carry their own section model.
 
-- Source: `SkeleKit.iOS/Controls/CollectionView.iOS.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/CollectionView.iOS.cs`
 - Inheritance/shape: `class CollectionView<TItem, TSection>`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UICollectionView` with diffable data source

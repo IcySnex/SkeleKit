@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 Wraps a single child with padding and an optional stroke; also the generic padding container.
 
-- Source: `SkeleKit.iOS/Layout/Border.iOS.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Layout/Border.iOS.cs`
 - Inheritance/shape: `class Border`
 - Inherited API: [`View`](../shared/view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer

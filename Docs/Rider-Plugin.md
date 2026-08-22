@@ -93,12 +93,12 @@ built-in event processor consumes the already-staged delta, applies its PDB to t
 reader, updates line mappings for unchanged methods, and rebinds the module's breakpoints.
 
 After a successful apply, the bridge sends a one-byte signal on port 9988.
-`SkeleKit.iOS/App/HotReload.cs` then rebuilds the live page tree while retaining its view models. The
+`Source/Framework/SkeleKit.iOS/App/HotReload.cs` then rebuilds the live page tree while retaining its view models. The
 app-side component does not compile or apply deltas; it is only the UI refresh hook.
 
 ## Simulator build requirements
 
-`SkeleKit.iOS/build/SkeleKit.iOS.targets` enables the runtime prerequisites only for a Debug
+`Source/Framework/SkeleKit.iOS/build/SkeleKit.iOS.targets` enables the runtime prerequisites only for a Debug
 simulator build with `EnableHotReload=true`:
 
 - `UseInterpreter=true`;
@@ -144,7 +144,7 @@ Launch the sandbox Rider:
 ```sh
 cd Tools/SkeleKit.Rider
 JAVA_HOME="$(/usr/libexec/java_home -v 21)" ./gradlew runIde \
-  --args="/Users/kevin/Repos/SkeleKit/SkeleKit.slnx"
+  --args="/Users/kevin/Repos/SkeleKit/Source/SkeleKit.slnx"
 ```
 
 For an end-to-end check:

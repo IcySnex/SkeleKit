@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 How a view is placed within the horizontal space its parent gives it.
 
-- Source: `SkeleKit.iOS/Primitives/Alignment.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Alignment.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -39,7 +39,7 @@ static void Showcase(HorizontalAlignment specimen)
 
 How a view is placed within the vertical space its parent gives it.
 
-- Source: `SkeleKit.iOS/Primitives/Alignment.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Alignment.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -70,7 +70,7 @@ static void Showcase(VerticalAlignment specimen)
 
 How a `GridLength` is interpreted by the grid layout.
 
-- Source: `SkeleKit.iOS/Primitives/GridLength.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/GridLength.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -100,7 +100,7 @@ static void Showcase(GridUnitType specimen)
 
 The size of a grid row or column: absolute (points), auto-sized, or a weighted star share.
 
-- Source: `SkeleKit.iOS/Primitives/GridLength.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/GridLength.cs`
 - Inheritance/shape: `record GridLength`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -143,7 +143,7 @@ static void Showcase(GridLength specimen)
 
 An observable list of `GridLength` values used by a `Grid`. Mutations automatically invalidate the owning grid's cached measurement.
 
-- Source: `SkeleKit.iOS/Primitives/GridLengthCollection.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/GridLengthCollection.cs`
 - Inheritance/shape: `class GridLengthCollection : Collection<GridLength>`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -173,7 +173,7 @@ static void Showcase(GridLengthCollection specimen)
 
 The stacking axis of a `StackPanel`.
 
-- Source: `SkeleKit.iOS/Primitives/Orientation.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Orientation.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -202,7 +202,7 @@ static void Showcase(Orientation specimen)
 
 A point in the layout coordinate space (origin top-left, y grows downward).
 
-- Source: `SkeleKit.iOS/Primitives/Point.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Point.cs`
 - Inheritance/shape: `record Point`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -239,7 +239,7 @@ static void Showcase(Point specimen)
 
 An axis-aligned rectangle of a location and a size, produced by the arrangement pass.
 
-- Source: `SkeleKit.iOS/Primitives/Rect.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Rect.cs`
 - Inheritance/shape: `record Rect`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -286,7 +286,7 @@ static void Showcase(Rect specimen)
 
 The edges of a view that should be inset by the safe area during arrange.
 
-- Source: `SkeleKit.iOS/Primitives/SafeAreaEdges.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/SafeAreaEdges.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -319,7 +319,7 @@ static void Showcase(SafeAreaEdges specimen)
 
 A width and height pair used by the measure/arrange layout.
 
-- Source: `SkeleKit.iOS/Primitives/Size.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Size.cs`
 - Inheritance/shape: `record Size`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -360,7 +360,7 @@ static void Showcase(Size specimen)
 
 How content is scaled to fill the space available to it.
 
-- Source: `SkeleKit.iOS/Primitives/Stretch.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Stretch.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -391,7 +391,7 @@ static void Showcase(Stretch specimen)
 
 The thickness of a frame around a rectangle, as used for margins and padding.
 
-- Source: `SkeleKit.iOS/Primitives/Thickness.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Thickness.cs`
 - Inheritance/shape: `record Thickness`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.

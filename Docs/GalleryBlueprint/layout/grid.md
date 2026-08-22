@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 A grid placing children into cells of `Grid.Rows` and `Grid.Columns` (absolute, auto, or star).
 
-- Source: `SkeleKit.iOS/Layout/Grid.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Layout/Grid.cs`
 - Inheritance/shape: `class Grid : Panel`
 - Inherited API: [`View`](../shared/view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
@@ -42,7 +42,7 @@ static void Showcase(Grid specimen)
 
 Fluent attached-property setters for placing a view inside a `Grid`.
 
-- Source: `SkeleKit.iOS/Layout/GridExtensions.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Layout/GridExtensions.cs`
 - Inheritance/shape: `class GridExtensions`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.

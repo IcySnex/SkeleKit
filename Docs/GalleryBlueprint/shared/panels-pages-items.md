@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 Base for native control wrappers: measurement delegates to the control's own SizeThatFits.
 
-- Source: `SkeleKit.iOS/Controls/Control.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/Control.cs`
 - Inheritance/shape: `class Control : View`
 - Inherited API: [`View`](view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
@@ -37,7 +37,7 @@ static void Showcase(Control specimen)
 
 A full screen: compose its tree into `ContentView.Content` in the constructor.
 
-- Source: `SkeleKit.iOS/Elements/ContentView.iOS.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Elements/ContentView.iOS.cs`
 - Inheritance/shape: `class ContentView`
 - Inherited API: [`View`](view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
@@ -109,7 +109,7 @@ static void Showcase(ContentView specimen)
 
 A page bound to a typed ViewModel: bind with `Bind(...)`.
 
-- Source: `SkeleKit.iOS/Elements/ContentView.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Elements/ContentView.cs`
 - Inheritance/shape: `class ContentView<T> : ContentView`
 - Inherited API: [`View`](view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
@@ -144,7 +144,7 @@ static void Showcase(ContentView<object> specimen)
 
 The element tree for one item in a `CollectionView`.
 
-- Source: `SkeleKit.iOS/Elements/ItemView.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Elements/ItemView.cs`
 - Inheritance/shape: `class ItemView<T> : Panel`
 - Inherited API: [`View`](view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
@@ -178,7 +178,7 @@ static void Showcase(ItemView<object> specimen)
 
 A `View` that lays out one or more children, hosted by a native LayoutHost.
 
-- Source: `SkeleKit.iOS/Elements/Panel.iOS.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Elements/Panel.iOS.cs`
 - Inheritance/shape: `class Panel`
 - Inherited API: [`View`](view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
@@ -208,7 +208,7 @@ static void Showcase(Panel specimen)
 
 The children of a `Panel`, raising a change callback so the panel can relayout.
 
-- Source: `SkeleKit.iOS/Elements/ViewCollection.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Elements/ViewCollection.cs`
 - Inheritance/shape: `class ViewCollection : IEnumerable<View>`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.

@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 Creates commands from plain delegates, for handlers that live in the view rather than a ViewModel.
 
-- Source: `SkeleKit.iOS/Primitives/Command.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Command.cs`
 - Inheritance/shape: `class Command`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -26,7 +26,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Where a continuous gesture is in its lifetime.
 
-- Source: `SkeleKit.iOS/Primitives/Gesture.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Gesture.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -47,7 +47,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 One update of a drag: how far it has moved from where it started, and how fast it is going.
 
-- Source: `SkeleKit.iOS/Primitives/Gesture.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Gesture.cs`
 - Inheritance/shape: `record PanGesture`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -74,7 +74,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 One update of a pinch: the factor the touched distance has scaled by since the gesture began.
 
-- Source: `SkeleKit.iOS/Primitives/Gesture.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Gesture.cs`
 - Inheritance/shape: `record PinchGesture`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -101,7 +101,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 One update of a two-finger rotation, in degrees since the gesture began.
 
-- Source: `SkeleKit.iOS/Primitives/Gesture.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Gesture.cs`
 - Inheritance/shape: `record RotateGesture`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -128,7 +128,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 An action shown in a button, toolbar or context menu.
 
-- Source: `SkeleKit.iOS/Primitives/MenuAction.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/MenuAction.cs`
 - Inheritance/shape: `class MenuAction`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase through button and context-menu scenarios
@@ -150,7 +150,7 @@ The Button showcase compares action and selection menus. Each action uses a shar
 
 How a view reacts to a hovering trackpad or mouse pointer on iPad.
 
-- Source: `SkeleKit.iOS/Primitives/PointerEffect.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/PointerEffect.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -170,7 +170,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 The shape of a row lifted as its own context-menu platter.
 
-- Source: `SkeleKit.iOS/Primitives/PreviewShape.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/PreviewShape.cs`
 - Inheritance/shape: `record PreviewShape`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -198,7 +198,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Which edge of a row a swipe action lives on.
 
-- Source: `SkeleKit.iOS/Primitives/SwipeAction.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/SwipeAction.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -217,7 +217,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 An action revealed by swiping a row.
 
-- Source: `SkeleKit.iOS/Primitives/SwipeAction.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/SwipeAction.cs`
 - Inheritance/shape: `class SwipeAction`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference

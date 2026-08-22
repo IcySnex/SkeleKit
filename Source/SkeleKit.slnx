@@ -8,10 +8,14 @@
     <Project Path="Samples/SkeleKit.Gallery/SkeleKit.Gallery.csproj" />
     <Project Path="Samples/SkeleKit.Template/SkeleKit.Template.csproj" />
   </Folder>
-  <Folder Name="/Packaging/">
-    <Project Path="Templates/SkeleKit.Templates.csproj" />
+  <Folder Name="/Framework/">
+    <Project Path="Framework/SkeleKit.Generators/SkeleKit.Generators.csproj" />
+    <Project Path="Framework/SkeleKit.iOS/SkeleKit.iOS.csproj" />
   </Folder>
-  <Project Path="SkeleKit.Generators/SkeleKit.Generators.csproj" />
-  <Project Path="SkeleKit.iOS/SkeleKit.iOS.csproj" />
-  <Project Path="SkeleKit.Tests/SkeleKit.Tests.csproj" />
+  <Folder Name="/Packaging/">
+    <Project Path="Packaging/SkeleKit.Templates.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/SkeleKit.Tests/SkeleKit.Tests.csproj" />
+  </Folder>
 </Solution>

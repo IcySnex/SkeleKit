@@ -34,7 +34,7 @@
                  Exclude="../Samples/SkeleKit.Template/bin/**/*;../Samples/SkeleKit.Template/obj/**/*"
                  Pack="true"
                  PackagePath="content/SkeleKit.iOS/" />
-        <None Include="../README.md" Pack="true" PackagePath="/" Link="README.md" />
+        <None Include="../../README.md" Pack="true" PackagePath="/" Link="README.md" />
         <None Include="../Samples/SkeleKit.Gallery/Assets.xcassets/AppIcon.appiconset/Icon120.png" Pack="true" PackagePath="package-icon.png" />
     </ItemGroup>
 </Project>

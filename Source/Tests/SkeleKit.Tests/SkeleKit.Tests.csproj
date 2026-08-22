@@ -11,6 +11,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\SkeleKit.iOS\SkeleKit.iOS.csproj" />
+        <ProjectReference Include="..\..\Framework\SkeleKit.iOS\SkeleKit.iOS.csproj" />
     </ItemGroup>
 </Project>

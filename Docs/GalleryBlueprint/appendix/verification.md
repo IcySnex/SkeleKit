@@ -2,11 +2,11 @@
 
 ## Reconciled inputs
 
-- `SkeleKit.iOS/**/*.cs`, excluding build output.
-- `SkeleKit.iOS/bin/Debug/net10.0-ios/SkeleKit.iOS.dll`.
-- `SkeleKit.iOS/bin/Debug/net10.0-ios/SkeleKit.iOS.xml`.
-- `SkeleKit.Generators/PageGenerator.cs` and diagnostics `SKEL001`–`SKEL003`.
-- `SkeleKit.iOS/build/SkeleKit.iOS.targets`.
+- `Source/Framework/SkeleKit.iOS/**/*.cs`, excluding build output.
+- `Source/Framework/SkeleKit.iOS/bin/Debug/net10.0-ios/SkeleKit.iOS.dll`.
+- `Source/Framework/SkeleKit.iOS/bin/Debug/net10.0-ios/SkeleKit.iOS.xml`.
+- `Source/Framework/SkeleKit.Generators/PageGenerator.cs` and diagnostics `SKEL001`–`SKEL003`.
+- `Source/Framework/SkeleKit.iOS/build/SkeleKit.iOS.targets`.
 - Rider `plugin.xml`, Gradle compatibility configuration, and user-facing `Docs/Rider-Plugin.md`.
 
 ## Counts
@@ -44,4 +44,4 @@ Metadata member counting includes visible fields, properties, events, constructo
 - Resolved every relative Markdown link in all **32** blueprint files: **0 broken links**.
 - Parsed `coverage.md`: **156 rows, 156 unique reconciled types**, each with one canonical path.
 - Counted canonical API rows: **1,202**, matching the reconciled XML/metadata union used by these pages.
-- Ran `dotnet test SkeleKit.Tests/SkeleKit.Tests.csproj -c Debug`: **188 passed**.
+- Ran `dotnet test Source/Tests/SkeleKit.Tests/SkeleKit.Tests.csproj -c Debug`: **191 passed**.

@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 How VoiceOver describes and treats a view.
 
-- Source: `SkeleKit.iOS/Primitives/AccessibilityTraits.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/AccessibilityTraits.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -38,7 +38,7 @@ Use the accessibility lab. Verify header, image, and selected traits with VoiceO
 
 The visual treatment of a `Button`.
 
-- Source: `SkeleKit.iOS/Primitives/ButtonStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ButtonStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -63,7 +63,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 The built-in size classes of a `Button`.
 
-- Source: `SkeleKit.iOS/Primitives/ButtonStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ButtonStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -84,7 +84,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Where a `Button`'s icon sits relative to its text.
 
-- Source: `SkeleKit.iOS/Primitives/ButtonStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ButtonStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -105,7 +105,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A geographic location in degrees.
 
-- Source: `SkeleKit.iOS/Primitives/Coordinate.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Coordinate.cs`
 - Inheritance/shape: `record Coordinate`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -131,7 +131,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 What a `DatePicker` lets the user pick.
 
-- Source: `SkeleKit.iOS/Primitives/DatePickerStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/DatePickerStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -151,7 +151,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 How a `DatePicker` presents itself.
 
-- Source: `SkeleKit.iOS/Primitives/DatePickerStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/DatePickerStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -171,7 +171,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 How the navigation bar shows the page's title.
 
-- Source: `SkeleKit.iOS/Primitives/PageStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/PageStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -190,7 +190,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 The page's background.
 
-- Source: `SkeleKit.iOS/Primitives/PageStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/PageStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -210,7 +210,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 How the next pushed page's back button represents this page.
 
-- Source: `SkeleKit.iOS/Primitives/PageStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/PageStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -230,7 +230,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 The status bar look a page asks for.
 
-- Source: `SkeleKit.iOS/Primitives/PageStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/PageStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -250,7 +250,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 The directions a popover's arrow may point.
 
-- Source: `SkeleKit.iOS/Primitives/PopoverArrow.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/PopoverArrow.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -272,7 +272,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A built-in animation an SF Symbol can perform.
 
-- Source: `SkeleKit.iOS/Primitives/Symbols.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Symbols.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -296,7 +296,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 The relative size an SF Symbol is drawn at within its font metrics.
 
-- Source: `SkeleKit.iOS/Primitives/Symbols.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Symbols.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -317,7 +317,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 When the tab bar minimizes as content scrolls.
 
-- Source: `SkeleKit.iOS/Primitives/TabBarMinimize.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/TabBarMinimize.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -337,7 +337,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 How a tab takes part in iPad user customization.
 
-- Source: `SkeleKit.iOS/Primitives/TabPlacement.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/TabPlacement.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -359,7 +359,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Which side of the navigation bar a toolbar item sits on.
 
-- Source: `SkeleKit.iOS/Primitives/ToolbarItem.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ToolbarItem.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -378,7 +378,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A button in the page's navigation bar.
 
-- Source: `SkeleKit.iOS/Primitives/ToolbarItem.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ToolbarItem.cs`
 - Inheritance/shape: `class ToolbarItem`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference

@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 How a `CollectionView` arranges its items.
 
-- Source: `SkeleKit.iOS/Primitives/CollectionLayout.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/CollectionLayout.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -38,7 +38,7 @@ static void Showcase(CollectionLayoutKind specimen)
 
 How a carousel settles when the drag ends.
 
-- Source: `SkeleKit.iOS/Primitives/CollectionLayout.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/CollectionLayout.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -73,7 +73,7 @@ static void Showcase(CarouselSnap specimen)
 
 The layout of a `CollectionView`: a list, a grid, or a carousel.
 
-- Source: `SkeleKit.iOS/Primitives/CollectionLayout.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/CollectionLayout.cs`
 - Inheritance/shape: `struct CollectionLayout`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -108,7 +108,7 @@ static void Showcase(CollectionLayout specimen)
 
 A `ISection`1` whose items collapse behind its header.
 
-- Source: `SkeleKit.iOS/Primitives/IExpandableSection.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/IExpandableSection.cs`
 - Inheritance/shape: `interface IExpandableSection<T> : ISection<TItem>`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -136,7 +136,7 @@ static void Showcase(IExpandableSection<object> specimen)
 
 Describes where an image comes from, without touching UIKit.
 
-- Source: `SkeleKit.iOS/Primitives/ImageSource.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ImageSource.cs`
 - Inheritance/shape: `struct ImageSource`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -170,7 +170,7 @@ static void Showcase(ImageSource specimen)
 
 Where an `Image` loads its content from.
 
-- Source: `SkeleKit.iOS/Primitives/ImageSource.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ImageSource.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -202,7 +202,7 @@ static void Showcase(ImageSourceKind specimen)
 
 The color of a scroll view's indicator bar.
 
-- Source: `SkeleKit.iOS/Primitives/IndicatorStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/IndicatorStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -232,7 +232,7 @@ static void Showcase(IndicatorStyle specimen)
 
 A group of items in a `CollectionView`.
 
-- Source: `SkeleKit.iOS/Primitives/ISection.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ISection.cs`
 - Inheritance/shape: `interface ISection<T>`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -260,7 +260,7 @@ static void Showcase(ISection<object> specimen)
 
 Describes a completed drag-to-reorder: which item moved and where it went.
 
-- Source: `SkeleKit.iOS/Primitives/ItemMove.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ItemMove.cs`
 - Inheritance/shape: `record ItemMove<T>`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -300,7 +300,7 @@ static void Showcase(ItemMove<object> specimen)
 
 The base imagery a map draws.
 
-- Source: `SkeleKit.iOS/Primitives/MapKind.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/MapKind.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -331,7 +331,7 @@ static void Showcase(MapKind specimen)
 
 A shape drawn onto a `MapView` beneath its pins.
 
-- Source: `SkeleKit.iOS/Primitives/MapOverlay.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/MapOverlay.cs`
 - Inheritance/shape: `class MapOverlay`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -361,7 +361,7 @@ static void Showcase(MapOverlay specimen)
 
 An open path connecting coordinates in order.
 
-- Source: `SkeleKit.iOS/Primitives/MapOverlay.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/MapOverlay.cs`
 - Inheritance/shape: `class MapPolyline : MapOverlay`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -389,7 +389,7 @@ static void Showcase(MapPolyline specimen)
 
 A closed area bounded by coordinates.
 
-- Source: `SkeleKit.iOS/Primitives/MapOverlay.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/MapOverlay.cs`
 - Inheritance/shape: `class MapPolygon : MapOverlay`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -417,7 +417,7 @@ static void Showcase(MapPolygon specimen)
 
 A circular area of a fixed radius around a center.
 
-- Source: `SkeleKit.iOS/Primitives/MapOverlay.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/MapOverlay.cs`
 - Inheritance/shape: `class MapCircle : MapOverlay`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -446,7 +446,7 @@ static void Showcase(MapCircle specimen)
 
 A marker placed on a `MapView` at a coordinate.
 
-- Source: `SkeleKit.iOS/Primitives/MapPin.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/MapPin.cs`
 - Inheritance/shape: `class MapPin`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -480,7 +480,7 @@ static void Showcase(MapPin specimen)
 
 A rectangular map extent, a center coordinate plus its span in degrees.
 
-- Source: `SkeleKit.iOS/Primitives/MapRegion.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/MapRegion.cs`
 - Inheritance/shape: `record MapRegion`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -518,7 +518,7 @@ static void Showcase(MapRegion specimen)
 
 Where a scrolled-to item lands in the viewport.
 
-- Source: `SkeleKit.iOS/Primitives/ScrollPosition.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ScrollPosition.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.

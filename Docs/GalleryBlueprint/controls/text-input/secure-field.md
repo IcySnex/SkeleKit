@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 Secure-entry preset of `TextField`, masking input as it's typed.
 
-- Source: `SkeleKit.iOS/Controls/SecureField.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/SecureField.cs`
 - Inheritance/shape: `class SecureField : TextField`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UITextField`

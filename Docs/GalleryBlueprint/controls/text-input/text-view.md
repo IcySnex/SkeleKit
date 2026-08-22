@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 Read-only rich text that can be selected, with tappable `Link` runs.
 
-- Source: `SkeleKit.iOS/Controls/TextView.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/TextView.cs`
 - Inheritance/shape: `class TextView : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UITextView`

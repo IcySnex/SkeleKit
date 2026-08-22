@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 A multi-line text input.
 
-- Source: `SkeleKit.iOS/Controls/TextEditor.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/TextEditor.cs`
 - Inheritance/shape: `class TextEditor : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UITextView`

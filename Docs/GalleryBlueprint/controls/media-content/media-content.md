@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 Displays an image from a symbol, bundle asset, or URL.
 
-- Source: `SkeleKit.iOS/Controls/Image.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/Image.cs`
 - Inheritance/shape: `class Image : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIImageView`
@@ -76,7 +76,7 @@ image.PlaySymbolEffect(SymbolEffect.Bounce);
 
 Embeds an interactive map in the tree, backed by a UIKit map view.
 
-- Source: `SkeleKit.iOS/Controls/MapView.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/MapView.cs`
 - Inheritance/shape: `class MapView : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `MKMapView`
@@ -160,7 +160,7 @@ MapView places = new()
 
 Escape hatch to embed any UIKit view in a SkeleKit tree.
 
-- Source: `SkeleKit.iOS/Controls/NativeView.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/NativeView.cs`
 - Inheritance/shape: `class NativeView : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: consumer-supplied `UIView`
@@ -197,7 +197,7 @@ canvas.Drawing = new PKDrawing();
 
 Embeds live web content in the tree, backed by a UIKit web view.
 
-- Source: `SkeleKit.iOS/Controls/WebView.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/WebView.cs`
 - Inheritance/shape: `class WebView : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `WKWebView`

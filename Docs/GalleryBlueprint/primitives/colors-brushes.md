@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 How a view's background is filled: a solid color, a gradient, or a blurred material.
 
-- Source: `SkeleKit.iOS/Primitives/Brush.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Brush.cs`
 - Inheritance/shape: `class Brush`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -36,7 +36,7 @@ static void Showcase(Brush specimen)
 
 A single flat color.
 
-- Source: `SkeleKit.iOS/Primitives/Brush.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Brush.cs`
 - Inheritance/shape: `class SolidBrush : Brush`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -64,7 +64,7 @@ static void Showcase(SolidBrush specimen)
 
 One color of a gradient, at a position along it.
 
-- Source: `SkeleKit.iOS/Primitives/Brush.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Brush.cs`
 - Inheritance/shape: `record GradientStop`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -100,7 +100,7 @@ static void Showcase(GradientStop specimen)
 
 A linear gradient between two points, given in unit space: (0,0) is the top-left corner, (1,1) the bottom-right.
 
-- Source: `SkeleKit.iOS/Primitives/Brush.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Brush.cs`
 - Inheritance/shape: `class LinearGradient : Brush`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -132,7 +132,7 @@ static void Showcase(LinearGradient specimen)
 
 The thickness of a `Material`, mapping to the system blur styles.
 
-- Source: `SkeleKit.iOS/Primitives/Brush.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Brush.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -165,7 +165,7 @@ static void Showcase(MaterialKind specimen)
 
 A blurred material, as used behind bars and sheets. Thinner materials let more of the content behind them through.
 
-- Source: `SkeleKit.iOS/Primitives/Brush.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Brush.cs`
 - Inheritance/shape: `class Material : Brush`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -193,7 +193,7 @@ static void Showcase(Material specimen)
 
 A straight (non-premultiplied) RGBA color with each channel in the range 0..1.
 
-- Source: `SkeleKit.iOS/Primitives/Color.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Color.cs`
 - Inheritance/shape: `record Color`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -237,7 +237,7 @@ static void Showcase(Color specimen)
 
 The standard colors, which also adapt to dark mode.
 
-- Source: `SkeleKit.iOS/Primitives/Colors.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Colors.cs`
 - Inheritance/shape: `class Colors`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -299,7 +299,7 @@ static void ShowcaseColors()
 
 A drop shadow behind a view.
 
-- Source: `SkeleKit.iOS/Primitives/Shadow.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Shadow.cs`
 - Inheritance/shape: `record Shadow`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.

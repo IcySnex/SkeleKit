@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 How scrolling dismisses the on-screen keyboard.
 
-- Source: `SkeleKit.iOS/Primitives/KeyboardDismiss.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/KeyboardDismiss.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: `UIScrollView.KeyboardDismissMode`
 - Gallery role: Interactive lab in the ScrollView showcase.
@@ -38,7 +38,7 @@ static void Showcase(KeyboardDismiss specimen)
 
 The color scheme of the keyboard raised by a text input.
 
-- Source: `SkeleKit.iOS/Primitives/KeyboardLook.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/KeyboardLook.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: `UIKeyboardAppearance`
 - Gallery role: Interactive lab in the TextField showcase.
@@ -67,7 +67,7 @@ new TextField
 
 The bar shown above the raised keyboard.
 
-- Source: `SkeleKit.iOS/Primitives/KeyboardToolbar.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/KeyboardToolbar.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: `UIToolbar` assigned as an input accessory
 - Gallery role: Interactive lab in the TextField showcase.
@@ -96,7 +96,7 @@ new TextField
 
 The on-screen keyboard shown while editing a text input.
 
-- Source: `SkeleKit.iOS/Primitives/KeyboardType.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/KeyboardType.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: `UIKeyboardType`
 - Gallery role: Interactive lab in the TextField showcase.
@@ -128,7 +128,7 @@ new TextField
 
 A tappable run of text inside a `TextView`'s `TextView.Spans`.
 
-- Source: `SkeleKit.iOS/Primitives/Link.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Link.cs`
 - Inheritance/shape: `class Link : Span`
 - Native counterpart: link attributes on a `UITextView` text item
 - Gallery role: Interactive lab in the TextView showcase.
@@ -175,7 +175,7 @@ new TextView
 
 The label shown on the keyboard's return key.
 
-- Source: `SkeleKit.iOS/Primitives/ReturnKeyType.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/ReturnKeyType.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: `UIReturnKeyType`
 - Gallery role: Interactive lab in the TextField showcase.
@@ -207,7 +207,7 @@ new TextField
 
 A styled run of text inside a `Label`'s `Label.Spans`.
 
-- Source: `SkeleKit.iOS/Primitives/Span.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Span.cs`
 - Inheritance/shape: `class Span`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -257,7 +257,7 @@ IReadOnlyList<Span> spans =
 
 Horizontal alignment of text within a control.
 
-- Source: `SkeleKit.iOS/Primitives/TextAlignment.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/TextAlignment.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -287,7 +287,7 @@ static void Showcase(TextAlignment specimen)
 
 What the field holds, so the system can offer autofill (passwords, one-time codes, contacts).
 
-- Source: `SkeleKit.iOS/Primitives/TextInput.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/TextInput.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: `UITextContentType`
 - Gallery role: Interactive lab in the TextField showcase.
@@ -323,7 +323,7 @@ new TextField
 
 When typing is automatically capitalized.
 
-- Source: `SkeleKit.iOS/Primitives/TextInput.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/TextInput.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: `UITextAutocapitalizationType`
 - Gallery role: Interactive lab in the TextField showcase.
@@ -353,7 +353,7 @@ new TextField
 
 When a text field shows its built-in clear button.
 
-- Source: `SkeleKit.iOS/Primitives/TextInput.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/TextInput.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: `UITextFieldViewMode`
 - Gallery role: Visual and interactive lab in the TextField showcase.
@@ -384,7 +384,7 @@ new TextField
 
 How text is shortened when it does not fit.
 
-- Source: `SkeleKit.iOS/Primitives/Truncation.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Truncation.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -415,7 +415,7 @@ static void Showcase(Truncation specimen)
 
 The weight of a font.
 
-- Source: `SkeleKit.iOS/Primitives/Typography.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Typography.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -451,7 +451,7 @@ static void Showcase(FontWeight specimen)
 
 The design of a font: the system face, a rounded one, a serif, or monospaced.
 
-- Source: `SkeleKit.iOS/Primitives/Typography.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Typography.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.
@@ -482,7 +482,7 @@ static void Showcase(FontDesign specimen)
 
 A step in the native type hierarchy. Each one carries its own Dynamic Type curve.
 
-- Source: `SkeleKit.iOS/Primitives/Typography.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Primitives/Typography.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Visual showcase; add an interactive lab when callbacks, focus, selection, scrolling, loading, or presentation are observable.

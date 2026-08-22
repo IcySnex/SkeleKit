@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 A text label.
 
-- Source: `SkeleKit.iOS/Controls/Label.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/Label.cs`
 - Inheritance/shape: `class Label : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UILabel`

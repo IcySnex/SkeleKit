@@ -23,7 +23,7 @@ Networking, Photos/files permissions, share extensions, haptics, URL opening, li
 
 The app's light or dark appearance.
 
-- Source: `SkeleKit.iOS/App/Appearance.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Appearance.cs`
 - Inheritance/shape: `enum`
 - Native counterpart: `UIUserInterfaceStyle`
 - Gallery role: Interactive lab
@@ -43,7 +43,7 @@ Use the app-appearance lab above. Switch the complete Gallery between system, li
 
 Declares the tabs inside a group.
 
-- Source: `SkeleKit.iOS/App/Builder/GroupBuilder.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Builder/GroupBuilder.cs`
 - Inheritance/shape: `class GroupBuilder`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -62,7 +62,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Everything iPad: the sidebar, placements and iPad-only destinations.
 
-- Source: `SkeleKit.iOS/App/Builder/PadTabsBuilder.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Builder/PadTabsBuilder.cs`
 - Inheritance/shape: `class PadTabsBuilder`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -84,7 +84,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Registers the pages available in the application.
 
-- Source: `SkeleKit.iOS/App/Builder/PagesBuilder.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Builder/PagesBuilder.cs`
 - Inheritance/shape: `class PagesBuilder`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -111,7 +111,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A builder used to configure and construct a `SkeleApplication`.
 
-- Source: `SkeleKit.iOS/App/Builder/SkeleApplicationBuilder.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Builder/SkeleApplicationBuilder.cs`
 - Inheritance/shape: `class SkeleApplicationBuilder`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -138,7 +138,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Declares the application's tabs.
 
-- Source: `SkeleKit.iOS/App/Builder/TabsBuilder.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Builder/TabsBuilder.cs`
 - Inheritance/shape: `class TabsBuilder`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -164,7 +164,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A single moment in a custom haptic pattern played through `Haptics.Play`.
 
-- Source: `SkeleKit.iOS/App/Haptics/HapticEvent.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Haptics/HapticEvent.cs`
 - Inheritance/shape: `struct HapticEvent`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -183,7 +183,7 @@ Use the haptics lab above. Combine timed taps and continuous events, adjust inte
 
 Provides access to native device haptic feedback.
 
-- Source: `SkeleKit.iOS/App/Haptics/Haptics.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Haptics/Haptics.cs`
 - Inheritance/shape: `class Haptics`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -203,7 +203,7 @@ Use the haptics lab above. Trigger impact, selection, notification, and custom f
 
 The type of notification event for haptic feedback.
 
-- Source: `SkeleKit.iOS/App/Haptics/HapticsNotification.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Haptics/HapticsNotification.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -223,7 +223,7 @@ Use the notification specimen in the haptics lab above. Compare the success, war
 
 The weight and sharpness of haptic feedback.
 
-- Source: `SkeleKit.iOS/App/Haptics/HapticStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Haptics/HapticStyle.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -245,7 +245,7 @@ Use the impact specimen in the haptics lab above. Compare light, medium, heavy, 
 
 Loads remote images for `Image`.
 
-- Source: `SkeleKit.iOS/App/Media/IImageLoader.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Media/IImageLoader.cs`
 - Inheritance/shape: `interface IImageLoader`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -262,7 +262,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 A selectable action shown in a dialog.
 
-- Source: `SkeleKit.iOS/App/Navigation/DialogOption.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Navigation/DialogOption.cs`
 - Inheritance/shape: `readonly record struct DialogOption`
 - Native counterpart: `UIAlertAction`
 - Gallery role: Interactive lab
@@ -288,7 +288,7 @@ Use the dialogs lab below. Present standard and destructive options together and
 
 A height where a modal sheet may rest.
 
-- Source: `SkeleKit.iOS/App/Navigation/Detent.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Navigation/Detent.cs`
 - Inheritance/shape: `readonly record struct Detent`
 - Native counterpart: `UISheetPresentationControllerDetent`
 - Gallery role: Interactive lab
@@ -315,7 +315,7 @@ Use the modal-presentation lab above. Show fixed and fractional sheets alone and
 
 Manages application navigation, modal presentations, and native dialogs from a view model.
 
-- Source: `SkeleKit.iOS/App/Navigation/INavigator.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Navigation/INavigator.cs`
 - Inheritance/shape: `interface INavigator`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -353,7 +353,7 @@ Use the dialogs lab above. Compare standard and destructive prompt acceptance, m
 
 How a modal page is structured and presented on screen.
 
-- Source: `SkeleKit.iOS/App/Navigation/ModalPresentation.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Navigation/ModalPresentation.cs`
 - Inheritance/shape: `enum, struct, delegate, or interface; see declaration`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -378,7 +378,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 The presentation style of a modal page.
 
-- Source: `SkeleKit.iOS/App/Navigation/ModalStyle.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Navigation/ModalStyle.cs`
 - Inheritance/shape: `struct ModalStyle`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -406,7 +406,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Marks a view for automatic page registration.
 
-- Source: `SkeleKit.iOS/App/Navigation/PageAttribute.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Navigation/PageAttribute.cs`
 - Inheritance/shape: `class PageAttribute : Attribute`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -424,7 +424,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 Presents the system photo and document pickers.
 
-- Source: `SkeleKit.iOS/App/Picking/ISystemPicker.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Picking/ISystemPicker.cs`
 - Inheritance/shape: `interface ISystemPicker`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -442,7 +442,7 @@ Use the system picking lab above. Exercise image limits and file-extension filte
 
 A file or an image chosen from the device.
 
-- Source: `SkeleKit.iOS/App/Picking/PickedAsset.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Picking/PickedAsset.cs`
 - Inheritance/shape: `class PickedAsset`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -460,7 +460,7 @@ Use the system picking lab above. Preview picked image data and show each select
 
 Presents the system share sheet.
 
-- Source: `SkeleKit.iOS/App/Sharing/ISharer.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Sharing/ISharer.cs`
 - Inheritance/shape: `interface ISharer`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -477,7 +477,7 @@ Use the sharing lab above. Present text, URL, image, and combined payloads and v
 
 What to hand the share sheet: an optional text, link and image.
 
-- Source: `SkeleKit.iOS/App/Sharing/ShareContent.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/Sharing/ShareContent.cs`
 - Inheritance/shape: `class ShareContent`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -503,7 +503,7 @@ Use the sharing lab above. Exercise each implicit conversion independently, then
 
 The core application instance that handles DI, navigation setup, and the app lifecycle.
 
-- Source: `SkeleKit.iOS/App/SkeleApplication.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/SkeleApplication.cs`
 - Inheritance/shape: `class SkeleApplication`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Interactive lab + code-only reference

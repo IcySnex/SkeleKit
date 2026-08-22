@@ -23,10 +23,10 @@
         <DeviceSpecificBuild>true</DeviceSpecificBuild>
     </PropertyGroup>
 
-    <Import Project="..\..\SkeleKit.iOS\build\SkeleKit.iOS.targets" Condition="'$(SkeleKitUseProjectReferences)' == 'true'" />
+    <Import Project="..\..\Framework\SkeleKit.iOS\build\SkeleKit.iOS.targets" Condition="'$(SkeleKitUseProjectReferences)' == 'true'" />
     <ItemGroup Condition="'$(SkeleKitUseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\..\SkeleKit.Generators\SkeleKit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-        <ProjectReference Include="..\..\SkeleKit.iOS\SkeleKit.iOS.csproj" />
+        <ProjectReference Include="..\..\Framework\SkeleKit.Generators\SkeleKit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\..\Framework\SkeleKit.iOS\SkeleKit.iOS.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(SkeleKitUseProjectReferences)' != 'true'">

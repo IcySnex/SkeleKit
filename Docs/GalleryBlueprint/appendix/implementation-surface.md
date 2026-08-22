@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 The UIKit application delegate SkeleKit registers for you.
 
-- Source: `SkeleKit.iOS/App/SkeleApplicationDelegate.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/SkeleApplicationDelegate.cs`
 - Inheritance/shape: `class SkeleApplicationDelegate : UIApplicationDelegate`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference
@@ -26,7 +26,7 @@ Non-gallery/reference entry. Exercise this API through the application, tooling,
 
 The UIKit scene delegate SkeleKit registers; it builds the app's window and shell.
 
-- Source: `SkeleKit.iOS/App/SkeleWindowSceneDelegate.cs`
+- Source: `Source/Framework/SkeleKit.iOS/App/SkeleWindowSceneDelegate.cs`
 - Inheritance/shape: `class SkeleWindowSceneDelegate : UIWindowSceneDelegate`
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
 - Gallery role: Code-only/non-gallery reference

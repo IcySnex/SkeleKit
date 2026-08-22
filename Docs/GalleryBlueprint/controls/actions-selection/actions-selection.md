@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 A tappable button.
 
-- Source: `SkeleKit.iOS/Controls/Button.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/Button.cs`
 - Inheritance/shape: `class Button : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIButton`
@@ -51,7 +51,7 @@ static void Showcase(Button specimen)
 
 A swatch that opens the system color picker.
 
-- Source: `SkeleKit.iOS/Controls/ColorWell.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/ColorWell.cs`
 - Inheritance/shape: `class ColorWell : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIColorWell`
@@ -87,7 +87,7 @@ new ColorWell
 
 A date and time picker.
 
-- Source: `SkeleKit.iOS/Controls/DatePicker.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/DatePicker.cs`
 - Inheritance/shape: `class DatePicker : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIDatePicker`
@@ -143,7 +143,7 @@ new DatePicker
 
 A menu-style selection button wrapping `UIButton` + `UIMenu`.
 
-- Source: `SkeleKit.iOS/Controls/Picker.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/Picker.cs`
 - Inheritance/shape: `class Picker<T> : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIButton` with `UIMenu`
@@ -190,7 +190,7 @@ destinations.Add(new("San Francisco", "United States", "SFO"));
 
 A segmented control choosing one of a few options.
 
-- Source: `SkeleKit.iOS/Controls/SegmentedControl.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/SegmentedControl.cs`
 - Inheritance/shape: `class SegmentedControl : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UISegmentedControl`

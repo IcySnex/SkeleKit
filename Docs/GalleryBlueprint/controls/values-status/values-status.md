@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 An activity indicator spinner.
 
-- Source: `SkeleKit.iOS/Controls/ActivityIndicator.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/ActivityIndicator.cs`
 - Inheritance/shape: `class ActivityIndicator : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIActivityIndicatorView`
@@ -40,7 +40,7 @@ new ActivityIndicator
 
 A hairline separator view.
 
-- Source: `SkeleKit.iOS/Controls/Divider.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/Divider.cs`
 - Inheritance/shape: `class Divider : View`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: value/configuration type or implementation-selected UIKit peer
@@ -70,7 +70,7 @@ new Divider
 
 A row of dots marking the current page of a paging scroll or a carousel.
 
-- Source: `SkeleKit.iOS/Controls/PageControl.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/PageControl.cs`
 - Inheritance/shape: `class PageControl : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIPageControl`
@@ -112,7 +112,7 @@ new PageControl
 
 A progress bar.
 
-- Source: `SkeleKit.iOS/Controls/ProgressBar.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/ProgressBar.cs`
 - Inheritance/shape: `class ProgressBar : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIProgressView`
@@ -145,7 +145,7 @@ new ProgressBar
 
 A continuous value picker.
 
-- Source: `SkeleKit.iOS/Controls/Slider.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/Slider.cs`
 - Inheritance/shape: `class Slider : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UISlider`
@@ -192,7 +192,7 @@ new Slider
 
 An increment/decrement control.
 
-- Source: `SkeleKit.iOS/Controls/Stepper.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/Stepper.cs`
 - Inheritance/shape: `class Stepper : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UIStepper`
@@ -230,7 +230,7 @@ new Stepper
 
 A binary on/off toggle.
 
-- Source: `SkeleKit.iOS/Controls/Switch.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Controls/Switch.cs`
 - Inheritance/shape: `class Switch : Control`
 - Inherited API: [`View`](../../shared/view.md)
 - Native counterpart: `UISwitch`

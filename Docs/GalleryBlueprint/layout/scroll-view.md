@@ -8,7 +8,7 @@ This is the canonical declaration inventory for the types below. Inherited `View
 
 A scrolling container for a single child.
 
-- Source: `SkeleKit.iOS/Layout/ScrollView.iOS.cs`
+- Source: `Source/Framework/SkeleKit.iOS/Layout/ScrollView.iOS.cs`
 - Inheritance/shape: `class ScrollView`
 - Inherited API: [`View`](../shared/view.md)
 - Native counterpart: `UIScrollView`
