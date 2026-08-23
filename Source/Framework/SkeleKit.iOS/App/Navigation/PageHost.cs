@@ -955,11 +955,10 @@ internal sealed class PageHost : UIViewController
 			? Thickness.Zero
 			: new(safe.Left, safe.Top, safe.Right, safe.Bottom);
 
-		// UIKit can only keep a root scroller's adjusted inset synchronized with navigation bars,
-		// tab bars and refresh controls when the scroller actually spans the controller.
-		CGRect frame = usesSystemScrollInsets
-			? View.Bounds
-			: Inset(View.Bounds, safe, Page.SafeAreaEdges);
+		SafeAreaEdges frameEdges = usesSystemScrollInsets
+			? Page.SafeAreaEdges & (SafeAreaEdges.Leading | SafeAreaEdges.Trailing)
+			: Page.SafeAreaEdges;
+		CGRect frame = Inset(View.Bounds, safe, frameEdges);
 		nfloat chrome = (nfloat)ChromeHeight(Page);
 
 		if (contentWidth != frame.Width || contentChrome != chrome)
@@ -980,8 +979,6 @@ internal sealed class PageHost : UIViewController
 		if (keyboardCover <= 0 || keyboardFocus is not UIView focused)
 			return;
 
-		// shrinking reflows a layout that can adapt; a top-anchored field just gets clipped, so
-		// slide the page up until the focused control clears the keyboard
 		Page.Native.LayoutIfNeeded();
 
 		CGRect target = focused.ConvertRectToView(focused.Bounds, View);
