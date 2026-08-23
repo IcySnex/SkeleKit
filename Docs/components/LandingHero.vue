@@ -3,34 +3,30 @@
     <div class="landing-grid" aria-hidden="true" />
 
     <div class="landing-content">
-      <NuxtLinkLocale
-        to="https://github.com/IcySnex/SkeleKit/releases/tag/v0.1.0"
-        target="_blank"
-        class="release-pill"
-      >
-        <SmartIcon name="lucide:sparkles" :size="14" />
-        SkeleKit 0.1.0 is available
-        <SmartIcon name="lucide:arrow-right" :size="14" />
-      </NuxtLinkLocale>
+      <div class="landing-copy">
+        <h1>Native iOS UI<br><span>in C#.</span></h1>
+        <p>
+          A C# UI framework for native iOS: real UIKit controls, no storyboards or constraints, zero boilerplate.
+        </p>
 
-      <h1>Native iOS UI.<br><span>Just C#.</span></h1>
-      <p>
-        A C# UI framework for native iOS: real UIKit controls, no storyboards or constraints, zero boilerplate.
-      </p>
+        <div class="landing-actions">
+          <NuxtLinkLocale to="/getting-started/introduction">
+            <UiButton>
+              Get started
+              <SmartIcon name="lucide:arrow-right" class="ml-1" :size="16" />
+            </UiButton>
+          </NuxtLinkLocale>
+          <NuxtLinkLocale to="https://github.com/IcySnex/SkeleKit" target="_blank">
+            <UiButton variant="outline">
+              <SmartIcon name="lucide:github" class="mr-1" :size="16" />
+              GitHub
+            </UiButton>
+          </NuxtLinkLocale>
+        </div>
+      </div>
 
-      <div class="landing-actions">
-        <NuxtLinkLocale to="/getting-started/introduction">
-          <UiButton>
-            Get started
-            <SmartIcon name="lucide:arrow-right" class="ml-1" :size="16" />
-          </UiButton>
-        </NuxtLinkLocale>
-        <NuxtLinkLocale to="https://github.com/IcySnex/SkeleKit" target="_blank">
-          <UiButton variant="outline">
-            <SmartIcon name="lucide:github" class="mr-1" :size="16" />
-            GitHub
-          </UiButton>
-        </NuxtLinkLocale>
+      <div class="landing-example">
+        <slot />
       </div>
     </div>
   </section>
@@ -44,7 +40,7 @@
   overflow: hidden;
   display: grid;
   place-items: center;
-  padding: 6rem 1.5rem 4rem;
+  padding: 6rem 1.5rem 4.5rem;
 }
 
 .landing-grid {
@@ -52,61 +48,37 @@
   z-index: -1;
   inset: 0 -10%;
   background-image:
-    linear-gradient(to right, hsl(var(--foreground) / 0.14) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--foreground) / 0.14) 1px, transparent 1px);
+    linear-gradient(to right, hsl(var(--foreground) / 0.13) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--foreground) / 0.13) 1px, transparent 1px);
   background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse 82% 70% at 50% 38%, black 12%, transparent 82%);
-  -webkit-mask-image: radial-gradient(ellipse 82% 70% at 50% 38%, black 12%, transparent 82%);
+  mask-image: radial-gradient(ellipse 82% 72% at 50% 40%, black 10%, transparent 82%);
+  -webkit-mask-image: radial-gradient(ellipse 82% 72% at 50% 40%, black 10%, transparent 82%);
 }
 
 .landing-grid::after {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 45% 38%, hsl(var(--brand) / 0.1), transparent 34%),
-    radial-gradient(circle at 57% 40%, hsl(var(--brand-secondary) / 0.055), transparent 32%),
-    radial-gradient(circle at 50% 42%, transparent 10%, hsl(var(--background) / 0.55) 72%, hsl(var(--background)) 100%);
+  background: radial-gradient(circle at 68% 44%, hsl(var(--brand) / 0.075), transparent 34%);
 }
 
 .landing-content {
-  display: flex;
-  width: min(850px, 100%);
-  flex-direction: column;
+  display: grid;
+  width: min(1120px, 100%);
+  grid-template-columns: minmax(0, 0.85fr) minmax(480px, 1.15fr);
   align-items: center;
-  text-align: center;
+  gap: clamp(3rem, 7vw, 6rem);
 }
 
-.release-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: 1px solid hsl(var(--border));
-  border-radius: 999px;
-  background: hsl(var(--background) / 0.76);
-  padding: 0.4rem 0.75rem;
-  color: hsl(var(--muted-foreground));
-  font-size: 0.8125rem;
-  font-weight: 500;
-  backdrop-filter: blur(10px);
-  transition: color 150ms ease, border-color 150ms ease;
-}
-
-.release-pill:hover {
-  color: hsl(var(--foreground));
-  border-color: hsl(var(--foreground) / 0.24);
-}
-
-.release-pill :deep(svg:first-child) {
-  color: hsl(var(--brand));
+.landing-copy {
+  min-width: 0;
 }
 
 h1 {
-  margin-top: 1.5rem;
-  max-width: 720px;
-  font-size: clamp(2.75rem, 6vw, 4rem);
+  max-width: 570px;
+  font-size: clamp(2.75rem, 5.4vw, 4rem);
   font-weight: 650;
-  line-height: 1;
+  line-height: 1.03;
   letter-spacing: -0.045em;
 }
 
@@ -114,27 +86,64 @@ h1 span {
   color: hsl(var(--brand));
 }
 
-p {
-  margin-top: 1.75rem;
-  max-width: 640px;
+.landing-copy > p {
+  max-width: 560px;
+  margin-top: 1.5rem;
   color: hsl(var(--muted-foreground));
   font-size: 1rem;
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .landing-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 0.75rem;
   margin-top: 2rem;
 }
 
+.landing-example {
+  min-width: 0;
+}
+
+.landing-example :deep(.relative.overflow-hidden) {
+  margin: 0;
+  border-color: hsl(var(--border));
+  background: hsl(var(--card) / 0.92);
+  box-shadow: 0 20px 70px hsl(var(--background) / 0.4);
+}
+
+.landing-example :deep(pre) {
+  min-height: 370px;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 900px) {
+  .landing-hero {
+    padding-top: 5rem;
+  }
+
+  .landing-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  .landing-copy {
+    max-width: 640px;
+  }
+
+  .landing-example :deep(pre) {
+    min-height: auto;
+  }
+}
+
 @media (max-width: 640px) {
   .landing-hero {
-    min-height: 560px;
-    padding-top: 4rem;
+    min-height: auto;
+    padding: 4rem 1rem 3.5rem;
   }
 
   .landing-grid {
