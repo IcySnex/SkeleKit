@@ -41,13 +41,11 @@ type Screenshot = {
 
 const props = defineProps<{ screenshot: Screenshot }>();
 const colorMode = useColorMode();
-const runtimeConfig = useRuntimeConfig();
 
 const appearance = ref<'light' | 'dark'>(colorMode.value === 'light' ? 'light' : 'dark');
 
 const activeSource = computed(() => {
-  const source = appearance.value === 'light' ? props.screenshot.lightSrc : props.screenshot.darkSrc;
-  return `${runtimeConfig.app.baseURL}${source}`;
+  return appearance.value === 'light' ? props.screenshot.lightSrc : props.screenshot.darkSrc;
 });
 
 const nextAppearance = computed(() => appearance.value === 'light' ? 'dark' : 'light');
