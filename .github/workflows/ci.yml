@@ -89,12 +89,12 @@ jobs:
       - name: Install and instantiate packaged template
         run: |
           dotnet new install "artifacts/packages/SkeleKit.Templates.${{ steps.version.outputs.package_version }}.nupkg"
-          dotnet new skelekit-ios --name SkeleKit.CiApp --output "${RUNNER_TEMP}/SkeleKit.CiApp" --skipRestore true
+          dotnet new skelekit-ios --name TemplateSmokeTest --output "${RUNNER_TEMP}/TemplateSmokeTest" --skipRestore true
 
       - name: Build generated app against packed NuGet
         run: |
-          dotnet restore "${RUNNER_TEMP}/SkeleKit.CiApp/SkeleKit.CiApp.csproj" --runtime iossimulator-arm64 --source "${GITHUB_WORKSPACE}/artifacts/packages" --source https://api.nuget.org/v3/index.json
-          dotnet build "${RUNNER_TEMP}/SkeleKit.CiApp/SkeleKit.CiApp.csproj" --configuration Debug --runtime iossimulator-arm64 --no-restore
+          dotnet restore "${RUNNER_TEMP}/TemplateSmokeTest/TemplateSmokeTest.csproj" --runtime iossimulator-arm64 --source "${GITHUB_WORKSPACE}/artifacts/packages" --source https://api.nuget.org/v3/index.json
+          dotnet build "${RUNNER_TEMP}/TemplateSmokeTest/TemplateSmokeTest.csproj" --configuration Debug --runtime iossimulator-arm64 --no-restore
 
       - name: Upload packages
         uses: actions/upload-artifact@v7

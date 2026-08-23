@@ -1,3 +1,5 @@
+using SkeleKit;
+
 namespace SkeleKit.Template;
 
 [Page]
