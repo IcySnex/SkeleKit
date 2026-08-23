@@ -1,12 +1,23 @@
 <template>
   <figure class="screenshot-card">
     <div class="screenshot-frame" :class="`screenshot-frame-${screenshot.format}`">
-      <ProseImg
-        :src="activeSource"
-        :alt="`${screenshot.alt}, ${appearance} appearance`"
-        :zoom="true"
-        class="gallery-screenshot"
-      />
+      <div v-show="appearance === 'light'" class="screenshot-variant">
+        <ProseImg
+          :src="screenshot.lightSrc"
+          :alt="`${screenshot.alt}, light appearance`"
+          :zoom="true"
+          class="gallery-screenshot"
+        />
+      </div>
+
+      <div v-show="appearance === 'dark'" class="screenshot-variant">
+        <ProseImg
+          :src="screenshot.darkSrc"
+          :alt="`${screenshot.alt}, dark appearance`"
+          :zoom="true"
+          class="gallery-screenshot"
+        />
+      </div>
     </div>
 
     <figcaption>
@@ -44,10 +55,6 @@ const colorMode = useColorMode();
 
 const appearance = ref<'light' | 'dark'>(colorMode.value === 'light' ? 'light' : 'dark');
 
-const activeSource = computed(() => {
-  return appearance.value === 'light' ? props.screenshot.lightSrc : props.screenshot.darkSrc;
-});
-
 const nextAppearance = computed(() => appearance.value === 'light' ? 'dark' : 'light');
 
 function toggleAppearance() {
@@ -81,7 +88,12 @@ function toggleAppearance() {
   aspect-ratio: 201 / 437;
 }
 
-.screenshot-frame > :deep(button) {
+.screenshot-variant {
+  width: 100%;
+  height: 100%;
+}
+
+.screenshot-variant :deep(button) {
   width: 100%;
   height: 100%;
 }

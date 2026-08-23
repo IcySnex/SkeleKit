@@ -34,7 +34,7 @@ const screenshots: Screenshot[] = [
   {
     lightSrc: 'images/gallery/map-iphone-light.png',
     darkSrc: 'images/gallery/map-iphone-dark.png',
-    alt: 'Collection interactions in the SkeleKit Gallery on iPhone',
+    alt: 'Map control in the SkeleKit Gallery on iPhone',
     title: 'Native controls',
     description: 'UIKit controls configured through SkeleKit.',
     format: 'iphone',
@@ -42,7 +42,7 @@ const screenshots: Screenshot[] = [
   {
     lightSrc: 'images/gallery/interactions-iphone-light.png',
     darkSrc: 'images/gallery/interactions-iphone-dark.png',
-    alt: 'Map control in the SkeleKit Gallery on iPhone',
+    alt: 'Collection interactions in the SkeleKit Gallery on iPhone',
     title: 'Layouts',
     description: 'Alignment, spacing, scrolling, and composition.',
     format: 'iphone',
