@@ -1,0 +1,12 @@
+<Project>
+	<ItemGroup Condition="'$(MSBuildProjectName)' == 'SkeleKit.Template'">
+		<PackageReference Remove="SkeleKit.iOS" />
+		<ProjectReference Include="$(MSBuildThisFileDirectory)Framework/SkeleKit.Generators/SkeleKit.Generators.csproj"
+		                  OutputItemType="Analyzer"
+		                  ReferenceOutputAssembly="false" />
+		<ProjectReference Include="$(MSBuildThisFileDirectory)Framework/SkeleKit.iOS/SkeleKit.iOS.csproj" />
+	</ItemGroup>
+
+	<Import Project="$(MSBuildThisFileDirectory)Framework/SkeleKit.iOS/build/SkeleKit.iOS.targets"
+	        Condition="'$(MSBuildProjectName)' == 'SkeleKit.Template'" />
+</Project>

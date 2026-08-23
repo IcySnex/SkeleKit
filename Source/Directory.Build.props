@@ -7,7 +7,6 @@
 		<ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
 
 		<SkeleKitPackageVersion>0.1.1</SkeleKitPackageVersion>
-		<SkeleKitUseProjectReferences Condition="'$(MSBuildProjectName)' == 'SkeleKit.Template'">true</SkeleKitUseProjectReferences>
 
 		<ValidateXcodeVersion>false</ValidateXcodeVersion>
 	</PropertyGroup>

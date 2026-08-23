@@ -5,31 +5,19 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>true</ImplicitUsings>
 
-        <TrimMode Condition="'$(Configuration)' == 'Release'">full</TrimMode>
-
         <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
-
-		<SkeleKitPackageVersion Condition="'$(SkeleKitPackageVersion)' == ''">0.1.1</SkeleKitPackageVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
         <CodesignKey>iPhone Developer</CodesignKey>
         <EnableHotReload>true</EnableHotReload>
     </PropertyGroup>
-
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <CodesignKey>iPhone Developer</CodesignKey>
-        <MtouchLink>Full</MtouchLink>
-        <DeviceSpecificBuild>true</DeviceSpecificBuild>
+        <TrimMode>full</TrimMode>
     </PropertyGroup>
 
-    <Import Project="..\..\Framework\SkeleKit.iOS\build\SkeleKit.iOS.targets" Condition="'$(SkeleKitUseProjectReferences)' == 'true'" />
-    <ItemGroup Condition="'$(SkeleKitUseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\..\Framework\SkeleKit.Generators\SkeleKit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-        <ProjectReference Include="..\..\Framework\SkeleKit.iOS\SkeleKit.iOS.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(SkeleKitUseProjectReferences)' != 'true'">
-        <PackageReference Include="SkeleKit.iOS" Version="$(SkeleKitPackageVersion)" />
+    <ItemGroup>
+        <PackageReference Include="SkeleKit.iOS" Version="0.1.1" />
     </ItemGroup>
 </Project>
