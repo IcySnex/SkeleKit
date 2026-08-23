@@ -16,7 +16,7 @@
         <PackageTags>dotnet-new;templates;skelekit;ios;uikit;dotnet-ios;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes>- Fix generated MainView imports.</PackageReleaseNotes>
+        <PackageReleaseNotes>- Clean up automated csproj file.</PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 
