@@ -7,6 +7,7 @@ import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.agent.builder.AgentBuilder
 import net.bytebuddy.asm.Advice
 import net.bytebuddy.description.type.TypeDescription
+import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.DynamicType
 import net.bytebuddy.matcher.ElementMatchers.named
 import net.bytebuddy.utility.JavaModule
@@ -22,6 +23,11 @@ class IosPortInstrumenter : ProjectActivity {
 
             AgentBuilder.Default()
                 .with(TRANSFORMATION_LISTENER)
+                .with(
+                    AgentBuilder.LocationStrategy.ForClassLoader.STRONG.withFallbackTo(
+                        ClassFileLocator.ForClassLoader.ofBootLoader(),
+                    ),
+                )
                 .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
                 .with(AgentBuilder.InitializationStrategy.NoOp.INSTANCE)
                 .with(AgentBuilder.TypeStrategy.Default.REDEFINE)
