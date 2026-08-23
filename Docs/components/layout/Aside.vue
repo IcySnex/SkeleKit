@@ -32,7 +32,9 @@ const guideSections = computed(() => {
   }
 
   return navigation.value.filter(link => (
-    link._path === '/getting-started' || link._path === '/guides'
+    link._path === '/motivation'
+    || link._path === '/getting-started'
+    || link._path === '/guides'
   ));
 });
 

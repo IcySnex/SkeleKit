@@ -59,19 +59,28 @@ export default defineNuxtConfig({
   icon: {
     clientBundle: {
       icons: [
+        'lucide:app-window',
         'lucide:box',
         'lucide:circle-dot',
         'lucide:clipboard',
         'lucide:square-pen',
         'lucide:book-open',
+        'lucide:download',
         'lucide:github',
+        'lucide:images',
+        'lucide:lightbulb',
+        'lucide:layout-template',
+        'lucide:refresh-cw',
         'lucide:rocket',
+        'lucide:sun',
+        'lucide:moon',
+        'lucide:wrench',
       ],
     },
   },
   content: {
     highlight: {
-      preload: ['csharp'],
+      preload: ['csharp', 'xml'],
     },
   },
   ogImage: {

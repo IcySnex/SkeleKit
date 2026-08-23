@@ -36,10 +36,17 @@ export default defineAppConfig({
           title: 'Guides',
           links: [
             {
+              title: 'Motivation',
+              description: 'Why SkeleKit exists, what it is trying to be, and how it is built.',
+              icon: 'lucide:lightbulb',
+              to: '/motivation/why-skelekit',
+              target: '_self',
+            },
+            {
               title: 'Getting started',
               description: 'Install SkeleKit and build your first native iOS app.',
               icon: 'lucide:rocket',
-              to: '/getting-started/introduction',
+              to: '/getting-started/installation/using-template',
               target: '_self',
             },
             {

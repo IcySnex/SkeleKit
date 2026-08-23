@@ -10,7 +10,7 @@
         </p>
 
         <div class="landing-actions">
-          <NuxtLinkLocale to="/getting-started/introduction">
+          <NuxtLinkLocale to="/getting-started/installation">
             <UiButton>
               Get started
               <SmartIcon name="lucide:arrow-right" class="ml-1" :size="16" />
