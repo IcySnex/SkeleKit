@@ -51,9 +51,9 @@ export default defineAppConfig({
             },
             {
               title: 'Guides',
-              description: 'Learn application structure, layout, and MVVM bindings.',
+              description: 'Learn the framework from application structure through controls and platform features.',
               icon: 'lucide:book-open',
-              to: '/guides/application',
+              to: '/guides/foundations/views-and-view-trees',
               target: '_self',
             },
           ],
