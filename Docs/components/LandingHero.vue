@@ -1,7 +1,5 @@
 <template>
   <section class="landing-hero">
-    <div class="landing-grid" aria-hidden="true" />
-
     <div class="landing-content">
       <div class="landing-copy">
         <h1>Native iOS UI<br><span>in C#.</span></h1>
@@ -10,7 +8,7 @@
         </p>
 
         <div class="landing-actions">
-          <NuxtLinkLocale to="/getting-started/installation">
+          <NuxtLinkLocale to="/getting-started/installation/using-template">
             <UiButton>
               Get started
               <SmartIcon name="lucide:arrow-right" class="ml-1" :size="16" />
@@ -34,32 +32,10 @@
 
 <style scoped>
 .landing-hero {
-  position: relative;
-  isolation: isolate;
   min-height: 620px;
-  overflow: hidden;
   display: grid;
   place-items: center;
   padding: 6rem 1.5rem 4.5rem;
-}
-
-.landing-grid {
-  position: absolute;
-  z-index: -1;
-  inset: 0 -10%;
-  background-image:
-    linear-gradient(to right, hsl(var(--foreground) / 0.13) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--foreground) / 0.13) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse 82% 72% at 50% 40%, black 10%, transparent 82%);
-  -webkit-mask-image: radial-gradient(ellipse 82% 72% at 50% 40%, black 10%, transparent 82%);
-}
-
-.landing-grid::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 68% 44%, hsl(var(--brand) / 0.075), transparent 34%);
 }
 
 .landing-content {
@@ -110,7 +86,8 @@ h1 span {
   margin: 0;
   border-color: hsl(var(--border));
   background: hsl(var(--card) / 0.92);
-  box-shadow: 0 20px 70px hsl(var(--background) / 0.4);
+  box-shadow:
+    0 10px 16px rgb(var(--landing-example-shadow) / 0.05);
 }
 
 .landing-example :deep(pre) {
@@ -146,8 +123,5 @@ h1 span {
     padding: 4rem 1rem 3.5rem;
   }
 
-  .landing-grid {
-    background-size: 44px 44px;
-  }
 }
 </style>

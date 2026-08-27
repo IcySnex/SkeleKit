@@ -55,6 +55,7 @@
     --ring: 240 5.9% 10%;
     --brand: 263.25 100% 84.31%;
     --brand-secondary: 288 82% 84%;
+    --landing-example-shadow: 0 0 0;
     --radius: 0.5rem;
   }
 
@@ -89,6 +90,7 @@
     --ring: 240 4.9% 83.9%;
     --brand: 263.25 100% 84.31%;
     --brand-secondary: 288 82% 84%;
+    --landing-example-shadow: 255 255 255;
   }
 }
 
