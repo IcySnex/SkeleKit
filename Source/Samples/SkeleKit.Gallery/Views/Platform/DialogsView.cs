@@ -144,7 +144,7 @@ internal sealed class DialogsView : ShowcaseView<DialogsViewModel>
 
 	static Button DialogButton(
 		string title,
-		string icon,
+		ImageSource icon,
 		ICommand command) =>
 		new()
 		{

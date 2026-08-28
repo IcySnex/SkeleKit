@@ -328,7 +328,7 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 
 	static Button ActionButton(
 		string text,
-		string icon,
+		ImageSource icon,
 		ICommand command) =>
 		new()
 		{

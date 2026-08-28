@@ -126,7 +126,7 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 
 	static Button ActionButton(
 		string text,
-		string icon,
+		ImageSource icon,
 		ICommand? command = null) =>
 		new()
 		{
@@ -170,14 +170,14 @@ internal sealed class PageChromeDemo : ContentView
 		{
 			ToolbarItems.Add(new ToolbarItem
 			{
-				Icon = "plus",
+				Icon = ImageSource.Symbol("plus"),
 				IsPrimary = true,
 				Command = Command.From(() => status.Text = "Top action tapped")
 			});
 
 			ToolbarItems.Add(new ToolbarItem
 			{
-				Icon = "ellipsis.circle",
+				Icon = ImageSource.Symbol("ellipsis.circle"),
 				Menu =
 				{
 					new MenuAction
@@ -194,14 +194,14 @@ internal sealed class PageChromeDemo : ContentView
 			BottomToolbarItems.Add(new ToolbarItem
 			{
 				Text = "Refresh",
-				Icon = "arrow.clockwise",
+				Icon = ImageSource.Symbol("arrow.clockwise"),
 				Command = Command.From(() => status.Text = "Bottom action tapped")
 			});
 
 			BottomToolbarItems.Add(new ToolbarItem
 			{
 				Text = "Done",
-				Icon = "checkmark",
+				Icon = ImageSource.Symbol("checkmark"),
 				IsPrimary = true,
 				Tint = Colors.Green,
 				Command = Command.From(() => status.Text = "Bottom action tapped")

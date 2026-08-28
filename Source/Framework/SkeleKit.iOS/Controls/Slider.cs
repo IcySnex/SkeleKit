@@ -93,24 +93,24 @@ public class Slider : Control
 	Color? thumbColor;
 
 	/// <summary>
-	/// The SF Symbol shown at the minimum end, or null for none.
+	/// The local icon shown at the minimum end, or null for none.
 	/// </summary>
-	public string? MinIcon
+	public ImageSource? MinIcon
 	{
 		get => minIcon;
 		set => Set(ref minIcon, value, ApplyStyle);
 	}
-	string? minIcon;
+	ImageSource? minIcon;
 
 	/// <summary>
-	/// The SF Symbol shown at the maximum end, or null for none.
+	/// The local icon shown at the maximum end, or null for none.
 	/// </summary>
-	public string? MaxIcon
+	public ImageSource? MaxIcon
 	{
 		get => maxIcon;
 		set => Set(ref maxIcon, value, ApplyStyle);
 	}
-	string? maxIcon;
+	ImageSource? maxIcon;
 
 	/// <summary>
 	/// Invoked with the new value whenever the user moves the slider.
@@ -149,8 +149,8 @@ public class Slider : Control
 		if (thumbColor is Color thumb)
 			Ui.ThumbTintColor = thumb.ToUIColor();
 
-		Ui.MinValueImage = minIcon is string min ? UIImage.GetSystemImage(min) : null;
-		Ui.MaxValueImage = maxIcon is string max ? UIImage.GetSystemImage(max) : null;
+		Ui.MinValueImage = minIcon?.ResolveLocal();
+		Ui.MaxValueImage = maxIcon?.ResolveLocal();
 	}
 
 	void OnValueChanged()

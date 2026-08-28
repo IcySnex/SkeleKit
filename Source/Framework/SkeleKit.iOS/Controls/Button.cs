@@ -24,15 +24,15 @@ public class Button : Control
 	Binding<string?>? textBinding;
 
 	/// <summary>
-	/// An SF Symbol name shown alongside the text, or null for none.
+	/// The local icon shown alongside the text, or null for none.
 	/// </summary>
-	public Bindable<string?> Icon
+	public Bindable<ImageSource?> Icon
 	{
 		get => icon;
 		set => iconBinding = Register(iconBinding, value, value => Set(ref icon, value, ApplyConfiguration));
 	}
-	string? icon;
-	Binding<string?>? iconBinding;
+	ImageSource? icon;
+	Binding<ImageSource?>? iconBinding;
 
 	/// <summary>
 	/// Smaller text shown under the title, or null for none.
@@ -76,7 +76,7 @@ public class Button : Control
 	IconPlacement iconPlacement = IconPlacement.Leading;
 
 	/// <summary>
-	/// The icon's point size, or NaN to match the size class.
+	/// The SF Symbol icon's point size, or NaN to match the size class. Other images keep their intrinsic size.
 	/// </summary>
 	public double IconSize
 	{
@@ -210,9 +210,9 @@ public class Button : Control
 			_ => UIButtonConfigurationSize.Medium
 		};
 
-		if (icon is not null)
+		if (icon is ImageSource iconSource)
 		{
-			configuration.Image = UIImage.GetSystemImage(icon);
+			configuration.Image = iconSource.ResolveLocal();
 
 			double points = double.IsNaN(iconSize)
 				? size switch
@@ -292,7 +292,7 @@ public class Button : Control
 
 			menuActions[index] = UIAction.Create(
 				entry.Text,
-				entry.Icon is string entryIcon ? UIImage.GetSystemImage(entryIcon) : null,
+				entry.Icon?.ResolveLocal(),
 				null,
 				_ =>
 				{

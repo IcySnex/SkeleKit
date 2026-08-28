@@ -13,7 +13,7 @@ internal sealed class GridsView : ShowcaseView<GridsViewModel>
 
 		ToolbarItems.Add(new ToolbarItem
 		{
-			Icon = "ellipsis.circle",
+			Icon = ImageSource.Symbol("ellipsis.circle"),
 			Menu =
 			{
 				new MenuAction

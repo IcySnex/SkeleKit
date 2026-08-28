@@ -288,14 +288,14 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 		documentation.ContextMenu.Add(new()
 		{
 			Text = "Open",
-			Icon = "arrow.up.forward",
+			Icon = ImageSource.Symbol("arrow.up.forward"),
 			Command = RunMenuActionCommand,
 			CommandParameter = "Open"
 		});
 		documentation.ContextMenu.Add(new()
 		{
 			Text = "Save",
-			Icon = "bookmark",
+			Icon = ImageSource.Symbol("bookmark"),
 			Command = RunMenuActionCommand,
 			CommandParameter = "Save"
 		});

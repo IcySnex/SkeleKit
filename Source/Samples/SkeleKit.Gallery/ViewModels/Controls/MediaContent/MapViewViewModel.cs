@@ -125,7 +125,7 @@ internal sealed partial class MapViewModel : ShowcaseViewModel
 			{
 				Title = "Ferry Building",
 				Subtitle = "Marketplace and waterfront",
-				Symbol = "ferry.fill",
+				Icon = ImageSource.Symbol("ferry.fill"),
 				Tint = Colors.Orange,
 				Callout = static () => BuildCallout(
 					"Ferry Building",

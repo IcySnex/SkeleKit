@@ -25,7 +25,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			Text = "Continue",
-			Icon = "arrow.right",
+			Icon = ImageSource.Symbol("arrow.right"),
 			Kind = viewModel.SelectedStyle.Value,
 			Size = viewModel.SelectedSize
 		};
@@ -72,7 +72,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			Text = "Save",
-			Icon = "square.and.arrow.down",
+			Icon = ImageSource.Symbol("square.and.arrow.down"),
 			Subtitle = "Updated moments ago",
 			Kind = ButtonStyle.Tinted,
 			Size = ButtonSize.Large,
@@ -156,7 +156,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Text = "Run command",
-			Icon = "play.fill",
+			Icon = ImageSource.Symbol("play.fill"),
 			Kind = ButtonStyle.Filled,
 			Size = ButtonSize.Large,
 			IsLoading = Bind(model => model.IsLoading),
@@ -225,27 +225,27 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Text = "Actions",
-			Icon = "ellipsis.circle",
+			Icon = ImageSource.Symbol("ellipsis.circle"),
 			Kind = ButtonStyle.Gray
 		};
 		actions.Menu.Add(new()
 		{
 			Text = "Share",
-			Icon = "square.and.arrow.up",
+			Icon = ImageSource.Symbol("square.and.arrow.up"),
 			Command = viewModel.SelectMenuCommand,
 			CommandParameter = "Share"
 		});
 		actions.Menu.Add(new()
 		{
 			Text = "Favorite",
-			Icon = "star",
+			Icon = ImageSource.Symbol("star"),
 			Command = viewModel.SelectMenuCommand,
 			CommandParameter = "Favorite"
 		});
 		actions.Menu.Add(new()
 		{
 			Text = "Delete",
-			Icon = "trash",
+			Icon = ImageSource.Symbol("trash"),
 			IsDestructive = true,
 			Command = viewModel.SelectMenuCommand,
 			CommandParameter = "Delete"

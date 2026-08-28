@@ -29,7 +29,7 @@ internal sealed class NativeView : ShowcaseView<NativeViewModel>
 		Button clear = new()
 		{
 			Text = "Clear",
-			Icon = "trash",
+			Icon = ImageSource.Symbol("trash"),
 			Kind = ButtonStyle.Tinted,
 			Size = ButtonSize.Small,
 			Command = new RelayCommand(() => canvas.Drawing = new())

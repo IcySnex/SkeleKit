@@ -40,13 +40,9 @@ internal sealed class Sharer : ISharer
 
 	static async Task<UIImage?> ResolveImage(
 		ImageSource source) =>
-		source.Kind switch
-		{
-			ImageSourceKind.Symbol => UIImage.GetSystemImage(source.Value),
-			ImageSourceKind.Bundle => UIImage.FromBundle(source.Value),
-			ImageSourceKind.Url => await Image.Loader.LoadAsync(source.Value, CancellationToken.None),
-			_ => UIImage.FromBundle(source.Value) ?? UIImage.GetSystemImage(source.Value)
-		};
+		source.Kind is ImageSourceKind.Url
+			? await Image.Loader.LoadAsync(source.Value, CancellationToken.None)
+			: source.ResolveLocal();
 
 	static UIViewController? Top()
 	{

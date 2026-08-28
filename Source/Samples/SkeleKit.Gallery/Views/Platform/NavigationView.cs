@@ -162,7 +162,7 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 
 	static Button ActionButton(
 		string text,
-		string icon,
+		ImageSource icon,
 		ICommand? command = null) =>
 		new()
 		{

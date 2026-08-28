@@ -76,7 +76,7 @@ internal sealed class SharingView : ShowcaseView<SharingViewModel>
 
 	static View ShareCanvas(
 		string title,
-		string icon,
+		ImageSource icon,
 		ICommand command,
 		BindingExpression<string?> result) =>
 		ShowcaseBox.Canvas(

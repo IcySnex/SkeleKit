@@ -23,7 +23,7 @@ internal sealed partial class AccessibilityViewModel : ShowcaseViewModel
 			"""
 			new Button
 			{
-				Icon = "info.circle",
+				Icon = ImageSource.Symbol("info.circle"),
 				AccessibilityLabel = "More information",
 				AccessibilityHint = "Shows additional information."
 			};

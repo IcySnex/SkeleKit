@@ -207,7 +207,7 @@ public class MapView : Control
 			view.Annotation = annotation;
 			view.ClusteringIdentifier = clusterId;
 			view.MarkerTintColor = pin.Pin.Tint?.ToUIColor();
-			view.GlyphImage = pin.Pin.Symbol is string symbol ? UIImage.GetSystemImage(symbol) : null;
+			view.GlyphImage = pin.Pin.Icon?.ResolveLocal();
 			ApplyCallout(view, pin.Pin, owner);
 
 			return view;

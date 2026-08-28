@@ -204,7 +204,7 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 							new Button
 							{
 								Text = "Done",
-								Icon = "keyboard.chevron.compact.down",
+								Icon = ImageSource.Symbol("keyboard.chevron.compact.down"),
 								Kind = ButtonStyle.Glass,
 								Command = Command.From(editor.Unfocus)
 							}.Column(1)

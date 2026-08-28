@@ -134,7 +134,7 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 
 
 	static Button ActionButton(
-		string icon,
+		ImageSource icon,
 		ICommand command) =>
 		new()
 		{

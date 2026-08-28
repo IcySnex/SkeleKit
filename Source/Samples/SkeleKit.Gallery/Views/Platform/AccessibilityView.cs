@@ -81,7 +81,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 							HorizontalAlignment = HorizontalAlignment.Center,
 							Width = 52,
 							Height = 52,
-							Icon = "info.circle",
+				Icon = ImageSource.Symbol("info.circle"),
 							IconSize = 22,
 							Kind = ButtonStyle.Tinted,
 							AccessibilityLabel = "More information",

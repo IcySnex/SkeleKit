@@ -116,7 +116,7 @@ internal sealed class SystemPickingView : ShowcaseView<SystemPickingViewModel>
 
 	static Button PickButton(
 		string title,
-		string icon,
+		ImageSource icon,
 		ICommand command) =>
 		new()
 		{

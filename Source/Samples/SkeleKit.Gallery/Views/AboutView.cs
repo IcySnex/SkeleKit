@@ -13,7 +13,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 
 		ToolbarItems.Add(new()
 		{
-			Icon = "xmark",
+			Icon = ImageSource.Symbol("xmark"),
 			Tint = Colors.Indigo,
 			Command = viewModel.DismissCommand
 		});
@@ -83,7 +83,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 					new Button
 					{
 						Text = "View on GitHub",
-						Icon = "arrow.up.right",
+			Icon = ImageSource.Symbol("arrow.up.right"),
 						Kind = ButtonStyle.Filled,
 						Size = ButtonSize.Large,
 						Tint = Colors.Indigo,
@@ -93,7 +93,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 					new Button
 					{
 						Text = "Open-Source Licenses",
-						Icon = "doc.text",
+			Icon = ImageSource.Symbol("doc.text"),
 						Kind = ButtonStyle.Gray,
 						Size = ButtonSize.Large,
 						Tint = Colors.Indigo,

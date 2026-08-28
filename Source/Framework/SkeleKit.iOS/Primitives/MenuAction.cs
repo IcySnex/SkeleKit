@@ -13,9 +13,9 @@ public sealed class MenuAction
 	public string Text { get; set; } = "";
 
 	/// <summary>
-	/// An SF Symbol name shown beside the title.
+	/// The local icon shown beside the title, or null for none.
 	/// </summary>
-	public string? Icon { get; set; }
+	public ImageSource? Icon { get; set; }
 
 	/// <summary>
 	/// Whether the entry is styled as destructive.

@@ -51,7 +51,7 @@ internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 		Button reset = new()
 		{
 			Text = "Reset",
-			Icon = "arrow.counterclockwise",
+			Icon = ImageSource.Symbol("arrow.counterclockwise"),
 			Kind = ButtonStyle.Tinted,
 			Command = viewModel.ResetColorCommand
 		};

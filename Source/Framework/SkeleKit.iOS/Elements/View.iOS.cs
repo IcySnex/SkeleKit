@@ -684,7 +684,7 @@ public abstract partial class View
 
 					contextMenuActions[index] = UIAction.Create(
 						entry.Text,
-						entry.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
+						entry.Icon?.ResolveLocal(),
 						null,
 						_ => Run(entry.Command, entry.CommandParameter));
 

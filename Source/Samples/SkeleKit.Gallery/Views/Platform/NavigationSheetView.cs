@@ -59,7 +59,7 @@ internal sealed class NavigationSheetView : ContentView<NavigationSheetViewModel
 						HorizontalAlignment = HorizontalAlignment.Center,
 						VerticalAlignment = VerticalAlignment.Center,
 						Text = "Dismiss sheet",
-						Icon = "xmark",
+						Icon = ImageSource.Symbol("xmark"),
 						Kind = ButtonStyle.Tinted,
 						Size = ButtonSize.Medium,
 						Command = viewModel.DismissCommand

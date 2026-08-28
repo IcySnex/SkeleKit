@@ -48,7 +48,7 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 		Func<IReadOnlyList<Span>> source) =>
 		ToolbarItems.Add(new ToolbarItem
 		{
-			Icon = "chevron.left.forwardslash.chevron.right",
+			Icon = ImageSource.Symbol("chevron.left.forwardslash.chevron.right"),
 			Command = Command.From(() =>
 				_ = Navigator.PushViewAsync(new ShowcaseCodeView(title, source(), Tint ?? Colors.Label)))
 		});

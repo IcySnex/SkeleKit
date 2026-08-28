@@ -232,7 +232,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 		{
 			Title = "Ferry Building",
 			Subtitle = "Marketplace and waterfront",
-			Symbol = "ferry.fill",
+			Icon = ImageSource.Symbol("ferry.fill"),
 			Tint = Colors.Orange,
 			Callout = static () => BuildCallout(
 				"Ferry Building",
@@ -242,14 +242,14 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 		{
 			Title = "Oracle Park",
 			Subtitle = "Baseball by the bay",
-			Symbol = "baseball.fill",
+			Icon = ImageSource.Symbol("baseball.fill"),
 			Tint = Colors.Red
 		},
 		new(new(37.8199, -122.4783))
 		{
 			Title = "Golden Gate Bridge",
 			Subtitle = "San Francisco landmark",
-			Symbol = "bridge.2.fill",
+			Icon = ImageSource.Symbol("bridge.2.fill"),
 			Tint = Colors.Indigo
 		},
 		new(new(37.7694, -122.4862))
@@ -262,7 +262,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 		{
 			Title = "Coit Tower",
 			Subtitle = "Telegraph Hill",
-			Symbol = "binoculars.fill",
+			Icon = ImageSource.Symbol("binoculars.fill"),
 			Tint = Colors.Teal
 		}
 	];

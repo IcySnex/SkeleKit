@@ -497,7 +497,7 @@ public class SkeleApplication
 					{
 						UITabGroup native = new(
 							group.Title,
-							UIImage.GetSystemImage(group.Icon),
+							group.Icon.ResolveLocal(),
 							$"group:{group.Title}",
 							[.. group.Children.Select(child => BuildTab(child, true))],
 							null!);
@@ -536,7 +536,7 @@ public class SkeleApplication
 
 					UITab tab = new(
 						leaf.Title,
-						UIImage.GetSystemImage(leaf.Icon),
+						leaf.Icon.ResolveLocal(),
 						leaf.View.Name,
 						provider);
 
@@ -571,6 +571,7 @@ public class SkeleApplication
 				else if (tabsBuilder?.BubbleView is Type bubbleView)
 				{
 					UINavigationController stack = Stack(bubbleView, tabsBuilder.UseLargeTitles);
+					UIImage? bubbleImage = tabsBuilder.BubbleIcon is ImageSource icon ? icon.ResolveLocal() : null;
 					UITab bubble;
 
 					if (OperatingSystem.IsIOSVersionAtLeast(26))
@@ -578,7 +579,7 @@ public class SkeleApplication
 						bubble = new UISearchTab(_ => stack)
 						{
 							Title = tabsBuilder.BubbleTitle!,
-							Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
+							Image = bubbleImage,
 							AutomaticallyActivatesSearch = false
 						};
 					}
@@ -586,7 +587,7 @@ public class SkeleApplication
 					{
 						bubble = new UITab(
 							tabsBuilder.BubbleTitle!,
-							UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
+							bubbleImage,
 							bubbleView.Name,
 							_ => stack);
 					}
@@ -599,6 +600,7 @@ public class SkeleApplication
 				else if (tabsBuilder?.BubbleFactory is Func<IServiceProvider, Action> action)
 				{
 					BubbleAction = action(Services);
+					UIImage? bubbleImage = tabsBuilder.BubbleIcon is ImageSource icon ? icon.ResolveLocal() : null;
 					UITab bubble;
 
 					if (OperatingSystem.IsIOSVersionAtLeast(26))
@@ -606,7 +608,7 @@ public class SkeleApplication
 						bubble = new UISearchTab(static _ => new())
 						{
 							Title = tabsBuilder.BubbleTitle!,
-							Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
+							Image = bubbleImage,
 							AutomaticallyActivatesSearch = false
 						};
 					}
@@ -614,7 +616,7 @@ public class SkeleApplication
 					{
 						bubble = new UITab(
 							tabsBuilder.BubbleTitle!,
-							UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
+							bubbleImage,
 							$"action:{tabsBuilder.BubbleTitle}",
 							static _ => new());
 					}

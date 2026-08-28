@@ -56,7 +56,7 @@ internal sealed class NavigationDetailView : ContentView<NavigationDetailViewMod
 						HorizontalAlignment = HorizontalAlignment.Center,
 						VerticalAlignment = VerticalAlignment.Center,
 						Text = "Push next detail",
-						Icon = "arrow.right",
+			Icon = ImageSource.Symbol("arrow.right"),
 						Kind = ButtonStyle.Tinted,
 						Size = ButtonSize.Medium,
 						Command = viewModel.PushNextCommand
@@ -67,7 +67,7 @@ internal sealed class NavigationDetailView : ContentView<NavigationDetailViewMod
 						HorizontalAlignment = HorizontalAlignment.Center,
 						VerticalAlignment = VerticalAlignment.Center,
 						Text = "Pop this page",
-						Icon = "chevron.left",
+			Icon = ImageSource.Symbol("chevron.left"),
 						Kind = ButtonStyle.Tinted,
 						Size = ButtonSize.Medium,
 						Command = viewModel.PopCommand
@@ -78,7 +78,7 @@ internal sealed class NavigationDetailView : ContentView<NavigationDetailViewMod
 						HorizontalAlignment = HorizontalAlignment.Center,
 						VerticalAlignment = VerticalAlignment.Center,
 						Text = "Pop to root",
-						Icon = "arrow.uturn.backward",
+			Icon = ImageSource.Symbol("arrow.uturn.backward"),
 						Kind = ButtonStyle.Tinted,
 						Size = ButtonSize.Medium,
 						Command = viewModel.PopToRootCommand

@@ -164,10 +164,10 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	string ToolbarCode =>
 		$$"""
 		if ({{Bool(HasToolbar)}})
-			page.ToolbarItems.Add(new ToolbarItem { Icon = "plus", IsPrimary = true });
+			page.ToolbarItems.Add(new ToolbarItem { Icon = ImageSource.Symbol("plus"), IsPrimary = true });
 
 		if ({{Bool(HasBottomToolbar)}})
-			page.BottomToolbarItems.Add(new ToolbarItem { Text = "Done", Icon = "checkmark", IsPrimary = true, Tint = Colors.Green });
+			page.BottomToolbarItems.Add(new ToolbarItem { Text = "Done", Icon = ImageSource.Symbol("checkmark"), IsPrimary = true, Tint = Colors.Green });
 		""";
 
 	static string Bool(

@@ -319,7 +319,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 				new Button
 				{
 					Text = "Done",
-					Icon = "keyboard.chevron.compact.down",
+			Icon = ImageSource.Symbol("keyboard.chevron.compact.down"),
 					Kind = ButtonStyle.Glass,
 					Size = ButtonSize.Small,
 					Command = Command.From(editor.Unfocus)

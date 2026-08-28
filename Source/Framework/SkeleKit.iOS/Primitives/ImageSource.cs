@@ -3,7 +3,7 @@ namespace SkeleKit;
 /// <summary>
 /// Describes where an image comes from, without touching UIKit.
 /// </summary>
-public readonly struct ImageSource
+public readonly partial struct ImageSource
 {
 	/// <summary>
 	/// An image from an SF Symbol name.
@@ -26,6 +26,9 @@ public readonly struct ImageSource
 	/// <summary>
 	/// An image from a remote URL, loaded asynchronously.
 	/// </summary>
+	/// <remarks>
+	/// Supported by <see cref="Image.Source"/> and sharing. Compact control icons accept local sources only.
+	/// </remarks>
 	/// <param name="url">The full web address of the image.</param>
 	/// <returns>An image source configured for a URL.</returns>
 	public static ImageSource Url(

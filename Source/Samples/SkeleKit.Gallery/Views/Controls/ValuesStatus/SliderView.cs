@@ -27,8 +27,8 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 			Maximum = 100,
 			Step = viewModel.SelectedStep.Value,
 			Continuous = viewModel.Continuous,
-			MinIcon = "speaker.fill",
-			MaxIcon = "speaker.wave.3.fill",
+			MinIcon = ImageSource.Symbol("speaker.fill"),
+			MaxIcon = ImageSource.Symbol("speaker.wave.3.fill"),
 			IsEnabled = Bind(model => model.ControlEnabled)
 		};
 
@@ -60,8 +60,8 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 				static (model, value) => model.ShowsIcons = value),
 			Toggled = value =>
 			{
-				slider.MinIcon = value ? "speaker.fill" : null;
-				slider.MaxIcon = value ? "speaker.wave.3.fill" : null;
+			slider.MinIcon = value ? ImageSource.Symbol("speaker.fill") : (ImageSource?)null;
+			slider.MaxIcon = value ? ImageSource.Symbol("speaker.wave.3.fill") : (ImageSource?)null;
 			}
 		};
 

@@ -401,8 +401,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 					done(true);
 				});
 
-			if (action.Icon is string icon)
-				native.Image = UIImage.GetSystemImage(icon);
+			if (action.Icon is ImageSource icon)
+				native.Image = icon.ResolveLocal();
 
 			if (action.Background is Color background)
 				native.BackgroundColor = background.ToUIColor();
@@ -449,7 +449,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 					entries[index] = UIAction.Create(
 						entry.Text,
-						entry.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
+						entry.Icon?.ResolveLocal(),
 						null,
 						_ =>
 						{

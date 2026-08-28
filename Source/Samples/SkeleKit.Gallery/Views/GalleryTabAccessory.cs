@@ -59,7 +59,8 @@ public sealed class GalleryTabAccessory : Overlay
 		Children.Add(new Button
 		{
 			Icon = BindingFactory.Bind(
-				(TabsIpadViewModel model) => model.PlayerIcon),
+				(TabsIpadViewModel model) => model.PlayerIcon,
+				static icon => (ImageSource?)ImageSource.Symbol(icon)),
 			Kind = ButtonStyle.Plain,
 			Size = ButtonSize.Small,
 			Margin = new(0, 0, 12, 0),

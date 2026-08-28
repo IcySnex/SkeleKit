@@ -251,10 +251,9 @@ public class Image : Control
 		source.Kind switch
 		{
 			ImageSourceKind.Symbol => Symbol(source.Value),
-			ImageSourceKind.Bundle => UIImage.FromBundle(source.Value),
-			ImageSourceKind.Data => source.Bytes is byte[] bytes ? UIImage.LoadFromData(NSData.FromArray(bytes)) : null,
-			ImageSourceKind.Url => null,
-			_ => UIImage.FromBundle(source.Value) ?? Symbol(source.Value)
+			ImageSourceKind.Auto => UIImage.FromBundle(source.Value) ?? Symbol(source.Value),
+			ImageSourceKind.Url => throw new InvalidOperationException("A URL source must be loaded asynchronously."),
+			_ => source.ResolveLocal()
 		};
 
 	UIImage? Symbol(

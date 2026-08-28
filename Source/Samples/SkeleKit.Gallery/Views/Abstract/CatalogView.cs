@@ -18,7 +18,7 @@ internal abstract class CatalogView<TViewModel> : TintView<TViewModel>
 
 		ToolbarItems.Add(new()
 		{
-			Icon = "info.circle",
+			Icon = ImageSource.Symbol("info.circle"),
 			Command = viewModel.ShowInfoCommand
 		});
 

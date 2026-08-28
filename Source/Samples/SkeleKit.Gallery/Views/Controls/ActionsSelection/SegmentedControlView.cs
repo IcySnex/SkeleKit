@@ -30,7 +30,7 @@ internal sealed class SegmentedControlView : ShowcaseView<SegmentedControlViewMo
 		Button reset = new()
 		{
 			Text = "Reset",
-			Icon = "arrow.counterclockwise",
+			Icon = ImageSource.Symbol("arrow.counterclockwise"),
 			Kind = ButtonStyle.Tinted,
 			Command = viewModel.ResetSelectionCommand
 		};

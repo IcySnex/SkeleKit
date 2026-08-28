@@ -13,18 +13,18 @@ public sealed class TabsBuilder
 	internal sealed record Leaf(
 		Type View,
 		string Title,
-		string Icon,
+		ImageSource Icon,
 		TabPlacement Placement) : Node;
 
 	internal sealed record GroupNode(
 		string Title,
-		string Icon,
+		ImageSource Icon,
 		List<Node> Children) : Node;
 
 
 	internal List<Node> Nodes { get; } = [];
 	internal Type? SearchView { get; private set; }
-	internal string? BubbleIcon { get; private set; }
+	internal ImageSource? BubbleIcon { get; private set; }
 	internal Func<IServiceProvider, Action>? BubbleFactory { get; private set; }
 	internal Type? BubbleView { get; private set; }
 	internal string? BubbleTitle { get; private set; }
@@ -50,11 +50,11 @@ public sealed class TabsBuilder
 	/// </summary>
 	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
 	/// <param name="title">The text displayed on the tab bar item.</param>
-	/// <param name="icon">The name or path of the icon resource for the tab.</param>
+	/// <param name="icon">The local icon shown on the tab.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Tab<TView>(
 		string title,
-		string icon) where TView : ContentView
+		ImageSource icon) where TView : ContentView
 	{
 		Nodes.Add(new Leaf(typeof(TView), title, icon, TabPlacement.Automatic));
 
@@ -78,11 +78,11 @@ public sealed class TabsBuilder
 	/// </summary>
 	/// <typeparam name="TView">The type of the content view to host in the bubble.</typeparam>
 	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
-	/// <param name="icon">The SF Symbol shown in the bubble.</param>
+	/// <param name="icon">The local icon shown in the bubble.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Bubble<TView>(
 		string title,
-		string icon) where TView : ContentView
+		ImageSource icon) where TView : ContentView
 	{
 		BubbleTitle = title;
 		BubbleIcon = icon;
@@ -98,12 +98,12 @@ public sealed class TabsBuilder
 	/// The bubble is single: Search and Bubble exclude each other.
 	/// </remarks>
 	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
-	/// <param name="icon">The SF Symbol shown in the bubble.</param>
+	/// <param name="icon">The local icon shown in the bubble.</param>
 	/// <param name="tapped">Runs on tap.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Bubble(
 		string title,
-		string icon,
+		ImageSource icon,
 		Action tapped)
 	{
 		BubbleTitle = title;
@@ -118,13 +118,13 @@ public sealed class TabsBuilder
 	/// </summary>
 	/// <typeparam name="TViewModel">The ViewModel type carrying the command.</typeparam>
 	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
-	/// <param name="icon">The SF Symbol shown in the bubble.</param>
+	/// <param name="icon">The local icon shown in the bubble.</param>
 	/// <param name="command">Picks the command off the ViewModel.</param>
 	/// <param name="commandParameter">The parameter passed to the command.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Bubble<TViewModel>(
 		string title,
-		string icon,
+		ImageSource icon,
 		Func<TViewModel, ICommand> command,
 		object? commandParameter = null)
 		where TViewModel : class

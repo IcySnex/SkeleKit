@@ -32,7 +32,7 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 		Button clear = new()
 		{
 			Text = "Clear",
-			Icon = "xmark",
+			Icon = ImageSource.Symbol("xmark"),
 			Kind = ButtonStyle.Tinted,
 			Command = viewModel.ClearSelectionCommand
 		};

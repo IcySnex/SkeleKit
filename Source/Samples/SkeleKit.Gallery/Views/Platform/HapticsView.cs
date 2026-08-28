@@ -164,7 +164,7 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 
 	static View HapticCanvas(
 		string title,
-		string icon,
+		ImageSource icon,
 		ICommand command,
 		BindingExpression<string?> result) =>
 		ShowcaseBox.Canvas(

@@ -61,7 +61,7 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 			new Button
 			{
 				Text = "Continue",
-				Icon = "arrow.right",
+				Icon = ImageSource.Symbol("arrow.right"),
 				Kind = ButtonStyle.{{SelectedStyle.Value}},
 				Size = ButtonSize.{{SelectedSize}}
 			};
@@ -101,7 +101,7 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 			new Button
 			{
 				Text = "Save",
-				Icon = "square.and.arrow.down",
+				Icon = ImageSource.Symbol("square.and.arrow.down"),
 				Subtitle = {{NullableString(ShowsSubtitle, "Updated moments ago")}},
 				Kind = ButtonStyle.Tinted,
 				Size = ButtonSize.Large,
@@ -137,7 +137,7 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 			new Button
 			{
 				Text = "Run command",
-				Icon = "play.fill",
+				Icon = ImageSource.Symbol("play.fill"),
 				Kind = ButtonStyle.Filled,
 				IsLoading = {{Boolean(IsLoading)}},
 				IsDestructive = {{Boolean(IsDestructive)}},
@@ -155,12 +155,12 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 			Button actions = new()
 			{
 				Text = "Actions",
-				Icon = "ellipsis.circle"
+				Icon = ImageSource.Symbol("ellipsis.circle")
 			};
 			actions.Menu.Add(new()
 			{
 				Text = "Share",
-				Icon = "square.and.arrow.up",
+				Icon = ImageSource.Symbol("square.and.arrow.up"),
 				Command = viewModel.SelectMenuCommand,
 				CommandParameter = "Share"
 			});

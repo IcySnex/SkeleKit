@@ -404,7 +404,7 @@ public class TextView : Control
 
 			heldMenu[index] = UIAction.Create(
 				entry.Text,
-				entry.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
+				entry.Icon?.ResolveLocal(),
 				null,
 				_ =>
 				{

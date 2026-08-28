@@ -359,7 +359,7 @@ internal sealed class PageHost : UIViewController
 
 		UIAction action = UIAction.Create(
 			item.Text ?? "",
-			item.Icon is string icon ? UIImage.GetSystemImage(icon) : null,
+			item.Icon?.ResolveLocal(),
 			null,
 			_ =>
 			{
@@ -397,7 +397,7 @@ internal sealed class PageHost : UIViewController
 
 			entries[index] = UIAction.Create(
 				entry.Text,
-				entry.Icon is string entryIcon ? UIImage.GetSystemImage(entryIcon) : null,
+				entry.Icon?.ResolveLocal(),
 				null,
 				_ =>
 				{
@@ -419,8 +419,8 @@ internal sealed class PageHost : UIViewController
 	{
 		UIMenu menu = BuildMenu(item);
 
-		UIBarButtonItem native = item.Icon is string icon
-			? new(UIImage.GetSystemImage(icon), menu)
+		UIBarButtonItem native = item.Icon is ImageSource icon
+			? new(icon.ResolveLocal(), menu)
 			: new(item.Text ?? "", menu);
 
 		if (item.IsPrimary)

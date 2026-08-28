@@ -29,9 +29,9 @@ public sealed class SwipeAction
 	public string? Text { get; set; }
 
 	/// <summary>
-	/// An SF Symbol name shown on the action.
+	/// The local icon shown on the action, or null for none.
 	/// </summary>
-	public string? Icon { get; set; }
+	public ImageSource? Icon { get; set; }
 
 	/// <summary>
 	/// Which edge reveals the action.

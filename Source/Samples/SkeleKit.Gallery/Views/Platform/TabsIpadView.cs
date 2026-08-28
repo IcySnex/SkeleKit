@@ -56,7 +56,7 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 			Text = Bind(
 				model => model.ShowsAccessory,
 				static shown => shown ? "Hide accessory" : "Show accessory"),
-			Icon = "rectangle.bottomthird.inset.filled",
+			Icon = ImageSource.Symbol("rectangle.bottomthird.inset.filled"),
 			Kind = ButtonStyle.Tinted,
 			Size = ButtonSize.Medium,
 			Command = viewModel.ToggleAccessoryCommand

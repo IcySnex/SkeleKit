@@ -58,8 +58,8 @@ internal sealed partial class SliderViewModel : ShowcaseViewModel
 				Maximum = 100,
 				Step = {{Number(SelectedStep.Value)}},
 				Continuous = {{Boolean(Continuous)}},
-				MinIcon = {{(ShowsIcons ? "\"speaker.fill\"" : "null")}},
-				MaxIcon = {{(ShowsIcons ? "\"speaker.wave.3.fill\"" : "null")}},
+				MinIcon = {{(ShowsIcons ? "ImageSource.Symbol(\"speaker.fill\")" : "null")}},
+				MaxIcon = {{(ShowsIcons ? "ImageSource.Symbol(\"speaker.wave.3.fill\")" : "null")}},
 				IsEnabled = Bind(model => model.ControlEnabled)
 			};
 			""")

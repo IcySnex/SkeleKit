@@ -105,7 +105,7 @@ public class TextField : Control
 	Binding<string?>? placeholderBinding;
 
 	/// <summary>
-	/// A decorative symbol or bundle icon shown before the text, or null for none.
+	/// The local icon shown before the text, or null for none.
 	/// </summary>
 	public ImageSource? LeadingIcon
 	{
@@ -114,7 +114,7 @@ public class TextField : Control
 	}
 
 	/// <summary>
-	/// A decorative symbol or bundle icon shown after the text, or null for none.
+	/// The local icon shown after the text, or null for none.
 	/// </summary>
 	/// <remarks>
 	/// Shares the trailing slot with <see cref="ClearButton"/>, so an icon hides the clear button.
@@ -462,13 +462,7 @@ public class TextField : Control
 
 	private protected static UIImage? ResolveIcon(
 		ImageSource source) =>
-		source.Kind switch
-		{
-			ImageSourceKind.Symbol => UIImage.GetSystemImage(source.Value, IconConfiguration),
-			ImageSourceKind.Bundle => UIImage.FromBundle(source.Value),
-			ImageSourceKind.Url => null,
-			_ => UIImage.FromBundle(source.Value) ?? UIImage.GetSystemImage(source.Value, IconConfiguration)
-		};
+		source.ResolveLocal(IconConfiguration);
 
 	static UIImageView IconView(
 		UIImage image) =>

@@ -23,9 +23,9 @@ public class MapPin(
 	public string? Subtitle { get; set; }
 
 	/// <summary>
-	/// The SF Symbol drawn inside the marker, or null for the default dot.
+	/// The local icon drawn inside the marker, or null for the default dot.
 	/// </summary>
-	public string? Symbol { get; set; }
+	public ImageSource? Icon { get; set; }
 
 	/// <summary>
 	/// The marker's fill color, or null to follow the map tint.

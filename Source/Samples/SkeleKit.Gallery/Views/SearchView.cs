@@ -30,7 +30,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 
 		ToolbarItems.Add(new()
 		{
-			Icon = "info.circle",
+			Icon = ImageSource.Symbol("info.circle"),
 			Command = viewModel.ShowInfoCommand
 		});
 

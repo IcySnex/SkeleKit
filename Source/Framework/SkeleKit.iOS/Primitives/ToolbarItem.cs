@@ -26,9 +26,6 @@ public sealed class ToolbarItem
 	/// <summary>
 	/// The item's text, or null when it shows only an icon.
 	/// </summary>
-	/// <remarks>
-	/// Setting it updates the bar live.
-	/// </remarks>
 	public string? Text
 	{
 		get;
@@ -40,12 +37,9 @@ public sealed class ToolbarItem
 	}
 
 	/// <summary>
-	/// An SF Symbol name, or null for a text-only item.
+	/// The local icon, or null for a text-only item.
 	/// </summary>
-	/// <remarks>
-	/// Setting it updates the bar live.
-	/// </remarks>
-	public string? Icon
+	public ImageSource? Icon
 	{
 		get;
 		set
@@ -86,9 +80,6 @@ public sealed class ToolbarItem
 	/// <summary>
 	/// The item's tint, or null to follow the page or app tint.
 	/// </summary>
-	/// <remarks>
-	/// Setting it updates the bar live.
-	/// </remarks>
 	public Color? Tint
 	{
 		get;
