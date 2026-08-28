@@ -272,6 +272,11 @@ public class TextField : Control
 	/// </summary>
 	public ICommand? SubmitCommand { get; set; }
 
+	/// <summary>
+	/// The parameter passed to <see cref="SubmitCommand"/>.
+	/// </summary>
+	public object? SubmitCommandParameter { get; set; }
+
 
 	void ApplyText() =>
 		Ui.Text = text;
@@ -422,8 +427,10 @@ public class TextField : Control
 		field.ShouldReturn = textField =>
 		{
 			textField.ResignFirstResponder();
-			if (SubmitCommand is ICommand submit && submit.CanExecute(null))
-				submit.Execute(null);
+			object? parameter = SubmitCommandParameter;
+
+			if (SubmitCommand is ICommand submit && submit.CanExecute(parameter))
+				submit.Execute(parameter);
 
 			return true;
 		};

@@ -158,9 +158,12 @@ public class SkeleApplication
 
 		PageHost? root = stack.ViewControllers?.FirstOrDefault() as PageHost;
 
-		if (root?.Page?.TabReselectedCommand is ICommand command && command.CanExecute(null))
+		ContentView? page = root?.Page;
+		object? parameter = page?.TabReselectedCommandParameter;
+
+		if (page?.TabReselectedCommand is ICommand command && command.CanExecute(parameter))
 		{
-			command.Execute(null);
+			command.Execute(parameter);
 			return;
 		}
 
@@ -170,7 +173,7 @@ public class SkeleApplication
 			return;
 		}
 
-		if (root?.Page is ContentView page && PageHost.FindScrolling(page)?.Native is UIScrollView scroll)
+		if (page is not null && PageHost.FindScrolling(page)?.Native is UIScrollView scroll)
 			scroll.SetContentOffset(new(scroll.ContentOffset.X, -scroll.AdjustedContentInset.Top), true);
 	}
 

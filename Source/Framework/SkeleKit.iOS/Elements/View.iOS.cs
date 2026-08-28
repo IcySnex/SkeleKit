@@ -456,7 +456,7 @@ public abstract partial class View
 
 		if (doubleTapCommand is not null && doubleTapRecognizer is null)
 		{
-			doubleTapRecognizer = new(() => Run(doubleTapCommand, null)) { NumberOfTapsRequired = 2 };
+			doubleTapRecognizer = new(() => Run(doubleTapCommand, DoubleTapCommandParameter)) { NumberOfTapsRequired = 2 };
 			native.AddGestureRecognizer(doubleTapRecognizer);
 
 			// a single tap must wait, or it fires on the double's first tap
@@ -469,7 +469,7 @@ public abstract partial class View
 			recognizer = new(() =>
 			{
 				if (recognizer.State is UIGestureRecognizerState.Began)
-					Run(longPressCommand, null);
+					Run(longPressCommand, LongPressCommandParameter);
 			});
 
 			longPressRecognizer = recognizer;

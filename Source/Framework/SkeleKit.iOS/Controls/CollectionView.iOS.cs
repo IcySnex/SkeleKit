@@ -106,7 +106,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	void ApplyRefreshCanExecute()
 	{
 		if (refresh is not null)
-			refresh.Enabled = RefreshCommand?.CanExecute(null) is true;
+			refresh.Enabled = RefreshCommand?.CanExecute(RefreshCommandParameter) is true;
 	}
 
 	void OnNativeRefreshTriggered(

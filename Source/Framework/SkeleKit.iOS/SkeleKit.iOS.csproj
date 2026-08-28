@@ -25,6 +25,7 @@
             - Prevent pull-to-refresh when RefreshCommand cannot execute.
             - Preserve system colors when using Color.WithAlpha.
             - Put transparent under Colors namespace.
+            - Add parameters to gesture, submit, refresh, load-more and tab commands.
         </PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>

@@ -120,11 +120,13 @@ public sealed class TabsBuilder
 	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
 	/// <param name="icon">The SF Symbol shown in the bubble.</param>
 	/// <param name="command">Picks the command off the ViewModel.</param>
+	/// <param name="commandParameter">The parameter passed to the command.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Bubble<TViewModel>(
 		string title,
 		string icon,
-		Func<TViewModel, ICommand> command)
+		Func<TViewModel, ICommand> command,
+		object? commandParameter = null)
 		where TViewModel : class
 	{
 		BubbleTitle = title;
@@ -135,8 +137,8 @@ public sealed class TabsBuilder
 
 			return () =>
 			{
-				if (resolved.CanExecute(null))
-					resolved.Execute(null);
+				if (resolved.CanExecute(commandParameter))
+					resolved.Execute(commandParameter);
 			};
 		};
 

@@ -15,14 +15,22 @@ public class RefreshCommandTests
 		}
 
 		public int Executions { get; private set; }
+		public object? CanExecuteParameter { get; private set; }
+		public object? ExecuteParameter { get; private set; }
 
 		public bool CanExecute(
-			object? parameter) =>
-			canExecute;
+			object? parameter)
+		{
+			CanExecuteParameter = parameter;
+			return canExecute;
+		}
 
 		public void Execute(
-			object? parameter) =>
+			object? parameter)
+		{
+			ExecuteParameter = parameter;
 			Executions++;
+		}
 	}
 
 
@@ -42,12 +50,19 @@ public class RefreshCommandTests
 	public void ScrollView_AllowedRefreshStartsAndExecutes()
 	{
 		TestCommand command = new(true);
-		ScrollView view = new() { RefreshCommand = command };
+		object parameter = new();
+		ScrollView view = new()
+		{
+			RefreshCommand = command,
+			RefreshCommandParameter = parameter
+		};
 
 		view.OnRefreshTriggered();
 
 		Assert.True(view.IsRefreshing.Value);
 		Assert.Equal(1, command.Executions);
+		Assert.Same(parameter, command.CanExecuteParameter);
+		Assert.Same(parameter, command.ExecuteParameter);
 	}
 
 }

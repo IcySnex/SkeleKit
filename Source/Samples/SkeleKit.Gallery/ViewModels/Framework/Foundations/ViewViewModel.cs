@@ -126,13 +126,18 @@ internal sealed partial class ViewViewModel(
 			Label status = new();
 			void Record(string interaction) =>
 				status.Text = interaction;
+			ICommand recordInteraction = Command.From<string>(interaction =>
+				Record(interaction ?? "Unknown"));
 
 			Border commandCard = new()
 			{
 				PointerEffect = PointerEffect.Automatic,
-				TapCommand = Command.From(() => Record("Tap")),
-				DoubleTapCommand = Command.From(() => Record("Double tap")),
-				LongPressCommand = Command.From(() => Record("Long press")),
+				TapCommand = recordInteraction,
+				TapCommandParameter = "Tap",
+				DoubleTapCommand = recordInteraction,
+				DoubleTapCommandParameter = "Double tap",
+				LongPressCommand = recordInteraction,
+				LongPressCommandParameter = "Long press",
 				LongPressDuration = 0.7
 			};
 

@@ -37,7 +37,7 @@ public partial class ScrollView : Panel
 	/// </summary>
 	/// <remarks>
 	/// Setting it installs the refresh control.
-	// The <see cref="ICommand.CanExecute(object?)"/> controls whether the user can pull to refresh.
+	/// The <see cref="ICommand.CanExecute(object?)"/> controls whether the user can pull to refresh.
 	/// </remarks>
 	public ICommand? RefreshCommand
 	{
@@ -52,6 +52,15 @@ public partial class ScrollView : Panel
 		}
 	}
 	ICommand? refreshCommand;
+
+	/// <summary>
+	/// The parameter passed to <see cref="RefreshCommand"/>.
+	/// </summary>
+	public object? RefreshCommandParameter
+	{
+		get;
+		set => Set(ref field, value, ApplyRefreshCommand, affectsMeasure: false);
+	}
 
 	/// <summary>
 	/// Whether the refresh spinner is showing.
@@ -199,7 +208,9 @@ public partial class ScrollView : Panel
 
 	internal void OnRefreshTriggered()
 	{
-		if (RefreshCommand is not ICommand command || !command.CanExecute(null))
+		object? parameter = RefreshCommandParameter;
+
+		if (RefreshCommand is not ICommand command || !command.CanExecute(parameter))
 		{
 			Set(ref isRefreshing, false, affectsMeasure: false);
 			isRefreshingBinding?.PushToSource(false);
@@ -209,7 +220,7 @@ public partial class ScrollView : Panel
 
 		Set(ref isRefreshing, true, affectsMeasure: false);
 		isRefreshingBinding?.PushToSource(true);
-		command.Execute(null);
+		command.Execute(parameter);
 	}
 
 

@@ -117,6 +117,11 @@ public abstract partial class ContentView : Panel
 	public ICommand? TabReselectedCommand { get; set; }
 
 	/// <summary>
+	/// The parameter passed to <see cref="TabReselectedCommand"/>.
+	/// </summary>
+	public object? TabReselectedCommandParameter { get; set; }
+
+	/// <summary>
 	/// The badge on this page's tab bar item, or null for none.
 	/// </summary>
 	/// <remarks>

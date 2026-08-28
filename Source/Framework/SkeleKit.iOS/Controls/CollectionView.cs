@@ -177,6 +177,11 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public ICommand? LoadMoreCommand { get; set; }
 
 	/// <summary>
+	/// The parameter passed to <see cref="LoadMoreCommand"/>.
+	/// </summary>
+	public object? LoadMoreCommandParameter { get; set; }
+
+	/// <summary>
 	/// How many items from the end <see cref="LoadMoreCommand"/> fires at.
 	/// </summary>
 	public int LoadMoreThreshold { get; set; } = 4;
@@ -206,6 +211,15 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		}
 	}
 	ICommand? refreshCommand;
+
+	/// <summary>
+	/// The parameter passed to <see cref="RefreshCommand"/>.
+	/// </summary>
+	public object? RefreshCommandParameter
+	{
+		get;
+		set => Set(ref field, value, ApplyRefreshCommand, affectsMeasure: false);
+	}
 
 	/// <summary>
 	/// Whether the refresh spinner is showing.
@@ -484,7 +498,9 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 	internal void OnRefreshTriggered()
 	{
-		if (RefreshCommand is not ICommand command || !command.CanExecute(null))
+		object? parameter = RefreshCommandParameter;
+
+		if (RefreshCommand is not ICommand command || !command.CanExecute(parameter))
 		{
 			Set(ref isRefreshing, false, affectsMeasure: false);
 			isRefreshingBinding?.PushToSource(false);
@@ -494,7 +510,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 		Set(ref isRefreshing, true, affectsMeasure: false);
 		isRefreshingBinding?.PushToSource(true);
-		command.Execute(null);
+		command.Execute(parameter);
 	}
 
 	void ApplyRefreshing() =>
@@ -706,8 +722,10 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 		loadMoreFiredAt = total;
 
-		if (command.CanExecute(null))
-			command.Execute(null);
+		object? parameter = LoadMoreCommandParameter;
+
+		if (command.CanExecute(parameter))
+			command.Execute(parameter);
 	}
 }
 

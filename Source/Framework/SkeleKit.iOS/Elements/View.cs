@@ -273,6 +273,11 @@ public abstract partial class View
 	ICommand? doubleTapCommand;
 
 	/// <summary>
+	/// The parameter passed to <see cref="DoubleTapCommand"/>.
+	/// </summary>
+	public object? DoubleTapCommandParameter { get; set; }
+
+	/// <summary>
 	/// Command invoked when the view is held down for <see cref="LongPressDuration"/>.
 	/// </summary>
 	public ICommand? LongPressCommand
@@ -281,6 +286,11 @@ public abstract partial class View
 		set => Set(ref longPressCommand, value, ApplyInteraction, affectsMeasure: false);
 	}
 	ICommand? longPressCommand;
+
+	/// <summary>
+	/// The parameter passed to <see cref="LongPressCommand"/>.
+	/// </summary>
+	public object? LongPressCommandParameter { get; set; }
 
 	/// <summary>
 	/// How long a press must be held to count as a long press, in seconds.

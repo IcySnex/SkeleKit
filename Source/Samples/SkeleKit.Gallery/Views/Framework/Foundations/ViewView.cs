@@ -187,11 +187,16 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 		ViewViewModel viewModel)
 	{
 		Label status = Status("Tap, double-tap, hold, drag, pinch or rotate.");
+		ICommand recordInteraction = Command.From<string>(interaction =>
+			RecordInteraction(status, interaction ?? "Unknown"));
 
 		Border commandCard = InteractionCard("Tap, double-tap, hold");
-		commandCard.TapCommand = Command.From(() => RecordInteraction(status, "Tap"));
-		commandCard.DoubleTapCommand = Command.From(() => RecordInteraction(status, "Double tap"));
-		commandCard.LongPressCommand = Command.From(() => RecordInteraction(status, "Long press"));
+		commandCard.TapCommand = recordInteraction;
+		commandCard.TapCommandParameter = "Tap";
+		commandCard.DoubleTapCommand = recordInteraction;
+		commandCard.DoubleTapCommandParameter = "Double tap";
+		commandCard.LongPressCommand = recordInteraction;
+		commandCard.LongPressCommandParameter = "Long press";
 		commandCard.LongPressDuration = 0.7;
 
 		Border gestureCard = InteractionCard("Drag, pinch, rotate");

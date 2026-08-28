@@ -89,7 +89,7 @@ public partial class ScrollView : ISystemInsetScroll
 	void ApplyRefreshCanExecute()
 	{
 		if (refresh is not null)
-			refresh.Enabled = RefreshCommand?.CanExecute(null) is true;
+			refresh.Enabled = RefreshCommand?.CanExecute(RefreshCommandParameter) is true;
 	}
 
 	void OnNativeRefreshTriggered(
