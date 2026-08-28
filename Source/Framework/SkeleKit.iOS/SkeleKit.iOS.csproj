@@ -19,7 +19,8 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes>- Make bubble a normal tab as fallback on iOS 18.</PackageReleaseNotes>
+        <PackageReleaseNotes>- Make bubble a normal tab as fallback on iOS 18.
+- Rename AddGesture to AddNativeGesture for clarifictation.</PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 

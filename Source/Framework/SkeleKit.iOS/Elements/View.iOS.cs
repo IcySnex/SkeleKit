@@ -738,9 +738,14 @@ public abstract partial class View
 			.LayoutIfNeeded();
 
 	/// <summary>
-	/// Adds a native gesture recognizer. An escape hatch for gestures the library does not wrap.
+	/// Adds a native gesture recognizer without forcing the view to realize.
 	/// </summary>
-	public void AddGesture(
+	/// <remarks>
+	/// This is an escape hatch for gestures the library does not wrap. The recognizer is retained and
+	/// attached whenever the view's native peer is realized. The caller owns any separate target or
+	/// delegate objects used by the recognizer.
+	/// </remarks>
+	public void AddNativeGesture(
 		UIGestureRecognizer gesture)
 	{
 		gestures.Add(gesture);
