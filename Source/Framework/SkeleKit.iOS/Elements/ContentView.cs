@@ -154,10 +154,11 @@ public abstract partial class ContentView : Panel
 	public IList<ToolbarItem> ToolbarItems { get; } = [];
 
 	/// <summary>
-	/// Buttons in a persistent bar along the screen's bottom edge.
+	/// Buttons along the screen's bottom edge.
 	/// </summary>
 	/// <remarks>
-	/// Above a visible tab bar they float as its accessory; everywhere else they form the classic bottom toolbar.
+	/// The toolbar stays hidden while a tab bar occupies the bottom edge.
+	/// A pushed page can set <see cref="HidesTabBar"/> to show its bottom toolbar in place of the tab bar.
 	/// </remarks>
 	public IList<ToolbarItem> BottomToolbarItems { get; } = [];
 
