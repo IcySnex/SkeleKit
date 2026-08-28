@@ -19,7 +19,7 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes>- Fix safe area not inset automatically on iPad.</PackageReleaseNotes>
+        <PackageReleaseNotes>- Make bubble a normal tab as fallback on iOS 18.</PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 
@@ -47,9 +47,7 @@
 
     <PropertyGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
         <IncludeBuildOutput>false</IncludeBuildOutput>
-        <!-- This target exists only for off-device tests and must not create a NuGet dependency group. -->
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-        <!-- iOS-only types referenced by shared XML comments are deliberately absent from the test shim. -->
         <NoWarn>$(NoWarn);CS1574</NoWarn>
     </PropertyGroup>
 

@@ -62,7 +62,7 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Adds the system search tab: the separated bubble that morphs the bar into the search field.
+	/// Adds the system search destination. It is a regular tab on iOS 18 and uses the separated search presentation on iOS 26.
 	/// </summary>
 	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
 	/// <returns>The builder instance for chaining calls.</returns>
@@ -74,7 +74,7 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Puts a destination page in the separated bubble: selecting it shows the page with native selection.
+	/// Puts a destination page in the separated bubble on iOS 26, with a regular tab fallback on earlier versions.
 	/// </summary>
 	/// <typeparam name="TView">The type of the content view to host in the bubble.</typeparam>
 	/// <param name="title">The title, shown in the sidebar and read by VoiceOver.</param>
@@ -92,7 +92,7 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Puts an action button in the separated bubble instead of search.
+	/// Puts an action button in the separated bubble instead of search, with a regular tab-shaped action on earlier versions.
 	/// </summary>
 	/// <remarks>
 	/// The bubble is single: Search and Bubble exclude each other.

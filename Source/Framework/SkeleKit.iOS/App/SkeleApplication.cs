@@ -565,35 +565,62 @@ public class SkeleApplication
 
 					tabs.Add(search);
 				}
-				else if (tabsBuilder?.BubbleView is Type bubbleView && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
+				else if (tabsBuilder?.BubbleView is Type bubbleView)
 				{
 					UINavigationController stack = Stack(bubbleView, tabsBuilder.UseLargeTitles);
+					UITab bubble;
 
-					UISearchTab bubble = new(_ => stack)
+					if (OperatingSystem.IsIOSVersionAtLeast(26))
 					{
-						Title = tabsBuilder.BubbleTitle!,
-						Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
-						AutomaticallyActivatesSearch = false
-					};
+						bubble = new UISearchTab(_ => stack)
+						{
+							Title = tabsBuilder.BubbleTitle!,
+							Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
+							AutomaticallyActivatesSearch = false
+						};
+					}
+					else
+					{
+						bubble = new UITab(
+							tabsBuilder.BubbleTitle!,
+							UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
+							bubbleView.Name,
+							_ => stack);
+					}
 
-					((PageHost)stack.ViewControllers![0]).Tab = bubble;
+					PageHost root = (PageHost)stack.ViewControllers![0];
+					root.Tab = bubble;
+					root.Page?.ApplyTabBadge();
 					tabs.Add(bubble);
 				}
-				else if (tabsBuilder?.BubbleFactory is Func<IServiceProvider, Action> action && UIDevice.CurrentDevice.CheckSystemVersion(26, 0))
+				else if (tabsBuilder?.BubbleFactory is Func<IServiceProvider, Action> action)
 				{
 					BubbleAction = action(Services);
+					UITab bubble;
 
-					UISearchTab bubble = new(static _ => new())
+					if (OperatingSystem.IsIOSVersionAtLeast(26))
 					{
-						Title = tabsBuilder.BubbleTitle!,
-						Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
-						AutomaticallyActivatesSearch = false
-					};
+						bubble = new UISearchTab(static _ => new())
+						{
+							Title = tabsBuilder.BubbleTitle!,
+							Image = UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
+							AutomaticallyActivatesSearch = false
+						};
+					}
+					else
+					{
+						bubble = new UITab(
+							tabsBuilder.BubbleTitle!,
+							UIImage.GetSystemImage(tabsBuilder.BubbleIcon!),
+							$"action:{tabsBuilder.BubbleTitle}",
+							static _ => new());
+					}
 
 					ActionTab = bubble;
 					tabs.Add(bubble);
 
-					CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => AttachBubbleInterceptor(controller));
+					if (OperatingSystem.IsIOSVersionAtLeast(26))
+						CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => AttachBubbleInterceptor(controller));
 				}
 
 				controller.SetTabs([.. tabs], false);
