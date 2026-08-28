@@ -20,7 +20,8 @@
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>- Make bubble a normal tab as fallback on iOS 18.
-- Rename AddGesture to AddNativeGesture for clarifictation.</PackageReleaseNotes>
+- Rename AddGesture to AddNativeGesture for clarifictation.
+- Prevent pull-to-refresh when RefreshCommand cannot execute.</PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 

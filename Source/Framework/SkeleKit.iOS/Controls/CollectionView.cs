@@ -190,9 +190,22 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	/// Command invoked when the user pulls to refresh.
 	/// </summary>
 	/// <remarks>
-	/// Setting it enables the refresh control.
+	/// Setting it installs the refresh control.
+	/// The <see cref="ICommand.CanExecute(object?)"/> controls whether the user can pull to refresh.
 	/// </remarks>
-	public ICommand? RefreshCommand { get; set; }
+	public ICommand? RefreshCommand
+	{
+		get => refreshCommand;
+		set
+		{
+			if (ReferenceEquals(refreshCommand, value))
+				return;
+
+			refreshCommand = value;
+			ApplyRefreshCommand();
+		}
+	}
+	ICommand? refreshCommand;
 
 	/// <summary>
 	/// Whether the refresh spinner is showing.
@@ -469,17 +482,26 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 		NotifyCollectionChangedEventArgs e) =>
 		ApplySelection();
 
-	void OnRefreshTriggered()
+	internal void OnRefreshTriggered()
 	{
+		if (RefreshCommand is not ICommand command || !command.CanExecute(null))
+		{
+			Set(ref isRefreshing, false, affectsMeasure: false);
+			isRefreshingBinding?.PushToSource(false);
+			ApplyRefreshing();
+			return;
+		}
+
 		Set(ref isRefreshing, true, affectsMeasure: false);
 		isRefreshingBinding?.PushToSource(true);
-
-		if (RefreshCommand is ICommand command && command.CanExecute(null))
-			command.Execute(null);
+		command.Execute(null);
 	}
 
 	void ApplyRefreshing() =>
 		ApplyRefreshingCore();
+
+	void ApplyRefreshCommand() =>
+		ApplyRefreshCommandCore();
 
 	void ApplyEditing() =>
 		ApplyEditingCore();
@@ -505,6 +527,8 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	}
 
 	partial void ApplyRefreshingCore();
+
+	partial void ApplyRefreshCommandCore();
 
 	partial void ApplyEditingCore();
 

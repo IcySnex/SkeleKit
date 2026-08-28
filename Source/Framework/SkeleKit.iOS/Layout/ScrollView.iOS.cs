@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using ObjCRuntime;
 
 namespace SkeleKit;
@@ -29,6 +30,7 @@ public partial class ScrollView : ISystemInsetScroll
 
 	nfloat keyboardCover;
 	UIRefreshControl? refresh;
+	ICommand? observedRefreshCommand;
 	bool endsAfterDrag;
 	bool usesSystemContentInsets;
 
@@ -59,16 +61,70 @@ public partial class ScrollView : ISystemInsetScroll
 		return true;
 	}
 
+	void ObserveRefreshCommand()
+	{
+		if (ReferenceEquals(observedRefreshCommand, RefreshCommand))
+			return;
+
+		StopObservingRefreshCommand();
+		observedRefreshCommand = RefreshCommand;
+
+		if (observedRefreshCommand is not null)
+			observedRefreshCommand.CanExecuteChanged += OnRefreshCanExecuteChanged;
+	}
+
+	void StopObservingRefreshCommand()
+	{
+		if (observedRefreshCommand is not null)
+			observedRefreshCommand.CanExecuteChanged -= OnRefreshCanExecuteChanged;
+
+		observedRefreshCommand = null;
+	}
+
+	void OnRefreshCanExecuteChanged(
+		object? sender,
+		EventArgs e) =>
+		MainThread.Post(ApplyRefreshCanExecute);
+
+	void ApplyRefreshCanExecute()
+	{
+		if (refresh is not null)
+			refresh.Enabled = RefreshCommand?.CanExecute(null) is true;
+	}
+
+	void OnNativeRefreshTriggered(
+		object? sender,
+		EventArgs e) =>
+		OnRefreshTriggered();
+
 	void ApplyRefresh(
 		UIScrollView host)
 	{
-		if (RefreshCommand is null || refresh is not null)
+		if (RefreshCommand is null)
+		{
+			if (refresh is not null)
+				refresh.Enabled = false;
+
+			return;
+		}
+
+		if (refresh is null)
+		{
+			refresh = new();
+			refresh.ValueChanged += OnNativeRefreshTriggered;
+			host.RefreshControl = refresh;
+		}
+
+		ApplyRefreshCanExecute();
+	}
+
+	partial void ApplyRefreshCommandCore()
+	{
+		if (!IsRealized)
 			return;
 
-		refresh = new();
-		refresh.ValueChanged += (_, _) => OnRefreshTriggered();
-
-		host.RefreshControl = refresh;
+		ObserveRefreshCommand();
+		ApplyRefresh((UIScrollView)Native);
 	}
 
 	void EndNativeRefresh()
@@ -329,7 +385,21 @@ public partial class ScrollView : ISystemInsetScroll
 
 		ApplyKeyboardDismiss();
 		ApplyBehavior();
+		ObserveRefreshCommand();
 		ApplyRefresh(host);
+	}
+
+	private protected override void OnUnrealized()
+	{
+		StopObservingRefreshCommand();
+
+		if (refresh is not null)
+			refresh.ValueChanged -= OnNativeRefreshTriggered;
+
+		refresh = null;
+		endsAfterDrag = false;
+
+		base.OnUnrealized();
 	}
 }
 
