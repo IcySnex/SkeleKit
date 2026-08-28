@@ -25,12 +25,20 @@ public class ColorTests
 	}
 
 	[Fact]
-	public void WithAlpha_FlattensSystemColor()
+	public void WithAlpha_PreservesSystemColor()
 	{
 		Color faded = Colors.Label.WithAlpha(0.5);
 
-		Assert.Null(faded.System);
+		Assert.Equal(SystemColor.Label, faded.System);
 		Assert.Equal(0.5, faded.Alpha);
+	}
+
+	[Fact]
+	public void Transparent_HasZeroAlpha()
+	{
+		Color transparent = Colors.Transparent;
+
+		Assert.Equal(0, transparent.Alpha);
 	}
 
 	[Fact]

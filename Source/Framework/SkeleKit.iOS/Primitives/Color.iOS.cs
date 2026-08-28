@@ -52,7 +52,7 @@ internal static class ColorInterop
 		this Color color)
 	{
 		if (color.System is SystemColor system)
-			return Resolve(system);
+			return Resolve(system).ColorWithAlpha((nfloat)color.Alpha);
 
 		if (color.Dark.HasValue)
 		{

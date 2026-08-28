@@ -44,12 +44,6 @@ public readonly record struct Color(
 	double Blue,
 	double Alpha)
 {
-	/// <summary>
-	/// Fully transparent.
-	/// </summary>
-	public static readonly Color Transparent = new(0, 0, 0, 0);
-
-
 	internal static Color? Lerp(
 		Color a,
 		Color b,
@@ -129,13 +123,12 @@ public readonly record struct Color(
 
 
 	/// <summary>
-	/// Returns this color with a different <paramref name="alpha"/> (0..1). A system color flattens to its light-mode value.
+	/// Returns this color with a different <paramref name="alpha"/> (0..1).
 	/// </summary>
 	public Color WithAlpha(
 		double alpha) =>
 		this with
 		{
-			System = null,
 			Alpha = alpha,
 			Dark = Dark.HasValue ? (Dark.Value.Red, Dark.Value.Green, Dark.Value.Blue, alpha) : null
 		};

@@ -19,9 +19,13 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes>- Make bubble a normal tab as fallback on iOS 18.
-- Rename AddGesture to AddNativeGesture for clarifictation.
-- Prevent pull-to-refresh when RefreshCommand cannot execute.</PackageReleaseNotes>
+        <PackageReleaseNotes>
+            - Make bubble a normal tab as fallback on iOS 18.
+            - Rename AddGesture to AddNativeGesture for clarifictation.
+            - Prevent pull-to-refresh when RefreshCommand cannot execute.
+            - Preserve system colors when using Color.WithAlpha.
+            - Put transparent under Colors namespace.
+        </PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 

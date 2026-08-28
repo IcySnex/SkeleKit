@@ -12,22 +12,9 @@ public static class Colors
 
 
 	/// <summary>
-	/// The given color made fully transparent.
+	/// Fully transparent.
 	/// </summary>
-	/// <param name="color">The color to drop the alpha from.</param>
-	public static Color Transparent(
-		Color color) =>
-		new(color.Red, color.Green, color.Blue, 0);
-
-	/// <summary>
-	/// A transparent color based on black.
-	/// </summary>
-	public static Color TransparentBlack => new(0, 0, 0, 0);
-
-	/// <summary>
-	/// A transparent color based on white.
-	/// </summary>
-	public static Color TransparentWhite => new(1, 1, 1, 0);
+	public static Color Transparent => new(0, 0, 0, 0);
 
 
 	/// <summary>
