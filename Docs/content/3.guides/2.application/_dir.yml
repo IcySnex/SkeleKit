@@ -1,0 +1,3 @@
+title: Application
+icon: lucide:app-window
+navigation.redirect: /guides/application/application-builder-and-dependency-injection
