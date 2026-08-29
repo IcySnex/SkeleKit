@@ -32,6 +32,11 @@ internal sealed partial class CollectionInteractionsViewModel : ShowcaseViewMode
 	];
 
 	int newContact = 1;
+	readonly IHaptics haptics;
+
+	public CollectionInteractionsViewModel(
+		IHaptics haptics) =>
+		this.haptics = haptics;
 
 	public ObservableCollection<ContactEntry> Items { get; } =
 	[
@@ -117,7 +122,7 @@ internal sealed partial class CollectionInteractionsViewModel : ShowcaseViewMode
 			string suffix = newContact == 1 ? "" : $" {newContact}";
 			newContact++;
 			Items.Insert(0, new("NC", $"New Contact{suffix}"));
-			Haptics.Selection();
+			haptics.Selection();
 		}
 		finally
 		{
@@ -130,7 +135,7 @@ internal sealed partial class CollectionInteractionsViewModel : ShowcaseViewMode
 		ContactEntry item)
 	{
 		Items.Remove(item);
-		Haptics.Notify(HapticsNotification.Success);
+		haptics.Notify(HapticsNotification.Success);
 	}
 
 	[RelayCommand]
@@ -144,9 +149,9 @@ internal sealed partial class CollectionInteractionsViewModel : ShowcaseViewMode
 	}
 
 	[RelayCommand]
-	static void Reorder(
+	void Reorder(
 		ItemMove<ContactEntry> move) =>
-		Haptics.Impact(HapticStyle.Light);
+		haptics.Impact(HapticStyle.Light);
 
 	static string Initials(
 		string name) =>

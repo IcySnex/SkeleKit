@@ -36,6 +36,14 @@ public abstract partial class ContentView
 	/// ViewModels take <see cref="ISystemPicker"/> by constructor instead.
 	/// </remarks>
 	protected ISystemPicker SystemPicker => SkeleApplication.Current?.Services.GetRequiredService<ISystemPicker>() ?? throw new InvalidOperationException("There is no running application.");
+
+	/// <summary>
+	/// The application's haptic feedback service, for feedback from page code.
+	/// </summary>
+	/// <remarks>
+	/// ViewModels take <see cref="IHaptics"/> by constructor instead.
+	/// </remarks>
+	protected IHaptics Haptics => SkeleApplication.Current?.Services.GetRequiredService<IHaptics>() ?? throw new InvalidOperationException("There is no running application.");
 #pragma warning restore CA1822
 
 

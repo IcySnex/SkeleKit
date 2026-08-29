@@ -2,12 +2,9 @@ using CoreHaptics;
 
 namespace SkeleKit;
 
-/// <summary>
-/// Provides access to native device haptic feedback.
-/// </summary>
-public static class Haptics
+internal sealed class Haptics : IHaptics, IDisposable
 {
-	static CHHapticEngine? engine;
+	CHHapticEngine? engine;
 
 	static UIWindow? Anchor() =>
 		UIApplication.SharedApplication
@@ -16,7 +13,7 @@ public static class Haptics
 			.SelectMany(scene => scene.Windows)
 			.FirstOrDefault(window => window.IsKeyWindow);
 
-	static CHHapticEngine? SharedEngine()
+	CHHapticEngine? SharedEngine()
 	{
 		if (!CHHapticEngine.GetHardwareCapabilities().SupportsHaptics)
 			return null;
@@ -36,11 +33,7 @@ public static class Haptics
 	}
 
 
-	/// <summary>
-	/// Triggers impact feedback to simulate physical weight or collisions.
-	/// </summary>
-	/// <param name="style">The weight profile of the impact sensation.</param>
-	public static void Impact(
+	public void Impact(
 		HapticStyle style = HapticStyle.Medium)
 	{
 		if (Anchor() is not UIWindow anchor)
@@ -61,10 +54,7 @@ public static class Haptics
 		generator.ImpactOccurred();
 	}
 
-	/// <summary>
-	/// Triggers subtle feedback indicating a user selection change.
-	/// </summary>
-	public static void Selection()
+	public void Selection()
 	{
 		if (Anchor() is not UIWindow anchor)
 			return;
@@ -75,11 +65,7 @@ public static class Haptics
 		generator.SelectionChanged();
 	}
 
-	/// <summary>
-	/// Triggers notification feedback for successes, warnings, or errors.
-	/// </summary>
-	/// <param name="notification">The event type being signaled.</param>
-	public static void Notify(
+	public void Notify(
 		HapticsNotification notification)
 	{
 		if (Anchor() is not UIWindow anchor)
@@ -98,11 +84,7 @@ public static class Haptics
 		generator.NotificationOccurred(type);
 	}
 
-	/// <summary>
-	/// Plays a custom haptic pattern built from taps and sustained vibrations.
-	/// </summary>
-	/// <param name="events">The events making up the pattern, timed from its start.</param>
-	public static void Play(
+	public void Play(
 		params ReadOnlySpan<HapticEvent> events)
 	{
 		if (events.Length == 0)
@@ -139,5 +121,11 @@ public static class Haptics
 			return;
 
 		player.Start(0, out _);
+	}
+
+	public void Dispose()
+	{
+		engine?.Dispose();
+		engine = null;
 	}
 }

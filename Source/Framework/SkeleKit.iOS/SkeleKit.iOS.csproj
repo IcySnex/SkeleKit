@@ -29,6 +29,7 @@
             - Support local ImageSource icons across controls, menus, toolbars, tabs and map pins.
             - Redesign bindings with fluent directions, converters, update triggers and observable nested paths.
             - Add managed factory creation for NativeViews.
+            - Inject haptics service into DI/ContentView instead of static utility.
         </PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>

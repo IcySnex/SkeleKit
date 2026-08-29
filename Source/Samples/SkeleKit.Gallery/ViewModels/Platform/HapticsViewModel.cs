@@ -8,8 +8,12 @@ namespace SkeleKit.Gallery.ViewModels.Platform;
 
 internal sealed partial class HapticsViewModel : ShowcaseViewModel
 {
-	public HapticsViewModel()
+	readonly IHaptics haptics;
+
+	public HapticsViewModel(
+		IHaptics haptics)
 	{
+		this.haptics = haptics;
 		SelectedImpactStyle = ImpactStyles[1];
 		SelectedNotification = Notifications[0];
 	}
@@ -72,7 +76,7 @@ internal sealed partial class HapticsViewModel : ShowcaseViewModel
 	[
 		new(
 			$$"""
-			Haptics.Impact(HapticStyle.{{SelectedImpactStyle.Value}});
+			haptics.Impact(HapticStyle.{{SelectedImpactStyle.Value}});
 			""")
 	];
 
@@ -80,7 +84,7 @@ internal sealed partial class HapticsViewModel : ShowcaseViewModel
 	[
 		new(
 			"""
-			Haptics.Selection();
+			haptics.Selection();
 			""")
 	];
 
@@ -88,7 +92,7 @@ internal sealed partial class HapticsViewModel : ShowcaseViewModel
 	[
 		new(
 			$$"""
-			Haptics.Notify(HapticsNotification.{{SelectedNotification.Value}});
+			haptics.Notify(HapticsNotification.{{SelectedNotification.Value}});
 			""")
 	];
 
@@ -96,7 +100,7 @@ internal sealed partial class HapticsViewModel : ShowcaseViewModel
 	[
 		new(
 			$$"""
-			Haptics.Play(
+			haptics.Play(
 				HapticEvent.Tap(
 					0,
 					intensity: {{Number(Intensity)}},
@@ -117,28 +121,28 @@ internal sealed partial class HapticsViewModel : ShowcaseViewModel
 	[RelayCommand]
 	void TriggerImpact()
 	{
-		Haptics.Impact(SelectedImpactStyle.Value);
+		haptics.Impact(SelectedImpactStyle.Value);
 		ImpactResult = $"Triggered: {SelectedImpactStyle.Title}";
 	}
 
 	[RelayCommand]
 	void TriggerSelection()
 	{
-		Haptics.Selection();
+		haptics.Selection();
 		SelectionResult = "Triggered";
 	}
 
 	[RelayCommand]
 	void TriggerNotification()
 	{
-		Haptics.Notify(SelectedNotification.Value);
+		haptics.Notify(SelectedNotification.Value);
 		NotificationResult = $"Triggered: {SelectedNotification.Title}";
 	}
 
 	[RelayCommand]
 	void PlayCustomPattern()
 	{
-		Haptics.Play(
+		haptics.Play(
 			HapticEvent.Tap(0, Intensity, Sharpness),
 			HapticEvent.Continuous(0.1, 0.3, Intensity, Sharpness),
 			HapticEvent.Tap(0.5, Intensity, Sharpness));

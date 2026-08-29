@@ -10,6 +10,7 @@ internal sealed record ListEntry(
 internal sealed partial class ListsViewModel : ShowcaseViewModel
 {
 	int nextItem = 13;
+	readonly IHaptics haptics;
 
 	public ObservableCollection<ListEntry> Items { get; } = [];
 
@@ -45,8 +46,11 @@ internal sealed partial class ListsViewModel : ShowcaseViewModel
 			""");
 
 
-	public ListsViewModel()
+	public ListsViewModel(
+		IHaptics haptics)
 	{
+		this.haptics = haptics;
+
 		for (int index = 1; index <= 12; index++)
 			Items.Add(new($"Item {index}"));
 	}
@@ -72,9 +76,9 @@ internal sealed partial class ListsViewModel : ShowcaseViewModel
 	}
 
 	[RelayCommand]
-	static void Select(
+	void Select(
 		ListEntry item) =>
-		Haptics.Selection();
+		haptics.Selection();
 
 	static IReadOnlyList<Span> Code(
 		string value) =>

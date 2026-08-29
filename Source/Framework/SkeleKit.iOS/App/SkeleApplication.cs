@@ -212,6 +212,7 @@ public class SkeleApplication
 		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, CurrentStack));
 		builder.Services.AddSingleton<ISharer>(_ => new Sharer());
 		builder.Services.AddSingleton<ISystemPicker>(_ => new SystemPicker());
+		builder.Services.AddSingleton<IHaptics>(_ => new Haptics());
 		Services = builder.Services.BuildServiceProvider();
 	}
 
