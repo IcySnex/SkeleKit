@@ -133,7 +133,7 @@ internal sealed partial class ImageViewModel : ShowcaseViewModel
 			{
 				Source = ImageSource.Symbol("speaker.wave.3.fill"),
 				SymbolSize = 72,
-				SymbolValue = Bind(model => model.SymbolValue),
+				SymbolValue = Bind(vm => vm.SymbolValue),
 				SymbolEffect = SymbolEffect.{{SelectedEffect.Value}}
 			};
 

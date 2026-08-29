@@ -97,7 +97,7 @@ internal sealed class OverlayView : ShowcaseView<OverlayViewModel>
 			"Layer order",
 			"Every child shares the same space. Children added later are drawn above earlier ones.",
 			ShowcaseBox.Canvas(artwork, 250),
-			Code(model => model.LayersCode));
+			Code(vm => vm.LayersCode));
 	}
 
 	void AddAlignmentShowcase(
@@ -155,9 +155,8 @@ internal sealed class OverlayView : ShowcaseView<OverlayViewModel>
 
 		SegmentedControl horizontal = new()
 		{
-			SelectedIndex = Bind(
-				model => model.HorizontalIndex,
-				static (model, value) => model.HorizontalIndex = value),
+			SelectedIndex = Bind(vm => vm.HorizontalIndex)
+				.TwoWay((vm, val) => vm.HorizontalIndex = val),
 			SelectionChanged = index => child.HorizontalAlignment = index switch
 			{
 				0 => HorizontalAlignment.Start,
@@ -171,9 +170,8 @@ internal sealed class OverlayView : ShowcaseView<OverlayViewModel>
 
 		SegmentedControl vertical = new()
 		{
-			SelectedIndex = Bind(
-				model => model.VerticalIndex,
-				static (model, value) => model.VerticalIndex = value),
+			SelectedIndex = Bind(vm => vm.VerticalIndex)
+				.TwoWay((vm, val) => vm.VerticalIndex = val),
 			SelectionChanged = index => child.VerticalAlignment = index switch
 			{
 				0 => VerticalAlignment.Start,
@@ -192,6 +190,6 @@ internal sealed class OverlayView : ShowcaseView<OverlayViewModel>
 				ShowcaseBox.Canvas(overlay, 240),
 				LabeledControl("Horizontal", horizontal),
 				LabeledControl("Vertical", vertical)),
-			Code(model => model.AlignmentCode));
+			Code(vm => vm.AlignmentCode));
 	}
 }

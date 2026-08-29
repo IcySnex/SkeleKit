@@ -20,30 +20,27 @@ internal sealed class StepperView : ShowcaseView<StepperViewModel>
 		Stepper stepper = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
-			Value = Bind(
-				model => model.Value,
-				static (model, value) => model.Value = value),
+			Value = Bind(vm => vm.Value)
+				.TwoWay((vm, val) => vm.Value = val),
 			Minimum = 0,
 			Maximum = 20,
 			Step = viewModel.SelectedStep.Value,
-			IsEnabled = Bind(model => model.ControlEnabled)
+			IsEnabled = Bind(vm => vm.ControlEnabled)
 		};
 
 		Picker<ShowcaseOption<double>> increment = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Steps,
-			SelectedItem = Bind(
-				model => model.SelectedStep,
-				static (model, value) => model.SelectedStep = value!),
+			SelectedItem = Bind(vm => vm.SelectedStep)
+				.TwoWay((vm, val) => vm.SelectedStep = val!),
 			SelectionChanged = option => stepper.Step = option.Value
 		};
 
 		Switch enabled = new()
 		{
-			IsOn = Bind(
-				model => model.ControlEnabled,
-				static (model, value) => model.ControlEnabled = value)
+			IsOn = Bind(vm => vm.ControlEnabled)
+				.TwoWay((vm, val) => vm.ControlEnabled = val)
 		};
 
 		AddShowcase(
@@ -62,7 +59,7 @@ internal sealed class StepperView : ShowcaseView<StepperViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.ValueLabel),
+								Text = Bind(vm => vm.ValueLabel),
 								TextStyle = TextStyle.Title2,
 								FontWeight = FontWeight.Semibold
 							},
@@ -81,7 +78,7 @@ internal sealed class StepperView : ShowcaseView<StepperViewModel>
 					}),
 				SettingRow("Increment", increment),
 				SettingRow("Enabled", enabled)),
-			Code(model => model.StepperCode));
+			Code(vm => vm.StepperCode));
 	}
 
 }

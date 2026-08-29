@@ -84,9 +84,8 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 
 		SegmentedControl timing = new()
 		{
-			SelectedIndex = Bind(
-				model => model.TimingIndex,
-				static (model, value) => model.TimingIndex = value)
+			SelectedIndex = Bind(vm => vm.TimingIndex)
+				.TwoWay((vm, val) => vm.TimingIndex = val)
 		};
 		timing.Items.Add("Spring");
 		timing.Items.Add("Ease in/out");
@@ -94,7 +93,7 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 
 		Button toggle = new()
 		{
-			Text = Bind(model => model.ActionTitle),
+			Text = Bind(vm => vm.ActionTitle),
 			Kind = ButtonStyle.Tinted
 		};
 		toggle.Command = Command.From(() =>
@@ -122,7 +121,7 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 				ShowcaseBox.Canvas(preview, 200),
 				LabeledControl("Timing", timing),
 				SettingRow("Card", toggle)),
-			Code(model => model.AnimationCode));
+			Code(vm => vm.AnimationCode));
 	}
 
 	void AddAnimatorShowcase(
@@ -207,7 +206,7 @@ internal sealed class AnimationView : ShowcaseView<AnimationViewModel>
 			"Interactive animator",
 			"Drag the framed work, release it to settle, and grab it again while it is moving.",
 			ShowcaseBox.Canvas(stage, 200),
-			Code(model => model.AnimatorCode));
+			Code(vm => vm.AnimatorCode));
 	}
 
 

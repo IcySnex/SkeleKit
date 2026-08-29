@@ -30,9 +30,8 @@ internal sealed partial class ColorWellViewModel : ShowcaseViewModel
 			$$"""
 			new ColorWell
 			{
-				Selected = Bind(
-					model => model.SelectedColor,
-					(model, value) => model.SelectedColor = value),
+				Selected = Bind(vm => vm.SelectedColor)
+					.TwoWay((vm, val) => vm.SelectedColor = val),
 				Title = {{(ShowsTitle ? "\"Gallery accent\"" : "null")}},
 				SupportsAlpha = {{(SupportsAlpha ? "true" : "false")}}
 			};

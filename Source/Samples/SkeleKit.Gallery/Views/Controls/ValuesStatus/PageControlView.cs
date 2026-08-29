@@ -20,10 +20,9 @@ internal sealed class PageControlView : ShowcaseView<PageControlViewModel>
 		PageControl pages = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
-			Count = Bind(model => model.Count),
-			Current = Bind(
-				model => model.Current,
-				static (model, value) => model.Current = value),
+			Count = Bind(vm => vm.Count),
+			Current = Bind(vm => vm.Current)
+				.TwoWay((vm, val) => vm.Current = val),
 			DotColor = Colors.Red.WithAlpha(0.25),
 			CurrentDotColor = Colors.Red,
 			HidesForSinglePage = viewModel.HidesForSinglePage,
@@ -34,16 +33,14 @@ internal sealed class PageControlView : ShowcaseView<PageControlViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Counts,
-			SelectedItem = Bind(
-				model => model.SelectedCount,
-				static (model, value) => model.SelectedCount = value!)
+			SelectedItem = Bind(vm => vm.SelectedCount)
+				.TwoWay((vm, val) => vm.SelectedCount = val!)
 		};
 
 		Switch hiding = new()
 		{
-			IsOn = Bind(
-				model => model.HidesForSinglePage,
-				static (model, value) => model.HidesForSinglePage = value),
+			IsOn = Bind(vm => vm.HidesForSinglePage)
+				.TwoWay((vm, val) => vm.HidesForSinglePage = val),
 			Toggled = value =>
 			{
 				pages.HidesForSinglePage = value;
@@ -52,9 +49,8 @@ internal sealed class PageControlView : ShowcaseView<PageControlViewModel>
 
 		Switch scrubbing = new()
 		{
-			IsOn = Bind(
-				model => model.AllowsScrubbing,
-				static (model, value) => model.AllowsScrubbing = value),
+			IsOn = Bind(vm => vm.AllowsScrubbing)
+				.TwoWay((vm, val) => vm.AllowsScrubbing = val),
 			Toggled = value =>
 			{
 				pages.AllowsScrubbing = value;
@@ -75,7 +71,7 @@ internal sealed class PageControlView : ShowcaseView<PageControlViewModel>
 						Children =
 						{
 							pages,
-							Status(Bind(model => model.StateLabel), FontWeight.Medium)
+							Status(Bind(vm => vm.StateLabel), FontWeight.Medium)
 						}
 					},
 					180),
@@ -91,7 +87,7 @@ internal sealed class PageControlView : ShowcaseView<PageControlViewModel>
 					}),
 				SettingRow("Hide single page", hiding),
 				SettingRow("Scrubbing", scrubbing)),
-			Code(model => model.PageControlCode));
+			Code(vm => vm.PageControlCode));
 	}
 
 

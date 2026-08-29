@@ -19,18 +19,16 @@ internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 		ColorWell well = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
-			Selected = Bind(
-				model => model.SelectedColor,
-				static (model, value) => model.SelectedColor = value),
+			Selected = Bind(vm => vm.SelectedColor)
+				.TwoWay((vm, val) => vm.SelectedColor = val),
 			Title = "Gallery accent",
 			SupportsAlpha = viewModel.SupportsAlpha
 		};
 
 		Switch title = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsTitle,
-				static (model, value) => model.ShowsTitle = value),
+			IsOn = Bind(vm => vm.ShowsTitle)
+				.TwoWay((vm, val) => vm.ShowsTitle = val),
 			Toggled = value =>
 			{
 				well.Title = value ? "Gallery accent" : null;
@@ -39,9 +37,8 @@ internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 
 		Switch alpha = new()
 		{
-			IsOn = Bind(
-				model => model.SupportsAlpha,
-				static (model, value) => model.SupportsAlpha = value),
+			IsOn = Bind(vm => vm.SupportsAlpha)
+				.TwoWay((vm, val) => vm.SupportsAlpha = val),
 			Toggled = value =>
 			{
 				well.SupportsAlpha = value;
@@ -75,7 +72,7 @@ internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.ColorSummary),
+								Text = Bind(vm => vm.ColorSummary),
 								TextStyle = TextStyle.Subheadline,
 								FontWeight = FontWeight.Medium,
 								TextAlignment = TextAlignment.Center
@@ -86,6 +83,6 @@ internal sealed class ColorWellView : ShowcaseView<ColorWellViewModel>
 				SettingRow("Picker title", title),
 				SettingRow("Opacity slider", alpha),
 				SettingRow("Bound value", reset)),
-			Code(model => model.SelectionCode));
+			Code(vm => vm.SelectionCode));
 	}
 }

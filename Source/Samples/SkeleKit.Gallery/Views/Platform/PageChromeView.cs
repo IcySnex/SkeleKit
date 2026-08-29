@@ -22,53 +22,48 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 		Picker<PageChromeTitleOption> title = new()
 		{
 			ItemsSource = viewModel.TitleStyles,
-			SelectedItem = Bind(
-				model => model.SelectedTitleStyle,
-				static (model, value) => model.SelectedTitleStyle = value!),
+			SelectedItem = Bind(vm => vm.SelectedTitleStyle)
+				.TwoWay((vm, val) => vm.SelectedTitleStyle = val!),
 			ItemTitle = static option => option.Title
 		};
 
 		Picker<PageChromeBackgroundOption> background = new()
 		{
 			ItemsSource = viewModel.Backgrounds,
-			SelectedItem = Bind(
-				model => model.SelectedBackground,
-				static (model, value) => model.SelectedBackground = value!),
+			SelectedItem = Bind(vm => vm.SelectedBackground)
+				.TwoWay((vm, val) => vm.SelectedBackground = val!),
 			ItemTitle = static option => option.Title
 		};
 
 		Picker<PageChromeStatusBarOption> statusBar = new()
 		{
 			ItemsSource = viewModel.StatusBars,
-			SelectedItem = Bind(
-				model => model.SelectedStatusBar,
-				static (model, value) => model.SelectedStatusBar = value!),
+			SelectedItem = Bind(vm => vm.SelectedStatusBar)
+				.TwoWay((vm, val) => vm.SelectedStatusBar = val!),
 			ItemTitle = static option => option.Title
 		};
 
 		Picker<PageChromeSafeAreaOption> safeArea = new()
 		{
 			ItemsSource = viewModel.SafeAreas,
-			SelectedItem = Bind(
-				model => model.SelectedSafeArea,
-				static (model, value) => model.SelectedSafeArea = value!),
+			SelectedItem = Bind(vm => vm.SelectedSafeArea)
+				.TwoWay((vm, val) => vm.SelectedSafeArea = val!),
 			ItemTitle = static option => option.Title
 		};
 
 		Picker<PageChromeColorOption> accent = new()
 		{
 			ItemsSource = viewModel.AccentColors,
-			SelectedItem = Bind(
-				model => model.SelectedAccentColors,
-				static (model, value) => model.SelectedAccentColors = value!),
+			SelectedItem = Bind(vm => vm.SelectedAccentColors)
+				.TwoWay((vm, val) => vm.SelectedAccentColors = val!),
 			ItemTitle = static option => option.Title
 		};
 
-		Switch prompt = Toggle(model => model.ShowsPrompt, static (model, value) => model.ShowsPrompt = value);
-		Switch navigationBar = Toggle(model => model.HidesNavigationBar, static (model, value) => model.HidesNavigationBar = value);
-		Switch tabBar = Toggle(model => model.HidesTabBar, static (model, value) => model.HidesTabBar = value);
-		Switch toolbar = Toggle(model => model.HasToolbar, static (model, value) => model.HasToolbar = value);
-		Switch bottomToolbar = Toggle(model => model.HasBottomToolbar, static (model, value) => model.HasBottomToolbar = value);
+		Switch prompt = Toggle(vm => vm.ShowsPrompt, (vm, val) => vm.ShowsPrompt = val);
+		Switch navigationBar = Toggle(vm => vm.HidesNavigationBar, (vm, val) => vm.HidesNavigationBar = val);
+		Switch tabBar = Toggle(vm => vm.HidesTabBar, (vm, val) => vm.HidesTabBar = val);
+		Switch toolbar = Toggle(vm => vm.HasToolbar, (vm, val) => vm.HasToolbar = val);
+		Switch bottomToolbar = Toggle(vm => vm.HasBottomToolbar, (vm, val) => vm.HasBottomToolbar = val);
 
 		Button open = ActionButton(
 			"Open configured page",
@@ -90,15 +85,15 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 				SettingRow("Hide tab bar", tabBar),
 				SettingRow("Toolbar actions", toolbar),
 				SettingRow("Bottom toolbar", bottomToolbar)),
-			Code(model => model.PageCode));
+			Code(vm => vm.PageCode));
 	}
 
 	void AddSearchShowcase(
 		PageChromeViewModel viewModel)
 	{
 		Switch collapsing = Toggle(
-			model => model.HidesSearchBarWhenScrolling,
-			static (model, value) => model.HidesSearchBarWhenScrolling = value);
+			vm => vm.HidesSearchBarWhenScrolling,
+			(vm, val) => vm.HidesSearchBarWhenScrolling = val);
 
 		Button open = ActionButton(
 			"Open search page",
@@ -111,7 +106,7 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(open, 140),
 				SettingRow("Collapse while scrolling", collapsing)),
-			Code(model => model.SearchCode));
+			Code(vm => vm.SearchCode));
 	}
 
 
@@ -121,7 +116,7 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
 		new()
 		{
-			IsOn = Bind(getter, setter, path)
+			IsOn = Bind(getter, path).TwoWay(setter)
 		};
 
 	static Button ActionButton(

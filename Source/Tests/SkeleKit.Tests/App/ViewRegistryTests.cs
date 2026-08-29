@@ -62,7 +62,7 @@ public class ViewRegistryTests
 	{
 		ViewRegistry registry = new();
 		new PagesBuilder(registry, replace: true)
-			.AddTransient((ViewModel viewModel) => new ViewModelPage(viewModel));
+			.AddTransient((ViewModel vm) => new ViewModelPage(vm));
 
 		using ServiceProvider services = Services();
 		ViewModel viewModel = services.GetRequiredService<ViewModel>();

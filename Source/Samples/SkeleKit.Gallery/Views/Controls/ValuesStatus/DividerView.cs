@@ -18,9 +18,8 @@ internal sealed class DividerView : ShowcaseView<DividerViewModel>
 	{
 		Switch accent = new()
 		{
-			IsOn = Bind(
-				model => model.UsesAccent,
-				static (model, value) => model.UsesAccent = value)
+			IsOn = Bind(vm => vm.UsesAccent)
+				.TwoWay((vm, val) => vm.UsesAccent = val)
 		};
 
 		AddShowcase(
@@ -44,7 +43,7 @@ internal sealed class DividerView : ShowcaseView<DividerViewModel>
 							new Divider
 							{
 								HorizontalAlignment = HorizontalAlignment.Stretch,
-								Color = Bind(model => model.DividerColor)
+								Color = Bind(vm => vm.DividerColor)
 							},
 							new Label
 							{
@@ -55,6 +54,6 @@ internal sealed class DividerView : ShowcaseView<DividerViewModel>
 					},
 					180),
 				SettingRow("Accent color", accent)),
-			Code(model => model.DividerCode));
+			Code(vm => vm.DividerCode));
 	}
 }

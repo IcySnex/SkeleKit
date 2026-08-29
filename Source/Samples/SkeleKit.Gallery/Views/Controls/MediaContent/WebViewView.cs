@@ -67,8 +67,8 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 						Children =
 						{
 							web,
-							Status(Bind(model => model.LocalStatus)),
-							Status(Bind(model => model.JavaScriptStatus))
+							Status(Bind(vm => vm.LocalStatus)),
+							Status(Bind(vm => vm.JavaScriptStatus))
 						}
 					},
 					320),
@@ -81,7 +81,7 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 						Size = ButtonSize.Small,
 						Command = evaluate
 					})),
-			Code(model => model.HtmlCode));
+			Code(vm => vm.HtmlCode));
 	}
 
 	void AddWebsiteShowcase(
@@ -124,12 +124,12 @@ internal sealed class WebView : ShowcaseView<WebViewModel>
 						Children =
 						{
 							web,
-							Status(Bind(model => model.WebsiteStatus))
+							Status(Bind(vm => vm.WebsiteStatus))
 						}
 					},
 					350),
 				SettingRow("Navigation", navigation)),
-			Code(model => model.WebsiteCode));
+			Code(vm => vm.WebsiteCode));
 	}
 
 

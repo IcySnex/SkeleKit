@@ -9,7 +9,7 @@ public sealed class GalleryTabAccessory : Overlay
 	{
 		TabsIpadViewModel viewModel = SkeleApplication.Current!.Services.GetRequiredService<TabsIpadViewModel>();
 		BindingContext = viewModel;
-		IsVisible = BindingFactory.Bind((TabsIpadViewModel model) => model.AccessoryVisible);
+		IsVisible = BindingFactory.Bind((TabsIpadViewModel vm) => vm.AccessoryVisible);
 
 		Children.Add(new StackPanel
 		{
@@ -58,9 +58,8 @@ public sealed class GalleryTabAccessory : Overlay
 
 		Children.Add(new Button
 		{
-			Icon = BindingFactory.Bind(
-				(TabsIpadViewModel model) => model.PlayerIcon,
-				static icon => (ImageSource?)ImageSource.Symbol(icon)),
+			Icon = BindingFactory.Bind((TabsIpadViewModel vm) => vm.PlayerIcon)
+				.ConvertTo(val => (ImageSource?)ImageSource.Symbol(val)),
 			Kind = ButtonStyle.Plain,
 			Size = ButtonSize.Small,
 			Margin = new(0, 0, 12, 0),

@@ -82,9 +82,8 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 			"""
 			new TextEditor
 			{
-				Text = Bind(
-					model => model.Text,
-					(model, value) => model.Text = value)
+				Text = Bind(vm => vm.Text)
+					.TwoWay((vm, val) => vm.Text = val)
 			};
 			""");
 

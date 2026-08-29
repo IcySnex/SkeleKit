@@ -20,33 +20,30 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 		Slider slider = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Stretch,
-			Value = Bind(
-				model => model.Value,
-				static (model, value) => model.Value = value),
+			Value = Bind(vm => vm.Value)
+				.TwoWay((vm, val) => vm.Value = val),
 			Minimum = 0,
 			Maximum = 100,
 			Step = viewModel.SelectedStep.Value,
 			Continuous = viewModel.Continuous,
 			MinIcon = ImageSource.Symbol("speaker.fill"),
 			MaxIcon = ImageSource.Symbol("speaker.wave.3.fill"),
-			IsEnabled = Bind(model => model.ControlEnabled)
+			IsEnabled = Bind(vm => vm.ControlEnabled)
 		};
 
 		Picker<ShowcaseOption<double>> step = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Steps,
-			SelectedItem = Bind(
-				model => model.SelectedStep,
-				static (model, value) => model.SelectedStep = value!),
+			SelectedItem = Bind(vm => vm.SelectedStep)
+				.TwoWay((vm, val) => vm.SelectedStep = val!),
 			SelectionChanged = option => slider.Step = option.Value
 		};
 
 		Switch continuous = new()
 		{
-			IsOn = Bind(
-				model => model.Continuous,
-				static (model, value) => model.Continuous = value),
+			IsOn = Bind(vm => vm.Continuous)
+				.TwoWay((vm, val) => vm.Continuous = val),
 			Toggled = value =>
 			{
 				slider.Continuous = value;
@@ -55,9 +52,8 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 
 		Switch icons = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsIcons,
-				static (model, value) => model.ShowsIcons = value),
+			IsOn = Bind(vm => vm.ShowsIcons)
+				.TwoWay((vm, val) => vm.ShowsIcons = val),
 			Toggled = value =>
 			{
 			slider.MinIcon = value ? ImageSource.Symbol("speaker.fill") : (ImageSource?)null;
@@ -67,9 +63,8 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 
 		Switch enabled = new()
 		{
-			IsOn = Bind(
-				model => model.ControlEnabled,
-				static (model, value) => model.ControlEnabled = value)
+			IsOn = Bind(vm => vm.ControlEnabled)
+				.TwoWay((vm, val) => vm.ControlEnabled = val)
 		};
 
 		AddShowcase(
@@ -89,7 +84,7 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.ValueLabel),
+								Text = Bind(vm => vm.ValueLabel),
 								TextStyle = TextStyle.Title2,
 								FontWeight = FontWeight.Semibold
 							},
@@ -110,7 +105,7 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 				SettingRow("Continuous updates", continuous),
 				SettingRow("Endpoint symbols", icons),
 				SettingRow("Enabled", enabled)),
-			Code(model => model.SliderCode));
+			Code(vm => vm.SliderCode));
 	}
 
 }

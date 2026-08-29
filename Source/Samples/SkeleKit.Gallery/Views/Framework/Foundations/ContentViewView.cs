@@ -25,7 +25,7 @@ internal sealed class ContentViewView : ShowcaseView<ContentViewViewModel>
 			"Content composition",
 			"Build a page by assigning a view tree to Content and let ContentView host it in the app shell.",
 			ShowcaseBox.Canvas(open, 140),
-			Code(model => model.CompositionCode));
+			Code(vm => vm.CompositionCode));
 	}
 
 	void AddLifecycleShowcase(
@@ -39,7 +39,7 @@ internal sealed class ContentViewView : ShowcaseView<ContentViewViewModel>
 			"Lifecycle & leave guard",
 			"Cover and uncover a page to observe its lifecycle, or enable confirmation before leaving it.",
 			ShowcaseBox.Canvas(open, 140),
-			Code(model => model.LifecycleCode));
+			Code(vm => vm.LifecycleCode));
 	}
 
 

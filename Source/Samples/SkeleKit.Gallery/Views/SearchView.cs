@@ -15,12 +15,10 @@ internal sealed class SearchView : TintView<SearchViewModel>
 		BackgroundStyle = PageBackground.Grouped;
 		SearchPlaceholder = "Search SkeleKit";
 		HidesSearchScopesWhenEmpty = true;
-		SearchText = Bind(
-			model => model.Query,
-			static (model, value) => model.Query = value ?? "");
-		SearchScopeIndex = Bind(
-			model => model.SelectedScopeIndex,
-			static (model, value) => model.SelectedScopeIndex = value);
+		SearchText = Bind(vm => vm.Query)
+			.TwoWay((vm, val) => vm.Query = val ?? "");
+		SearchScopeIndex = Bind(vm => vm.SelectedScopeIndex)
+			.TwoWay((vm, val) => vm.SelectedScopeIndex = val);
 		SearchCanceled = viewModel.CancelSearch;
 
 		SearchScopes.Add("All");
@@ -36,7 +34,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 
 		Content = new CollectionView<GalleryTopic>
 		{
-			ItemsSource = Bind(model => model.Results),
+			ItemsSource = Bind(vm => vm.Results),
 			ItemTemplate = static () => new TopicCell(showsArea: true),
 			Layout = CollectionLayout.List(grouped: true),
 			ItemCommand = viewModel.OpenTopicCommand,
@@ -72,7 +70,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 
 					new Label
 					{
-						Text = Bind(model => model.EmptyTitle),
+						Text = Bind(vm => vm.EmptyTitle),
 						TextStyle = TextStyle.Headline,
 						FontWeight = FontWeight.Semibold,
 						TextAlignment = TextAlignment.Center
@@ -80,7 +78,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 
 					new Label
 					{
-						Text = Bind(model => model.EmptySummary),
+						Text = Bind(vm => vm.EmptySummary),
 						TextStyle = TextStyle.Subheadline,
 						TextColor = Colors.SecondaryLabel,
 						TextAlignment = TextAlignment.Center,

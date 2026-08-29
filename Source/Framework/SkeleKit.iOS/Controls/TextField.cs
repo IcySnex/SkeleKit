@@ -82,7 +82,7 @@ public class TextField : Control
 
 
 	/// <summary>
-	/// The current text. Two-way by default.
+	/// The current text.
 	/// </summary>
 	public Bindable<string?> Text
 	{

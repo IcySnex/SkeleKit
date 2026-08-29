@@ -71,9 +71,8 @@ internal sealed partial class DatePickerViewModel : ShowcaseViewModel
 			{
 				HorizontalAlignment = HorizontalAlignment.Center,
 				Width = 215,
-				Date = Bind(
-					model => model.SelectedDate,
-					(model, value) => model.SelectedDate = value),
+				Date = Bind(vm => vm.SelectedDate)
+					.TwoWay((vm, val) => vm.SelectedDate = val),
 				Mode = DatePickerMode.DateAndTime,
 				Kind = DatePickerStyle.Compact,
 				Minimum = new DateTime(2026, 8, 10, 9, 0, 0),

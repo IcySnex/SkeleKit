@@ -65,6 +65,23 @@ class Movie : Notifier
 		get => name;
 		set { name = value; Raise(); }
 	}
+
+	Director? director;
+	public Director? Director
+	{
+		get => director;
+		set { director = value; Raise(); }
+	}
+}
+
+class Director : Notifier
+{
+	string name = "";
+	public string Name
+	{
+		get => name;
+		set { name = value; Raise(); }
+	}
 }
 
 // a leaf view with one bindable property, standing in for a real control (controls are iOS-only)

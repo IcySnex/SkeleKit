@@ -30,9 +30,8 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 
 		SegmentedControl mode = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedModeIndex,
-				static (model, value) => model.SelectedModeIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedModeIndex)
+				.TwoWay((vm, val) => vm.SelectedModeIndex = val),
 			SelectionChanged = index =>
 			{
 				picker.Mode = viewModel.SelectedMode;
@@ -44,9 +43,8 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 
 		SegmentedControl style = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedStyleIndex,
-				static (model, value) => model.SelectedStyleIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedStyleIndex)
+				.TwoWay((vm, val) => vm.SelectedStyleIndex = val),
 			SelectionChanged = index =>
 			{
 				picker.Kind = viewModel.SelectedStyle;
@@ -63,7 +61,7 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 				canvas,
 				LabeledControl("Mode", mode),
 				LabeledControl("Style", style)),
-			Code(model => model.ConfigurationCode));
+			Code(vm => vm.ConfigurationCode));
 	}
 
 	void AddRangeShowcase(
@@ -73,9 +71,8 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Width = 215,
-			Date = Bind(
-				model => model.SelectedDate,
-				static (model, value) => model.SelectedDate = value),
+			Date = Bind(vm => vm.SelectedDate)
+				.TwoWay((vm, val) => vm.SelectedDate = val),
 			Mode = DatePickerMode.DateAndTime,
 			Kind = DatePickerStyle.Compact,
 			Minimum = DatePickerViewModel.MinimumDate,
@@ -84,9 +81,8 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 
 		SegmentedControl position = new()
 		{
-			SelectedIndex = Bind(
-				model => model.RangePositionIndex,
-				static (model, value) => model.RangePositionIndex = value)
+			SelectedIndex = Bind(vm => vm.RangePositionIndex)
+				.TwoWay((vm, val) => vm.RangePositionIndex = val)
 		};
 		position.Items.Add("Start");
 		position.Items.Add("Middle");
@@ -111,7 +107,7 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.DateSummary),
+								Text = Bind(vm => vm.DateSummary),
 								TextStyle = TextStyle.Subheadline,
 								FontWeight = FontWeight.Medium,
 								TextAlignment = TextAlignment.Center
@@ -120,6 +116,6 @@ internal sealed class DatePickerView : ShowcaseView<DatePickerViewModel>
 					},
 					190),
 				LabeledControl("Bound value", position)),
-			Code(model => model.RangeCode));
+			Code(vm => vm.RangeCode));
 	}
 }

@@ -43,9 +43,8 @@ internal sealed class BorderView : ShowcaseView<BorderViewModel>
 			Minimum = 0,
 			Maximum = 36,
 			Step = 1,
-			Value = Bind(
-				model => model.CornerRadius,
-				static (model, value) => model.CornerRadius = value),
+			Value = Bind(vm => vm.CornerRadius)
+				.TwoWay((vm, val) => vm.CornerRadius = val),
 			ValueChanged = value => frame.CornerRadius = value
 		};
 
@@ -54,9 +53,8 @@ internal sealed class BorderView : ShowcaseView<BorderViewModel>
 			Minimum = 0,
 			Maximum = 6,
 			Step = 0.5,
-			Value = Bind(
-				model => model.StrokeThickness,
-				static (model, value) => model.StrokeThickness = value),
+			Value = Bind(vm => vm.StrokeThickness)
+				.TwoWay((vm, val) => vm.StrokeThickness = val),
 			ValueChanged = value => frame.StrokeThickness = value
 		};
 
@@ -65,8 +63,8 @@ internal sealed class BorderView : ShowcaseView<BorderViewModel>
 			"Adjust the outline around one text child.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(frame, 200),
-				LabeledSlider("Corner radius", Bind(model => model.CornerRadiusLabel), cornerRadius),
-				LabeledSlider("Stroke width", Bind(model => model.StrokeLabel), stroke)),
-			Code(model => model.FrameCode));
+				LabeledSlider("Corner radius", Bind(vm => vm.CornerRadiusLabel), cornerRadius),
+				LabeledSlider("Stroke width", Bind(vm => vm.StrokeLabel), stroke)),
+			Code(vm => vm.FrameCode));
 	}
 }

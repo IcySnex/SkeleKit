@@ -8,7 +8,7 @@ internal sealed class NavigationDetailView : ContentView<NavigationDetailViewMod
 	public NavigationDetailView(
 		NavigationDetailViewModel viewModel) : base(viewModel)
 	{
-		Title = Bind(model => model.Title);
+		Title = Bind(vm => vm.Title);
 		TitleStyle = TitleStyle.Inline;
 		BackButtonStyle = BackButtonStyle.Generic;
 		BackgroundStyle = PageBackground.Grouped;
@@ -35,14 +35,14 @@ internal sealed class NavigationDetailView : ContentView<NavigationDetailViewMod
 							{
 								new Label
 								{
-									Text = Bind(model => model.Title),
+									Text = Bind(vm => vm.Title),
 									TextStyle = TextStyle.Title2,
 									FontWeight = FontWeight.Bold
 								},
 
 								new Label
 								{
-									Text = Bind(model => model.Summary),
+									Text = Bind(vm => vm.Summary),
 									TextStyle = TextStyle.Subheadline,
 									TextColor = Colors.SecondaryLabel,
 									MaxLines = 3

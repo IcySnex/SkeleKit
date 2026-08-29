@@ -29,9 +29,8 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 
 		Stepper count = new()
 		{
-			Value = Bind(
-				model => model.ChildCount,
-				static (model, value) => model.ChildCount = value),
+			Value = Bind(vm => vm.ChildCount)
+				.TwoWay((vm, val) => vm.ChildCount = val),
 			Minimum = 1,
 			Maximum = 5,
 			Step = 1,
@@ -55,14 +54,14 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 							new Label
 							{
 								VerticalAlignment = VerticalAlignment.Center,
-								Text = Bind(model => model.ChildCountLabel),
+								Text = Bind(vm => vm.ChildCountLabel),
 								TextStyle = TextStyle.Subheadline,
 								TextColor = Colors.SecondaryLabel
 							},
 							count
 						}
 					})),
-			Code(model => model.ChildrenCode));
+			Code(vm => vm.ChildrenCode));
 	}
 
 	void AddPaddingShowcase(
@@ -103,9 +102,8 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 			Minimum = 0,
 			Maximum = 32,
 			Step = 1,
-			Value = Bind(
-				model => model.PanelPadding,
-				static (model, value) => model.PanelPadding = value),
+			Value = Bind(vm => vm.PanelPadding)
+				.TwoWay((vm, val) => vm.PanelPadding = val),
 			ValueChanged = value => panel.Padding = new(value)
 		};
 
@@ -114,8 +112,8 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 			"Adjust the space reserved between the panel's bounds and its child.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(panel, 190),
-				LabeledSlider("Padding", Bind(model => model.PaddingLabel), padding)),
-			Code(model => model.PaddingCode));
+				LabeledSlider("Padding", Bind(vm => vm.PaddingLabel), padding)),
+			Code(vm => vm.PaddingCode));
 	}
 
 	void AddBindingShowcase(
@@ -150,9 +148,8 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 
 					Child = new Label
 					{
-						Text = Bind(
-							model => model.InheritedText,
-							text => $"Child reads: {text}"),
+						Text = Bind(vm => vm.InheritedText)
+							.ConvertTo(text => $"Child reads: {text}"),
 						TextStyle = TextStyle.Headline,
 						FontWeight = FontWeight.Semibold,
 						MaxLines = 2
@@ -164,9 +161,8 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 		TextField value = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Stretch,
-			Text = Bind(
-				model => model.InheritedText,
-				static (model, text) => model.InheritedText = text),
+			Text = Bind(vm => vm.InheritedText)
+				.TwoWay((vm, val) => vm.InheritedText = val),
 			Placeholder = "Type a value",
 			ClearButton = ClearButton.WhileEditing
 		};
@@ -177,7 +173,7 @@ internal sealed class PanelsView : ShowcaseView<PanelsViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(panel, 200),
 				LabeledControl("Context value", value)),
-			Code(model => model.BindingCode));
+			Code(vm => vm.BindingCode));
 	}
 
 

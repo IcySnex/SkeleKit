@@ -13,10 +13,5 @@ public enum UpdateTrigger
 	/// <summary>
 	/// When the control loses focus.
 	/// </summary>
-	FocusLost,
-
-	/// <summary>
-	/// Only when the app asks for it.
-	/// </summary>
-	Explicit
+	FocusLost
 }

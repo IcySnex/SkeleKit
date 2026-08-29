@@ -47,12 +47,10 @@ public class BindingTests
 		MovieViewModel viewModel = new() { Query = "SkeleKit", SearchScope = 1 };
 		StubPage page = new()
 		{
-			SearchText = BindingFactory.Bind(
-				(MovieViewModel vm) => vm.Query,
-				static (vm, value) => vm.Query = value ?? ""),
-			SearchScopeIndex = BindingFactory.Bind(
-				(MovieViewModel vm) => vm.SearchScope,
-				static (vm, value) => vm.SearchScope = value)
+			SearchText = BindingFactory.Bind((MovieViewModel vm) => vm.Query)
+				.TwoWay((vm, val) => vm.Query = val ?? ""),
+			SearchScopeIndex = BindingFactory.Bind((MovieViewModel vm) => vm.SearchScope)
+				.TwoWay((vm, val) => vm.SearchScope = val)
 		};
 		page.BindingContext = viewModel;
 
@@ -118,9 +116,8 @@ public class BindingTests
 		MovieViewModel viewModel = new() { Title = "Interstellar" };
 		StubBound view = new()
 		{
-			Text = BindingFactory.Bind(
-				(MovieViewModel vm) => vm.Title,
-				(vm, value) => vm.Title = value ?? "")
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Title)
+				.TwoWay((vm, val) => vm.Title = val ?? "")
 		};
 		view.BindingContext = viewModel;
 
@@ -149,7 +146,8 @@ public class BindingTests
 		MovieViewModel viewModel = new() { Minutes = 169 };
 		StubBound view = new()
 		{
-			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes, minutes => $"{minutes} min")
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
+				.ConvertTo(val => $"{val} min")
 		};
 
 		view.BindingContext = viewModel;
@@ -193,12 +191,13 @@ public class BindingTests
 	}
 
 	[Fact]
-	public void BindPath_ResubscribesWhenIntermediateReplaced()
+	public void Path_ResubscribesWhenIntermediateReplaced()
 	{
 		MovieViewModel viewModel = new() { Movie = new() { Name = "Interstellar" } };
 		StubBound view = new()
 		{
-			Text = BindingFactory.BindPath((MovieViewModel vm) => vm.Movie, movie => movie.Name)
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Movie)
+				.Path(movie => movie?.Name)
 		};
 		view.BindingContext = viewModel;
 
@@ -212,6 +211,144 @@ public class BindingTests
 
 		viewModel.Movie.Name = "Tenet";
 		Assert.Equal("Tenet", view.Current);
+	}
+
+	[Fact]
+	public void Path_TwoWayWritesThroughRootSource()
+	{
+		MovieViewModel viewModel = new() { Movie = new() { Name = "Interstellar" } };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Movie)
+				.Path(movie => movie?.Name)
+				.TwoWay((vm, val) => vm.Movie!.Name = val ?? "")
+		};
+		view.BindingContext = viewModel;
+
+		view.SimulateEdit("Dune");
+
+		Assert.Equal("Dune", viewModel.Movie.Name);
+	}
+
+	[Fact]
+	public void Path_CanObserveMultipleReplaceableObjects()
+	{
+		MovieViewModel viewModel = new()
+		{
+			Movie = new() { Director = new() { Name = "Denis Villeneuve" } }
+		};
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Movie)
+				.Path(movie => movie?.Director)
+				.Path(director => director?.Name)
+		};
+		view.BindingContext = viewModel;
+
+		Assert.Equal("Denis Villeneuve", view.Current);
+
+		viewModel.Movie!.Director!.Name = "Christopher Nolan";
+		Assert.Equal("Christopher Nolan", view.Current);
+
+		viewModel.Movie.Director = new() { Name = "Greta Gerwig" };
+		Assert.Equal("Greta Gerwig", view.Current);
+
+		viewModel.Movie = new() { Director = new() { Name = "Bong Joon Ho" } };
+		Assert.Equal("Bong Joon Ho", view.Current);
+	}
+
+	[Fact]
+	public void Once_DoesNotTrackSourceChanges()
+	{
+		MovieViewModel viewModel = new() { Title = "Interstellar" };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Title).Once()
+		};
+		view.BindingContext = viewModel;
+
+		viewModel.Title = "Dune";
+
+		Assert.Equal("Interstellar", view.Current);
+	}
+
+	[Fact]
+	public void ToSource_DoesNotReadOrSubscribe()
+	{
+		MovieViewModel viewModel = new() { Title = "Interstellar" };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Title)
+				.ToSource((vm, val) => vm.Title = val ?? "")
+		};
+		view.BindingContext = viewModel;
+
+		Assert.Null(view.Current);
+
+		viewModel.Title = "Arrival";
+		Assert.Null(view.Current);
+
+		view.SimulateEdit("Dune");
+		Assert.Equal("Dune", viewModel.Title);
+	}
+
+	[Fact]
+	public void ConvertedTwoWay_RoundTrips()
+	{
+		MovieViewModel viewModel = new() { Minutes = 169 };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
+				.TwoWay((vm, val) => vm.Minutes = val)
+				.ConvertTo(val => val.ToString())
+				.ConvertFrom(val => int.Parse(val))
+		};
+		view.BindingContext = viewModel;
+
+		Assert.Equal("169", view.Current);
+
+		view.SimulateEdit("120");
+		Assert.Equal(120, viewModel.Minutes);
+	}
+
+	[Fact]
+	public void ConvertedToSource_WritesConvertedValue()
+	{
+		MovieViewModel viewModel = new() { Minutes = 169 };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
+				.ToSource((vm, val) => vm.Minutes = val)
+				.ConvertFrom((string val) => int.Parse(val))
+		};
+		view.BindingContext = viewModel;
+
+		Assert.Null(view.Current);
+
+		view.SimulateEdit("120");
+		Assert.Equal(120, viewModel.Minutes);
+	}
+
+	[Fact]
+	public void WritableConversion_RequiresConvertFrom()
+	{
+		Assert.Throws<InvalidOperationException>(() => new StubBound
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
+				.TwoWay((vm, val) => vm.Minutes = val)
+				.ConvertTo(val => val.ToString())
+		});
+	}
+
+	[Fact]
+	public void UpdateOn_StoresTrigger()
+	{
+		BindingExpression<MovieViewModel, string, string> binding = BindingFactory
+			.Bind((MovieViewModel vm) => vm.Title)
+			.TwoWay((vm, val) => vm.Title = val ?? "")
+			.UpdateOn(UpdateTrigger.FocusLost);
+
+		Assert.Equal(UpdateTrigger.FocusLost, binding.Trigger);
 	}
 
 	[Fact]

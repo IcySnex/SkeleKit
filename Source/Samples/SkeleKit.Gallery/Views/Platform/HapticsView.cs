@@ -67,9 +67,8 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 		{
 			MinWidth = 140,
 			ItemsSource = viewModel.ImpactStyles,
-			SelectedItem = Bind(
-				model => model.SelectedImpactStyle,
-				static (model, value) => model.SelectedImpactStyle = value!)
+			SelectedItem = Bind(vm => vm.SelectedImpactStyle)
+				.TwoWay((vm, val) => vm.SelectedImpactStyle = val!)
 		};
 
 		AddShowcase(
@@ -80,9 +79,9 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 					"Trigger impact",
 					"circle.grid.cross",
 					viewModel.TriggerImpactCommand,
-					Bind(model => model.ImpactResult)),
+					Bind(vm => vm.ImpactResult)),
 				SettingRow("Style", style)),
-			Code(model => model.ImpactCode));
+			Code(vm => vm.ImpactCode));
 	}
 
 	void AddSelectionShowcase(
@@ -95,8 +94,8 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 				"Trigger selection",
 				"checkmark.circle",
 				viewModel.TriggerSelectionCommand,
-				Bind(model => model.SelectionResult)),
-			Code(model => model.SelectionCode));
+				Bind(vm => vm.SelectionResult)),
+			Code(vm => vm.SelectionCode));
 	}
 
 	void AddNotificationShowcase(
@@ -106,9 +105,8 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 		{
 			MinWidth = 140,
 			ItemsSource = viewModel.Notifications,
-			SelectedItem = Bind(
-				model => model.SelectedNotification,
-				static (model, value) => model.SelectedNotification = value!)
+			SelectedItem = Bind(vm => vm.SelectedNotification)
+				.TwoWay((vm, val) => vm.SelectedNotification = val!)
 		};
 
 		AddShowcase(
@@ -119,9 +117,9 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 					"Trigger notification",
 					"bell.badge",
 					viewModel.TriggerNotificationCommand,
-					Bind(model => model.NotificationResult)),
+					Bind(vm => vm.NotificationResult)),
 				SettingRow("Type", notification)),
-			Code(model => model.NotificationCode));
+			Code(vm => vm.NotificationCode));
 	}
 
 	void AddCustomPatternShowcase(
@@ -129,9 +127,8 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 	{
 		Slider intensity = new()
 		{
-			Value = Bind(
-				model => model.Intensity,
-				static (model, value) => model.Intensity = value),
+			Value = Bind(vm => vm.Intensity)
+				.TwoWay((vm, val) => vm.Intensity = val),
 			Minimum = 0,
 			Maximum = 1,
 			Step = 0.1
@@ -139,9 +136,8 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 
 		Slider sharpness = new()
 		{
-			Value = Bind(
-				model => model.Sharpness,
-				static (model, value) => model.Sharpness = value),
+			Value = Bind(vm => vm.Sharpness)
+				.TwoWay((vm, val) => vm.Sharpness = val),
 			Minimum = 0,
 			Maximum = 1,
 			Step = 0.1
@@ -155,10 +151,10 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 					"Play pattern",
 					"waveform.path",
 					viewModel.PlayCustomPatternCommand,
-					Bind(model => model.CustomPatternResult)),
-				LabeledSlider("Intensity", Bind(model => model.IntensityLabel), intensity),
-				LabeledSlider("Sharpness", Bind(model => model.SharpnessLabel), sharpness)),
-			Code(model => model.CustomPatternCode));
+					Bind(vm => vm.CustomPatternResult)),
+				LabeledSlider("Intensity", Bind(vm => vm.IntensityLabel), intensity),
+				LabeledSlider("Sharpness", Bind(vm => vm.SharpnessLabel), sharpness)),
+			Code(vm => vm.CustomPatternCode));
 	}
 
 

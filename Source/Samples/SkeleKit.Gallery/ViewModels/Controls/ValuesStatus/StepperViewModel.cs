@@ -44,13 +44,12 @@ internal sealed partial class StepperViewModel : ShowcaseViewModel
 			$$"""
 			new Stepper
 			{
-				Value = Bind(
-					model => model.Value,
-					(model, value) => model.Value = value),
+				Value = Bind(vm => vm.Value)
+					.TwoWay((vm, val) => vm.Value = val),
 				Minimum = 0,
 				Maximum = 20,
 				Step = {{Number(SelectedStep.Value)}},
-				IsEnabled = Bind(model => model.ControlEnabled)
+				IsEnabled = Bind(vm => vm.ControlEnabled)
 			};
 			""")
 	];

@@ -93,7 +93,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 					}
 				},
 				170),
-			Code(model => model.LabelHintCode));
+			Code(vm => vm.LabelHintCode));
 	}
 
 	void AddValueShowcase(
@@ -102,13 +102,12 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 		Slider slider = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Stretch,
-			Value = Bind(
-				model => model.Value,
-				static (model, value) => model.Value = value),
+			Value = Bind(vm => vm.Value)
+				.TwoWay((vm, val) => vm.Value = val),
 			Minimum = 0,
 			Maximum = 100,
 			AccessibilityLabel = "Value",
-			AccessibilityValue = Bind(model => model.AccessibilityValueText)
+			AccessibilityValue = Bind(vm => vm.AccessibilityValueText)
 		};
 
 		AddShowcase(
@@ -127,7 +126,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 						new Label
 						{
 							HorizontalAlignment = HorizontalAlignment.Center,
-							Text = Bind(model => model.ValueLabel),
+							Text = Bind(vm => vm.ValueLabel),
 							TextStyle = TextStyle.Title2,
 							FontWeight = FontWeight.Semibold,
 							IsAccessibilityElement = false
@@ -137,7 +136,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 					}
 				},
 				180),
-			Code(model => model.ValueCode));
+			Code(vm => vm.ValueCode));
 	}
 
 	void AddTraitsShowcase(
@@ -202,7 +201,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 					}
 				},
 				230),
-			Code(model => model.TraitsCode));
+			Code(vm => vm.TraitsCode));
 	}
 
 	void AddGroupingShowcase(
@@ -272,7 +271,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 			"Grouping & identifiers",
 			"Expose a compound card as one VoiceOver element and give it a stable identifier for UI tests.",
 			ShowcaseBox.Canvas(card, 180),
-			Code(model => model.GroupingCode));
+			Code(vm => vm.GroupingCode));
 	}
 
 	void AddFocusShowcase(
@@ -339,7 +338,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 					}
 				},
 				210),
-			Code(model => model.FocusCode));
+			Code(vm => vm.FocusCode));
 	}
 
 

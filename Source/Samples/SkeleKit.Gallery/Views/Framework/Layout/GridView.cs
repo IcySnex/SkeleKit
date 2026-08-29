@@ -48,14 +48,14 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 			"Rows & columns",
 			"Place 25 cells in five equal rows and five equal columns.",
 			ShowcaseBox.Canvas(grid, 320),
-			Code(model => model.SimpleGridCode));
+			Code(vm => vm.SimpleGridCode));
 	}
 
 	void AddGridShowcase(
 		GridViewModel viewModel)
 	{
 		Border spanningCell = Cell(
-			Bind(model => model.SpanLabel),
+			Bind(vm => vm.SpanLabel),
 			filled: true)
 			.Column(viewModel.ColumnIndex)
 			.Row(1)
@@ -86,7 +86,7 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 			Children =
 			{
 				Cell("Auto").Column(0).Row(0),
-				Cell(Bind(model => model.FixedWidthLabel)).Column(1).Row(0),
+				Cell(Bind(vm => vm.FixedWidthLabel)).Column(1).Row(0),
 				Cell("Star").Column(2).Row(0),
 				spanningCell
 			}
@@ -97,9 +97,8 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 			Minimum = 56,
 			Maximum = 96,
 			Step = 4,
-			Value = Bind(
-				model => model.FixedColumnWidth,
-				static (model, value) => model.FixedColumnWidth = value),
+			Value = Bind(vm => vm.FixedColumnWidth)
+				.TwoWay((vm, val) => vm.FixedColumnWidth = val),
 			ValueChanged = value => grid.Columns[1] = value
 		};
 
@@ -109,9 +108,8 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 		{
 			SegmentedControl control = new()
 			{
-				SelectedIndex = Bind(
-					model => model.SpanIndex,
-					static (model, value) => model.SpanIndex = value),
+				SelectedIndex = Bind(vm => vm.SpanIndex)
+					.TwoWay((vm, val) => vm.SpanIndex = val),
 				SelectionChanged = index =>
 				{
 					spanningCell.ColumnSpan(index + 1);
@@ -129,9 +127,8 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 
 		SegmentedControl column = new()
 		{
-			SelectedIndex = Bind(
-				model => model.ColumnIndex,
-				static (model, value) => model.ColumnIndex = value),
+			SelectedIndex = Bind(vm => vm.ColumnIndex)
+				.TwoWay((vm, val) => vm.ColumnIndex = val),
 			SelectionChanged = index =>
 			{
 				spanningCell
@@ -150,10 +147,10 @@ internal sealed class GridView : ShowcaseView<GridViewModel>
 			"Compare track sizes, then change the lower cell's starting column index and span.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(grid, 220),
-				LabeledSlider("Fixed column", Bind(model => model.FixedWidthLabel), fixedWidth),
+				LabeledSlider("Fixed column", Bind(vm => vm.FixedWidthLabel), fixedWidth),
 				LabeledControl("Column index", column),
 				LabeledControl("Column span", spanHost)),
-			Code(model => model.GridCode));
+			Code(vm => vm.GridCode));
 	}
 
 

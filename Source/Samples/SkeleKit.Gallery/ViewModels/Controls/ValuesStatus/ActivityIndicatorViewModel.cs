@@ -19,7 +19,7 @@ internal sealed partial class ActivityIndicatorViewModel : ShowcaseViewModel
 			$$"""
 			new ActivityIndicator
 			{
-				IsAnimating = Bind(model => model.IsAnimating),
+				IsAnimating = Bind(vm => vm.IsAnimating),
 				IsLarge = {{Boolean(IsLarge)}},
 				Color = Colors.Red
 			};

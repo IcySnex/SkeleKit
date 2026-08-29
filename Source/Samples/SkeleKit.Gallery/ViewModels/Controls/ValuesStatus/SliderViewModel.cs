@@ -51,16 +51,15 @@ internal sealed partial class SliderViewModel : ShowcaseViewModel
 			$$"""
 			new Slider
 			{
-				Value = Bind(
-					model => model.Value,
-					(model, value) => model.Value = value),
+				Value = Bind(vm => vm.Value)
+					.TwoWay((vm, val) => vm.Value = val),
 				Minimum = 0,
 				Maximum = 100,
 				Step = {{Number(SelectedStep.Value)}},
 				Continuous = {{Boolean(Continuous)}},
 				MinIcon = {{(ShowsIcons ? "ImageSource.Symbol(\"speaker.fill\")" : "null")}},
 				MaxIcon = {{(ShowsIcons ? "ImageSource.Symbol(\"speaker.wave.3.fill\")" : "null")}},
-				IsEnabled = Bind(model => model.ControlEnabled)
+				IsEnabled = Bind(vm => vm.ControlEnabled)
 			};
 			""")
 	];

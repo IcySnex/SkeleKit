@@ -19,10 +19,9 @@ internal sealed partial class SwitchViewModel : ShowcaseViewModel
 			"""
 			new Switch
 			{
-				IsOn = Bind(
-					model => model.IsOn,
-					(model, value) => model.IsOn = value),
-				IsEnabled = Bind(model => model.ControlEnabled)
+				IsOn = Bind(vm => vm.IsOn)
+					.TwoWay((vm, val) => vm.IsOn = val),
+				IsEnabled = Bind(vm => vm.ControlEnabled)
 			};
 			""")
 	];

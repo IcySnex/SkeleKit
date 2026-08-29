@@ -74,26 +74,11 @@ public abstract class ItemView<TItem> : Panel
 	/// Binds one way to an item property.
 	/// </summary>
 	/// <typeparam name="T">The bound value type.</typeparam>
-	/// <param name="getter">The item property to read.</param>
+	/// <param name="read">The item property to read.</param>
 	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
 	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<T?> Bind<T>(
-		Func<TItem, T> getter,
-		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
-		BindingFactory.Bind(getter, path);
-
-	/// <summary>
-	/// Binds one way through a converter.
-	/// </summary>
-	/// <typeparam name="TValue">The value type read from the item.</typeparam>
-	/// <typeparam name="T">The converted value type.</typeparam>
-	/// <param name="getter">The item property to read.</param>
-	/// <param name="format">Converts the item value for display.</param>
-	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
-	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<T?> Bind<TValue, T>(
-		Func<TItem, TValue> getter,
-		Func<TValue, T> format,
-		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
-		BindingFactory.Bind(getter, format, path);
+	protected static BindingExpression<TItem, T, T> Bind<T>(
+		Func<TItem, T> read,
+		[CallerArgumentExpression(nameof(read))] string? path = null) =>
+		BindingFactory.Bind(read, path);
 }

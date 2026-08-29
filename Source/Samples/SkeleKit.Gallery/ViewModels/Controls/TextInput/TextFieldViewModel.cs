@@ -113,9 +113,8 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 			$$"""
 			new TextField
 			{
-				Text = Bind(
-					model => model.Text,
-					(model, value) => model.Text = value),
+				Text = Bind(vm => vm.Text)
+					.TwoWay((vm, val) => vm.Text = val),
 				Placeholder = "name@example.com",
 				LeadingIcon = ImageSource.Symbol("envelope"),
 				ClearButton = ClearButton.WhileEditing,

@@ -51,9 +51,8 @@ internal sealed partial class SecureFieldViewModel : ShowcaseViewModel
 			$$"""
 			new SecureField
 			{
-				Text = Bind(
-					model => model.Text,
-					(model, value) => model.Text = value),
+				Text = Bind(vm => vm.Text)
+					.TwoWay((vm, val) => vm.Text = val),
 				Placeholder = "Create a password",
 				LeadingIcon = ImageSource.Symbol("lock.fill"),
 				RevealButton = {{Boolean(RevealsEntry)}},

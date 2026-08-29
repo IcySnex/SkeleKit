@@ -37,9 +37,8 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 		{
 			MinWidth = 140,
 			ItemsSource = viewModel.TextStyles,
-			SelectedItem = Bind(
-				model => model.SelectedTextStyle,
-				static (model, value) => model.SelectedTextStyle = value!),
+			SelectedItem = Bind(vm => vm.SelectedTextStyle)
+				.TwoWay((vm, val) => vm.SelectedTextStyle = val!),
 			SelectionChanged = option => label.TextStyle = option.Value
 		};
 
@@ -47,9 +46,8 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 
 		Switch cap = new()
 		{
-			IsOn = Bind(
-				model => model.CapsDynamicType,
-				static (model, value) => model.CapsDynamicType = value),
+			IsOn = Bind(vm => vm.CapsDynamicType)
+				.TwoWay((vm, val) => vm.CapsDynamicType = val),
 			Toggled = value =>
 			{
 				label.MaxFontSize = value ? 24 : double.NaN;
@@ -63,25 +61,23 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			Minimum = 12,
 			Maximum = 40,
 			Step = 1,
-			Value = Bind(
-				model => model.FontSize,
-				static (model, value) => model.FontSize = value),
+			Value = Bind(vm => vm.FontSize)
+				.TwoWay((vm, val) => vm.FontSize = val),
 			ValueChanged = value =>
 			{
 				label.FontSize = value;
 			}
 		};
 
-		View sizeSetting = LabeledSlider("Font size", Bind(model => model.FontSizeLabel), size);
+		View sizeSetting = LabeledSlider("Font size", Bind(vm => vm.FontSizeLabel), size);
 		sizeSetting.IsVisible = false;
 
 		SegmentedControl sizing = new()
 		{
-			SelectedIndex = Bind(
-				model => model.UsesExplicitSize,
-				static (model, value) => model.UsesExplicitSize = value,
-				static value => value ? 1 : 0,
-				static index => index is 1),
+			SelectedIndex = Bind(vm => vm.UsesExplicitSize)
+				.TwoWay((vm, val) => vm.UsesExplicitSize = val)
+				.ConvertTo(val => val ? 1 : 0)
+				.ConvertFrom(val => val is 1),
 			SelectionChanged = index =>
 			{
 				label.TextStyle = viewModel.UsesExplicitSize ? null : viewModel.SelectedTextStyle.Value;
@@ -101,17 +97,15 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.FontWeights,
-			SelectedItem = Bind(
-				model => model.SelectedWeight,
-				static (model, value) => model.SelectedWeight = value!),
+			SelectedItem = Bind(vm => vm.SelectedWeight)
+				.TwoWay((vm, val) => vm.SelectedWeight = val!),
 			SelectionChanged = option => label.FontWeight = option.Value
 		};
 
 		SegmentedControl design = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedDesignIndex,
-				static (model, value) => model.SelectedDesignIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedDesignIndex)
+				.TwoWay((vm, val) => vm.SelectedDesignIndex = val),
 			SelectionChanged = index =>
 			{
 				label.FontDesign = viewModel.SelectedDesign.Value;
@@ -153,7 +147,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 				sizeSetting,
 				SettingRow("Weight", weight),
 				LabeledControl("Design", design)),
-			Code(model => model.TypographyCode));
+			Code(vm => vm.TypographyCode));
 	}
 
 	void AddFlowShowcase(
@@ -166,17 +160,16 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			Width = 250,
 			Text = "Quarterly performance overview for international product teams and regional partners.",
 			TextStyle = TextStyle.Body,
-			MaxLines = Bind(model => model.WrappingLines),
+			MaxLines = Bind(vm => vm.WrappingLines),
 			Truncation = viewModel.SelectedTruncation.Value,
-			TextAlignment = Bind(model => model.SelectedAlignment),
+			TextAlignment = Bind(vm => vm.SelectedAlignment),
 			AutoShrink = 0
 		};
 
 		SegmentedControl lines = new()
 		{
-			SelectedIndex = Bind(
-				model => model.LineCountIndex,
-				static (model, value) => model.LineCountIndex = value)
+			SelectedIndex = Bind(vm => vm.LineCountIndex)
+				.TwoWay((vm, val) => vm.LineCountIndex = val)
 		};
 		lines.Items.Add("1");
 		lines.Items.Add("2");
@@ -184,9 +177,8 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 
 		SegmentedControl alignment = new()
 		{
-			SelectedIndex = Bind(
-				model => model.AlignmentIndex,
-				static (model, value) => model.AlignmentIndex = value)
+			SelectedIndex = Bind(vm => vm.AlignmentIndex)
+				.TwoWay((vm, val) => vm.AlignmentIndex = val)
 		};
 		alignment.Items.Add("Leading");
 		alignment.Items.Add("Center");
@@ -196,17 +188,15 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 		{
 			MinWidth = 120,
 			ItemsSource = viewModel.Truncations,
-			SelectedItem = Bind(
-				model => model.SelectedTruncation,
-				static (model, value) => model.SelectedTruncation = value!),
+			SelectedItem = Bind(vm => vm.SelectedTruncation)
+				.TwoWay((vm, val) => vm.SelectedTruncation = val!),
 			SelectionChanged = option => label.Truncation = option.Value
 		};
 
 		Switch shrink = new()
 		{
-			IsOn = Bind(
-				model => model.ShrinksToFit,
-				static (model, value) => model.ShrinksToFit = value)
+			IsOn = Bind(vm => vm.ShrinksToFit)
+				.TwoWay((vm, val) => vm.ShrinksToFit = val)
 		};
 
 		lines.SelectionChanged = index =>
@@ -223,7 +213,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 				LabeledControl("Text alignment", alignment),
 				SettingRow("Truncation", truncation),
 				SettingRow("Shrink to fit", shrink)),
-			Code(model => model.FlowCode));
+			Code(vm => vm.FlowCode));
 	}
 
 	void AddAttributedShowcase(
@@ -249,9 +239,8 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			Minimum = 0,
 			Maximum = 12,
 			Step = 1,
-			Value = Bind(
-				model => model.LineSpacing,
-				static (model, value) => model.LineSpacing = value),
+			Value = Bind(vm => vm.LineSpacing)
+				.TwoWay((vm, val) => vm.LineSpacing = val),
 			ValueChanged = value =>
 			{
 				label.LineSpacing = value;
@@ -263,9 +252,8 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			Minimum = -1,
 			Maximum = 3,
 			Step = 0.25,
-			Value = Bind(
-				model => model.LetterSpacing,
-				static (model, value) => model.LetterSpacing = value),
+			Value = Bind(vm => vm.LetterSpacing)
+				.TwoWay((vm, val) => vm.LetterSpacing = val),
 			ValueChanged = value =>
 			{
 				label.LetterSpacing = value;
@@ -274,9 +262,8 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 
 		Switch underline = new()
 		{
-			IsOn = Bind(
-				model => model.UnderlinesAll,
-				static (model, value) => model.UnderlinesAll = value),
+			IsOn = Bind(vm => vm.UnderlinesAll)
+				.TwoWay((vm, val) => vm.UnderlinesAll = val),
 			Toggled = value =>
 			{
 				label.Underline = value;
@@ -285,9 +272,8 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 
 		Switch strike = new()
 		{
-			IsOn = Bind(
-				model => model.StrikesAll,
-				static (model, value) => model.StrikesAll = value),
+			IsOn = Bind(vm => vm.StrikesAll)
+				.TwoWay((vm, val) => vm.StrikesAll = val),
 			Toggled = value =>
 			{
 				label.Strikethrough = value;
@@ -299,10 +285,10 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			"Mix styled spans, spacing and whole-label decoration while preserving inherited typography.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(label, 240),
-				LabeledSlider("Line spacing", Bind(model => model.LineSpacingLabel), lineSpacing),
-				LabeledSlider("Letter spacing", Bind(model => model.LetterSpacingLabel), letterSpacing),
+				LabeledSlider("Line spacing", Bind(vm => vm.LineSpacingLabel), lineSpacing),
+				LabeledSlider("Letter spacing", Bind(vm => vm.LetterSpacingLabel), letterSpacing),
 				SettingRow("Underline all", underline),
 				SettingRow("Strike all", strike)),
-			Code(model => model.AttributedCode));
+			Code(vm => vm.AttributedCode));
 	}
 }

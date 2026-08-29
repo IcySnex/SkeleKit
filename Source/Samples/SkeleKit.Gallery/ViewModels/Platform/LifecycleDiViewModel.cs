@@ -87,9 +87,8 @@ internal sealed partial class LifecycleDiViewModel : ShowcaseViewModel
 				{
 					Content = new Label
 					{
-						Text = Bind(
-							model => model.MovieCount,
-							count => $"{count} movies")
+						Text = Bind(vm => vm.MovieCount)
+							.ConvertTo(count => $"{count} movies")
 					};
 				}
 			}

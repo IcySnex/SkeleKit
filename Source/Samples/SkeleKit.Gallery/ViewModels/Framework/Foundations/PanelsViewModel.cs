@@ -91,9 +91,8 @@ internal sealed partial class PanelsViewModel : ShowcaseViewModel
 				{
 					new Label
 					{
-						Text = Bind(
-							(PanelsViewModel model) => model.InheritedText,
-							text => $"Child reads: {text}")
+						Text = Bind((PanelsViewModel vm) => vm.InheritedText)
+							.ConvertTo(val => $"Child reads: {val}")
 					}
 				}
 			};

@@ -36,14 +36,13 @@ internal sealed partial class AccessibilityViewModel : ShowcaseViewModel
 			"""
 			new Slider
 			{
-				Value = Bind(
-					model => model.Value,
-					(model, value) => model.Value = value),
+				Value = Bind(vm => vm.Value)
+					.TwoWay((vm, val) => vm.Value = val),
 				Minimum = 0,
 				Maximum = 100,
 				AccessibilityLabel = "Value",
 				AccessibilityValue = Bind(
-					model => model.AccessibilityValueText)
+					vm => vm.AccessibilityValueText)
 			};
 			""")
 	];

@@ -39,9 +39,8 @@ internal sealed class ScrollViewView : ShowcaseView<ScrollViewViewModel>
 
 		Switch indicator = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsIndicator,
-				static (model, value) => model.ShowsIndicator = value),
+			IsOn = Bind(vm => vm.ShowsIndicator)
+				.TwoWay((vm, val) => vm.ShowsIndicator = val),
 			Toggled = value => scroll.ShowsIndicator = value
 		};
 
@@ -57,14 +56,14 @@ internal sealed class ScrollViewView : ShowcaseView<ScrollViewViewModel>
 						Width = 64,
 						Height = 20,
 						VerticalAlignment = VerticalAlignment.Center,
-						Text = Bind(model => model.OffsetLabel),
+						Text = Bind(vm => vm.OffsetLabel),
 						TextStyle = TextStyle.Subheadline,
 						FontDesign = FontDesign.Monospaced,
 						TextAlignment = TextAlignment.Trailing,
 						TextColor = Colors.SecondaryLabel
 					}),
 				SettingRow("Scroll indicator", indicator)),
-			Code(model => model.VerticalCode));
+			Code(vm => vm.VerticalCode));
 	}
 
 	void AddPagingShowcase(
@@ -97,9 +96,8 @@ internal sealed class ScrollViewView : ShowcaseView<ScrollViewViewModel>
 
 		Switch paging = new()
 		{
-			IsOn = Bind(
-				model => model.Paging,
-				static (model, value) => model.Paging = value),
+			IsOn = Bind(vm => vm.Paging)
+				.TwoWay((vm, val) => vm.Paging = val),
 			Toggled = value => pager.Paging = value
 		};
 
@@ -109,7 +107,7 @@ internal sealed class ScrollViewView : ShowcaseView<ScrollViewViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(pager, 230),
 				SettingRow("Snap to pages", paging)),
-			Code(model => model.PagingCode));
+			Code(vm => vm.PagingCode));
 	}
 
 

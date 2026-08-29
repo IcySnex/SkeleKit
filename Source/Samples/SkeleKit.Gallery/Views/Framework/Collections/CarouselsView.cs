@@ -30,9 +30,8 @@ internal sealed class CarouselsView : ShowcaseView<CarouselsViewModel>
 
 		SegmentedControl snapping = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SnapIndex,
-				static (model, value) => model.SnapIndex = value),
+			SelectedIndex = Bind(vm => vm.SnapIndex)
+				.TwoWay((vm, val) => vm.SnapIndex = val),
 			SelectionChanged = index =>
 				carouselHost.Child = CreateCarousel(SnapFor(index))
 		};

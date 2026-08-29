@@ -13,11 +13,11 @@ internal sealed class LifecycleDiView : ShowcaseView<LifecycleDiViewModel>
 		AddCodeShowcase(
 			"Service registration",
 			"Choose singleton or transient lifetimes when configuring the application container.",
-			Code(model => model.RegistrationCode));
+			Code(vm => vm.RegistrationCode));
 		AddCodeShowcase(
 			"Constructor injection",
 			"Pages and ViewModels receive their registered dependencies through ordinary constructors.",
-			Code(model => model.InjectionCode));
+			Code(vm => vm.InjectionCode));
 	}
 
 
@@ -38,9 +38,8 @@ internal sealed class LifecycleDiView : ShowcaseView<LifecycleDiViewModel>
 						new Image
 						{
 							HorizontalAlignment = HorizontalAlignment.Center,
-							Source = Bind(
-								model => model.StatusIcon,
-								static icon => (ImageSource?)ImageSource.Symbol(icon)),
+							Source = Bind(vm => vm.StatusIcon)
+								.ConvertTo(static icon => (ImageSource?)ImageSource.Symbol(icon)),
 							SymbolSize = 30,
 							Tint = Colors.Green
 						},
@@ -48,7 +47,7 @@ internal sealed class LifecycleDiView : ShowcaseView<LifecycleDiViewModel>
 						new Label
 						{
 							HorizontalAlignment = HorizontalAlignment.Center,
-							Text = Bind(model => model.StatusTitle),
+							Text = Bind(vm => vm.StatusTitle),
 							TextStyle = TextStyle.Title3,
 							FontWeight = FontWeight.Semibold,
 							TextAlignment = TextAlignment.Center
@@ -57,7 +56,7 @@ internal sealed class LifecycleDiView : ShowcaseView<LifecycleDiViewModel>
 						new Label
 						{
 							HorizontalAlignment = HorizontalAlignment.Center,
-							Text = Bind(model => model.TransitionCounts),
+							Text = Bind(vm => vm.TransitionCounts),
 							TextStyle = TextStyle.Subheadline,
 							TextColor = Colors.SecondaryLabel,
 							TextAlignment = TextAlignment.Center
@@ -66,7 +65,7 @@ internal sealed class LifecycleDiView : ShowcaseView<LifecycleDiViewModel>
 						new Label
 						{
 							HorizontalAlignment = HorizontalAlignment.Center,
-							Text = Bind(model => model.LastTransition),
+							Text = Bind(vm => vm.LastTransition),
 							TextStyle = TextStyle.Caption1,
 							TextColor = Colors.TertiaryLabel,
 							TextAlignment = TextAlignment.Center
@@ -74,6 +73,6 @@ internal sealed class LifecycleDiView : ShowcaseView<LifecycleDiViewModel>
 					}
 				},
 				190),
-			Code(model => model.LifecycleCode));
+			Code(vm => vm.LifecycleCode));
 	}
 }

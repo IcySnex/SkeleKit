@@ -23,9 +23,8 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 		TextField field = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Stretch,
-			Text = Bind(
-				model => model.Text,
-				static (model, value) => model.Text = value),
+			Text = Bind(vm => vm.Text)
+				.TwoWay((vm, val) => vm.Text = val),
 			Placeholder = "name@example.com",
 			LeadingIcon = ImageSource.Symbol("envelope"),
 			ClearButton = ClearButton.WhileEditing,
@@ -40,9 +39,8 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		Switch requiresText = new()
 		{
-			IsOn = Bind(
-				model => model.RequiresText,
-				static (model, value) => model.RequiresText = value),
+			IsOn = Bind(vm => vm.RequiresText)
+				.TwoWay((vm, val) => vm.RequiresText = val),
 			Toggled = value =>
 			{
 				field.RequiresText = value;
@@ -91,12 +89,12 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 								}
 							},
 
-							Status(Bind(model => model.SubmitStatus))
+							Status(Bind(vm => vm.SubmitStatus))
 						}
 					},
 					220),
 				SettingRow("Require text", requiresText)),
-			Code(model => model.BindingCode));
+			Code(vm => vm.BindingCode));
 	}
 
 	void AddKeyboardShowcase(
@@ -118,9 +116,8 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Keyboards,
-			SelectedItem = Bind(
-				model => model.SelectedKeyboard,
-				static (model, value) => model.SelectedKeyboard = value!),
+			SelectedItem = Bind(vm => vm.SelectedKeyboard)
+				.TwoWay((vm, val) => vm.SelectedKeyboard = val!),
 			SelectionChanged = option => field.Keyboard = option.Value
 		};
 
@@ -128,9 +125,8 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.ReturnKeys,
-			SelectedItem = Bind(
-				model => model.SelectedReturnKey,
-				static (model, value) => model.SelectedReturnKey = value!),
+			SelectedItem = Bind(vm => vm.SelectedReturnKey)
+				.TwoWay((vm, val) => vm.SelectedReturnKey = val!),
 			SelectionChanged = option => field.ReturnKey = option.Value
 		};
 
@@ -138,17 +134,15 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.ContentKinds,
-			SelectedItem = Bind(
-				model => model.SelectedContentKind,
-				static (model, value) => model.SelectedContentKind = value!),
+			SelectedItem = Bind(vm => vm.SelectedContentKind)
+				.TwoWay((vm, val) => vm.SelectedContentKind = val!),
 			SelectionChanged = option => field.ContentKind = option.Value
 		};
 
 		SegmentedControl capitalization = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedCapitalizationIndex,
-				static (model, value) => model.SelectedCapitalizationIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedCapitalizationIndex)
+				.TwoWay((vm, val) => vm.SelectedCapitalizationIndex = val),
 			SelectionChanged = index =>
 			{
 				field.Capitalization = viewModel.SelectedCapitalization.Value;
@@ -161,9 +155,8 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		Switch autocorrection = new()
 		{
-			IsOn = Bind(
-				model => model.Autocorrection,
-				static (model, value) => model.Autocorrection = value),
+			IsOn = Bind(vm => vm.Autocorrection)
+				.TwoWay((vm, val) => vm.Autocorrection = val),
 			Toggled = value =>
 			{
 				field.Autocorrection = value;
@@ -172,9 +165,8 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		SegmentedControl look = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedKeyboardLookIndex,
-				static (model, value) => model.SelectedKeyboardLookIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedKeyboardLookIndex)
+				.TwoWay((vm, val) => vm.SelectedKeyboardLookIndex = val),
 			SelectionChanged = index =>
 			{
 				field.KeyboardLook = viewModel.SelectedKeyboardLook.Value;
@@ -208,7 +200,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 				LabeledControl("Capitalization", capitalization),
 				SettingRow("Autocorrection", autocorrection),
 				LabeledControl("Keyboard appearance", look)),
-			Code(model => model.KeyboardCode));
+			Code(vm => vm.KeyboardCode));
 	}
 
 	void AddChromeShowcase(
@@ -220,16 +212,15 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 			Text = "SkeleKit",
 			LeadingIcon = ImageSource.Symbol("character.cursor.ibeam"),
 			ClearButton = viewModel.SelectedClearButton.Value,
-			FontSize = Bind(model => model.FontSize),
+			FontSize = Bind(vm => vm.FontSize),
 			FontWeight = viewModel.SelectedWeight.Value,
 			FontDesign = viewModel.SelectedDesign.Value
 		};
 
 		Switch leading = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsLeadingIcon,
-				static (model, value) => model.ShowsLeadingIcon = value),
+			IsOn = Bind(vm => vm.ShowsLeadingIcon)
+				.TwoWay((vm, val) => vm.ShowsLeadingIcon = val),
 			Toggled = value =>
 			{
 				field.LeadingIcon = value
@@ -242,9 +233,8 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.ClearButtons,
-			SelectedItem = Bind(
-				model => model.SelectedClearButton,
-				static (model, value) => model.SelectedClearButton = value!),
+			SelectedItem = Bind(vm => vm.SelectedClearButton)
+				.TwoWay((vm, val) => vm.SelectedClearButton = val!),
 			SelectionChanged = option =>
 			{
 				if (viewModel.TrailingModeIndex is 0)
@@ -256,9 +246,8 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		SegmentedControl trailing = new()
 		{
-			SelectedIndex = Bind(
-				model => model.TrailingModeIndex,
-				static (model, value) => model.TrailingModeIndex = value),
+			SelectedIndex = Bind(vm => vm.TrailingModeIndex)
+				.TwoWay((vm, val) => vm.TrailingModeIndex = val),
 			SelectionChanged = index =>
 			{
 				field.TrailingIcon = index is 1
@@ -279,26 +268,23 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 			Minimum = 12,
 			Maximum = 32,
 			Step = 1,
-			Value = Bind(
-				model => model.FontSize,
-				static (model, value) => model.FontSize = value)
+			Value = Bind(vm => vm.FontSize)
+				.TwoWay((vm, val) => vm.FontSize = val)
 		};
 
 		Picker<ShowcaseOption<FontWeight>> weight = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.FontWeights,
-			SelectedItem = Bind(
-				model => model.SelectedWeight,
-				static (model, value) => model.SelectedWeight = value!),
+			SelectedItem = Bind(vm => vm.SelectedWeight)
+				.TwoWay((vm, val) => vm.SelectedWeight = val!),
 			SelectionChanged = option => field.FontWeight = option.Value
 		};
 
 		SegmentedControl design = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedDesignIndex,
-				static (model, value) => model.SelectedDesignIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedDesignIndex)
+				.TwoWay((vm, val) => vm.SelectedDesignIndex = val),
 			SelectionChanged = index =>
 			{
 				field.FontDesign = viewModel.SelectedDesign.Value;
@@ -329,10 +315,10 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 				SettingRow("Leading icon", leading),
 				LabeledControl("Trailing slot", trailing),
 				clearSetting,
-				LabeledSlider("Font size", Bind(model => model.FontSizeLabel), size),
+				LabeledSlider("Font size", Bind(vm => vm.FontSizeLabel), size),
 				SettingRow("Weight", weight),
 				LabeledControl("Design", design)),
-			Code(model => model.ChromeCode));
+			Code(vm => vm.ChromeCode));
 	}
 
 	void AddAccessoryShowcase(
@@ -350,9 +336,8 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		SegmentedControl mode = new()
 		{
-			SelectedIndex = Bind(
-				model => model.AccessoryModeIndex,
-				static (model, value) => model.AccessoryModeIndex = value),
+			SelectedIndex = Bind(vm => vm.AccessoryModeIndex)
+				.TwoWay((vm, val) => vm.AccessoryModeIndex = val),
 			SelectionChanged = index =>
 			{
 				foreach (TextField field in fields)
@@ -385,7 +370,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 					},
 					240),
 				LabeledControl("Accessory", mode)),
-			Code(model => model.AccessoryCode));
+			Code(vm => vm.AccessoryCode));
 	}
 
 

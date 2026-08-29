@@ -74,7 +74,7 @@ internal sealed partial class TabsIpadViewModel : ShowcaseViewModel
 						.GetRequiredService<PlayerViewModel>();
 					BindingContext = viewModel;
 					IsVisible = BindingFactory.Bind(
-						(PlayerViewModel model) => model.IsVisible);
+						(PlayerViewModel vm) => vm.IsVisible);
 				}
 			}
 			""")
@@ -88,7 +88,7 @@ internal sealed partial class TabsIpadViewModel : ShowcaseViewModel
 			{
 				public PlatformView(PlatformViewModel viewModel) : base(viewModel)
 				{
-					TabBadge = Bind(model => model.Badge);
+					TabBadge = Bind(vm => vm.Badge);
 				}
 			}
 			""")

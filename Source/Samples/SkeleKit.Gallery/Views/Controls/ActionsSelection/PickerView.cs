@@ -21,10 +21,9 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			MinWidth = 220,
-			ItemsSource = Bind(model => model.Destinations),
-			SelectedItem = Bind(
-				model => model.SelectedDestination,
-				static (model, value) => model.SelectedDestination = value),
+			ItemsSource = Bind(vm => vm.Destinations),
+			SelectedItem = Bind(vm => vm.SelectedDestination)
+				.TwoWay((vm, val) => vm.SelectedDestination = val),
 			Placeholder = "Choose a destination",
 			ItemTitle = DestinationTitle
 		};
@@ -39,9 +38,8 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 
 		SegmentedControl items = new()
 		{
-			SelectedIndex = Bind(
-				model => model.ItemsStateIndex,
-				static (model, value) => model.ItemsStateIndex = value)
+			SelectedIndex = Bind(vm => vm.ItemsStateIndex)
+				.TwoWay((vm, val) => vm.ItemsStateIndex = val)
 		};
 		items.Items.Add("Base");
 		items.Items.Add("Empty");
@@ -66,7 +64,7 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.ItemsSummary),
+								Text = Bind(vm => vm.ItemsSummary),
 								TextStyle = TextStyle.Footnote,
 								TextColor = Colors.SecondaryLabel,
 								TextAlignment = TextAlignment.Center
@@ -76,7 +74,7 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 					180),
 				SettingRow("Selection", clear),
 				LabeledControl("Collection contents", items)),
-			Code(model => model.PickerCode));
+			Code(vm => vm.PickerCode));
 	}
 
 

@@ -17,7 +17,7 @@ public class DatePicker : Control
 
 
 	/// <summary>
-	/// The picked date, in local time. Two-way by default.
+	/// The picked date, in local time.
 	/// </summary>
 	public Bindable<DateTime> Date
 	{

@@ -196,7 +196,7 @@ public abstract partial class ContentView : Panel
 	public bool HidesSearchScopesWhenEmpty { get; set; }
 
 	/// <summary>
-	/// The search field's text. Two-way by default.
+	/// The search field's text.
 	/// </summary>
 	public Bindable<string?> SearchText
 	{
@@ -207,7 +207,7 @@ public abstract partial class ContentView : Panel
 	Binding<string?>? searchTextBinding;
 
 	/// <summary>
-	/// The selected search scope index. Two-way by default.
+	/// The selected search scope index.
 	/// </summary>
 	public Bindable<int> SearchScopeIndex
 	{
@@ -405,87 +405,13 @@ public abstract class ContentView<TViewModel> : ContentView
 	/// Binds one way to a ViewModel property.
 	/// </summary>
 	/// <typeparam name="T">The bound value type.</typeparam>
-	/// <param name="getter">The ViewModel property to read.</param>
+	/// <param name="read">The ViewModel property to read.</param>
 	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
 	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<T?> Bind<T>(
-		Func<TViewModel, T> getter,
-		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
-		BindingFactory.Bind(getter, path);
-
-	/// <summary>
-	/// Binds two ways; <paramref name="setter"/> writes the control's value back.
-	/// </summary>
-	/// <typeparam name="T">The bound value type.</typeparam>
-	/// <param name="getter">The ViewModel property to read.</param>
-	/// <param name="setter">The action that writes the value back to the ViewModel.</param>
-	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
-	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<T?> Bind<T>(
-		Func<TViewModel, T> getter,
-		Action<TViewModel, T?> setter,
-		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
-		BindingFactory.Bind(getter, setter, path);
-
-	/// <summary>
-	/// Binds one way through a converter.
-	/// </summary>
-	/// <typeparam name="TValue">The value type read from the ViewModel.</typeparam>
-	/// <typeparam name="T">The converted value type.</typeparam>
-	/// <param name="getter">The ViewModel property to read.</param>
-	/// <param name="format">Converts the ViewModel value for display.</param>
-	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
-	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<T?> Bind<TValue, T>(
-		Func<TViewModel, TValue> getter,
-		Func<TValue, T> format,
-		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
-		BindingFactory.Bind(getter, format, path);
-
-	/// <summary>
-	/// Binds two ways through converters: <paramref name="format"/> out, <paramref name="parse"/> back in, as for a numeric text field.
-	/// </summary>
-	/// <typeparam name="TValue">The value type read from the ViewModel.</typeparam>
-	/// <typeparam name="T">The converted value type.</typeparam>
-	/// <param name="getter">The ViewModel property to read.</param>
-	/// <param name="setter">The action that writes the value back to the ViewModel.</param>
-	/// <param name="format">Converts the ViewModel value for display.</param>
-	/// <param name="parse">Converts the displayed value back to the ViewModel type.</param>
-	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
-	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<T?> Bind<TValue, T>(
-		Func<TViewModel, TValue> getter,
-		Action<TViewModel, TValue> setter,
-		Func<TValue, T> format,
-		Func<T, TValue> parse,
-		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
-		BindingFactory.Bind(getter, setter, format, parse, path);
-
-	/// <summary>
-	/// Binds control to source only: the control writes, and never reads back.
-	/// </summary>
-	/// <typeparam name="T">The bound value type.</typeparam>
-	/// <param name="getter">The ViewModel property to read the initial value from.</param>
-	/// <param name="setter">The action that writes the value back to the ViewModel.</param>
-	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
-	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<T?> BindToSource<T>(
-		Func<TViewModel, T> getter,
-		Action<TViewModel, T?> setter,
-		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
-		BindingFactory.BindToSource(getter, setter, path);
-
-	/// <summary>
-	/// Reads the value once when the ViewModel attaches, then never again.
-	/// </summary>
-	/// <typeparam name="T">The bound value type.</typeparam>
-	/// <param name="getter">The ViewModel property to read.</param>
-	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
-	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<T?> BindOnce<T>(
-		Func<TViewModel, T> getter,
-		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
-		BindingFactory.BindOnce(getter, path);
+	protected static BindingExpression<TViewModel, T, T> Bind<T>(
+		Func<TViewModel, T> read,
+		[CallerArgumentExpression(nameof(read))] string? path = null) =>
+		BindingFactory.Bind(read, path);
 
 
 	/// <summary>

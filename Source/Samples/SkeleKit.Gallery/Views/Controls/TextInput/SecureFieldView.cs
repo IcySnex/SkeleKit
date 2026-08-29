@@ -21,9 +21,8 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 		SecureField field = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Stretch,
-			Text = Bind(
-				model => model.Text,
-				static (model, value) => model.Text = value),
+			Text = Bind(vm => vm.Text)
+				.TwoWay((vm, val) => vm.Text = val),
 			Placeholder = "Create a password",
 			LeadingIcon = ImageSource.Symbol("lock.fill"),
 			RevealButton = viewModel.RevealsEntry,
@@ -35,9 +34,8 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 
 		Switch reveal = new()
 		{
-			IsOn = Bind(
-				model => model.RevealsEntry,
-				static (model, value) => model.RevealsEntry = value),
+			IsOn = Bind(vm => vm.RevealsEntry)
+				.TwoWay((vm, val) => vm.RevealsEntry = val),
 			Toggled = value =>
 			{
 				field.RevealButton = value;
@@ -63,11 +61,11 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 							new ProgressBar
 							{
 								HorizontalAlignment = HorizontalAlignment.Stretch,
-								Progress = Bind(model => model.Strength),
+								Progress = Bind(vm => vm.Strength),
 								FillColor = Colors.Pink
 							},
 
-							Status(Bind(model => model.StrengthLabel), FontWeight.Medium),
+							Status(Bind(vm => vm.StrengthLabel), FontWeight.Medium),
 
 							new StackPanel
 							{
@@ -95,12 +93,12 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 								}
 							},
 
-							Status(Bind(model => model.SubmitStatus))
+							Status(Bind(vm => vm.SubmitStatus))
 						}
 					},
 					280),
 				SettingRow("Reveal button", reveal)),
-			Code(model => model.EntryCode));
+			Code(vm => vm.EntryCode));
 	}
 
 	void AddIntentShowcase(
@@ -120,17 +118,15 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 		{
 			MinWidth = 160,
 			ItemsSource = viewModel.PasswordIntents,
-			SelectedItem = Bind(
-				model => model.SelectedIntent,
-				static (model, value) => model.SelectedIntent = value!),
+			SelectedItem = Bind(vm => vm.SelectedIntent)
+				.TwoWay((vm, val) => vm.SelectedIntent = val!),
 			SelectionChanged = option => field.ContentKind = option.Value
 		};
 
 		Switch reveal = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsReveal,
-				static (model, value) => model.ShowsReveal = value),
+			IsOn = Bind(vm => vm.ShowsReveal)
+				.TwoWay((vm, val) => vm.ShowsReveal = val),
 			Toggled = value =>
 			{
 				field.RevealButton = value;
@@ -139,9 +135,8 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 
 		Switch trailing = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsTrailingIcon,
-				static (model, value) => model.ShowsTrailingIcon = value),
+			IsOn = Bind(vm => vm.ShowsTrailingIcon)
+				.TwoWay((vm, val) => vm.ShowsTrailingIcon = val),
 			Toggled = value =>
 			{
 				field.TrailingIcon = value
@@ -152,9 +147,8 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 
 		Switch clear = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsClearButton,
-				static (model, value) => model.ShowsClearButton = value),
+			IsOn = Bind(vm => vm.ShowsClearButton)
+				.TwoWay((vm, val) => vm.ShowsClearButton = val),
 			Toggled = value =>
 			{
 				field.ClearButton = value
@@ -178,7 +172,7 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 						Children =
 						{
 							field,
-							Status(Bind(model => model.TrailingOwner), FontWeight.Medium)
+							Status(Bind(vm => vm.TrailingOwner), FontWeight.Medium)
 						}
 					},
 					190),
@@ -186,7 +180,7 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 				SettingRow("Reveal button", reveal),
 				SettingRow("Trailing icon", trailing),
 				SettingRow("Clear button", clear)),
-			Code(model => model.IntentCode));
+			Code(vm => vm.IntentCode));
 	}
 
 

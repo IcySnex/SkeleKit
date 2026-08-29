@@ -56,7 +56,7 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 	protected static View Code(
 		Func<TViewModel, IReadOnlyList<Span>> getter,
 		[CallerArgumentExpression(nameof(getter))] string? path = null) =>
-		ShowcaseBox.Code(Bind(getter, CSharpSyntax.Highlight, path));
+		ShowcaseBox.Code(Bind(getter, path).ConvertTo(CSharpSyntax.Highlight));
 
 	protected void AddShowcase(
 		string title,

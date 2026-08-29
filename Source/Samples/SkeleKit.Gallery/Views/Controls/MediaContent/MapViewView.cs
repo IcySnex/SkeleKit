@@ -30,9 +30,8 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 		{
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			Height = 300,
-			Region = Bind(
-				model => model.Region,
-				static (model, value) => model.Region = value),
+			Region = Bind(vm => vm.Region)
+				.TwoWay((vm, val) => vm.Region = val),
 			Kind = viewModel.SelectedKind.Value,
 			ShowsCompass = true,
 			CornerRadius = 18
@@ -42,9 +41,8 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Kinds,
-			SelectedItem = Bind(
-				model => model.SelectedKind,
-				static (model, value) => model.SelectedKind = value!),
+			SelectedItem = Bind(vm => vm.SelectedKind)
+				.TwoWay((vm, val) => vm.SelectedKind = val!),
 			SelectionChanged = option => map.Kind = option.Value
 		};
 
@@ -52,9 +50,8 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Regions,
-			SelectedItem = Bind(
-				model => model.SelectedRegion,
-				static (model, value) => model.SelectedRegion = value!),
+			SelectedItem = Bind(vm => vm.SelectedRegion)
+				.TwoWay((vm, val) => vm.SelectedRegion = val!),
 			SelectionChanged = option => map.SetRegion(option.Value, animated: true)
 		};
 
@@ -62,9 +59,8 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.Gestures,
-			SelectedItem = Bind(
-				model => model.SelectedGestures,
-				static (model, value) => model.SelectedGestures = value!),
+			SelectedItem = Bind(vm => vm.SelectedGestures)
+				.TwoWay((vm, val) => vm.SelectedGestures = val!),
 			SelectionChanged = option =>
 			{
 				map.ScrollEnabled = viewModel.ScrollEnabled;
@@ -76,9 +72,8 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 
 		Switch scale = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsScale,
-				static (model, value) => model.ShowsScale = value),
+			IsOn = Bind(vm => vm.ShowsScale)
+				.TwoWay((vm, val) => vm.ShowsScale = val),
 			Toggled = value =>
 			{
 				map.ShowsScale = value;
@@ -87,9 +82,8 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 
 		Switch compass = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsCompass,
-				static (model, value) => model.ShowsCompass = value),
+			IsOn = Bind(vm => vm.ShowsCompass)
+				.TwoWay((vm, val) => vm.ShowsCompass = val),
 			Toggled = value =>
 			{
 				map.ShowsCompass = value;
@@ -98,9 +92,8 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 
 		Switch traffic = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsTraffic,
-				static (model, value) => model.ShowsTraffic = value),
+			IsOn = Bind(vm => vm.ShowsTraffic)
+				.TwoWay((vm, val) => vm.ShowsTraffic = val),
 			Toggled = value =>
 			{
 				map.ShowsTraffic = value;
@@ -125,7 +118,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.RegionSummary),
+								Text = Bind(vm => vm.RegionSummary),
 								TextStyle = TextStyle.Caption1,
 								TextColor = Colors.SecondaryLabel
 							}
@@ -138,7 +131,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 				SettingRow("Compass when rotated", compass),
 				SettingRow("Scale while zooming", scale),
 				SettingRow("Traffic", traffic)),
-			Code(model => model.PresentationCode));
+			Code(vm => vm.PresentationCode));
 	}
 
 	void AddPinsShowcase(
@@ -164,9 +157,8 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 
 		SegmentedControl clustering = new()
 		{
-			SelectedIndex = Bind(
-				model => model.ClusterModeIndex,
-				static (model, value) => model.ClusterModeIndex = value),
+			SelectedIndex = Bind(vm => vm.ClusterModeIndex)
+				.TwoWay((vm, val) => vm.ClusterModeIndex = val),
 			SelectionChanged = index =>
 			{
 				map.ClusterMarker = index is 2 ? BuildCluster : null;
@@ -180,9 +172,8 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 
 		Switch showsOverlays = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsOverlays,
-				static (model, value) => model.ShowsOverlays = value),
+			IsOn = Bind(vm => vm.ShowsOverlays)
+				.TwoWay((vm, val) => vm.ShowsOverlays = val),
 			Toggled = value =>
 			{
 				overlays.Clear();
@@ -211,7 +202,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.SelectionStatus),
+								Text = Bind(vm => vm.SelectionStatus),
 								TextStyle = TextStyle.Caption1,
 								TextColor = Colors.SecondaryLabel,
 								MaxLines = 2,
@@ -222,7 +213,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 					380),
 				LabeledControl("Clustering", clustering),
 				SettingRow("Overlays", showsOverlays)),
-			Code(model => model.PinsCode));
+			Code(vm => vm.PinsCode));
 	}
 
 

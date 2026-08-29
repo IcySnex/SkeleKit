@@ -23,9 +23,8 @@ internal sealed class SystemPickingView : ShowcaseView<SystemPickingViewModel>
 		{
 			MinWidth = 140,
 			ItemsSource = viewModel.ImageLimits,
-			SelectedItem = Bind(
-				model => model.SelectedImageLimit,
-				static (model, value) => model.SelectedImageLimit = value!)
+			SelectedItem = Bind(vm => vm.SelectedImageLimit)
+				.TwoWay((vm, val) => vm.SelectedImageLimit = val!)
 		};
 
 		AddShowcase(
@@ -46,7 +45,7 @@ internal sealed class SystemPickingView : ShowcaseView<SystemPickingViewModel>
 								HorizontalAlignment = HorizontalAlignment.Center,
 								Width = 140,
 								Height = 100,
-								Source = Bind(model => model.ImagePreview),
+								Source = Bind(vm => vm.ImagePreview),
 								Stretch = Stretch.UniformToFill,
 								Background = Colors.SecondaryBackground,
 								CornerRadius = 14
@@ -57,12 +56,12 @@ internal sealed class SystemPickingView : ShowcaseView<SystemPickingViewModel>
 								"photo.on.rectangle.angled",
 								viewModel.PickImagesCommand),
 
-							ResultLabel(Bind(model => model.ImagesResult))
+							ResultLabel(Bind(vm => vm.ImagesResult))
 						}
 					},
 					220),
 				SettingRow("Selection limit", limit)),
-			Code(model => model.ImagesCode));
+			Code(vm => vm.ImagesCode));
 	}
 
 	void AddFileShowcase(
@@ -72,9 +71,8 @@ internal sealed class SystemPickingView : ShowcaseView<SystemPickingViewModel>
 		{
 			MinWidth = 140,
 			ItemsSource = viewModel.FileFilters,
-			SelectedItem = Bind(
-				model => model.SelectedFileFilter,
-				static (model, value) => model.SelectedFileFilter = value!)
+			SelectedItem = Bind(vm => vm.SelectedFileFilter)
+				.TwoWay((vm, val) => vm.SelectedFileFilter = val!)
 		};
 
 		AddShowcase(
@@ -105,12 +103,12 @@ internal sealed class SystemPickingView : ShowcaseView<SystemPickingViewModel>
 								"doc.badge.plus",
 								viewModel.PickFileCommand),
 
-							ResultLabel(Bind(model => model.FileResult))
+							ResultLabel(Bind(vm => vm.FileResult))
 						}
 					},
 					190),
 				SettingRow("Allowed files", filter)),
-			Code(model => model.FileCode));
+			Code(vm => vm.FileCode));
 	}
 
 

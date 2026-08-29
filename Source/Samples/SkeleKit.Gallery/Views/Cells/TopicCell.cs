@@ -15,7 +15,8 @@ internal sealed class TopicCell : ItemView<GalleryTopic>
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
-			Source = Bind(topic => topic.Symbol, symbol => (ImageSource?)ImageSource.Symbol(symbol)),
+			Source = Bind(topic => topic.Symbol)
+				.ConvertTo(symbol => (ImageSource?)ImageSource.Symbol(symbol)),
 			SymbolSize = 19,
 			SymbolWeight = FontWeight.Semibold
 		};

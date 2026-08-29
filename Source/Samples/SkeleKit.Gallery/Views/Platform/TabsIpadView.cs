@@ -16,11 +16,11 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 		AddCodeShowcase(
 			"Bottom tabs & search",
 			"Declare the app's primary destinations and the system search bubble.",
-			Code(model => model.TabsCode));
+			Code(vm => vm.TabsCode));
 		AddCodeShowcase(
 			"iPad sidebar",
 			"Set placements, iPad-only destinations, grouped sections and a footer in one configuration.",
-			Code(model => model.PadCode));
+			Code(vm => vm.PadCode));
 	}
 
 	void AddMinimizationShowcase(
@@ -32,9 +32,8 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 			VerticalAlignment = VerticalAlignment.Center,
 			MinWidth = 210,
 			ItemsSource = viewModel.MinimizeBehaviors,
-			SelectedItem = Bind(
-				model => model.SelectedMinimizeBehavior,
-				static (model, value) => model.SelectedMinimizeBehavior = value!),
+			SelectedItem = Bind(vm => vm.SelectedMinimizeBehavior)
+				.TwoWay((vm, val) => vm.SelectedMinimizeBehavior = val!),
 			ItemTitle = static option => option.Title
 		};
 
@@ -42,7 +41,7 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 			"Tab bar minimization",
 			"Choose a live scroll direction, then move the page up or down to see the native iOS 26 behavior.",
 			ShowcaseBox.Canvas(behavior, 140),
-			Code(model => model.MinimizeCode));
+			Code(vm => vm.MinimizeCode));
 	}
 
 
@@ -53,9 +52,8 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
-			Text = Bind(
-				model => model.ShowsAccessory,
-				static shown => shown ? "Hide accessory" : "Show accessory"),
+			Text = Bind(vm => vm.ShowsAccessory)
+				.ConvertTo(static shown => shown ? "Hide accessory" : "Show accessory"),
 			Icon = ImageSource.Symbol("rectangle.bottomthird.inset.filled"),
 			Kind = ButtonStyle.Tinted,
 			Size = ButtonSize.Medium,
@@ -66,7 +64,7 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 			"Tab accessory",
 			"Show or hide an app-level view in the native iOS 26 slot above the tab bar.",
 			ShowcaseBox.Canvas(visible, 140),
-			Code(model => model.AccessoryCode));
+			Code(vm => vm.AccessoryCode));
 	}
 
 	void AddBadgeShowcase(
@@ -75,9 +73,8 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 		Stepper count = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
-			Value = Bind(
-				model => model.BadgeCount,
-				static (model, value) => model.BadgeCount = value),
+			Value = Bind(vm => vm.BadgeCount)
+				.TwoWay((vm, val) => vm.BadgeCount = val),
 			Minimum = 0,
 			Maximum = 12,
 			Step = 1
@@ -99,7 +96,7 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.BadgeLabel),
+								Text = Bind(vm => vm.BadgeLabel),
 								TextStyle = TextStyle.Title3,
 								FontWeight = FontWeight.Semibold,
 								TextAlignment = TextAlignment.Center
@@ -118,7 +115,7 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 						Size = ButtonSize.Small,
 						Command = viewModel.ClearBadgeCommand
 					})),
-			Code(model => model.BadgeCode));
+			Code(vm => vm.BadgeCode));
 	}
 
 

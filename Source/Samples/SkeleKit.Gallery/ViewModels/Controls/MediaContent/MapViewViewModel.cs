@@ -96,9 +96,8 @@ internal sealed partial class MapViewModel : ShowcaseViewModel
 			new MapView
 			{
 				Height = 300,
-				Region = Bind(
-					model => model.Region,
-					(model, value) => model.Region = value),
+				Region = Bind(vm => vm.Region)
+					.TwoWay((vm, val) => vm.Region = val),
 				Kind = MapKind.{{SelectedKind.Value}},
 				ScrollEnabled = {{Boolean(ScrollEnabled)}},
 				ZoomEnabled = {{Boolean(ZoomEnabled)}},

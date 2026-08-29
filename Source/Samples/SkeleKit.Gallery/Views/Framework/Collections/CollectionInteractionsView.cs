@@ -33,13 +33,11 @@ internal sealed class CollectionInteractionsView : ShowcaseView<CollectionIntera
 			HighlightsSelection = false,
 			SeparatorInsets = new Thickness(66, 0, 0, 0),
 			RefreshCommand = viewModel.RefreshCommand,
-			IsRefreshing = Bind(
-				model => model.IsRefreshing,
-				static (model, value) => model.IsRefreshing = value),
+			IsRefreshing = Bind(vm => vm.IsRefreshing)
+				.TwoWay((vm, val) => vm.IsRefreshing = val),
 			ReorderCommand = viewModel.ReorderCommand,
-			IsEditing = Bind(
-				model => model.IsEditing,
-				static (model, value) => model.IsEditing = value),
+			IsEditing = Bind(vm => vm.IsEditing)
+				.TwoWay((vm, val) => vm.IsEditing = val),
 
 			SwipeActions =
 			{

@@ -19,9 +19,8 @@ internal sealed class SegmentedControlView : ShowcaseView<SegmentedControlViewMo
 		SegmentedControl sections = new()
 		{
 			VerticalAlignment = VerticalAlignment.Center,
-			SelectedIndex = Bind(
-				model => model.SelectedIndex,
-				static (model, value) => model.SelectedIndex = value)
+			SelectedIndex = Bind(vm => vm.SelectedIndex)
+				.TwoWay((vm, val) => vm.SelectedIndex = val)
 		};
 		sections.Items.Add("Overview");
 		sections.Items.Add("Details");
@@ -41,6 +40,6 @@ internal sealed class SegmentedControlView : ShowcaseView<SegmentedControlViewMo
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(sections, 150),
 				SettingRow("Selection", reset)),
-			Code(model => model.SelectionCode));
+			Code(vm => vm.SelectionCode));
 	}
 }

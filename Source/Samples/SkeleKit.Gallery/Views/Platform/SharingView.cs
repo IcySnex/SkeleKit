@@ -27,8 +27,8 @@ internal sealed class SharingView : ShowcaseView<SharingViewModel>
 				"Share text",
 				"text.quote",
 				viewModel.ShareTextCommand,
-				Bind(model => model.TextResult)),
-			Code(model => model.TextCode));
+				Bind(vm => vm.TextResult)),
+			Code(vm => vm.TextCode));
 	}
 
 	void AddLinkShowcase(
@@ -41,8 +41,8 @@ internal sealed class SharingView : ShowcaseView<SharingViewModel>
 				"Share link",
 				"link",
 				viewModel.ShareLinkCommand,
-				Bind(model => model.LinkResult)),
-			Code(model => model.LinkCode));
+				Bind(vm => vm.LinkResult)),
+			Code(vm => vm.LinkCode));
 	}
 
 	void AddImageShowcase(
@@ -55,8 +55,8 @@ internal sealed class SharingView : ShowcaseView<SharingViewModel>
 				"Share image",
 				"photo",
 				viewModel.ShareImageCommand,
-				Bind(model => model.ImageResult)),
-			Code(model => model.ImageCode));
+				Bind(vm => vm.ImageResult)),
+			Code(vm => vm.ImageCode));
 	}
 
 	void AddCombinedShowcase(
@@ -69,8 +69,8 @@ internal sealed class SharingView : ShowcaseView<SharingViewModel>
 				"Share combined",
 				"square.stack.3d.up",
 				viewModel.ShareCombinedCommand,
-				Bind(model => model.CombinedResult)),
-			Code(model => model.CombinedCode));
+				Bind(vm => vm.CombinedResult)),
+			Code(vm => vm.CombinedCode));
 	}
 
 

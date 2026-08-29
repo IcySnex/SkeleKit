@@ -13,7 +13,7 @@ internal sealed class SectionsView : ShowcaseView<SectionsViewModel>
 
 		Content = new CollectionView<SectionEntry, CollectionSection>
 		{
-			GroupedItemsSource = Bind(model => model.Sections),
+			GroupedItemsSource = Bind(vm => vm.Sections),
 			ItemTemplate = static () => new SectionCell(),
 			HeaderTemplate = static () => new CollectionHeader(),
 			FooterTemplate = static () => new CollectionFooter(),
@@ -97,9 +97,8 @@ internal sealed class CollectionHeader : ItemView<CollectionSection>
 				new Label
 				{
 					VerticalAlignment = VerticalAlignment.Center,
-					Text = Bind<CollectionLayoutKind, string>(
-						section => section.Layout,
-						layout => layout is CollectionLayoutKind.Carousel ? "Carousel" : "List"),
+					Text = Bind(section => section.Layout)
+						.ConvertTo(layout => layout is CollectionLayoutKind.Carousel ? "Carousel" : "List"),
 					TextStyle = TextStyle.Footnote,
 					TextColor = Colors.SecondaryLabel
 				}.Column(1)
@@ -125,9 +124,8 @@ internal sealed class CollectionFooter : ItemView<CollectionSection>
 	{
 		label = new()
 		{
-			Text = Bind<IReadOnlyList<SectionEntry>, string>(
-				section => section.Items,
-				items => $"{items.Count} items"),
+			Text = Bind(section => section.Items)
+				.ConvertTo(items => $"{items.Count} items"),
 			TextStyle = TextStyle.Footnote,
 			TextColor = Colors.SecondaryLabel
 		};

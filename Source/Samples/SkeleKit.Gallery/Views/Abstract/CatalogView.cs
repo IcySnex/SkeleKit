@@ -34,7 +34,7 @@ internal abstract class CatalogView<TViewModel> : TintView<TViewModel>
 
 		CollectionView<GalleryTopic, GallerySection> collection = new()
 		{
-			GroupedItemsSource = Bind(model => model.Sections),
+			GroupedItemsSource = Bind(vm => vm.Sections),
 			ItemTemplate = static () => new TopicCell(),
 			HeaderTemplate = static () => new SectionHeaderView(),
 			Layout = CollectionLayout.List(grouped: true),

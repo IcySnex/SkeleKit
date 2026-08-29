@@ -33,17 +33,15 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		Picker<ShowcaseOption<ButtonStyle>> style = new()
 		{
 			ItemsSource = viewModel.Styles,
-			SelectedItem = Bind(
-				model => model.SelectedStyle,
-				static (model, value) => model.SelectedStyle = value!),
+			SelectedItem = Bind(vm => vm.SelectedStyle)
+				.TwoWay((vm, val) => vm.SelectedStyle = val!),
 			SelectionChanged = option => button.Kind = option.Value
 		};
 
 		SegmentedControl size = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedSizeIndex,
-				static (model, value) => model.SelectedSizeIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedSizeIndex)
+				.TwoWay((vm, val) => vm.SelectedSizeIndex = val),
 			SelectionChanged = index =>
 			{
 				button.Size = viewModel.SelectedSize;
@@ -61,7 +59,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 				ShowcaseBox.Canvas(button),
 				SettingRow("Style", style),
 				LabeledControl("Size", size)),
-			Code(model => model.ConfigurationCode));
+			Code(vm => vm.ConfigurationCode));
 	}
 
 	void AddContentShowcase(
@@ -86,17 +84,15 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Placements,
-			SelectedItem = Bind(
-				model => model.SelectedPlacement,
-				static (model, value) => model.SelectedPlacement = value!),
+			SelectedItem = Bind(vm => vm.SelectedPlacement)
+				.TwoWay((vm, val) => vm.SelectedPlacement = val!),
 			SelectionChanged = option => button.IconPlacement = option.Value
 		};
 
 		Switch subtitle = new()
 		{
-			IsOn = Bind(
-				model => model.ShowsSubtitle,
-				static (model, value) => model.ShowsSubtitle = value),
+			IsOn = Bind(vm => vm.ShowsSubtitle)
+				.TwoWay((vm, val) => vm.ShowsSubtitle = val),
 			Toggled = value =>
 			{
 				button.Subtitle = value ? "Updated moments ago" : null;
@@ -108,9 +104,8 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Minimum = 10,
 			Maximum = 28,
 			Step = 1,
-			Value = Bind(
-				model => model.IconSize,
-				static (model, value) => model.IconSize = value),
+			Value = Bind(vm => vm.IconSize)
+				.TwoWay((vm, val) => vm.IconSize = val),
 			ValueChanged = value => button.IconSize = value
 		};
 
@@ -119,9 +114,8 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Minimum = 0,
 			Maximum = 20,
 			Step = 1,
-			Value = Bind(
-				model => model.IconSpacing,
-				static (model, value) => model.IconSpacing = value),
+			Value = Bind(vm => vm.IconSpacing)
+				.TwoWay((vm, val) => vm.IconSpacing = val),
 			ValueChanged = value => button.IconSpacing = value
 		};
 
@@ -130,9 +124,8 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Minimum = 8,
 			Maximum = 32,
 			Step = 1,
-			Value = Bind(
-				model => model.HorizontalPadding,
-				static (model, value) => model.HorizontalPadding = value),
+			Value = Bind(vm => vm.HorizontalPadding)
+				.TwoWay((vm, val) => vm.HorizontalPadding = val),
 			ValueChanged = value => button.Padding = new(value, 12)
 		};
 
@@ -143,10 +136,10 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 				ShowcaseBox.Canvas(button, 176),
 				SettingRow("Icon placement", placement),
 				SettingRow("Subtitle", subtitle),
-				LabeledSlider("Icon size", Bind(model => model.IconSizeLabel), iconSize),
-				LabeledSlider("Icon spacing", Bind(model => model.IconSpacingLabel), iconSpacing),
-				LabeledSlider("Horizontal padding", Bind(model => model.PaddingLabel), padding)),
-			Code(model => model.ContentCode));
+				LabeledSlider("Icon size", Bind(vm => vm.IconSizeLabel), iconSize),
+				LabeledSlider("Icon spacing", Bind(vm => vm.IconSpacingLabel), iconSpacing),
+				LabeledSlider("Horizontal padding", Bind(vm => vm.PaddingLabel), padding)),
+			Code(vm => vm.ContentCode));
 	}
 
 	void AddStateShowcase(
@@ -159,30 +152,27 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Icon = ImageSource.Symbol("play.fill"),
 			Kind = ButtonStyle.Filled,
 			Size = ButtonSize.Large,
-			IsLoading = Bind(model => model.IsLoading),
+			IsLoading = Bind(vm => vm.IsLoading),
 			Command = viewModel.TapCommand
 		};
 
 		Switch loading = new()
 		{
-			IsOn = Bind(
-				model => model.IsLoading,
-				static (model, value) => model.IsLoading = value)
+			IsOn = Bind(vm => vm.IsLoading)
+				.TwoWay((vm, val) => vm.IsLoading = val)
 		};
 
 		Switch destructive = new()
 		{
-			IsOn = Bind(
-				model => model.IsDestructive,
-				static (model, value) => model.IsDestructive = value),
+			IsOn = Bind(vm => vm.IsDestructive)
+				.TwoWay((vm, val) => vm.IsDestructive = val),
 			Toggled = value => button.IsDestructive = value
 		};
 
 		Switch enabled = new()
 		{
-			IsOn = Bind(
-				model => model.IsButtonEnabled,
-				static (model, value) => model.IsButtonEnabled = value)
+			IsOn = Bind(vm => vm.IsButtonEnabled)
+				.TwoWay((vm, val) => vm.IsButtonEnabled = val)
 		};
 
 		AddShowcase(
@@ -203,7 +193,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.StateStatus),
+								Text = Bind(vm => vm.StateStatus),
 								TextStyle = TextStyle.Footnote,
 								TextColor = Colors.SecondaryLabel,
 								TextAlignment = TextAlignment.Center,
@@ -215,7 +205,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 				SettingRow("Loading", loading),
 				SettingRow("Destructive", destructive),
 				SettingRow("Enabled", enabled)),
-			Code(model => model.StateCode));
+			Code(vm => vm.StateCode));
 	}
 
 	void AddMenuShowcase(
@@ -305,7 +295,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 						new Label
 						{
 							HorizontalAlignment = HorizontalAlignment.Center,
-							Text = Bind(model => model.MenuStatus),
+							Text = Bind(vm => vm.MenuStatus),
 							TextStyle = TextStyle.Footnote,
 							TextColor = Colors.SecondaryLabel,
 							TextAlignment = TextAlignment.Center
@@ -313,6 +303,6 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 					}
 				},
 				190),
-			Code(model => model.MenuCode));
+			Code(vm => vm.MenuCode));
 	}
 }

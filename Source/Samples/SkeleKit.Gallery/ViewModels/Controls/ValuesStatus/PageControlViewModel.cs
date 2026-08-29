@@ -51,10 +51,9 @@ internal sealed partial class PageControlViewModel : ShowcaseViewModel
 			$$"""
 			new PageControl
 			{
-				Count = Bind(model => model.Count),
-				Current = Bind(
-					model => model.Current,
-					(model, value) => model.Current = value),
+				Count = Bind(vm => vm.Count),
+				Current = Bind(vm => vm.Current)
+					.TwoWay((vm, val) => vm.Current = val),
 				DotColor = Colors.Red.WithAlpha(0.25),
 				CurrentDotColor = Colors.Red,
 				HidesForSinglePage = {{Boolean(HidesForSinglePage)}},

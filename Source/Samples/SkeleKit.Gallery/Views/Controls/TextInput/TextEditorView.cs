@@ -21,9 +21,8 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 		TextEditorViewModel viewModel)
 	{
 		TextEditor editor = Editor();
-		editor.Text = Bind(
-			model => model.Text,
-			static (model, value) => model.Text = value);
+		editor.Text = Bind(vm => vm.Text)
+			.TwoWay((vm, val) => vm.Text = val);
 
 		AddShowcase(
 			"Binding & live growth",
@@ -67,11 +66,11 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 								}
 							},
 
-							Status(Bind(model => model.EditSummary), FontWeight.Medium)
+							Status(Bind(vm => vm.EditSummary), FontWeight.Medium)
 						}
 					},
 					250)),
-			Code(model => model.BindingCode));
+			Code(vm => vm.BindingCode));
 	}
 
 	void AddKeyboardShowcase(
@@ -88,17 +87,15 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.ContentKinds,
-			SelectedItem = Bind(
-				model => model.SelectedContentKind,
-				static (model, value) => model.SelectedContentKind = value!),
+			SelectedItem = Bind(vm => vm.SelectedContentKind)
+				.TwoWay((vm, val) => vm.SelectedContentKind = val!),
 			SelectionChanged = option => editor.ContentKind = option.Value
 		};
 
 		SegmentedControl capitalization = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedCapitalizationIndex,
-				static (model, value) => model.SelectedCapitalizationIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedCapitalizationIndex)
+				.TwoWay((vm, val) => vm.SelectedCapitalizationIndex = val),
 			SelectionChanged = index =>
 			{
 				editor.Capitalization = viewModel.SelectedCapitalization.Value;
@@ -111,9 +108,8 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 
 		Switch autocorrection = new()
 		{
-			IsOn = Bind(
-				model => model.Autocorrection,
-				static (model, value) => model.Autocorrection = value),
+			IsOn = Bind(vm => vm.Autocorrection)
+				.TwoWay((vm, val) => vm.Autocorrection = val),
 			Toggled = value =>
 			{
 				editor.Autocorrection = value;
@@ -122,9 +118,8 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 
 		SegmentedControl look = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedKeyboardLookIndex,
-				static (model, value) => model.SelectedKeyboardLookIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedKeyboardLookIndex)
+				.TwoWay((vm, val) => vm.SelectedKeyboardLookIndex = val),
 			SelectionChanged = index =>
 			{
 				editor.KeyboardLook = viewModel.SelectedKeyboardLook.Value;
@@ -156,14 +151,14 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 				LabeledControl("Capitalization", capitalization),
 				SettingRow("Autocorrection", autocorrection),
 				LabeledControl("Keyboard appearance", look)),
-			Code(model => model.KeyboardCode));
+			Code(vm => vm.KeyboardCode));
 	}
 
 	void AddTypographyShowcase(
 		TextEditorViewModel viewModel)
 	{
 		TextEditor editor = Editor("Editable typography\nacross multiple lines.");
-		editor.FontSize = Bind(model => model.FontSize);
+		editor.FontSize = Bind(vm => vm.FontSize);
 		editor.FontWeight = viewModel.SelectedWeight.Value;
 		editor.FontDesign = viewModel.SelectedDesign.Value;
 
@@ -172,26 +167,23 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 			Minimum = 12,
 			Maximum = 32,
 			Step = 1,
-			Value = Bind(
-				model => model.FontSize,
-				static (model, value) => model.FontSize = value)
+			Value = Bind(vm => vm.FontSize)
+				.TwoWay((vm, val) => vm.FontSize = val)
 		};
 
 		Picker<ShowcaseOption<FontWeight>> weight = new()
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.FontWeights,
-			SelectedItem = Bind(
-				model => model.SelectedWeight,
-				static (model, value) => model.SelectedWeight = value!),
+			SelectedItem = Bind(vm => vm.SelectedWeight)
+				.TwoWay((vm, val) => vm.SelectedWeight = val!),
 			SelectionChanged = option => editor.FontWeight = option.Value
 		};
 
 		SegmentedControl design = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedDesignIndex,
-				static (model, value) => model.SelectedDesignIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedDesignIndex)
+				.TwoWay((vm, val) => vm.SelectedDesignIndex = val),
 			SelectionChanged = index =>
 			{
 				editor.FontDesign = viewModel.SelectedDesign.Value;
@@ -219,10 +211,10 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 						}
 					},
 					170),
-				LabeledSlider("Font size", Bind(model => model.FontSizeLabel), size),
+				LabeledSlider("Font size", Bind(vm => vm.FontSizeLabel), size),
 				SettingRow("Weight", weight),
 				LabeledControl("Design", design)),
-			Code(model => model.TypographyCode));
+			Code(vm => vm.TypographyCode));
 	}
 
 	void AddAccessoryShowcase(
@@ -239,9 +231,8 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 
 		SegmentedControl mode = new()
 		{
-			SelectedIndex = Bind(
-				model => model.AccessoryModeIndex,
-				static (model, value) => model.AccessoryModeIndex = value),
+			SelectedIndex = Bind(vm => vm.AccessoryModeIndex)
+				.TwoWay((vm, val) => vm.AccessoryModeIndex = val),
 			SelectionChanged = index =>
 			{
 				foreach (TextEditor editor in editors)
@@ -273,7 +264,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 					},
 					280),
 				LabeledControl("Accessory", mode)),
-			Code(model => model.AccessoryCode));
+			Code(vm => vm.AccessoryCode));
 	}
 
 

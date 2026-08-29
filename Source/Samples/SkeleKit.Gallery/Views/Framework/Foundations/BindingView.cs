@@ -11,6 +11,7 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 	{
 		AddOneWayShowcase(viewModel);
 		AddTwoWayShowcase(viewModel);
+		AddPathShowcase(viewModel);
 		AddListShowcase(viewModel);
 	}
 
@@ -21,9 +22,8 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 		Label target = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
-			Text = Bind(
-				model => model.OneWayValue,
-				value => $"{value:0}"),
+			Text = Bind(vm => vm.OneWayValue)
+				.ConvertTo(value => $"{value:0}"),
 			TextStyle = TextStyle.LargeTitle,
 			FontWeight = FontWeight.Bold,
 			TextColor = Colors.Indigo
@@ -63,8 +63,8 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 						}
 					},
 					170),
-				LabeledSlider("Source value", Bind(model => model.OneWayValueLabel), source)),
-			Code(model => model.OneWayCode));
+				LabeledSlider("Source value", Bind(vm => vm.OneWayValueLabel), source)),
+			Code(vm => vm.OneWayCode));
 	}
 
 	void AddTwoWayShowcase(
@@ -73,9 +73,8 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 		TextField field = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Stretch,
-			Text = Bind(
-				model => model.TwoWayText,
-				static (model, value) => model.TwoWayText = value),
+			Text = Bind(vm => vm.TwoWayText)
+				.TwoWay((vm, val) => vm.TwoWayText = val),
 			Placeholder = "Type a value",
 			ClearButton = ClearButton.WhileEditing
 		};
@@ -126,7 +125,7 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 
 										new Label
 										{
-											Text = Bind(model => model.TwoWayText),
+											Text = Bind(vm => vm.TwoWayText),
 											TextStyle = TextStyle.Headline,
 											FontWeight = FontWeight.Semibold,
 											MaxLines = 2
@@ -138,7 +137,7 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 					},
 					220),
 				SettingRow("Update source", updateSource)),
-			Code(model => model.TwoWayCode));
+			Code(vm => vm.TwoWayCode));
 	}
 
 	void AddListShowcase(
@@ -149,7 +148,7 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 			Text = "Add",
 			Kind = ButtonStyle.Tinted,
 			Size = ButtonSize.Small,
-			IsEnabled = Bind(model => model.CanAddItem),
+			IsEnabled = Bind(vm => vm.CanAddItem),
 			Command = Command.From(viewModel.AddItem)
 		};
 
@@ -158,7 +157,7 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 			Text = "Remove",
 			Kind = ButtonStyle.Gray,
 			Size = ButtonSize.Small,
-			IsEnabled = Bind(model => model.CanRemoveItem),
+			IsEnabled = Bind(vm => vm.CanRemoveItem),
 			Command = Command.From(viewModel.RemoveItem)
 		};
 
@@ -166,10 +165,9 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			MinWidth = 220,
-			ItemsSource = Bind(model => model.Items),
-			SelectedItem = Bind(
-				model => model.SelectedItem,
-				static (model, item) => model.SelectedItem = item),
+			ItemsSource = Bind(vm => vm.Items),
+			SelectedItem = Bind(vm => vm.SelectedItem)
+				.TwoWay((vm, val) => vm.SelectedItem = val),
 			ItemTitle = item => item.Title
 		};
 
@@ -191,9 +189,8 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(
-									model => model.SelectedItemLabel,
-									value => $"Selected: {value}"),
+								Text = Bind(vm => vm.SelectedItemLabel)
+									.ConvertTo(value => $"Selected: {value}"),
 								TextStyle = TextStyle.Subheadline,
 								TextColor = Colors.SecondaryLabel
 							}
@@ -212,7 +209,7 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 							new Label
 							{
 								VerticalAlignment = VerticalAlignment.Center,
-								Text = Bind(model => model.ItemCountLabel),
+								Text = Bind(vm => vm.ItemCountLabel),
 								TextStyle = TextStyle.Subheadline,
 								TextColor = Colors.SecondaryLabel
 							},
@@ -220,6 +217,51 @@ internal sealed class BindingView : ShowcaseView<BindingViewModel>
 							add
 						}
 					})),
-			Code(model => model.ListCode));
+			Code(vm => vm.ListCode));
+	}
+
+	void AddPathShowcase(
+		BindingViewModel viewModel)
+	{
+		Label name = new()
+		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			Text = Bind(vm => vm.Profile)
+				.Path(profile => profile.DisplayName),
+			TextStyle = TextStyle.Title2,
+			FontWeight = FontWeight.Semibold,
+			TextColor = Colors.Indigo
+		};
+
+		Button rename = new()
+		{
+			Text = "Change name",
+			Kind = ButtonStyle.Tinted,
+			Size = ButtonSize.Small,
+			Command = Command.From(viewModel.RenameProfile)
+		};
+
+		Button replace = new()
+		{
+			Text = "Replace profile",
+			Kind = ButtonStyle.Gray,
+			Size = ButtonSize.Small,
+			Command = Command.From(viewModel.ReplaceProfile)
+		};
+
+		AddShowcase(
+			"Nested path",
+			"Observe a property on a nested object, including changes after that object is replaced.",
+			PreviewWithSettings(
+				ShowcaseBox.Canvas(name, 150),
+				SettingRow(
+					"Source",
+					new StackPanel
+					{
+						Orientation = Orientation.Horizontal,
+						Spacing = 8,
+						Children = { rename, replace }
+					})),
+			Code(vm => vm.PathCode));
 	}
 }

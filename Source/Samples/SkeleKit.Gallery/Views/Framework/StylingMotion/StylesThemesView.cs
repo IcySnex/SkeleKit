@@ -30,9 +30,8 @@ internal sealed class StylesThemesView : ShowcaseView<StylesThemesViewModel>
 
 		SegmentedControl mode = new()
 		{
-			SelectedIndex = Bind(
-				model => model.ModeIndex,
-				static (model, value) => model.ModeIndex = value),
+			SelectedIndex = Bind(vm => vm.ModeIndex)
+				.TwoWay((vm, val) => vm.ModeIndex = val),
 			SelectionChanged = index =>
 			{
 				preview.Children.Clear();
@@ -50,7 +49,7 @@ internal sealed class StylesThemesView : ShowcaseView<StylesThemesViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(preview, 224),
 				LabeledControl("Applied source", mode)),
-			Code(model => model.StyleCode));
+			Code(vm => vm.StyleCode));
 	}
 
 

@@ -7,9 +7,21 @@ namespace SkeleKit.Gallery.ViewModels.Framework.Foundations;
 internal sealed record BindingSampleItem(
 	string Title);
 
+internal sealed partial class BindingProfile : ObservableObject
+{
+	[ObservableProperty]
+	string displayName;
+
+
+	public BindingProfile(
+		string displayName) =>
+		this.displayName = displayName;
+}
+
 internal sealed partial class BindingViewModel : ShowcaseViewModel
 {
 	int nextItem = 4;
+	int profileRevision;
 
 
 	[ObservableProperty]
@@ -22,6 +34,9 @@ internal sealed partial class BindingViewModel : ShowcaseViewModel
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(SelectedItemLabel))]
 	BindingSampleItem? selectedItem;
+
+	[ObservableProperty]
+	BindingProfile profile = new("Ada");
 
 	public ObservableCollection<BindingSampleItem> Items { get; } =
 	[
@@ -51,9 +66,8 @@ internal sealed partial class BindingViewModel : ShowcaseViewModel
 			"""
 			Label target = new()
 			{
-				Text = Bind(
-					model => model.OneWayValue,
-					value => $"{value:0}")
+				Text = Bind(vm => vm.OneWayValue)
+					.ConvertTo(value => $"{value:0}")
 			};
 
 			Slider source = new()
@@ -70,14 +84,13 @@ internal sealed partial class BindingViewModel : ShowcaseViewModel
 			"""
 			TextField field = new()
 			{
-				Text = Bind(
-					model => model.TwoWayText,
-					static (model, value) => model.TwoWayText = value)
+				Text = Bind(vm => vm.TwoWayText)
+					.TwoWay((vm, val) => vm.TwoWayText = val)
 			};
 
 			Label sourceValue = new()
 			{
-				Text = Bind(model => model.TwoWayText)
+				Text = Bind(vm => vm.TwoWayText)
 			};
 
 			Button updateSource = new()
@@ -100,15 +113,27 @@ internal sealed partial class BindingViewModel : ShowcaseViewModel
 
 			Picker<BindingSampleItem> picker = new()
 			{
-				ItemsSource = Bind(model => model.Items),
-				SelectedItem = Bind(
-					model => model.SelectedItem,
-					static (model, item) => model.SelectedItem = item),
+				ItemsSource = Bind(vm => vm.Items),
+				SelectedItem = Bind(vm => vm.SelectedItem)
+					.TwoWay((vm, val) => vm.SelectedItem = val),
 				ItemTitle = item => item.Title
 			};
 
 			Items.Add(new("Item 4"));
 			Items.RemoveAt(Items.Count - 1);
+			""");
+
+	public IReadOnlyList<Span> PathCode { get; } =
+		Code(
+			"""
+			Label name = new()
+			{
+				Text = Bind(vm => vm.Profile)
+					.Path(profile => profile.DisplayName)
+			};
+
+			viewModel.Profile.DisplayName = "Grace";
+			viewModel.Profile = new BindingProfile("Linus");
 			""");
 
 	public BindingViewModel()
@@ -119,6 +144,12 @@ internal sealed partial class BindingViewModel : ShowcaseViewModel
 
 	internal void SetTwoWayExample() =>
 		TwoWayText = "Updated by source";
+
+	internal void RenameProfile() =>
+		Profile.DisplayName = profileRevision++ % 2 is 0 ? "Grace" : "Ada";
+
+	internal void ReplaceProfile() =>
+		Profile = new(profileRevision++ % 2 is 0 ? "Linus" : "Margaret");
 
 	internal void AddItem()
 	{

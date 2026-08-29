@@ -60,7 +60,7 @@ internal sealed partial class ViewViewModel(
 				Margin = new Thickness({{Number(LeadingMargin)}}, 0, 0, 0),
 				HorizontalAlignment = HorizontalAlignment.{{LayoutAlignment}},
 				VerticalAlignment = VerticalAlignment.Center,
-				IsVisible = Bind(model => model.LayoutVisible),
+				IsVisible = Bind(vm => vm.LayoutVisible),
 				Background = Colors.Indigo,
 				CornerRadius = 18
 			};

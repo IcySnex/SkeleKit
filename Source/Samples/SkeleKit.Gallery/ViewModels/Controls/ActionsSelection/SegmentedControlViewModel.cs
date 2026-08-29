@@ -24,9 +24,8 @@ internal sealed partial class SegmentedControlViewModel : ShowcaseViewModel
 			$$"""
 			SegmentedControl sections = new()
 			{
-				SelectedIndex = Bind(
-					model => model.SelectedIndex,
-					(model, value) => model.SelectedIndex = value)
+				SelectedIndex = Bind(vm => vm.SelectedIndex)
+					.TwoWay((vm, val) => vm.SelectedIndex = val)
 			};
 			sections.Items.Add("Overview");
 			sections.Items.Add("Details");

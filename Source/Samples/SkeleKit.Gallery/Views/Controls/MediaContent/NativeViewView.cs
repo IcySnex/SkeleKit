@@ -48,7 +48,7 @@ internal sealed class NativeView : ShowcaseView<NativeViewModel>
 					},
 					300),
 				SettingRow("Drawing", clear)),
-			Code(model => model.CanvasCode));
+			Code(vm => vm.CanvasCode));
 	}
 
 	void AddDirectAccessShowcase()
@@ -56,6 +56,6 @@ internal sealed class NativeView : ShowcaseView<NativeViewModel>
 		AddCodeShowcase(
 			"Direct native access",
 			"Inspect a realized UIKit peer or hosted controller only when no SkeleKit API covers the requirement. Accessing Native realizes the view immediately, and direct mutations bypass framework state.",
-			Code(model => model.DirectAccessCode));
+			Code(vm => vm.DirectAccessCode));
 	}
 }

@@ -29,7 +29,7 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 			"Stack transitions",
 			"Push real detail pages, use the native back gesture, and pop one or every page from the stack.",
 			ShowcaseBox.Canvas(push, 140),
-			Code(model => model.StackCode));
+			Code(vm => vm.StackCode));
 	}
 
 	void AddPresentationShowcase(
@@ -38,18 +38,16 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 		Picker<NavigationModalOption> style = new()
 		{
 			ItemsSource = viewModel.ModalStyles,
-			SelectedItem = Bind(
-				model => model.SelectedModalStyle,
-				static (model, value) => model.SelectedModalStyle = value!),
+			SelectedItem = Bind(vm => vm.SelectedModalStyle)
+				.TwoWay((vm, val) => vm.SelectedModalStyle = val!),
 			ItemTitle = static option => option.Title
 		};
 
 		Picker<NavigationDetentOption> detents = new()
 		{
 			ItemsSource = viewModel.Detents,
-			SelectedItem = Bind(
-				model => model.SelectedDetents,
-				static (model, value) => model.SelectedDetents = value!),
+			SelectedItem = Bind(vm => vm.SelectedDetents)
+				.TwoWay((vm, val) => vm.SelectedDetents = val!),
 			ItemTitle = static option => option.Title
 		};
 
@@ -69,7 +67,7 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 				ShowcaseBox.Canvas(present, 140),
 				SettingRow("Presentation", style),
 				detentSetting),
-			Code(model => model.ModalCode));
+			Code(vm => vm.ModalCode));
 	}
 
 	void AddTabsShowcase(
@@ -90,7 +88,7 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 			"Tab selection",
 			"Select one of the app's declared tabs through the navigator and keep each tab's own stack intact.",
 			ShowcaseBox.Canvas(tabs, 140),
-			Code(model => model.TabsCode));
+			Code(vm => vm.TabsCode));
 	}
 
 	void AddUrlShowcase(
@@ -99,42 +97,37 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 		Picker<NavigationModalOption> style = new()
 		{
 			ItemsSource = viewModel.UrlModalStyles,
-			SelectedItem = Bind(
-				model => model.SelectedUrlModalStyle,
-				static (model, value) => model.SelectedUrlModalStyle = value!),
+			SelectedItem = Bind(vm => vm.SelectedUrlModalStyle)
+				.TwoWay((vm, val) => vm.SelectedUrlModalStyle = val!),
 			ItemTitle = static option => option.Title
 		};
 
 		Picker<NavigationDetentOption> detents = new()
 		{
 			ItemsSource = viewModel.UrlDetents,
-			SelectedItem = Bind(
-				model => model.SelectedUrlDetents,
-				static (model, value) => model.SelectedUrlDetents = value!),
+			SelectedItem = Bind(vm => vm.SelectedUrlDetents)
+				.TwoWay((vm, val) => vm.SelectedUrlDetents = val!),
 			ItemTitle = static option => option.Title
 		};
 
 		Picker<NavigationSafariDismissButtonOption> dismiss = new()
 		{
 			ItemsSource = viewModel.SafariDismissButtons,
-			SelectedItem = Bind(
-				model => model.SelectedSafariDismissButton,
-				static (model, value) => model.SelectedSafariDismissButton = value!),
+			SelectedItem = Bind(vm => vm.SelectedSafariDismissButton)
+				.TwoWay((vm, val) => vm.SelectedSafariDismissButton = val!),
 			ItemTitle = static option => option.Title
 		};
 
 		Switch reader = new()
 		{
-			IsOn = Bind(
-				model => model.EntersReaderIfAvailable,
-				static (model, value) => model.EntersReaderIfAvailable = value)
+			IsOn = Bind(vm => vm.EntersReaderIfAvailable)
+				.TwoWay((vm, val) => vm.EntersReaderIfAvailable = val)
 		};
 
 		Switch bars = new()
 		{
-			IsOn = Bind(
-				model => model.BarCollapsingEnabled,
-				static (model, value) => model.BarCollapsingEnabled = value)
+			IsOn = Bind(vm => vm.BarCollapsingEnabled)
+				.TwoWay((vm, val) => vm.BarCollapsingEnabled = val)
 		};
 
 		Button open = ActionButton(
@@ -156,7 +149,7 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 				SettingRow("Reader mode", reader),
 				SettingRow("Collapsing bars", bars),
 				SettingRow("Dismiss button", dismiss)),
-			Code(model => model.UrlCode));
+			Code(vm => vm.UrlCode));
 	}
 
 

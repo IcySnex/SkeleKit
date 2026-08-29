@@ -26,7 +26,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Width = 280,
 			Height = 180,
-			Source = Bind(model => model.RemoteSource),
+			Source = Bind(vm => vm.RemoteSource),
 			Placeholder = ImageSource.Symbol("photo"),
 			Fallback = ImageSource.Symbol("exclamationmark.triangle.fill"),
 			FadesIn = true,
@@ -39,18 +39,16 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Sources,
-			SelectedItem = Bind(
-				model => model.SelectedSource,
-				static (model, value) => model.SelectedSource = value!)
+			SelectedItem = Bind(vm => vm.SelectedSource)
+				.TwoWay((vm, val) => vm.SelectedSource = val!)
 		};
 
 		Picker<ShowcaseOption<Stretch>> stretch = new()
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Stretches,
-			SelectedItem = Bind(
-				model => model.SelectedStretch,
-				static (model, value) => model.SelectedStretch = value!),
+			SelectedItem = Bind(vm => vm.SelectedStretch)
+				.TwoWay((vm, val) => vm.SelectedStretch = val!),
 			SelectionChanged = option => image.Stretch = option.Value
 		};
 
@@ -61,7 +59,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 				ShowcaseBox.Canvas(image, 230),
 				SettingRow("Source", source),
 				SettingRow("Stretch", stretch)),
-			Code(model => model.SourceCode));
+			Code(vm => vm.SourceCode));
 	}
 
 	void AddRenderingShowcase(
@@ -83,9 +81,8 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 		Slider size = new()
 		{
 			MinWidth = 150,
-			Value = Bind(
-				model => model.SymbolSize,
-				static (model, value) => model.SymbolSize = value),
+			Value = Bind(vm => vm.SymbolSize)
+				.TwoWay((vm, val) => vm.SymbolSize = val),
 			Minimum = 32,
 			Maximum = 96,
 			ValueChanged = value => symbol.SymbolSize = value
@@ -95,9 +92,8 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Weights,
-			SelectedItem = Bind(
-				model => model.SelectedWeight,
-				static (model, value) => model.SelectedWeight = value!),
+			SelectedItem = Bind(vm => vm.SelectedWeight)
+				.TwoWay((vm, val) => vm.SelectedWeight = val!),
 			SelectionChanged = option => symbol.SymbolWeight = option.Value
 		};
 
@@ -105,17 +101,15 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Scales,
-			SelectedItem = Bind(
-				model => model.SelectedScale,
-				static (model, value) => model.SelectedScale = value!),
+			SelectedItem = Bind(vm => vm.SelectedScale)
+				.TwoWay((vm, val) => vm.SelectedScale = val!),
 			SelectionChanged = option => symbol.SymbolScale = option.Value
 		};
 
 		Switch multicolor = new()
 		{
-			IsOn = Bind(
-				model => model.PrefersMulticolor,
-				static (model, value) => model.PrefersMulticolor = value),
+			IsOn = Bind(vm => vm.PrefersMulticolor)
+				.TwoWay((vm, val) => vm.PrefersMulticolor = val),
 			Toggled = value =>
 			{
 				symbol.PrefersMulticolor = value;
@@ -131,7 +125,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 				SettingRow("Weight", weight),
 				SettingRow("Scale", scale),
 				SettingRow("Multicolor", multicolor)),
-			Code(model => model.RenderingCode));
+			Code(vm => vm.RenderingCode));
 	}
 
 	void AddEffectsShowcase(
@@ -145,16 +139,15 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 			Height = 110,
 			Source = ImageSource.Symbol("speaker.wave.3.fill"),
 			SymbolSize = 72,
-			SymbolValue = Bind(model => model.SymbolValue),
+			SymbolValue = Bind(vm => vm.SymbolValue),
 			SymbolEffect = viewModel.SelectedEffect.Value
 		};
 
 		Slider value = new()
 		{
 			MinWidth = 150,
-			Value = Bind(
-				model => model.SymbolValue,
-				static (model, value) => model.SymbolValue = value),
+			Value = Bind(vm => vm.SymbolValue)
+				.TwoWay((vm, val) => vm.SymbolValue = val),
 			Minimum = 0,
 			Maximum = 1
 		};
@@ -163,9 +156,8 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 		{
 			MinWidth = 150,
 			ItemsSource = viewModel.Effects,
-			SelectedItem = Bind(
-				model => model.SelectedEffect,
-				static (model, value) => model.SelectedEffect = value!),
+			SelectedItem = Bind(vm => vm.SelectedEffect)
+				.TwoWay((vm, val) => vm.SelectedEffect = val!),
 			SelectionChanged = option => symbol.SymbolEffect = option.Value
 		};
 
@@ -185,6 +177,6 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 						Size = ButtonSize.Small,
 						Command = new RelayCommand(() => symbol.PlaySymbolEffect(SymbolEffect.Bounce))
 					})),
-			Code(model => model.EffectsCode));
+			Code(vm => vm.EffectsCode));
 	}
 }

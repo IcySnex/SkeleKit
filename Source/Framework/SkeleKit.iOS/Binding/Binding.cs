@@ -79,11 +79,15 @@ internal sealed class Binding<T>(
 	{
 		Detach();
 
+		if (expression.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource
+			&& expression.Setter is null)
+			throw new InvalidOperationException("A converted writable binding also needs ConvertFrom(...).");
+
 		this.source = source;
 		if (source is null)
 			return;
 
-		if (expression.Mode is not BindingMode.OneTime)
+		if (expression.Mode is not (BindingMode.OneTime or BindingMode.OneWayToSource))
 			Subscribe(source);
 
 		if (expression.Mode is not BindingMode.OneWayToSource)

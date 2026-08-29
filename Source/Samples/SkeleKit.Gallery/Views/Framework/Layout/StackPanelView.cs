@@ -33,9 +33,8 @@ internal sealed class StackPanelView : ShowcaseView<StackPanelViewModel>
 
 		SegmentedControl orientation = new()
 		{
-			SelectedIndex = Bind(
-				model => model.OrientationIndex,
-				static (model, value) => model.OrientationIndex = value),
+			SelectedIndex = Bind(vm => vm.OrientationIndex)
+				.TwoWay((vm, val) => vm.OrientationIndex = val),
 			SelectionChanged = index => stack.Orientation = index == 1
 				? Orientation.Horizontal
 				: Orientation.Vertical
@@ -48,9 +47,8 @@ internal sealed class StackPanelView : ShowcaseView<StackPanelViewModel>
 			Minimum = 0,
 			Maximum = 24,
 			Step = 2,
-			Value = Bind(
-				model => model.Spacing,
-				static (model, value) => model.Spacing = value),
+			Value = Bind(vm => vm.Spacing)
+				.TwoWay((vm, val) => vm.Spacing = val),
 			ValueChanged = value => stack.Spacing = value
 		};
 
@@ -60,8 +58,8 @@ internal sealed class StackPanelView : ShowcaseView<StackPanelViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(stack, 260),
 				LabeledControl("Orientation", orientation),
-				LabeledSlider("Spacing", Bind(model => model.SpacingLabel), spacing)),
-			Code(model => model.ConfigurationCode));
+				LabeledSlider("Spacing", Bind(vm => vm.SpacingLabel), spacing)),
+			Code(vm => vm.ConfigurationCode));
 	}
 
 

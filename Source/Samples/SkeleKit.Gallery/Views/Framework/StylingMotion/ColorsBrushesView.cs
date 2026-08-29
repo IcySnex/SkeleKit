@@ -81,7 +81,7 @@ internal sealed class ColorsBrushesView : ShowcaseView<ColorsBrushesViewModel>
 			"Semantic colors",
 			"Use system colors for native appearance changes, or provide explicit light and dark values.",
 			ShowcaseBox.Canvas(palette, 232),
-			Code(model => model.SemanticCode));
+			Code(vm => vm.SemanticCode));
 	}
 
 	void AddGradientShowcase(
@@ -146,7 +146,7 @@ internal sealed class ColorsBrushesView : ShowcaseView<ColorsBrushesViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(surface, 188),
 				SettingRow("Palette", transition)),
-			Code(model => model.GradientCode));
+			Code(vm => vm.GradientCode));
 	}
 
 

@@ -14,7 +14,7 @@ public class SegmentedControl : Control
 	public IList<string> Items { get; } = [];
 
 	/// <summary>
-	/// The selected segment's index. Two-way by default.
+	/// The selected segment's index.
 	/// </summary>
 	public Bindable<int> SelectedIndex
 	{

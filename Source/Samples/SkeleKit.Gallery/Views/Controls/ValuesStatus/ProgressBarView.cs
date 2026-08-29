@@ -21,9 +21,8 @@ internal sealed class ProgressBarView : ShowcaseView<ProgressBarViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.ProgressValues,
-			SelectedItem = Bind(
-				model => model.SelectedProgress,
-				static (model, value) => model.SelectedProgress = value!)
+			SelectedItem = Bind(vm => vm.SelectedProgress)
+				.TwoWay((vm, val) => vm.SelectedProgress = val!)
 		};
 
 		AddShowcase(
@@ -43,14 +42,14 @@ internal sealed class ProgressBarView : ShowcaseView<ProgressBarViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.ProgressLabel),
+								Text = Bind(vm => vm.ProgressLabel),
 								TextStyle = TextStyle.Title2,
 								FontWeight = FontWeight.Semibold
 							},
 							new ProgressBar
 							{
 								HorizontalAlignment = HorizontalAlignment.Stretch,
-								Progress = Bind(model => model.Progress),
+								Progress = Bind(vm => vm.Progress),
 								FillColor = Colors.Red,
 								TrackColor = Colors.Red.WithAlpha(0.16)
 							}
@@ -58,6 +57,6 @@ internal sealed class ProgressBarView : ShowcaseView<ProgressBarViewModel>
 					},
 					160),
 				SettingRow("Progress", progress)),
-			Code(model => model.ProgressBarCode));
+			Code(vm => vm.ProgressBarCode));
 	}
 }

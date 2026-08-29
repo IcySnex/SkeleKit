@@ -27,8 +27,8 @@ internal sealed class DialogsView : ShowcaseView<DialogsViewModel>
 				"Show alert",
 				"exclamationmark.bubble",
 				viewModel.ShowAlertCommand,
-				Bind(model => model.AlertResult)),
-			Code(model => model.AlertCode));
+				Bind(vm => vm.AlertResult)),
+			Code(vm => vm.AlertCode));
 	}
 
 	void AddConfirmationShowcase(
@@ -42,9 +42,8 @@ internal sealed class DialogsView : ShowcaseView<DialogsViewModel>
 
 		Switch destructive = new()
 		{
-			IsOn = Bind(
-				model => model.DestructiveConfirmation,
-				static (model, value) => model.DestructiveConfirmation = value),
+			IsOn = Bind(vm => vm.DestructiveConfirmation)
+				.TwoWay((vm, val) => vm.DestructiveConfirmation = val),
 			Toggled = value => show.IsDestructive = value
 		};
 
@@ -55,10 +54,10 @@ internal sealed class DialogsView : ShowcaseView<DialogsViewModel>
 				ShowcaseBox.Canvas(
 					DialogContent(
 						show,
-						Bind(model => model.ConfirmationResult)),
+						Bind(vm => vm.ConfirmationResult)),
 					170),
 				SettingRow("Destructive action", destructive)),
-			Code(model => model.ConfirmationCode));
+			Code(vm => vm.ConfirmationCode));
 	}
 
 	void AddPromptShowcase(
@@ -72,9 +71,8 @@ internal sealed class DialogsView : ShowcaseView<DialogsViewModel>
 
 		Switch destructive = new()
 		{
-			IsOn = Bind(
-				model => model.DestructivePrompt,
-				static (model, value) => model.DestructivePrompt = value),
+			IsOn = Bind(vm => vm.DestructivePrompt)
+				.TwoWay((vm, val) => vm.DestructivePrompt = val),
 			Toggled = value => show.IsDestructive = value
 		};
 
@@ -85,10 +83,10 @@ internal sealed class DialogsView : ShowcaseView<DialogsViewModel>
 				ShowcaseBox.Canvas(
 					DialogContent(
 						show,
-						Bind(model => model.PromptResult)),
+						Bind(vm => vm.PromptResult)),
 					170),
 				SettingRow("Destructive action", destructive)),
-			Code(model => model.PromptCode));
+			Code(vm => vm.PromptCode));
 	}
 
 	void AddSelectionShowcase(
@@ -101,8 +99,8 @@ internal sealed class DialogsView : ShowcaseView<DialogsViewModel>
 				"Show selection",
 				"list.bullet",
 				viewModel.ShowSelectionCommand,
-				Bind(model => model.SelectionResult)),
-			Code(model => model.SelectionCode));
+				Bind(vm => vm.SelectionResult)),
+			Code(vm => vm.SelectionCode));
 	}
 
 

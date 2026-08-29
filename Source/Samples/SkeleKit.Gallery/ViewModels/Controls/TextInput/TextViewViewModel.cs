@@ -95,7 +95,7 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 				    [
 				      "This plain rich text can be selected and copied when selection is enabled."
 				    ],
-				    IsSelectable = Bind(model => model.IsSelectable),
+				    IsSelectable = Bind(vm => vm.IsSelectable),
 				    LinkColor = {{(LinkColorIndex is 0 ? "null" : "Colors.Blue")}}
 				  };
 				  """
@@ -126,7 +126,7 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 				      },
 				      ". Hold documentation for more actions."
 				    ],
-				    IsSelectable = Bind(model => model.IsSelectable),
+				    IsSelectable = Bind(vm => vm.IsSelectable),
 				    LinkColor = {{(LinkColorIndex is 0 ? "null" : "Colors.Blue")}}
 				  };
 				  """);

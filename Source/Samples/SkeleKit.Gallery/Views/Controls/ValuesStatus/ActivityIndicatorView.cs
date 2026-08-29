@@ -18,23 +18,21 @@ internal sealed class ActivityIndicatorView : ShowcaseView<ActivityIndicatorView
 	{
 		ActivityIndicator indicator = new()
 		{
-			IsAnimating = Bind(model => model.IsAnimating),
+			IsAnimating = Bind(vm => vm.IsAnimating),
 			IsLarge = viewModel.IsLarge,
 			Color = Colors.Red
 		};
 
 		Switch animating = new()
 		{
-			IsOn = Bind(
-				model => model.IsAnimating,
-				static (model, value) => model.IsAnimating = value)
+			IsOn = Bind(vm => vm.IsAnimating)
+				.TwoWay((vm, val) => vm.IsAnimating = val)
 		};
 
 		Switch size = new()
 		{
-			IsOn = Bind(
-				model => model.IsLarge,
-				static (model, value) => model.IsLarge = value),
+			IsOn = Bind(vm => vm.IsLarge)
+				.TwoWay((vm, val) => vm.IsLarge = val),
 			Toggled = value =>
 			{
 				indicator.IsLarge = value;
@@ -48,6 +46,6 @@ internal sealed class ActivityIndicatorView : ShowcaseView<ActivityIndicatorView
 				ShowcaseBox.Canvas(indicator, 150),
 				SettingRow("Large", size),
 				SettingRow("Animating", animating)),
-			Code(model => model.IndicatorCode));
+			Code(vm => vm.IndicatorCode));
 	}
 }

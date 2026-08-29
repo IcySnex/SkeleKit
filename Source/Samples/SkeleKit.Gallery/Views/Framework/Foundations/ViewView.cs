@@ -28,7 +28,7 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 			Margin = new(viewModel.LeadingMargin, 0, 0, 0),
 			HorizontalAlignment = viewModel.LayoutAlignment,
 			VerticalAlignment = VerticalAlignment.Center,
-			IsVisible = Bind(model => model.LayoutVisible),
+			IsVisible = Bind(vm => vm.LayoutVisible),
 			Background = Colors.Indigo,
 			CornerRadius = 18,
 
@@ -48,17 +48,15 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 			Minimum = 100,
 			Maximum = 240,
 			Step = 10,
-			Value = Bind(
-				model => model.LayoutWidth,
-				static (model, value) => model.LayoutWidth = value),
+			Value = Bind(vm => vm.LayoutWidth)
+				.TwoWay((vm, val) => vm.LayoutWidth = val),
 			ValueChanged = value => card.Width = value
 		};
 
 		SegmentedControl alignment = new()
 		{
-			SelectedIndex = Bind(
-				model => model.LayoutAlignmentIndex,
-				static (model, value) => model.LayoutAlignmentIndex = value),
+			SelectedIndex = Bind(vm => vm.LayoutAlignmentIndex)
+				.TwoWay((vm, val) => vm.LayoutAlignmentIndex = val),
 			SelectionChanged = index => card.HorizontalAlignment = viewModel.LayoutAlignment
 		};
 		alignment.Items.Add("Start");
@@ -70,17 +68,15 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 			Minimum = 0,
 			Maximum = 56,
 			Step = 1,
-			Value = Bind(
-				model => model.LeadingMargin,
-				static (model, value) => model.LeadingMargin = value),
+			Value = Bind(vm => vm.LeadingMargin)
+				.TwoWay((vm, val) => vm.LeadingMargin = val),
 			ValueChanged = value => card.Margin = new(value, 0, 0, 0)
 		};
 
 		Switch visible = new()
 		{
-			IsOn = Bind(
-				model => model.LayoutVisible,
-				static (model, value) => model.LayoutVisible = value)
+			IsOn = Bind(vm => vm.LayoutVisible)
+				.TwoWay((vm, val) => vm.LayoutVisible = val)
 		};
 
 		AddShowcase(
@@ -88,9 +84,9 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 			"Change explicit constraints, margin and alignment, then inspect the measured and arranged result.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(card, 190),
-				LabeledSlider("Width", Bind(model => model.LayoutWidthLabel), width),
+				LabeledSlider("Width", Bind(vm => vm.LayoutWidthLabel), width),
 				LabeledControl("Horizontal alignment", alignment),
-				LabeledSlider("Leading margin", Bind(model => model.LeadingMarginLabel), leadingMargin),
+				LabeledSlider("Leading margin", Bind(vm => vm.LeadingMarginLabel), leadingMargin),
 				SettingRow("Visible", visible),
 				SettingRow(
 					"Layout state",
@@ -98,7 +94,7 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 						"Inspect",
 						"ruler",
 						Command.From(() => _ = viewModel.InspectLayoutAsync(card))))),
-			Code(model => model.LayoutCode));
+			Code(vm => vm.LayoutCode));
 	}
 
 	void AddVisualShowcase(
@@ -133,9 +129,8 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 			Minimum = -30,
 			Maximum = 30,
 			Step = 1,
-			Value = Bind(
-				model => model.Rotation,
-				static (model, value) => model.Rotation = value),
+			Value = Bind(vm => vm.Rotation)
+				.TwoWay((vm, val) => vm.Rotation = val),
 			ValueChanged = value => card.Rotation = value
 		};
 
@@ -144,9 +139,8 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 			Minimum = 0.7,
 			Maximum = 1.3,
 			Step = 0.05,
-			Value = Bind(
-				model => model.Scale,
-				static (model, value) => model.Scale = value),
+			Value = Bind(vm => vm.Scale)
+				.TwoWay((vm, val) => vm.Scale = val),
 			ValueChanged = value => card.Scale = value
 		};
 
@@ -155,17 +149,15 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 			Minimum = 0.25,
 			Maximum = 1,
 			Step = 0.05,
-			Value = Bind(
-				model => model.Opacity,
-				static (model, value) => model.Opacity = value),
+			Value = Bind(vm => vm.Opacity)
+				.TwoWay((vm, val) => vm.Opacity = val),
 			ValueChanged = value => card.Opacity = value
 		};
 
 		SegmentedControl anchor = new()
 		{
-			SelectedIndex = Bind(
-				model => model.AnchorIndex,
-				static (model, value) => model.AnchorIndex = value),
+			SelectedIndex = Bind(vm => vm.AnchorIndex)
+				.TwoWay((vm, val) => vm.AnchorIndex = val),
 			SelectionChanged = index => card.AnchorPoint = viewModel.Anchor
 		};
 		anchor.Items.Add("Center");
@@ -176,11 +168,11 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 			"Adjust opacity and transforms without changing the view's layout slot.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(card, 240),
-				LabeledSlider("Rotation", Bind(model => model.RotationLabel), rotation),
-				LabeledSlider("Scale", Bind(model => model.ScaleLabel), scale),
-				LabeledSlider("Opacity", Bind(model => model.OpacityLabel), opacity),
+				LabeledSlider("Rotation", Bind(vm => vm.RotationLabel), rotation),
+				LabeledSlider("Scale", Bind(vm => vm.ScaleLabel), scale),
+				LabeledSlider("Opacity", Bind(vm => vm.OpacityLabel), opacity),
 				LabeledControl("Transform anchor", anchor)),
-			Code(model => model.VisualCode));
+			Code(vm => vm.VisualCode));
 	}
 
 	void AddInteractionShowcase(
@@ -233,7 +225,7 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 					}
 				},
 				280),
-			Code(model => model.InteractionCode));
+			Code(vm => vm.InteractionCode));
 	}
 
 	static void Pan(

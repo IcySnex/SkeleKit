@@ -53,9 +53,8 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 			Picker<PickerDestination> picker = new()
 			{
 				ItemsSource = destinations,
-				SelectedItem = Bind(
-					model => model.SelectedDestination,
-					(model, value) => model.SelectedDestination = value),
+				SelectedItem = Bind(vm => vm.SelectedDestination)
+					.TwoWay((vm, val) => vm.SelectedDestination = val),
 				Placeholder = "Choose a destination",
 				ItemTitle = item => $"{item.City}, {item.Country}"
 			};

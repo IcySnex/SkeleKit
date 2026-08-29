@@ -20,17 +20,15 @@ internal sealed class SwitchView : ShowcaseView<SwitchViewModel>
 		{
 			VerticalAlignment = VerticalAlignment.Center,
 			HorizontalAlignment = HorizontalAlignment.Center,
-			IsOn = Bind(
-				model => model.IsOn,
-				static (model, value) => model.IsOn = value),
-			IsEnabled = Bind(model => model.ControlEnabled)
+			IsOn = Bind(vm => vm.IsOn)
+				.TwoWay((vm, val) => vm.IsOn = val),
+			IsEnabled = Bind(vm => vm.ControlEnabled)
 		};
 
 		Switch enabled = new()
 		{
-			IsOn = Bind(
-				model => model.ControlEnabled,
-				static (model, value) => model.ControlEnabled = value)
+			IsOn = Bind(vm => vm.ControlEnabled)
+				.TwoWay((vm, val) => vm.ControlEnabled = val)
 		};
 
 		AddShowcase(
@@ -48,7 +46,7 @@ internal sealed class SwitchView : ShowcaseView<SwitchViewModel>
 						Command = viewModel.ToggleFromViewModelCommand
 					}),
 				SettingRow("Enabled", enabled)),
-			Code(model => model.SwitchCode));
+			Code(vm => vm.SwitchCode));
 	}
 
 }

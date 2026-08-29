@@ -19,7 +19,7 @@ internal sealed partial class DividerViewModel : ShowcaseViewModel
 			new Divider
 			{
 				HorizontalAlignment = HorizontalAlignment.Stretch,
-				Color = Bind(model => model.DividerColor)
+				Color = Bind(vm => vm.DividerColor)
 			};
 			""")
 	];

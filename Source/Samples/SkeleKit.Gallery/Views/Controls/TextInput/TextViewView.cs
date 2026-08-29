@@ -24,26 +24,24 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			MaxWidth = 290,
-			Spans = Bind(model => model.InteractiveSpans),
-			IsSelectable = Bind(model => model.IsSelectable),
+			Spans = Bind(vm => vm.InteractiveSpans),
+			IsSelectable = Bind(vm => vm.IsSelectable),
 			TextStyle = TextStyle.Body,
 			TextAlignment = TextAlignment.Center
 		};
 
 		SegmentedControl content = new()
 		{
-			SelectedIndex = Bind(
-				model => model.ContentModeIndex,
-				static (model, value) => model.ContentModeIndex = value)
+			SelectedIndex = Bind(vm => vm.ContentModeIndex)
+				.TwoWay((vm, val) => vm.ContentModeIndex = val)
 		};
 		content.Items.Add("Plain");
 		content.Items.Add("Links");
 
 		Switch selectable = new()
 		{
-			IsOn = Bind(
-				model => model.IsSelectable,
-				static (model, value) => model.IsSelectable = value)
+			IsOn = Bind(vm => vm.IsSelectable)
+				.TwoWay((vm, val) => vm.IsSelectable = val)
 		};
 
 		View selectableSetting = SettingRow("Selectable", selectable);
@@ -56,9 +54,8 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl linkColor = new()
 		{
-			SelectedIndex = Bind(
-				model => model.LinkColorIndex,
-				static (model, value) => model.LinkColorIndex = value),
+			SelectedIndex = Bind(vm => vm.LinkColorIndex)
+				.TwoWay((vm, val) => vm.LinkColorIndex = val),
 			SelectionChanged = index =>
 			{
 				text.LinkColor = index is 0 ? null : Colors.Blue;
@@ -86,7 +83,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 							new Label
 							{
 								HorizontalAlignment = HorizontalAlignment.Center,
-								Text = Bind(model => model.InteractionStatus),
+								Text = Bind(vm => vm.InteractionStatus),
 								TextStyle = TextStyle.Caption1,
 								TextColor = Colors.SecondaryLabel,
 								MaxLines = 2,
@@ -98,7 +95,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 				LabeledControl("Content", content),
 				selectableSetting,
 				LabeledControl("Link color", linkColor)),
-			Code(model => model.SelectionCode));
+			Code(vm => vm.SelectionCode));
 	}
 
 	void AddTypographyShowcase(
@@ -120,9 +117,8 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 		{
 			MinWidth = 140,
 			ItemsSource = viewModel.TextStyles,
-			SelectedItem = Bind(
-				model => model.SelectedTextStyle,
-				static (model, value) => model.SelectedTextStyle = value!),
+			SelectedItem = Bind(vm => vm.SelectedTextStyle)
+				.TwoWay((vm, val) => vm.SelectedTextStyle = val!),
 			SelectionChanged = option =>
 			{
 				if (!viewModel.UsesExplicitSize)
@@ -137,25 +133,23 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			Minimum = 12,
 			Maximum = 40,
 			Step = 1,
-			Value = Bind(
-				model => model.FontSize,
-				static (model, value) => model.FontSize = value),
+			Value = Bind(vm => vm.FontSize)
+				.TwoWay((vm, val) => vm.FontSize = val),
 			ValueChanged = value =>
 			{
 				text.FontSize = value;
 			}
 		};
 
-		View sizeSetting = LabeledSlider("Font size", Bind(model => model.FontSizeLabel), size);
+		View sizeSetting = LabeledSlider("Font size", Bind(vm => vm.FontSizeLabel), size);
 		sizeSetting.IsVisible = false;
 
 		SegmentedControl sizing = new()
 		{
-			SelectedIndex = Bind(
-				model => model.UsesExplicitSize,
-				static (model, value) => model.UsesExplicitSize = value,
-				static value => value ? 1 : 0,
-				static index => index is 1),
+			SelectedIndex = Bind(vm => vm.UsesExplicitSize)
+				.TwoWay((vm, val) => vm.UsesExplicitSize = val)
+				.ConvertTo(val => val ? 1 : 0)
+				.ConvertFrom(val => val is 1),
 			SelectionChanged = index =>
 			{
 				text.TextStyle = viewModel.UsesExplicitSize ? null : viewModel.SelectedTextStyle.Value;
@@ -171,17 +165,15 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 		{
 			MinWidth = 130,
 			ItemsSource = viewModel.FontWeights,
-			SelectedItem = Bind(
-				model => model.SelectedWeight,
-				static (model, value) => model.SelectedWeight = value!),
+			SelectedItem = Bind(vm => vm.SelectedWeight)
+				.TwoWay((vm, val) => vm.SelectedWeight = val!),
 			SelectionChanged = option => text.FontWeight = option.Value
 		};
 
 		SegmentedControl design = new()
 		{
-			SelectedIndex = Bind(
-				model => model.SelectedDesignIndex,
-				static (model, value) => model.SelectedDesignIndex = value),
+			SelectedIndex = Bind(vm => vm.SelectedDesignIndex)
+				.TwoWay((vm, val) => vm.SelectedDesignIndex = val),
 			SelectionChanged = index =>
 			{
 				text.FontDesign = viewModel.SelectedDesign.Value;
@@ -194,9 +186,8 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl color = new()
 		{
-			SelectedIndex = Bind(
-				model => model.TextColorIndex,
-				static (model, value) => model.TextColorIndex = value),
+			SelectedIndex = Bind(vm => vm.TextColorIndex)
+				.TwoWay((vm, val) => vm.TextColorIndex = val),
 			SelectionChanged = index =>
 			{
 				text.TextColor = index is 0 ? (Color?)null : Colors.Blue;
@@ -216,7 +207,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 				SettingRow("Weight", weight),
 				LabeledControl("Design", design),
 				LabeledControl("Text color", color)),
-			Code(model => model.TypographyCode));
+			Code(vm => vm.TypographyCode));
 	}
 
 	void AddContainerShowcase(
@@ -237,9 +228,8 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl lines = new()
 		{
-			SelectedIndex = Bind(
-				model => model.LineCountIndex,
-				static (model, value) => model.LineCountIndex = value),
+			SelectedIndex = Bind(vm => vm.LineCountIndex)
+				.TwoWay((vm, val) => vm.LineCountIndex = val),
 			SelectionChanged = index =>
 			{
 				text.MaxLines = viewModel.SelectedLineCount;
@@ -251,9 +241,8 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 
 		SegmentedControl alignment = new()
 		{
-			SelectedIndex = Bind(
-				model => model.AlignmentIndex,
-				static (model, value) => model.AlignmentIndex = value),
+			SelectedIndex = Bind(vm => vm.AlignmentIndex)
+				.TwoWay((vm, val) => vm.AlignmentIndex = val),
 			SelectionChanged = index =>
 			{
 				text.TextAlignment = viewModel.SelectedAlignment;
@@ -268,9 +257,8 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			Minimum = 0,
 			Maximum = 12,
 			Step = 1,
-			Value = Bind(
-				model => model.LineSpacing,
-				static (model, value) => model.LineSpacing = value),
+			Value = Bind(vm => vm.LineSpacing)
+				.TwoWay((vm, val) => vm.LineSpacing = val),
 			ValueChanged = value =>
 			{
 				text.LineSpacing = value;
@@ -282,9 +270,8 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 			Minimum = -1,
 			Maximum = 3,
 			Step = 0.25,
-			Value = Bind(
-				model => model.LetterSpacing,
-				static (model, value) => model.LetterSpacing = value),
+			Value = Bind(vm => vm.LetterSpacing)
+				.TwoWay((vm, val) => vm.LetterSpacing = val),
 			ValueChanged = value =>
 			{
 				text.LetterSpacing = value;
@@ -298,8 +285,8 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 				ShowcaseBox.Canvas(text, 230),
 				LabeledControl("Maximum lines", lines),
 				LabeledControl("Text alignment", alignment),
-				LabeledSlider("Line spacing", Bind(model => model.LineSpacingLabel), lineSpacing),
-				LabeledSlider("Letter spacing", Bind(model => model.LetterSpacingLabel), letterSpacing)),
-			Code(model => model.ContainerCode));
+				LabeledSlider("Line spacing", Bind(vm => vm.LineSpacingLabel), lineSpacing),
+				LabeledSlider("Letter spacing", Bind(vm => vm.LetterSpacingLabel), letterSpacing)),
+			Code(vm => vm.ContainerCode));
 	}
 }

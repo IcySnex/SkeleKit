@@ -53,7 +53,7 @@ internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewMo
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
-			Text = Bind(model => model.SurfaceName),
+			Text = Bind(vm => vm.SurfaceName),
 			TextStyle = TextStyle.Title3,
 			FontWeight = FontWeight.Semibold,
 			TextColor = viewModel.SurfaceTextColor
@@ -91,10 +91,9 @@ internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewMo
 		Picker<SurfaceOption> surfacePicker = new()
 		{
 			MinWidth = 180,
-			ItemsSource = Bind(model => model.SurfaceOptions),
-			SelectedItem = Bind(
-				model => model.SelectedSurface,
-				static (model, value) => model.SelectedSurface = value),
+			ItemsSource = Bind(vm => vm.SurfaceOptions),
+			SelectedItem = Bind(vm => vm.SelectedSurface)
+				.TwoWay((vm, val) => vm.SelectedSurface = val),
 			ItemTitle = option => option.Title,
 			SelectionChanged = option =>
 			{
@@ -105,9 +104,8 @@ internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewMo
 
 		SegmentedControl depth = new()
 		{
-			SelectedIndex = Bind(
-				model => model.DepthIndex,
-				static (model, value) => model.DepthIndex = value),
+			SelectedIndex = Bind(vm => vm.DepthIndex)
+				.TwoWay((vm, val) => vm.DepthIndex = val),
 			SelectionChanged = _ => surface.Shadow = viewModel.SelectedShadow
 		};
 		depth.Items.Add("None");
@@ -117,9 +115,8 @@ internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewMo
 
 		Switch clip = new()
 		{
-			IsOn = Bind(
-				model => model.ClipsContent,
-				static (model, value) => model.ClipsContent = value),
+			IsOn = Bind(vm => vm.ClipsContent)
+				.TwoWay((vm, val) => vm.ClipsContent = val),
 			Toggled = enabled => overflowHost.ClipsToBounds = enabled
 		};
 
@@ -131,7 +128,7 @@ internal sealed class MaterialsShadowsView : ShowcaseView<MaterialsShadowsViewMo
 				SettingRow("Surface", surfacePicker),
 				LabeledControl("Depth", depth),
 				SettingRow("Clip content", clip)),
-			Code(model => model.CompositionCode));
+			Code(vm => vm.CompositionCode));
 	}
 
 

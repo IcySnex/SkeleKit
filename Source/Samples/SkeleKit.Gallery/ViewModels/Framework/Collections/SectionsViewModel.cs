@@ -24,7 +24,7 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 			"""
 			CollectionView<SectionEntry, CollectionSection> collection = new()
 			{
-				GroupedItemsSource = Bind(model => model.Sections),
+				GroupedItemsSource = Bind(vm => vm.Sections),
 				ItemTemplate = static () => new SectionCell(),
 				HeaderTemplate = static () => new CollectionHeader(),
 				FooterTemplate = static () => new CollectionFooter(),
