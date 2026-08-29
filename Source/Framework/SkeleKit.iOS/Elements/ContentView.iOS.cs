@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace SkeleKit;
 
 public abstract partial class ContentView
@@ -10,42 +8,6 @@ public abstract partial class ContentView
 	View? automaticScrollBleed;
 
 	internal View? AutomaticScrollBleed => automaticScrollBleed;
-
-
-#pragma warning disable CA1822
-	/// <summary>
-	/// The application's navigator, for navigation from page code.
-	/// </summary>
-	/// <remarks>
-	/// ViewModels take <see cref="INavigator"/> by constructor instead.
-	/// </remarks>
-	protected INavigator Navigator => SkeleApplication.Current?.Services.GetRequiredService<INavigator>() ?? throw new InvalidOperationException("There is no running application.");
-
-	/// <summary>
-	/// The application's share sheet, for sharing from page code.
-	/// </summary>
-	/// <remarks>
-	/// ViewModels take <see cref="ISharer"/> by constructor instead.
-	/// </remarks>
-	protected ISharer Sharer => SkeleApplication.Current?.Services.GetRequiredService<ISharer>() ?? throw new InvalidOperationException("There is no running application.");
-
-	/// <summary>
-	/// The application's photo and document pickers, for picking from page code.
-	/// </summary>
-	/// <remarks>
-	/// ViewModels take <see cref="ISystemPicker"/> by constructor instead.
-	/// </remarks>
-	protected ISystemPicker SystemPicker => SkeleApplication.Current?.Services.GetRequiredService<ISystemPicker>() ?? throw new InvalidOperationException("There is no running application.");
-
-	/// <summary>
-	/// The application's haptic feedback service, for feedback from page code.
-	/// </summary>
-	/// <remarks>
-	/// ViewModels take <see cref="IHaptics"/> by constructor instead.
-	/// </remarks>
-	protected IHaptics Haptics => SkeleApplication.Current?.Services.GetRequiredService<IHaptics>() ?? throw new InvalidOperationException("There is no running application.");
-#pragma warning restore CA1822
-
 
 	public UIViewController? Controller => Host;
 

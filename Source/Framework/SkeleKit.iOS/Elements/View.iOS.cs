@@ -6,6 +6,41 @@ namespace SkeleKit;
 
 public abstract partial class View
 {
+#pragma warning disable CA1822
+	/// <summary>
+	/// The application's navigator.
+	/// </summary>
+	/// <remarks>
+	/// ViewModels take <see cref="INavigator"/> by constructor instead.
+	/// </remarks>
+	protected INavigator Navigator => SkeleApplication.Current?.Navigator ?? throw new InvalidOperationException("There is no running application.");
+
+	/// <summary>
+	/// The application's share sheet.
+	/// </summary>
+	/// <remarks>
+	/// ViewModels take <see cref="ISharer"/> by constructor instead.
+	/// </remarks>
+	protected ISharer Sharer => SkeleApplication.Current?.Sharer ?? throw new InvalidOperationException("There is no running application.");
+
+	/// <summary>
+	/// The application's photo and document pickers.
+	/// </summary>
+	/// <remarks>
+	/// ViewModels take <see cref="ISystemPicker"/> by constructor instead.
+	/// </remarks>
+	protected ISystemPicker SystemPicker => SkeleApplication.Current?.SystemPicker ?? throw new InvalidOperationException("There is no running application.");
+
+	/// <summary>
+	/// The application's haptic feedback service.
+	/// </summary>
+	/// <remarks>
+	/// ViewModels take <see cref="IHaptics"/> by constructor instead.
+	/// </remarks>
+	protected IHaptics Haptics => SkeleApplication.Current?.Haptics ?? throw new InvalidOperationException("There is no running application.");
+#pragma warning restore CA1822
+
+
 	// ReSharper disable once RedundantAssignment
 	static partial void GetApplicationTint(
 		ref Color? tint) =>

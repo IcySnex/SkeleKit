@@ -214,6 +214,11 @@ public class SkeleApplication
 		builder.Services.AddSingleton<ISystemPicker>(_ => new SystemPicker());
 		builder.Services.AddSingleton<IHaptics>(_ => new Haptics());
 		Services = builder.Services.BuildServiceProvider();
+
+		Navigator = Services.GetRequiredService<INavigator>();
+		Sharer = Services.GetRequiredService<ISharer>();
+		SystemPicker = Services.GetRequiredService<ISystemPicker>();
+		Haptics = Services.GetRequiredService<IHaptics>();
 	}
 
 
@@ -248,6 +253,11 @@ public class SkeleApplication
 	/// The built-in service provider for resolving dependencies.
 	/// </summary>
 	public IServiceProvider Services { get; }
+
+	internal INavigator Navigator { get; }
+	internal ISharer Sharer { get; }
+	internal ISystemPicker SystemPicker { get; }
+	internal IHaptics Haptics { get; }
 
 	/// <summary>
 	/// The app-wide tint inherited by windows, chrome and views, or null for the system default.

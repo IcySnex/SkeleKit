@@ -30,6 +30,7 @@
             - Redesign bindings with fluent directions, converters, update triggers and observable nested paths.
             - Add managed factory creation for NativeViews.
             - Inject haptics service into DI/ContentView instead of static utility.
+            - Move Navigator, Sharer, SystemPicker and Haptics services from ContentView to View.
         </PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
