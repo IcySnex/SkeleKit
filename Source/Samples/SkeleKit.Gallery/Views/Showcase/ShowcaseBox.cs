@@ -85,7 +85,7 @@ internal sealed class ShowcaseBox : Border
 			{
 				Children =
 				{
-					new NativeView(new DotGridView()),
+					new NativeView(static () => new DotGridView()),
 
 					new Border
 					{

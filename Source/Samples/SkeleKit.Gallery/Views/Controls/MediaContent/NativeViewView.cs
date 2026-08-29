@@ -19,11 +19,16 @@ internal sealed class NativeView : ShowcaseView<NativeViewModel>
 
 	void AddCanvasShowcase()
 	{
-		PKCanvasView canvas = new()
+		SkeleKit.NativeView canvas = new(() => new PKCanvasView
 		{
 			BackgroundColor = UIColor.SystemBackground,
 			DrawingPolicy = PKCanvasViewDrawingPolicy.AnyInput,
 			Tool = new PKInkingTool(PKInkType.Pen, UIColor.SystemOrange, 5)
+		})
+		{
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			Height = 260,
+			CornerRadius = 18
 		};
 
 		Button clear = new()
@@ -32,7 +37,7 @@ internal sealed class NativeView : ShowcaseView<NativeViewModel>
 			Icon = ImageSource.Symbol("trash"),
 			Kind = ButtonStyle.Tinted,
 			Size = ButtonSize.Small,
-			Command = new RelayCommand(() => canvas.Drawing = new())
+			Command = new RelayCommand(() => ((PKCanvasView)canvas.Native).Drawing = new())
 		};
 
 		AddShowcase(
@@ -40,12 +45,7 @@ internal sealed class NativeView : ShowcaseView<NativeViewModel>
 			"Host an unsupported native framework view and control it from the surrounding SkeleKit tree.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
-					new SkeleKit.NativeView(canvas)
-					{
-						HorizontalAlignment = HorizontalAlignment.Stretch,
-						Height = 260,
-						CornerRadius = 18
-					},
+					canvas,
 					300),
 				SettingRow("Drawing", clear)),
 			Code(vm => vm.CanvasCode));

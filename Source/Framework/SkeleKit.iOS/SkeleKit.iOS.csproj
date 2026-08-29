@@ -28,6 +28,7 @@
             - Add parameters to gesture, submit, refresh, load-more and tab commands.
             - Support local ImageSource icons across controls, menus, toolbars, tabs and map pins.
             - Redesign bindings with fluent directions, converters, update triggers and observable nested paths.
+            - Add managed factory creation for NativeViews.
         </PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>

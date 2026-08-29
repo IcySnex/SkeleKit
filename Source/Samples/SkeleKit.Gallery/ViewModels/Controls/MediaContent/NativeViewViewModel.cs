@@ -8,7 +8,7 @@ internal sealed class NativeViewModel : ShowcaseViewModel
 	[
 		new(
 			"""
-			PKCanvasView canvas = new()
+			NativeView canvas = new(() => new PKCanvasView
 			{
 				BackgroundColor = UIColor.SystemBackground,
 				DrawingPolicy = PKCanvasViewDrawingPolicy.AnyInput,
@@ -16,15 +16,13 @@ internal sealed class NativeViewModel : ShowcaseViewModel
 					PKInkType.Pen,
 					UIColor.SystemOrange,
 					5)
-			};
-
-			new NativeView(canvas)
+			})
 			{
 				Height = 260,
 				CornerRadius = 18
 			};
 
-			canvas.Drawing = new PKDrawing();
+			((PKCanvasView)canvas.Native).Drawing = new PKDrawing();
 			""")
 	];
 
