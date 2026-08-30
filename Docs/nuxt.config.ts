@@ -4,7 +4,14 @@ import { fileURLToPath } from 'node:url';
 
 const baseURL = process.env.NUXT_APP_BASE_URL || '/';
 const siteOrigin = (process.env.NUXT_SITE_URL || 'https://icysnex.github.io').replace(/\/$/, '');
-const contentDirectory = join(dirname(fileURLToPath(import.meta.url)), 'content');
+const docsDirectory = dirname(fileURLToPath(import.meta.url));
+const contentDirectory = join(docsDirectory, 'content');
+const proseOverrides = new Map([
+  ['ProseH1', join(docsDirectory, 'internal/components/DocsProseH1.vue')],
+  ['ProseH2', join(docsDirectory, 'internal/components/DocsProseH2.vue')],
+  ['ProseP', join(docsDirectory, 'internal/components/DocsProseP.vue')],
+]);
+const disabledOgImageComposable = join(docsDirectory, 'internal/defineOgImage.ts');
 
 function getContentRoutes(directory: string, segments: string[] = []): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -27,6 +34,24 @@ function getContentRoutes(directory: string, segments: string[] = []): string[] 
 export default defineNuxtConfig({
   devtools: { enabled: false },
   extends: ['shadcn-docs-nuxt'],
+  hooks: {
+    'components:extend'(components) {
+      for (const component of components) {
+        const override = proseOverrides.get(component.pascalName);
+        if (override) {
+          component.filePath = override;
+          component.declarationPath = override;
+        }
+      }
+    },
+    'imports:extend'(imports) {
+      imports.push({
+        name: 'defineOgImage',
+        from: disabledOgImageComposable,
+        priority: 100,
+      });
+    },
+  },
   app: {
     baseURL,
     head: {

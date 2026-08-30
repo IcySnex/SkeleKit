@@ -1,7 +1,13 @@
 <template>
   <div class="mb-7">
     <DocsProseH1>{{ title }}</DocsProseH1>
-    <p class="text-muted-foreground pt-1 text-base font-normal">
+    <MDC
+      v-if="richDescription"
+      :value="richDescription"
+      unwrap="p"
+      class="text-muted-foreground pt-1 text-base font-normal"
+    />
+    <p v-else class="text-muted-foreground pt-1 text-base font-normal">
       {{ description }}
     </p>
 
@@ -35,6 +41,13 @@
 
 <script setup lang="ts">
 import DocsProseH1 from '~/internal/components/DocsProseH1.vue';
+
+const { page } = useContent();
+const richDescription = computed(() => (
+  page.value?.docs && typeof page.value.markdown === 'string'
+    ? page.value.markdown
+    : undefined
+));
 
 defineProps<{
   title?: string;

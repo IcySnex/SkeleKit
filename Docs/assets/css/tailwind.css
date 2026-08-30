@@ -145,17 +145,20 @@ aside [data-reka-scroll-area-viewport] li > div > button > span.truncate {
 }
 
 aside [data-reka-scroll-area-viewport] li > a:hover,
-aside [data-reka-scroll-area-viewport] li > a.bg-muted {
+aside [data-reka-scroll-area-viewport] li > a.bg-muted,
+aside [data-reka-scroll-area-viewport] a.aside-page-link.bg-muted {
   color: hsl(var(--foreground));
 }
 
-aside [data-reka-scroll-area-viewport] li > a.bg-muted {
+aside [data-reka-scroll-area-viewport] li > a.bg-muted,
+aside [data-reka-scroll-area-viewport] a.aside-page-link.bg-muted {
   background: linear-gradient(90deg, hsl(var(--brand) / 0.14), hsl(var(--brand-secondary) / 0.055));
   box-shadow: inset 2px 0 hsl(var(--brand) / 0.72);
   font-weight: 500;
 }
 
-aside [data-reka-scroll-area-viewport] li > a.bg-muted svg {
+aside [data-reka-scroll-area-viewport] li > a.bg-muted svg,
+aside [data-reka-scroll-area-viewport] a.aside-page-link.bg-muted svg {
   color: hsl(var(--brand));
 }
 
