@@ -23,6 +23,7 @@ permissions:
   contents: read
 
 env:
+  CREFDOCS_VERSION: "0.1.0"
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_NOLOGO: "1"
 
@@ -86,6 +87,25 @@ jobs:
           dotnet pack Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj --configuration Release --no-restore --output artifacts/packages
           dotnet pack Source/Packaging/SkeleKit.Templates.csproj --configuration Release --no-restore --output artifacts/packages
 
+      - name: Install CrefDocs
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: dotnet tool install CrefDocs.Tool --version "$CREFDOCS_VERSION" --tool-path "${RUNNER_TEMP}/crefdocs"
+
+      - name: Capture API reference
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          mkdir -p artifacts/reference
+          "${RUNNER_TEMP}/crefdocs/crefdocs" capture \
+            --project Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj \
+            --framework net10.0-ios \
+            --package SkeleKit.iOS \
+            --version "${{ steps.version.outputs.package_version }}" \
+            --source-root Source/Framework/SkeleKit.iOS \
+            --configuration Release \
+            --metadata Docs/api-reference.json \
+            --output "artifacts/reference/SkeleKit.iOS.${{ steps.version.outputs.package_version }}.crefdocs.json"
+
       - name: Create GitHub release notes
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
@@ -130,6 +150,14 @@ jobs:
           path: artifacts/packages/*
           if-no-files-found: error
 
+      - name: Upload API reference snapshot
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-reference
+          path: artifacts/reference/*.crefdocs.json
+          if-no-files-found: error
+
   publish:
     name: Publish release
     if: startsWith(github.ref, 'refs/tags/v')
@@ -145,6 +173,12 @@ jobs:
         with:
           name: nuget-packages
           path: artifacts/packages
+
+      - name: Download API reference snapshot
+        uses: actions/download-artifact@v8
+        with:
+          name: api-reference
+          path: artifacts/reference
 
       - name: Log in to NuGet.org with trusted publishing
         id: nuget
@@ -162,4 +196,4 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" artifacts/packages/*.*nupkg --repo "${GITHUB_REPOSITORY}" --verify-tag --notes-file artifacts/packages/release-notes.md --title "SkeleKit ${GITHUB_REF_NAME#v}"
+        run: gh release create "${GITHUB_REF_NAME}" artifacts/packages/*.*nupkg artifacts/reference/*.crefdocs.json --repo "${GITHUB_REPOSITORY}" --verify-tag --notes-file artifacts/packages/release-notes.md --title "SkeleKit ${GITHUB_REF_NAME#v}"

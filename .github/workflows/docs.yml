@@ -1,6 +1,11 @@
 name: Documentation
 
 on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
   push:
     branches:
       - main
@@ -16,7 +21,13 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
+
+env:
+  CREFDOCS_VERSION: "0.1.0"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
 
 concurrency:
   group: pages-${{ github.ref }}
@@ -25,11 +36,66 @@ concurrency:
 jobs:
   build:
     name: Build documentation
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out source
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Download released API snapshot
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v8
+        with:
+          name: api-reference
+          path: artifacts/reference
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Download latest API snapshot
+        if: github.event_name != 'workflow_run'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p artifacts/reference
+          if ! gh release download --repo "${GITHUB_REPOSITORY}" --pattern 'SkeleKit.iOS.*.crefdocs.json' --dir artifacts/reference; then
+            echo "::notice::No released API snapshot exists yet; keeping the reference placeholder."
+          fi
+
+      - name: Locate API snapshot
+        id: reference
+        shell: bash
+        run: |
+          snapshot="$(find artifacts/reference -maxdepth 1 -name 'SkeleKit.iOS.*.crefdocs.json' -print -quit 2>/dev/null || true)"
+          echo "snapshot=$snapshot" >> "$GITHUB_OUTPUT"
+
+      - name: Install .NET SDK
+        if: steps.reference.outputs.snapshot != ''
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Install CrefDocs
+        if: steps.reference.outputs.snapshot != ''
+        run: dotnet tool install CrefDocs.Tool --version "$CREFDOCS_VERSION" --tool-path "${RUNNER_TEMP}/crefdocs"
+
+      - name: Render API reference
+        if: steps.reference.outputs.snapshot != ''
+        run: |
+          "${RUNNER_TEMP}/crefdocs/crefdocs" render \
+            --snapshot "${{ steps.reference.outputs.snapshot }}" \
+            --output Docs/content/4.reference \
+            --structure source \
+            --base-route /reference \
+            --page-header frontmatter
 
       - name: Install Node.js
         uses: actions/setup-node@v7
@@ -61,7 +127,9 @@ jobs:
 
   deploy:
     name: Deploy documentation
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: >-
+      github.event_name == 'workflow_run' ||
+      (github.event_name != 'pull_request' && github.ref == 'refs/heads/main')
     needs: build
     runs-on: ubuntu-latest
     permissions:
