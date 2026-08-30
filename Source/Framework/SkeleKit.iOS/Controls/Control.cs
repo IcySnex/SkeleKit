@@ -16,6 +16,7 @@ public abstract class Control : View
 	}
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{

@@ -1,0 +1,22 @@
+{
+  "namespaces": {
+    "SkeleKit": "Native, code-first UI framework for .NET for iOS."
+  },
+  "sections": {
+    "": "Generated reference documentation for the public SkeleKit API.",
+    "Animation": "View animation and transition APIs.",
+    "App": "Application hosting and platform services.",
+    "App/Builder": "Application builder extensions and dependency registration.",
+    "App/Haptics": "Haptic feedback services.",
+    "App/Media": "Remote image loading services.",
+    "App/Navigation": "Page registration, navigation, presentation, tabs and Safari.",
+    "App/Picking": "System file and image picker services.",
+    "App/Sharing": "System sharing services.",
+    "Binding": "AOT-safe ViewModel binding expressions, directions and update triggers.",
+    "Controls": "UIKit-backed controls and collection views.",
+    "Elements": "Base views, pages, panels and native-view elements.",
+    "Layout": "Stack, grid, overlay and custom panel layout infrastructure.",
+    "Primitives": "Value types and configuration objects shared across the framework.",
+    "Styling": "Styles, themes and style setters."
+  }
+}

@@ -181,6 +181,7 @@ public class SkeleApplication
 	/// <summary>
 	/// Creates a new builder to configure services and the layout shell.
 	/// </summary>
+	/// <returns>A new application builder.</returns>
 	public static SkeleApplicationBuilder CreateBuilder() =>
 		new();
 
@@ -679,6 +680,7 @@ public class SkeleApplication
 	/// <summary>
 	/// Starts the native iOS main loop.
 	/// </summary>
+	/// <param name="args">The application command-line arguments.</param>
 	public void Run(
 		string[] args)
 	{

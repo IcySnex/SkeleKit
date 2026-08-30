@@ -9,6 +9,9 @@ public abstract partial class ContentView
 
 	internal View? AutomaticScrollBleed => automaticScrollBleed;
 
+	/// <summary>
+	/// The native controller hosting this page, or null before it is presented.
+	/// </summary>
 	public UIViewController? Controller => Host;
 
 

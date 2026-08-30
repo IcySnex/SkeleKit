@@ -88,6 +88,7 @@ public sealed class BindingExpression<TSource, TValue, TTarget> : BindingExpress
 	/// <summary>
 	/// Reads once whenever a binding context attaches, without observing later changes.
 	/// </summary>
+	/// <exception cref="InvalidOperationException">The binding direction or mode was already changed.</exception>
 	/// <returns>The one-time binding.</returns>
 	public BindingExpression<TSource, TValue, TTarget> Once()
 	{
@@ -101,6 +102,7 @@ public sealed class BindingExpression<TSource, TValue, TTarget> : BindingExpress
 	/// Adds control-to-source updates to this binding.
 	/// </summary>
 	/// <param name="write">Writes the control value back to the source.</param>
+	/// <exception cref="InvalidOperationException">The binding direction or mode was already changed.</exception>
 	/// <returns>The two-way binding.</returns>
 	public BindingExpression<TSource, TValue, TTarget> TwoWay(
 		Action<TSource, TValue?> write)
@@ -117,6 +119,7 @@ public sealed class BindingExpression<TSource, TValue, TTarget> : BindingExpress
 	/// Uses this source property only as the destination for control changes.
 	/// </summary>
 	/// <param name="write">Writes the control value to the source.</param>
+	/// <exception cref="InvalidOperationException">The binding direction or mode was already changed.</exception>
 	/// <returns>The control-to-source binding.</returns>
 	public BindingExpression<TSource, TValue, TTarget> ToSource(
 		Action<TSource, TValue?> write)
@@ -155,6 +158,7 @@ public sealed class BindingExpression<TSource, TValue, TTarget> : BindingExpress
 	/// Converts control values before writing them to the source.
 	/// </summary>
 	/// <param name="converter">Converts control values to source values.</param>
+	/// <exception cref="InvalidOperationException">The binding is not two-way or source-only.</exception>
 	/// <returns>The converted binding.</returns>
 	public BindingExpression<TSource, TValue, TTarget> ConvertFrom(
 		Func<TTarget, TValue> converter)
@@ -172,6 +176,7 @@ public sealed class BindingExpression<TSource, TValue, TTarget> : BindingExpress
 	/// </summary>
 	/// <typeparam name="TConverted">The value type supplied by the control.</typeparam>
 	/// <param name="converter">Converts control values to source values.</param>
+	/// <exception cref="InvalidOperationException">The binding is not source-only.</exception>
 	/// <returns>The converted source-only binding.</returns>
 	public BindingExpression<TSource, TValue, TConverted> ConvertFrom<TConverted>(
 		Func<TConverted, TValue> converter)
@@ -196,6 +201,7 @@ public sealed class BindingExpression<TSource, TValue, TTarget> : BindingExpress
 	/// Chooses when control changes are written to the source.
 	/// </summary>
 	/// <param name="trigger">When to write the control value back.</param>
+	/// <exception cref="InvalidOperationException">The binding is not two-way or source-only.</exception>
 	/// <returns>The binding with the selected update trigger.</returns>
 	public BindingExpression<TSource, TValue, TTarget> UpdateOn(
 		UpdateTrigger trigger)
@@ -238,6 +244,7 @@ public static class BindingExpressionPathExtensions
 	/// <param name="expression">The binding to continue.</param>
 	/// <param name="next">Reads the next property from the current reference.</param>
 	/// <param name="path">The path lambda, captured automatically to derive its property name.</param>
+	/// <exception cref="InvalidOperationException">The path follows a binding mode or converter, or its intermediate value is not a reference type.</exception>
 	/// <returns>A binding that observes the added path segment.</returns>
 	public static BindingExpression<TSource, TNext?, TNext?> Path<TSource, TMiddle, TNext>(
 		this BindingExpression<TSource, TMiddle, TMiddle> expression,
@@ -340,6 +347,11 @@ public static class BindingFactory
 	/// <summary>
 	/// Starts a one-way binding that reads a source property.
 	/// </summary>
+	/// <typeparam name="TSource">The binding source type.</typeparam>
+	/// <typeparam name="T">The property value type.</typeparam>
+	/// <param name="read">Reads the property from the source.</param>
+	/// <param name="path">The captured source expression used to identify the property path.</param>
+	/// <returns>A one-way binding expression.</returns>
 	public static BindingExpression<TSource, T, T> Bind<TSource, T>(
 		Func<TSource, T> read,
 		[CallerArgumentExpression(nameof(read))] string? path = null) where TSource : class =>

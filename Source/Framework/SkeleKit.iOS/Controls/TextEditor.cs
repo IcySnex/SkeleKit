@@ -206,6 +206,7 @@ public class TextEditor : Control
 	}
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{

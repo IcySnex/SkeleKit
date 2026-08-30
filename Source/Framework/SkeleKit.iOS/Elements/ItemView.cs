@@ -50,6 +50,7 @@ public abstract class ItemView<TItem> : Panel
 	{ }
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
@@ -61,6 +62,7 @@ public abstract class ItemView<TItem> : Panel
 		return content.DesiredSize;
 	}
 
+	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{

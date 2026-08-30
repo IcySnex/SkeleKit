@@ -20,7 +20,7 @@ public class PageControl : Control
 	Binding<int>? countBinding;
 
 	/// <summary>
-	/// The filled dot. Two-way: tapping or scrubbing the dots writes it back.
+	/// The filled dot, updated when the user taps or scrubs the dots.
 	/// </summary>
 	public Bindable<int> Current
 	{

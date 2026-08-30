@@ -28,6 +28,7 @@ public class Divider : View
 		ApplyColor();
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize) =>
 		new(0, 1.0 / UIScreen.MainScreen.Scale);

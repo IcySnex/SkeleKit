@@ -8,6 +8,7 @@ public interface ISystemPicker
 	/// <summary>
 	/// Presents the photo library and returns the chosen image, or null if canceled.
 	/// </summary>
+	/// <param name="limit">The maximum number of images that can be selected.</param>
 	/// <returns>A task containing the picked image, or null.</returns>
 	Task<PickedAsset[]?> PickImagesAsync(
 		int limit = 1);

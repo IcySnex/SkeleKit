@@ -1,7 +1,7 @@
 namespace SkeleKit;
 
 /// <summary>
-/// Manages application navigation, modal presentations, and native dialogs from a view model.
+/// Manages application navigation, modal presentations, and native dialogs from a ViewModel.
 /// </summary>
 public interface INavigator
 {
@@ -14,24 +14,24 @@ public interface INavigator
 		string title);
 
 	/// <summary>
-	/// Pushes a new page onto the stack, resolving its view model from the service container.
+	/// Pushes a new page onto the stack, resolving its ViewModel from the service container.
 	/// </summary>
-	/// <typeparam name="TViewModel">The type of the view model to resolve.</typeparam>
+	/// <typeparam name="TViewModel">The type of the ViewModel to resolve.</typeparam>
 	/// <returns>A task representing the async operation.</returns>
 	Task PushAsync<TViewModel>() where TViewModel : class;
 
 	/// <summary>
-	/// Pushes a new page onto the stack, resolving its view model by type from the service container.
+	/// Pushes a new page onto the stack, resolving its ViewModel by type from the service container.
 	/// </summary>
-	/// <param name="viewModel">The type of the view model to resolve.</param>
+	/// <param name="viewModel">The type of the ViewModel to resolve.</param>
 	/// <returns>A task representing the async operation.</returns>
 	Task PushAsync(
 		Type viewModel);
 
 	/// <summary>
-	/// Pushes a new page onto the stack using an existing view model instance.
+	/// Pushes a new page onto the stack using an existing ViewModel instance.
 	/// </summary>
-	/// <param name="viewModel">The view model instance to bind to the page.</param>
+	/// <param name="viewModel">The ViewModel instance to bind to the page.</param>
 	/// <returns>A task representing the async operation.</returns>
 	Task PushAsync(
 		object viewModel);
@@ -77,18 +77,18 @@ public interface INavigator
 
 
 	/// <summary>
-	/// Presents a modal page, resolving its view model from the service container.
+	/// Presents a modal page, resolving its ViewModel from the service container.
 	/// </summary>
-	/// <typeparam name="TViewModel">The type of the view model to resolve.</typeparam>
+	/// <typeparam name="TViewModel">The type of the ViewModel to resolve.</typeparam>
 	/// <param name="style">The modal style and presentation configuration.</param>
 	/// <returns>A task representing the async operation.</returns>
 	Task PresentAsync<TViewModel>(
 		ModalStyle style) where TViewModel : class;
 
 	/// <summary>
-	/// Presents a modal page, resolving its view model by type from the service container.
+	/// Presents a modal page, resolving its ViewModel by type from the service container.
 	/// </summary>
-	/// <param name="viewModel">The type of the view model to resolve.</param>
+	/// <param name="viewModel">The type of the ViewModel to resolve.</param>
 	/// <param name="style">The modal style and presentation configuration.</param>
 	/// <returns>A task representing the async operation.</returns>
 	Task PresentAsync(
@@ -96,9 +96,9 @@ public interface INavigator
 		ModalStyle style);
 
 	/// <summary>
-	/// Presents a modal page using an existing view model instance.
+	/// Presents a modal page using an existing ViewModel instance.
 	/// </summary>
-	/// <param name="viewModel">The view model instance to bind to the page.</param>
+	/// <param name="viewModel">The ViewModel instance to bind to the page.</param>
 	/// <param name="style">The modal style and presentation configuration.</param>
 	/// <returns>A task representing the async operation.</returns>
 	Task PresentAsync(

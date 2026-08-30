@@ -59,6 +59,7 @@ public readonly record struct GridLength
 	/// A fixed track from a point value (so <c>Columns = { 200, GridLength.Star }</c> compiles).
 	/// </summary>
 	/// <param name="points">The absolute size in layout points.</param>
+	/// <returns>A fixed-size grid length.</returns>
 	public static implicit operator GridLength(
 		double points) =>
 		Pixels(points);

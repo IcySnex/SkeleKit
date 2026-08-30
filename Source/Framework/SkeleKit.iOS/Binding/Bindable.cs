@@ -10,6 +10,7 @@ public readonly struct Bindable<T>
 	/// Creates a bindable container from a constant value.
 	/// </summary>
 	/// <param name="value">The raw value to wrap.</param>
+	/// <returns>The wrapped value.</returns>
 	public static implicit operator Bindable<T>(
 		T value) =>
 		new(value);
@@ -18,6 +19,7 @@ public readonly struct Bindable<T>
 	/// Creates a bindable container from an active binding expression.
 	/// </summary>
 	/// <param name="expression">The evaluation rule for the property.</param>
+	/// <returns>The wrapped binding expression.</returns>
 	public static implicit operator Bindable<T>(
 		BindingExpression<T> expression) =>
 		new(expression);

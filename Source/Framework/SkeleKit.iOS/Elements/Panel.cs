@@ -1,7 +1,7 @@
 namespace SkeleKit;
 
 /// <summary>
-/// A <see cref="View"/> that lays out one or more children, hosted by a native LayoutHost.
+/// Base for views that measure and arrange one or more children.
 /// </summary>
 public abstract partial class Panel : View
 {

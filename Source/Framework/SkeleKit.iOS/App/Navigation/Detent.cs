@@ -25,6 +25,7 @@ public readonly record struct Detent
 	/// A fixed height in points, clamped to the sheet's available height.
 	/// </summary>
 	/// <param name="height">The height in points.</param>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="height"/> is not finite or greater than zero.</exception>
 	/// <returns>The fixed-height detent.</returns>
 	public static Detent Height(
 		double height)
@@ -39,6 +40,7 @@ public readonly record struct Detent
 	/// A fraction of the sheet's available height.
 	/// </summary>
 	/// <param name="fraction">A value greater than 0 and no greater than 1.</param>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="fraction"/> is not finite or between 0 and 1.</exception>
 	/// <returns>The proportional detent.</returns>
 	public static Detent Fraction(
 		double fraction)

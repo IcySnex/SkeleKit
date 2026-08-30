@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace SkeleKit;
 
 /// <summary>
-/// A builder used to configure and construct a <see cref="SkeleApplication"/>.
+/// Configures services, pages, appearance and the application shell.
 /// </summary>
 public sealed class SkeleApplicationBuilder
 {
@@ -40,9 +40,6 @@ public sealed class SkeleApplicationBuilder
 	/// <summary>
 	/// Sets how <c>Image</c> loads remote URLs.
 	/// </summary>
-	/// <remarks>
-	/// Plug in a caching loader here.
-	/// </remarks>
 	/// <param name="loader">The loader to use.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public SkeleApplicationBuilder UseImageLoader(

@@ -9,7 +9,7 @@ public class ColorWell : Control
 
 
 	/// <summary>
-	/// The picked color. Two-way: the picker writes it back as the user drags.
+	/// The picked color, updated as the user drags.
 	/// </summary>
 	public Bindable<Color> Selected
 	{

@@ -49,6 +49,7 @@ public partial class Border : Panel
 	partial void ApplyStrokeCore();
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
@@ -62,6 +63,7 @@ public partial class Border : Panel
 		return child.DesiredSize.Inflate(inset);
 	}
 
+	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{

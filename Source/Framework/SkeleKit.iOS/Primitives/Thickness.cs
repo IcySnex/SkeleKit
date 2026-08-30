@@ -41,6 +41,7 @@ public readonly record struct Thickness(
 	/// Creates a uniform thickness from a single numeric value.
 	/// </summary>
 	/// <param name="uniform">The uniform thickness value.</param>
+	/// <returns>A uniform thickness.</returns>
 	public static implicit operator Thickness(
 		double uniform) =>
 		new(uniform);

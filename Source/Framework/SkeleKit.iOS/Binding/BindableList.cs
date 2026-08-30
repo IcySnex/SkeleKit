@@ -22,6 +22,7 @@ public readonly struct BindableList<TItem>
 	/// Wraps an array literal.
 	/// </summary>
 	/// <param name="value">The items to show.</param>
+	/// <returns>A list source containing the array.</returns>
 	public static implicit operator BindableList<TItem>(
 		TItem[] value) =>
 		new(value);
@@ -30,6 +31,7 @@ public readonly struct BindableList<TItem>
 	/// Wraps a list literal.
 	/// </summary>
 	/// <param name="value">The items to show.</param>
+	/// <returns>A list source containing the list.</returns>
 	public static implicit operator BindableList<TItem>(
 		List<TItem> value) =>
 		new(value);
@@ -38,6 +40,7 @@ public readonly struct BindableList<TItem>
 	/// Wraps an observable collection, whose changes animate into place.
 	/// </summary>
 	/// <param name="value">The live items to show.</param>
+	/// <returns>A live list source containing the collection.</returns>
 	public static implicit operator BindableList<TItem>(
 		ObservableCollection<TItem> value) =>
 		new(value);
@@ -46,6 +49,7 @@ public readonly struct BindableList<TItem>
 	/// Wraps an active binding to a list-typed source property.
 	/// </summary>
 	/// <param name="expression">The evaluation rule for the property.</param>
+	/// <returns>A list source using the binding expression.</returns>
 	public static implicit operator BindableList<TItem>(
 		BindingExpression<IReadOnlyList<TItem>?> expression) =>
 		new(expression);
@@ -54,6 +58,7 @@ public readonly struct BindableList<TItem>
 	/// Wraps an active binding to a <c>List</c>-typed source property.
 	/// </summary>
 	/// <param name="expression">The evaluation rule for the property.</param>
+	/// <returns>A list source using the binding expression.</returns>
 	public static implicit operator BindableList<TItem>(
 		BindingExpression<List<TItem>?> expression) =>
 		new(Widen(expression));
@@ -62,6 +67,7 @@ public readonly struct BindableList<TItem>
 	/// Wraps an active binding to an <c>ObservableCollection</c>-typed source property.
 	/// </summary>
 	/// <param name="expression">The evaluation rule for the property.</param>
+	/// <returns>A live list source using the binding expression.</returns>
 	public static implicit operator BindableList<TItem>(
 		BindingExpression<ObservableCollection<TItem>?> expression) =>
 		new(Widen(expression));
@@ -88,6 +94,10 @@ public readonly struct BindableList<TItem>
 
 
 	// lets collection expressions infer the element type; current items only, never a live source
+	/// <summary>
+	/// Enumerates the current list value.
+	/// </summary>
+	/// <returns>An enumerator over the current items.</returns>
 	public IEnumerator<TItem> GetEnumerator() =>
 		(Value ?? []).GetEnumerator();
 }

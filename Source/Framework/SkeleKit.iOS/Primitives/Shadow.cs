@@ -18,6 +18,9 @@ public readonly record struct Shadow(
 	/// <summary>
 	/// A shadow offset straight down, in the default shadow color.
 	/// </summary>
+	/// <param name="opacity">The shadow intensity from 0.0 to 1.0.</param>
+	/// <param name="radius">The blur radius of the shadow edges.</param>
+	/// <param name="offsetY">The vertical displacement of the shadow.</param>
 	public Shadow(
 		double opacity,
 		double radius,

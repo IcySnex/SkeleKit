@@ -9,6 +9,7 @@ public sealed class ShareContent
 	/// Shares a string as plain text.
 	/// </summary>
 	/// <param name="text">The text to share.</param>
+	/// <returns>Share content containing the text.</returns>
 	public static implicit operator ShareContent(
 		string text) =>
 		new() { Text = text };
@@ -17,6 +18,7 @@ public sealed class ShareContent
 	/// Shares a web address as a link.
 	/// </summary>
 	/// <param name="url">The address to share.</param>
+	/// <returns>Share content containing the link.</returns>
 	public static implicit operator ShareContent(
 		Uri url) =>
 		new() { Url = url };
@@ -25,6 +27,7 @@ public sealed class ShareContent
 	/// Shares an image.
 	/// </summary>
 	/// <param name="image">The image to share.</param>
+	/// <returns>Share content containing the image.</returns>
 	public static implicit operator ShareContent(
 		ImageSource image) =>
 		new() { Image = image };

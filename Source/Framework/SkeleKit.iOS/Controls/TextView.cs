@@ -57,7 +57,7 @@ public class TextView : Control
 	/// The styled runs to display; a plain string becomes an unstyled run, a <see cref="Link"/> a tappable one.
 	/// </summary>
 	/// <remarks>
-	/// Changes re-render and animate nothing, since they replace the text.<br/>
+	/// Changes replace the attributed text without animation.<br/>
 	/// Live when the list is an <c>ObservableCollection</c>.
 	/// </remarks>
 	public BindableList<Span> Spans

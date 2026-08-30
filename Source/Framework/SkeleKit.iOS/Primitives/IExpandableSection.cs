@@ -1,7 +1,7 @@
 namespace SkeleKit;
 
 /// <summary>
-/// A <see cref="ISection{TItem}"/> whose items collapse behind its header.
+/// An <see cref="ISection{TItem}"/> whose items collapse behind its header.
 /// </summary>
 /// <remarks>
 /// The header shows a chevron and tapping it toggles <see cref="IsExpanded"/>.

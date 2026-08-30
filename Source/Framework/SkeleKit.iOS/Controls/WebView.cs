@@ -140,6 +140,7 @@ public class WebView : Control
 	}
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize) =>
 		new(Fill(availableSize.Width), Fill(availableSize.Height));

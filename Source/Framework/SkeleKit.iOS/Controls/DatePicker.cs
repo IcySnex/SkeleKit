@@ -109,6 +109,7 @@ public class DatePicker : Control
 	}
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{

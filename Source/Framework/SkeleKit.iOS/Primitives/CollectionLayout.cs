@@ -73,6 +73,8 @@ public readonly struct CollectionLayout
 	/// <summary>
 	/// A list of full-width rows; <paramref name="grouped"/> uses the native inset-grouped style.
 	/// </summary>
+	/// <param name="grouped">Whether to use the native inset-grouped style.</param>
+	/// <returns>The list layout.</returns>
 	public static CollectionLayout List(
 		bool grouped = false) =>
 		new(CollectionLayoutKind.List, 1, 0, 0, grouped, CarouselSnap.None);
@@ -80,6 +82,9 @@ public readonly struct CollectionLayout
 	/// <summary>
 	/// A grid of equal columns.
 	/// </summary>
+	/// <param name="columns">The number of columns per row.</param>
+	/// <param name="spacing">The gap between items, in points.</param>
+	/// <returns>The grid layout.</returns>
 	public static CollectionLayout Grid(
 		int columns,
 		double spacing = 8) =>
@@ -88,6 +93,10 @@ public readonly struct CollectionLayout
 	/// <summary>
 	/// A horizontally scrolling row of fixed-width items, optionally snapping as it settles.
 	/// </summary>
+	/// <param name="itemWidth">The width of each item, in points.</param>
+	/// <param name="spacing">The gap between items, in points.</param>
+	/// <param name="snap">How scrolling settles when the drag ends.</param>
+	/// <returns>The carousel layout.</returns>
 	public static CollectionLayout Carousel(
 		double itemWidth,
 		double spacing = 8,

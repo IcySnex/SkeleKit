@@ -24,6 +24,7 @@ public class StackPanel : Panel
 	}
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
@@ -70,6 +71,7 @@ public class StackPanel : Panel
 		return desiredSize.Inflate(Padding);
 	}
 
+	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{

@@ -735,6 +735,7 @@ public abstract partial class View
 	/// <summary>
 	/// Builds the native view (if needed) and realizes children and bindings.
 	/// </summary>
+	/// <returns>The realized native view.</returns>
 	public UIView Realize() =>
 		Native;
 
@@ -763,7 +764,7 @@ public abstract partial class View
 	/// <summary>
 	/// Runs any pending layout right now. Call it inside an <see cref="Animator"/>'s changes to animate a layout property.
 	/// </summary>
-	/// <remarks>A layout property (Width, Margin, ...) only reaches the native frame on the next layout pass, which lands after an animation block has closed — so it would snap instead of animating. <see cref="Animate(Animation, Action, Action{bool})"/> does this for you.</remarks>
+	/// <remarks>Layout properties such as Width or Margin reach the native frame on the next layout pass, after an animation block closes. Calling this method inside the animation keeps them from snapping; <see cref="Animate(Animation, Action, Action{bool})"/> does this automatically.</remarks>
 	public static void LayoutNow() =>
 		UIApplication.SharedApplication
 			.ConnectedScenes
@@ -780,6 +781,7 @@ public abstract partial class View
 	/// attached whenever the view's native peer is realized. The caller owns any separate target or
 	/// delegate objects used by the recognizer.
 	/// </remarks>
+	/// <param name="gesture">The native gesture recognizer to retain and attach.</param>
 	public void AddNativeGesture(
 		UIGestureRecognizer gesture)
 	{
@@ -791,6 +793,8 @@ public abstract partial class View
 	/// <summary>
 	/// Animates the property changes made inside <paramref name="changes"/>.
 	/// </summary>
+	/// <param name="seconds">The animation duration, in seconds.</param>
+	/// <param name="changes">The property changes to animate.</param>
 	public static void Animate(
 		double seconds,
 		Action changes) =>
@@ -800,6 +804,9 @@ public abstract partial class View
 	/// Animates the property changes made inside <paramref name="changes"/>, following <paramref name="animation"/>.
 	/// </summary>
 	/// <remarks>For an animation the user can grab mid-flight, create an <see cref="Animator"/> instead.</remarks>
+	/// <param name="animation">The timing and easing to use.</param>
+	/// <param name="changes">The property changes to animate.</param>
+	/// <param name="completed">Called when the animation completes, with whether it finished normally.</param>
 	public static void Animate(
 		Animation animation,
 		Action changes,

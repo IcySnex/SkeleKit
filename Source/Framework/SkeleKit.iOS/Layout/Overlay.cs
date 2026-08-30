@@ -5,6 +5,7 @@ namespace SkeleKit;
 /// </summary>
 public class Overlay : Panel
 {
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
@@ -27,6 +28,7 @@ public class Overlay : Panel
 		return new Size(width, height).Inflate(Padding);
 	}
 
+	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{

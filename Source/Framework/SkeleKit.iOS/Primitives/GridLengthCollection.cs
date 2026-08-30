@@ -3,8 +3,7 @@ using System.Collections.ObjectModel;
 namespace SkeleKit;
 
 /// <summary>
-/// An observable list of <see cref="GridLength"/> values used by a <see cref="Grid"/>.
-/// Mutations automatically invalidate the owning grid's cached measurement.
+/// An observable <see cref="GridLength"/> list that invalidates its owning <see cref="Grid"/> when changed.
 /// </summary>
 public sealed class GridLengthCollection : Collection<GridLength>
 {
@@ -18,6 +17,7 @@ public sealed class GridLengthCollection : Collection<GridLength>
 	}
 
 
+	/// <inheritdoc/>
 	protected override void InsertItem(
 		int index,
 		GridLength item)
@@ -26,6 +26,7 @@ public sealed class GridLengthCollection : Collection<GridLength>
 		changed();
 	}
 
+	/// <inheritdoc/>
 	protected override void SetItem(
 		int index,
 		GridLength item)
@@ -37,6 +38,7 @@ public sealed class GridLengthCollection : Collection<GridLength>
 		changed();
 	}
 
+	/// <inheritdoc/>
 	protected override void RemoveItem(
 		int index)
 	{
@@ -44,6 +46,7 @@ public sealed class GridLengthCollection : Collection<GridLength>
 		changed();
 	}
 
+	/// <inheritdoc/>
 	protected override void ClearItems()
 	{
 		if (Count == 0)

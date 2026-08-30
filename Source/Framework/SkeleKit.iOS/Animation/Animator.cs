@@ -18,6 +18,9 @@ public sealed class Animator : IDisposable
 	/// It does not run until <see cref="Start"/>.<br/>
 	/// Only what <paramref name="changes"/> touches is animated. Transforms, Opacity, CornerRadius, colors, gradients and layout lengths all interpolate; what has no in-between (a Material, a system color, an auto-sized Width) snaps when the animation settles.
 	/// </remarks>
+	/// <param name="animation">The timing and easing to use.</param>
+	/// <param name="changes">The property changes to capture.</param>
+	/// <returns>The prepared animator.</returns>
 	public static Animator Create(
 		Animation animation,
 		Action changes) =>
@@ -158,6 +161,7 @@ public sealed class Animator : IDisposable
 	/// <summary>
 	/// Runs the animation, after <paramref name="delay"/> seconds if given.
 	/// </summary>
+	/// <param name="delay">The delay before starting, in seconds.</param>
 	public void Start(
 		double delay = 0)
 	{
@@ -186,6 +190,7 @@ public sealed class Animator : IDisposable
 	/// <remarks>
 	/// For a spring, <paramref name="velocity"/> carries the gesture's speed in, as full travels per second, positive towards the end.
 	/// </remarks>
+	/// <param name="velocity">The initial velocity in full travels per second.</param>
 	public void Continue(
 		double velocity = 0)
 	{
@@ -215,6 +220,7 @@ public sealed class Animator : IDisposable
 	/// <remarks>
 	/// It settles where it is, unless <paramref name="finish"/> jumps it to the end.
 	/// </remarks>
+	/// <param name="finish">Whether to jump to the end before stopping.</param>
 	public void Stop(
 		bool finish = false)
 	{
@@ -233,6 +239,7 @@ public sealed class Animator : IDisposable
 	/// <summary>
 	/// Calls <paramref name="handler"/> when the animation ends, with true if it reached the end rather than being interrupted.
 	/// </summary>
+	/// <param name="handler">The completion callback.</param>
 	public void OnCompleted(
 		Action<bool> handler) =>
 		completions.Add(handler);

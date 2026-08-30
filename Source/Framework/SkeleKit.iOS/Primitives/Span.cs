@@ -23,6 +23,7 @@ public class Span
 	/// Wraps a plain string as an unstyled span, so string literals sit beside styled runs in a list.
 	/// </summary>
 	/// <param name="text">The run's text.</param>
+	/// <returns>An unstyled span containing the text.</returns>
 	public static implicit operator Span(
 		string text) =>
 		new(text);

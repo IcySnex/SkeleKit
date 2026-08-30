@@ -48,6 +48,7 @@ public readonly partial struct ImageSource
 	/// Treats a string as a URL when it looks like one, otherwise resolves it automatically.
 	/// </summary>
 	/// <param name="value">The string value to convert.</param>
+	/// <returns>An image source for the string.</returns>
 	public static implicit operator ImageSource(
 		string value) =>
 		new(value.Contains("://") ? ImageSourceKind.Url : ImageSourceKind.Auto, value);

@@ -225,7 +225,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	/// Whether the refresh spinner is showing.
 	/// </summary>
 	/// <remarks>
-	/// Two-way: the pull sets it true, the ViewModel sets it false when done.
+	/// With a two-way binding, pulling sets it to true and the ViewModel sets it to false when done.
 	/// </remarks>
 	public Bindable<bool> IsRefreshing
 	{
@@ -290,7 +290,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public ICommand? ReorderCommand { get; set; }
 
 	/// <summary>
-	/// Whether the collection is in edit mode, showing selection circles and reorder handles. Two-way.
+	/// Whether the collection is in edit mode, showing selection circles and reorder handles.
 	/// </summary>
 	public Bindable<bool> IsEditing
 	{
@@ -561,6 +561,7 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	partial void MovedInSource();
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize) =>
 		new(double.IsFinite(availableSize.Width) ? availableSize.Width : 0, double.IsFinite(availableSize.Height) ? availableSize.Height : 0);

@@ -54,6 +54,7 @@ public abstract class Brush
 	/// Fills with a solid color.
 	/// </summary>
 	/// <param name="color">The solid color to wrap.</param>
+	/// <returns>A solid brush using the color.</returns>
 	public static implicit operator Brush(
 		Color color) =>
 		new SolidBrush(color);
@@ -180,6 +181,7 @@ public enum MaterialKind
 /// <summary>
 /// A blurred material, as used behind bars and sheets. Thinner materials let more of the content behind them through.
 /// </summary>
+/// <param name="kind">How much the material blurs the content behind it.</param>
 public sealed class Material(
 	MaterialKind kind) : Brush
 {

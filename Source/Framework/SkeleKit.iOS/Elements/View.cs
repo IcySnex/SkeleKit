@@ -562,7 +562,7 @@ public abstract partial class View
 	// Visual properties
 
 	/// <summary>
-	/// The background fill — a color, a gradient or a material — or null for transparent.
+	/// The background fill: a color, gradient or material, or null for transparent.
 	/// </summary>
 	public Brush? Background
 	{
@@ -637,7 +637,7 @@ public abstract partial class View
 	/// A drop shadow behind the view, or null for none.
 	/// </summary>
 	/// <remarks>
-	/// A shadow needs unclipped bounds: it stops a corner radius from clipping the content, and an explicit <see cref="ClipsToBounds"/> hides it.
+	/// Setting a shadow prevents <see cref="CornerRadius"/> from enabling clipping; an explicit <see cref="ClipsToBounds"/> still hides it.
 	/// </remarks>
 	public Shadow? Shadow
 	{
@@ -762,6 +762,7 @@ public abstract partial class View
 	/// <summary>
 	/// First pass: computes <see cref="DesiredSize"/> for the space the parent offers.
 	/// </summary>
+	/// <param name="available">The size available from the parent.</param>
 	public void Measure(
 		Size available)
 	{
@@ -820,6 +821,7 @@ public abstract partial class View
 	/// <summary>
 	/// Second pass: positions the view within its slot, honoring margin and alignment.
 	/// </summary>
+	/// <param name="finalRect">The final slot in the parent's coordinates.</param>
 	public void Arrange(
 		Rect finalRect)
 	{
@@ -860,6 +862,8 @@ public abstract partial class View
 	/// <summary>
 	/// Content measurement. Panels recurse; controls delegate to the native SizeThatFits.
 	/// </summary>
+	/// <param name="availableSize">The size available for the view's content.</param>
+	/// <returns>The desired content size.</returns>
 	protected virtual Size MeasureOverride(
 		Size availableSize) =>
 		Size.Zero;
@@ -867,6 +871,8 @@ public abstract partial class View
 	/// <summary>
 	/// Content arrangement. Panels override to place their children.
 	/// </summary>
+	/// <param name="finalSize">The final size available for the view's content.</param>
+	/// <returns>The arranged content size.</returns>
 	protected virtual Size ArrangeOverride(
 		Size finalSize) =>
 		finalSize;

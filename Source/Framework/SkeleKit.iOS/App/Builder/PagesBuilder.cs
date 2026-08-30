@@ -20,6 +20,8 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a view-only page that is recreated for each presentation.
 	/// </summary>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddTransient<TView>()
 		where TView : ContentView, new() =>
 		AddTransient(() => new TView());
@@ -27,6 +29,9 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a view-only page that is recreated for each presentation.
 	/// </summary>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <param name="create">Creates the page.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddTransient<TView>(
 		Func<TView> create)
 		where TView : ContentView =>
@@ -35,6 +40,9 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a view-only page that is recreated for each presentation.
 	/// </summary>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <param name="create">Creates the page from the application's services.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddTransient<TView>(
 		Func<IServiceProvider, TView> create)
 		where TView : ContentView
@@ -47,6 +55,10 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a ViewModel-backed page that is recreated for each presentation.
 	/// </summary>
+	/// <typeparam name="TViewModel">The ViewModel type.</typeparam>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <param name="create">Creates the page from its ViewModel.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddTransient<TViewModel, TView>(
 		Func<TViewModel, TView> create)
 		where TViewModel : class
@@ -56,6 +68,10 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a ViewModel-backed page that is recreated for each presentation.
 	/// </summary>
+	/// <typeparam name="TViewModel">The ViewModel type.</typeparam>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <param name="create">Creates the page from the application's services and its ViewModel.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddTransient<TViewModel, TView>(
 		Func<IServiceProvider, TViewModel, TView> create)
 		where TViewModel : class
@@ -69,6 +85,8 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a view-only page built once and kept for the application's lifetime.
 	/// </summary>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddSingleton<TView>()
 		where TView : ContentView, new() =>
 		AddSingleton(() => new TView());
@@ -76,6 +94,9 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers an existing view-only page for the application's lifetime.
 	/// </summary>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <param name="instance">The page instance to register.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddSingleton<TView>(
 		TView instance)
 		where TView : ContentView
@@ -88,6 +109,9 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a view-only page built once and kept for the application's lifetime.
 	/// </summary>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <param name="create">Creates the page.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddSingleton<TView>(
 		Func<TView> create)
 		where TView : ContentView =>
@@ -96,6 +120,9 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a view-only page built once and kept for the application's lifetime.
 	/// </summary>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <param name="create">Creates the page from the application's services.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddSingleton<TView>(
 		Func<IServiceProvider, TView> create)
 		where TView : ContentView
@@ -108,6 +135,10 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a ViewModel-backed page built once and kept for the application's lifetime.
 	/// </summary>
+	/// <typeparam name="TViewModel">The ViewModel type.</typeparam>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <param name="create">Creates the page from its ViewModel.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddSingleton<TViewModel, TView>(
 		Func<TViewModel, TView> create)
 		where TViewModel : class
@@ -117,6 +148,10 @@ public sealed class PagesBuilder
 	/// <summary>
 	/// Registers a ViewModel-backed page built once and kept for the application's lifetime.
 	/// </summary>
+	/// <typeparam name="TViewModel">The ViewModel type.</typeparam>
+	/// <typeparam name="TView">The page type.</typeparam>
+	/// <param name="create">Creates the page from the application's services and its ViewModel.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
 	public PagesBuilder AddSingleton<TViewModel, TView>(
 		Func<IServiceProvider, TViewModel, TView> create)
 		where TViewModel : class

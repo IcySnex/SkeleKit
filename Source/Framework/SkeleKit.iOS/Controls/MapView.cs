@@ -350,7 +350,7 @@ public class MapView : Control
 
 
 	/// <summary>
-	/// The visible extent, updated two-way as the user pans and zooms.
+	/// The visible extent, updated as the user pans and zooms.
 	/// </summary>
 	public Bindable<MapRegion> Region
 	{
@@ -690,6 +690,7 @@ public class MapView : Control
 	}
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize) =>
 		new(Fill(availableSize.Width), Fill(availableSize.Height));

@@ -66,7 +66,7 @@ public partial class ScrollView : Panel
 	/// Whether the refresh spinner is showing.
 	/// </summary>
 	/// <remarks>
-	/// Two-way: the pull sets it true, the ViewModel sets it false when done.
+	/// With a two-way binding, pulling sets it to true and the ViewModel sets it to false when done.
 	/// </remarks>
 	public Bindable<bool> IsRefreshing
 	{
@@ -170,6 +170,7 @@ public partial class ScrollView : Panel
 		bool animated);
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
@@ -197,6 +198,7 @@ public partial class ScrollView : Panel
 		return new Size(width, height).Inflate(Padding);
 	}
 
+	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
@@ -227,6 +229,8 @@ public partial class ScrollView : Panel
 	/// <summary>
 	/// Scrolls to an offset along the scroll axis, in points.
 	/// </summary>
+	/// <param name="offset">The target offset in points.</param>
+	/// <param name="animated">Whether to animate the scroll.</param>
 	public void ScrollTo(
 		double offset,
 		bool animated = true) =>

@@ -16,6 +16,8 @@ public readonly record struct Rect(
 	/// <summary>
 	/// Creates a rectangle from a location and a size.
 	/// </summary>
+	/// <param name="location">The top-left corner.</param>
+	/// <param name="size">The rectangle size.</param>
 	public Rect(
 		Point location,
 		Size size) : this(location.X, location.Y, size.Width, size.Height)
@@ -62,6 +64,8 @@ public readonly record struct Rect(
 	/// <summary>
 	/// Returns this rectangle inset by <paramref name="thickness"/>, clamped so size never goes negative.
 	/// </summary>
+	/// <param name="thickness">The inset applied to each edge.</param>
+	/// <returns>The inset rectangle.</returns>
 	public Rect Deflate(
 		Thickness thickness) =>
 		new(X + thickness.Left, Y + thickness.Top, Math.Max(0, Width - thickness.Horizontal), Math.Max(0, Height - thickness.Vertical));

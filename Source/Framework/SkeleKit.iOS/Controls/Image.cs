@@ -112,7 +112,7 @@ public class Image : Control
 	}
 
 	/// <summary>
-	/// The value 0–1 driving a variable symbol's layers (a wifi or speaker level), or NaN for none.
+	/// A value from 0 to 1 driving a variable symbol's layers, such as a wifi or speaker level, or NaN for none.
 	/// </summary>
 	public Bindable<double> SymbolValue
 	{

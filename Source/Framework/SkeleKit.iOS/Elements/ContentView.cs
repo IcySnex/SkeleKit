@@ -125,7 +125,7 @@ public abstract partial class ContentView : Panel
 	/// The badge on this page's tab bar item, or null for none.
 	/// </summary>
 	/// <remarks>
-	/// Applies even while the tab was never opened.
+	/// Applies before the tab is opened.
 	/// </remarks>
 	public Bindable<string?> TabBadge
 	{
@@ -365,6 +365,7 @@ public abstract partial class ContentView : Panel
 		ApplyTabBadgeCore();
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
@@ -378,6 +379,7 @@ public abstract partial class ContentView : Panel
 		return content.DesiredSize.Inflate(Padding);
 	}
 
+	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{

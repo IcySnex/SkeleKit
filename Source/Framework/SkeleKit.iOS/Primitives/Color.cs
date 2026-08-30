@@ -38,6 +38,10 @@ internal enum SystemColor
 /// <summary>
 /// A straight (non-premultiplied) RGBA color with each channel in the range 0..1.
 /// </summary>
+/// <param name="Red">The red channel.</param>
+/// <param name="Green">The green channel.</param>
+/// <param name="Blue">The blue channel.</param>
+/// <param name="Alpha">The alpha channel.</param>
 public readonly record struct Color(
 	double Red,
 	double Green,
@@ -78,6 +82,9 @@ public readonly record struct Color(
 	/// <summary>
 	/// A color that resolves per appearance: <paramref name="light"/> normally, <paramref name="dark"/> in dark mode.
 	/// </summary>
+	/// <param name="light">The color used in light mode.</param>
+	/// <param name="dark">The color used in dark mode.</param>
+	/// <returns>The appearance-aware color.</returns>
 	public static Color Dynamic(
 		Color light,
 		Color dark) =>
@@ -86,6 +93,11 @@ public readonly record struct Color(
 	/// <summary>
 	/// Creates a color from 8-bit channel values (0..255).
 	/// </summary>
+	/// <param name="red">The red channel.</param>
+	/// <param name="green">The green channel.</param>
+	/// <param name="blue">The blue channel.</param>
+	/// <param name="alpha">The alpha channel.</param>
+	/// <returns>The color represented by the channel values.</returns>
 	public static Color FromBytes(
 		byte red,
 		byte green,
@@ -96,6 +108,8 @@ public readonly record struct Color(
 	/// <summary>
 	/// Creates a color from a packed <c>0xRRGGBB</c> or <c>0xAARRGGBB</c> hex value.
 	/// </summary>
+	/// <param name="hex">The packed color value.</param>
+	/// <returns>The color represented by the packed value.</returns>
 	public static Color FromHex(
 		uint hex)
 	{
@@ -111,6 +125,9 @@ public readonly record struct Color(
 	/// <summary>
 	/// Creates an opaque color (alpha 1).
 	/// </summary>
+	/// <param name="red">The red channel.</param>
+	/// <param name="green">The green channel.</param>
+	/// <param name="blue">The blue channel.</param>
 	public Color(
 		double red,
 		double green,
@@ -125,6 +142,8 @@ public readonly record struct Color(
 	/// <summary>
 	/// Returns this color with a different <paramref name="alpha"/> (0..1).
 	/// </summary>
+	/// <param name="alpha">The replacement alpha channel.</param>
+	/// <returns>A copy with the replacement alpha.</returns>
 	public Color WithAlpha(
 		double alpha) =>
 		this with

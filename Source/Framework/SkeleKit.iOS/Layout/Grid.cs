@@ -131,6 +131,7 @@ public class Grid : Panel
 	}
 
 
+	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
@@ -161,6 +162,7 @@ public class Grid : Panel
 			Sum(rowHeights) + rowGaps).Inflate(Padding);
 	}
 
+	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
