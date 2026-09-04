@@ -93,6 +93,11 @@ public sealed class MainView : ContentView<MainViewModel>
 SkeleKit currently requires the .NET 10 iOS workload and targets iOS 18 or later. The [Getting Started guide](https://icysnex.github.io/SkeleKit/getting-started/installation/using-template) covers setup, project structure, hot reload, and the first app; the [guides](https://icysnex.github.io/SkeleKit/guides/foundations/views-and-view-trees) cover the rest of the framework.
 
 ---
+
+<p align="center">
+  <img alt="Screenshots Image" src="Assets/gallery/gallery.webp">
+</p>
+
 <table>
   <tr>
     <td align="center">
@@ -117,6 +122,8 @@ SkeleKit currently requires the .NET 10 iOS workload and targets iOS 18 or later
     </td>
   </tr>
 </table>
+
+---
 
 > [!NOTE]
 > SkeleKit is an early preview. It can be used to build complete apps, but APIs may change before 1.0.
