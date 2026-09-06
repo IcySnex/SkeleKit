@@ -1,15 +1,19 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace SkeleKit;
 
 internal sealed class HttpImageLoader : IImageLoader
 {
+	internal static ILogger<Image>? Logger => field ??= SkeleApplication.Current?.Services.GetRequiredService<ILogger<Image>>();
+
 	static readonly HttpClient Client = new(new SocketsHttpHandler());
 	static readonly NSCache Cache = new() { TotalCostLimit = 64 * 1024 * 1024 };
 	static readonly ConcurrentDictionary<string, Task<UIImage?>> Inflight = new();
 
 
-	static async Task<UIImage?> Fetch(
+	async Task<UIImage?> Fetch(
 		string url)
 	{
 		try
@@ -17,7 +21,10 @@ internal sealed class HttpImageLoader : IImageLoader
 			byte[] data = await Client.GetByteArrayAsync(url);
 
 			if (UIImage.LoadFromData(NSData.FromArray(data)) is not UIImage image)
+			{
+				Logger?.LogWarning("Failed to decode remote image data.");
 				return null;
+			}
 
 			image = (UIImage?)await image.PrepareForDisplayAsync() ?? image;
 
@@ -26,8 +33,9 @@ internal sealed class HttpImageLoader : IImageLoader
 
 			return image;
 		}
-		catch
+		catch (Exception exception)
 		{
+			Logger?.LogWarning(exception, "Failed to fetch remote image.");
 			return null;
 		}
 		finally
@@ -36,7 +44,7 @@ internal sealed class HttpImageLoader : IImageLoader
 		}
 	}
 
-	
+
 	public async Task<UIImage?> LoadAsync(
 		string url,
 		CancellationToken cancellationToken)
@@ -53,6 +61,7 @@ internal sealed class HttpImageLoader : IImageLoader
 		}
 		catch (Exception e) when (e is not OperationCanceledException)
 		{
+			Logger?.LogWarning(e, "Failed to wait for the remote image request.");
 			return null;
 		}
 	}

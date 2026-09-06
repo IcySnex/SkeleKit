@@ -1,9 +1,11 @@
 using LinkPresentation;
+using Microsoft.Extensions.Logging;
 using ObjCRuntime;
 
 namespace SkeleKit;
 
-internal sealed class Sharer : ISharer
+internal sealed class Sharer(
+	ILogger<Sharer> logger) : ISharer
 {
 	internal sealed class ShareItemSource : UIActivityItemSource
 	{
@@ -84,8 +86,16 @@ internal sealed class Sharer : ISharer
 			activityItems.Add(new ShareItemSource(image, metadata));
 		}
 
-		if (activityItems.Count == 0 || Top() is not UIViewController top)
+		if (activityItems.Count == 0)
+		{
+			logger.LogWarning("The share request did not contain usable text, a URL, or an image.");
 			return;
+		}
+		if (Top() is not UIViewController top)
+		{
+			logger.LogWarning("Could not present share sheet because no active view controller is available.");
+			return;
+		}
 
 		UIActivityViewController controller = new([.. activityItems], null);
 

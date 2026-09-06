@@ -211,9 +211,10 @@ public class SkeleApplication
 		Foregrounded = builder.LifecycleForeground;
 
 		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, CurrentStack));
-		builder.Services.AddSingleton<ISharer>(_ => new Sharer());
-		builder.Services.AddSingleton<ISystemPicker>(_ => new SystemPicker());
-		builder.Services.AddSingleton<IHaptics>(_ => new Haptics());
+		builder.Services.AddSingleton<ISharer, Sharer>();
+		builder.Services.AddSingleton<ISystemPicker, SystemPicker>();
+		builder.Services.AddSingleton<IHaptics, Haptics>();
+
 		Services = builder.Services.BuildServiceProvider();
 
 		Navigator = Services.GetRequiredService<INavigator>();

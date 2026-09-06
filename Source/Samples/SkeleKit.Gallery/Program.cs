@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SkeleKit;
 using SkeleKit.Gallery.Services;
 using SkeleKit.Gallery.Services.Abstract;
@@ -15,6 +16,12 @@ using SkeleKit.Gallery.ViewModels.Platform;
 using SkeleKit.Gallery.Views;
 
 SkeleApplication.CreateBuilder()
+	.ConfigureLogging(logging =>
+	{
+		logging.SetMinimumLevel(LogLevel.Information);
+
+		logging.AddConsole();
+	})
 	.UseServices(services =>
 	{
 		services.AddSingleton<IGalleryCatalog, GalleryCatalog>();

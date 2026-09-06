@@ -1,10 +1,12 @@
+using Microsoft.Extensions.Logging;
 using ObjCRuntime;
 using PhotosUI;
 using UniformTypeIdentifiers;
 
 namespace SkeleKit;
 
-internal sealed class SystemPicker : ISystemPicker
+internal sealed class SystemPicker(
+	ILogger<SystemPicker> logger) : ISystemPicker
 {
 	sealed class PhotoDelegate : PHPickerViewControllerDelegate
 	{
@@ -78,7 +80,10 @@ internal sealed class SystemPicker : ISystemPicker
 		int limit = 1)
 	{
 		if (Top() is not UIViewController top)
+		{
+			logger.LogWarning("Failed to present image picker because no active view controller is available.");
 			return null;
+		}
 
 		PHPickerConfiguration configuration = new()
 		{
@@ -114,7 +119,10 @@ internal sealed class SystemPicker : ISystemPicker
 		params string[] extensions)
 	{
 		if (Top() is not UIViewController top)
+		{
+			logger.LogWarning("Failed to present document picker because no active view controller is available.");
 			return null;
+		}
 
 		UTType[] types = [.. extensions.Select(UTType.CreateFromExtension).OfType<UTType>()];
 		if (types.Length == 0)

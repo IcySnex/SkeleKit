@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Symbols;
 
 namespace SkeleKit;
@@ -7,8 +9,8 @@ namespace SkeleKit;
 /// </summary>
 public class Image : Control
 {
-	// URL-source loader; set through SkeleApplicationBuilder.UseImageLoader(...)
 	internal static IImageLoader Loader { get; set; } = new HttpImageLoader();
+	internal static ILogger<Image>? Logger => field ??= SkeleApplication.Current?.Services.GetRequiredService<ILogger<Image>>();
 
 
 	CancellationTokenSource? loadCancellation;
@@ -303,9 +305,9 @@ public class Image : Control
 		{
 			return;
 		}
-		catch
+		catch (Exception exception)
 		{
-			// custom loader must not kill the process
+			Logger?.LogWarning(exception, "The configured image loader threw while loading a remote image.");
 		}
 
 		if (cancellationToken.IsCancellationRequested)
@@ -333,8 +335,6 @@ public class Image : Control
 			InvalidateMeasure();
 		});
 	}
-
-
 	private protected override UIView CreateNative() =>
 		new UIImageView();
 

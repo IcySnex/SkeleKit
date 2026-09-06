@@ -1,4 +1,6 @@
 using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ObjCRuntime;
 using SafariServices;
 
@@ -9,6 +11,9 @@ internal sealed class Navigator(
 	IServiceProvider services,
 	Func<UINavigationController?> currentStack) : INavigator
 {
+	readonly ILogger<Navigator> logger = services.GetRequiredService<ILogger<Navigator>>();
+
+
 	sealed class PopoverStay : UIPopoverPresentationControllerDelegate
 	{
 		public PopoverStay()
@@ -44,32 +49,41 @@ internal sealed class Navigator(
 		return controller;
 	}
 
-	static void Present<T>(
+	void Present<T>(
 		UIAlertController alert,
 		TaskCompletionSource<T> completion)
 	{
 		if (Top() is UIViewController top)
 			top.PresentViewController(alert, true, null);
 		else
+		{
+			logger.LogWarning("Failed to present alert because no active view controller is available.");
 			completion.SetResult(default!);
+		}
 	}
 
-	static void Present(
+	void Present(
 		UIAlertController alert,
 		TaskCompletionSource completion)
 	{
 		if (Top() is UIViewController top)
 			top.PresentViewController(alert, true, null);
 		else
+		{
+			logger.LogWarning("Failed to present alert because no active view controller is available.");
 			completion.SetResult();
+		}
 	}
 
-	static Task PresentCore(
+	Task PresentCore(
 		PageHost host,
 		ModalStyle style)
 	{
 		if (Top() is not UIViewController presenter)
+		{
+			logger.LogWarning("Failed to present modal because no active view controller is available.");
 			return Task.CompletedTask;
+		}
 
 		UINavigationController wrapper = new(host);
 		IReadOnlyList<Detent> detents = style.Detents ?? [Detent.Large];
@@ -80,12 +94,15 @@ internal sealed class Navigator(
 		return Task.CompletedTask;
 	}
 
-	static Task PresentSafari(
+	Task PresentSafari(
 		SFSafariViewController browser,
 		ModalStyle style)
 	{
 		if (Top() is not UIViewController presenter)
+		{
+			logger.LogWarning("Failed to present browser because no active view controller is available.");
 			return Task.CompletedTask;
+		}
 
 		ModalStyle safariStyle = SafariStyle(style);
 		IReadOnlyList<Detent> detents = safariStyle.Detents ?? [Detent.Large];
@@ -116,7 +133,6 @@ internal sealed class Navigator(
 			if (Identifier(detents[0]) is UISheetPresentationControllerDetentIdentifier identifier)
 				sheet.SelectedDetentIdentifier = identifier;
 
-			// the handle is the affordance for dragging, so it only earns its place on a sheet that resizes
 			sheet.PrefersGrabberVisible = detents.Count > 1;
 		}
 
@@ -128,7 +144,6 @@ internal sealed class Navigator(
 			popover.SourceRect = anchor.Native.Bounds;
 			popover.PermittedArrowDirections = Directions(style.Arrows);
 
-			// UIKit would adapt the bubble into a full sheet on iPhone
 			popover.Delegate = Stay;
 		}
 	}
@@ -346,7 +361,11 @@ internal sealed class Navigator(
 
 	public Task PopAsync()
 	{
-		currentStack()?.PopViewController(true);
+		if (currentStack() is UINavigationController stack)
+			stack.PopViewController(true);
+		else
+			logger.LogWarning("Failed to pop because no navigation stack is active.");
+
 		Prune();
 
 		return Task.CompletedTask;
@@ -354,7 +373,11 @@ internal sealed class Navigator(
 
 	public Task PopToRootAsync()
 	{
-		currentStack()?.PopToRootViewController(true);
+		if (currentStack() is UINavigationController stack)
+			stack.PopToRootViewController(true);
+		else
+			logger.LogWarning("Failed to pop to root because no navigation stack is active.");
+
 		Prune();
 
 		return Task.CompletedTask;
@@ -402,7 +425,10 @@ internal sealed class Navigator(
 			});
 		}
 		else
+		{
+			logger.LogWarning("Failed to dismiss because no active view controller is available.");
 			completion.SetResult();
+		}
 
 		return completion.Task;
 	}
@@ -436,8 +462,6 @@ internal sealed class Navigator(
 
 		return PresentSafari(browser, style);
 	}
-
-
 	public Task AlertAsync(
 		string title,
 		string message,
@@ -509,10 +533,12 @@ internal sealed class Navigator(
 		UIAlertController sheet = UIAlertController.Create(title, null, UIAlertControllerStyle.ActionSheet);
 
 		foreach (DialogOption option in options)
+		{
 			sheet.AddAction(UIAlertAction.Create(
 				option.Text,
 				option.IsDestructive ? UIAlertActionStyle.Destructive : UIAlertActionStyle.Default,
 				_ => completion.SetResult(option.Text)));
+		}
 
 		sheet.AddAction(UIAlertAction.Create(cancel, UIAlertActionStyle.Cancel, _ => completion.SetResult(null)));
 
