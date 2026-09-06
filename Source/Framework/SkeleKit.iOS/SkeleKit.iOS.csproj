@@ -35,7 +35,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="../../../README.md" Pack="true" PackagePath="/" />
+        <None Include="../../Packaging/README.md" Pack="true" PackagePath="/" />
         <None Include="../../../Assets/icon/package.png" Pack="true" PackagePath="package-icon.png" />
         <None Include="build/SkeleKit.iOS.targets" Pack="true" PackagePath="buildTransitive/SkeleKit.iOS.targets" />
         <None Include="../SkeleKit.Generators/bin/$(Configuration)/netstandard2.0/SkeleKit.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
