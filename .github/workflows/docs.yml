@@ -6,6 +6,8 @@ on:
       - CI
     types:
       - completed
+    branches:
+      - "v*"
   push:
     branches:
       - main
