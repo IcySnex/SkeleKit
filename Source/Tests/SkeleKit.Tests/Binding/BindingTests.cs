@@ -286,9 +286,9 @@ public class BindingTests
 		{
 			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Movie)
 				.Path(movie => movie?.Name)
-				.TwoWay((movie, name) => movie!.Name = name ?? "")
 				.ConvertTo(name => name?.ToUpperInvariant())
 				.ConvertFrom(name => name?.Trim())
+				.TwoWay((movie, name) => movie!.Name = name ?? "")
 		};
 		view.BindingContext = viewModel;
 
@@ -341,9 +341,9 @@ public class BindingTests
 		StubBound view = new()
 		{
 			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
-				.TwoWay((vm, val) => vm.Minutes = val)
 				.ConvertTo(val => val.ToString())
 				.ConvertFrom(val => int.Parse(val!))
+				.TwoWay((vm, val) => vm.Minutes = val)
 		};
 		view.BindingContext = viewModel;
 
@@ -360,9 +360,9 @@ public class BindingTests
 		StubDoubleBound view = new()
 		{
 			Value = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
-				.TwoWay((vm, val) => vm.Minutes = val)
 				.ConvertTo(val => (double)val)
 				.ConvertFrom(val => (int)val)
+				.TwoWay((vm, val) => vm.Minutes = val)
 		};
 		view.BindingContext = viewModel;
 
@@ -396,9 +396,9 @@ public class BindingTests
 		StubBound view = new()
 		{
 			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Title)
-				.TwoWay((vm, val) => vm.Title = val)
 				.ConvertTo(val => val)
 				.ConvertFrom(val => val ?? "")
+				.TwoWay((vm, val) => vm.Title = val)
 		};
 		view.BindingContext = viewModel;
 

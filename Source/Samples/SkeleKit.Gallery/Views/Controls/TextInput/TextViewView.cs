@@ -147,9 +147,9 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 		SegmentedControl sizing = new()
 		{
 			SelectedIndex = Bind(vm => vm.UsesExplicitSize)
-				.TwoWay((vm, val) => vm.UsesExplicitSize = val)
 				.ConvertTo(val => val ? 1 : 0)
-				.ConvertFrom(val => val is 1),
+				.ConvertFrom(val => val is 1)
+				.TwoWay((vm, val) => vm.UsesExplicitSize = val),
 			SelectionChanged = index =>
 			{
 				text.TextStyle = viewModel.UsesExplicitSize ? null : viewModel.SelectedTextStyle.Value;
