@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -9,11 +10,15 @@ namespace SkeleKit;
 /// </summary>
 public sealed class SkeleApplicationBuilder
 {
-	internal SkeleApplicationBuilder() =>
+	internal SkeleApplicationBuilder()
+	{
+		Services.AddSingleton<IConfiguration>(Configuration);
 		Services.AddLogging();
+	}
 
 
 	internal readonly ServiceCollection Services = [];
+	internal readonly ConfigurationManager Configuration = new();
 	internal readonly ViewRegistry Registry = new();
 
 	internal SkeleApplication.ShellKind Shell = SkeleApplication.ShellKind.None;
@@ -36,6 +41,18 @@ public sealed class SkeleApplicationBuilder
 		Action<IServiceCollection> configure)
 	{
 		configure(Services);
+		return this;
+	}
+
+	/// <summary>
+	/// Adds sources to the shared application configuration.
+	/// </summary>
+	/// <param name="configure">Configures application configuration sources.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder ConfigureAppConfiguration(
+		Action<IConfigurationBuilder> configure)
+	{
+		configure(Configuration);
 		return this;
 	}
 
