@@ -27,7 +27,7 @@ public readonly partial struct ImageSource
 		{
 			ImageSourceKind.Symbol => Symbol(),
 			ImageSourceKind.Bundle => Bundle(),
-			_ => Bundle() ?? Symbol()
+			_ => Symbol() ?? Bundle()
 		};
 	}
 }

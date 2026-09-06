@@ -88,7 +88,7 @@ public readonly partial struct ImageSource
 public enum ImageSourceKind
 {
 	/// <summary>
-	/// Resolve from a bundle asset first, then an SF Symbol.
+	/// Resolve from an SF Symbol first, then a bundle asset.
 	/// </summary>
 	Auto,
 
