@@ -81,7 +81,7 @@ internal sealed class Binding<T>(
 
 		if (expression.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource
 			&& expression.Setter is null)
-			throw new InvalidOperationException("A converted writable binding also needs ConvertFrom(...).");
+			throw new InvalidOperationException("A writable binding needs a source setter.");
 
 		this.source = source;
 		if (source is null)

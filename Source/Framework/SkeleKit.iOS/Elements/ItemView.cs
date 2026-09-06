@@ -73,13 +73,21 @@ public abstract class ItemView<TItem> : Panel
 
 
 	/// <summary>
+	/// Starts a binding that can only write control values to the item.
+	/// </summary>
+	/// <returns>A source-only binding builder.</returns>
+	protected static ToSourceBindingBuilder<TItem> Bind() =>
+		BindingFactory.Bind<TItem>();
+
+
+	/// <summary>
 	/// Binds one way to an item property.
 	/// </summary>
 	/// <typeparam name="T">The bound value type.</typeparam>
 	/// <param name="read">The item property to read.</param>
 	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
 	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<TItem, T, T> Bind<T>(
+	protected static BindingExpression<TItem, TItem, T> Bind<T>(
 		Func<TItem, T> read,
 		[CallerArgumentExpression(nameof(read))] string? path = null) =>
 		BindingFactory.Bind(read, path);

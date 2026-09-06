@@ -214,14 +214,14 @@ public class BindingTests
 	}
 
 	[Fact]
-	public void Path_TwoWayWritesThroughRootSource()
+	public void Path_TwoWayWritesThroughFinalOwner()
 	{
 		MovieViewModel viewModel = new() { Movie = new() { Name = "Interstellar" } };
 		StubBound view = new()
 		{
 			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Movie)
 				.Path(movie => movie?.Name)
-				.TwoWay((vm, val) => vm.Movie!.Name = val ?? "")
+				.TwoWay((movie, val) => movie!.Name = val ?? "")
 		};
 		view.BindingContext = viewModel;
 
@@ -258,6 +258,48 @@ public class BindingTests
 	}
 
 	[Fact]
+	public void Path_TwoWayWritesThroughDeepFinalOwner()
+	{
+		MovieViewModel viewModel = new()
+		{
+			Movie = new() { Director = new() { Name = "Denis Villeneuve" } }
+		};
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Movie)
+				.Path(movie => movie?.Director)
+				.Path(director => director?.Name)
+				.TwoWay((director, val) => director!.Name = val ?? "")
+		};
+		view.BindingContext = viewModel;
+
+		view.SimulateEdit("Christopher Nolan");
+
+		Assert.Equal("Christopher Nolan", viewModel.Movie.Director.Name);
+	}
+
+	[Fact]
+	public void Path_ConvertedTwoWayWritesThroughFinalOwner()
+	{
+		MovieViewModel viewModel = new() { Movie = new() { Name = "Interstellar" } };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Movie)
+				.Path(movie => movie?.Name)
+				.ConvertTo(name => name?.ToUpperInvariant())
+				.TwoWay((movie, name) => movie!.Name = name ?? "")
+				.ConvertFrom(name => name?.Trim())
+		};
+		view.BindingContext = viewModel;
+
+		Assert.Equal("INTERSTELLAR", view.Current);
+
+		view.SimulateEdit(" Dune ");
+
+		Assert.Equal("Dune", viewModel.Movie.Name);
+	}
+
+	[Fact]
 	public void Once_DoesNotTrackSourceChanges()
 	{
 		MovieViewModel viewModel = new() { Title = "Interstellar" };
@@ -278,8 +320,8 @@ public class BindingTests
 		MovieViewModel viewModel = new() { Title = "Interstellar" };
 		StubBound view = new()
 		{
-			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Title)
-				.ToSource((vm, val) => vm.Title = val ?? "")
+			Text = BindingFactory.Bind<MovieViewModel>()
+				.ToSource<string>((vm, val) => vm.Title = val ?? "")
 		};
 		view.BindingContext = viewModel;
 
@@ -299,9 +341,9 @@ public class BindingTests
 		StubBound view = new()
 		{
 			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
-				.TwoWay((vm, val) => vm.Minutes = val)
 				.ConvertTo(val => val.ToString())
-				.ConvertFrom(val => int.Parse(val))
+				.TwoWay((vm, val) => vm.Minutes = val)
+				.ConvertFrom(val => int.Parse(val!))
 		};
 		view.BindingContext = viewModel;
 
@@ -312,38 +354,99 @@ public class BindingTests
 	}
 
 	[Fact]
-	public void ConvertedToSource_WritesConvertedValue()
+	public void ConvertedTwoWay_RoundTripsValueTypes()
+	{
+		MovieViewModel viewModel = new() { Minutes = 169 };
+		StubDoubleBound view = new()
+		{
+			Value = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
+				.ConvertTo(val => (double)val)
+				.TwoWay((vm, val) => vm.Minutes = val)
+				.ConvertFrom(val => (int)val)
+		};
+		view.BindingContext = viewModel;
+
+		Assert.Equal(169, view.Current);
+
+		view.SimulateEdit(120);
+
+		Assert.Equal(120, viewModel.Minutes);
+	}
+
+	[Fact]
+	public void OneWayConversion_DoesNotPushToSource()
 	{
 		MovieViewModel viewModel = new() { Minutes = 169 };
 		StubBound view = new()
 		{
 			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
-				.ToSource((vm, val) => vm.Minutes = val)
-				.ConvertFrom((string val) => int.Parse(val))
+				.ConvertTo(val => val.ToString())
+		};
+		view.BindingContext = viewModel;
+
+		view.SimulateEdit("120");
+
+		Assert.Equal(169, viewModel.Minutes);
+	}
+
+	[Fact]
+	public void ConvertedTwoWay_NormalizesNullableControlValue()
+	{
+		MovieViewModel viewModel = new() { Title = "Interstellar" };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Title)
+				.ConvertTo(val => val)
+				.TwoWay((vm, val) => vm.Title = val)
+				.ConvertFrom(val => val ?? "")
+		};
+		view.BindingContext = viewModel;
+
+		view.SimulateEdit(null);
+
+		Assert.Equal("", viewModel.Title);
+	}
+
+	[Fact]
+	public void ConvertedOnce_FormatsWithoutTrackingSourceChanges()
+	{
+		MovieViewModel viewModel = new() { Minutes = 169 };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
+				.Once()
+				.ConvertTo(val => $"{val} min")
+		};
+		view.BindingContext = viewModel;
+
+		viewModel.Minutes = 120;
+
+		Assert.Equal("169 min", view.Current);
+	}
+
+	[Fact]
+	public void ConvertedToSource_WritesConvertedValue()
+	{
+		MovieViewModel viewModel = new() { Minutes = 169 };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind<MovieViewModel>()
+				.ToSource<int>((vm, val) => vm.Minutes = val)
+				.ConvertFrom<string>(val => int.Parse(val!))
 		};
 		view.BindingContext = viewModel;
 
 		Assert.Null(view.Current);
 
 		view.SimulateEdit("120");
-		Assert.Equal(120, viewModel.Minutes);
-	}
 
-	[Fact]
-	public void WritableConversion_RequiresConvertFrom()
-	{
-		Assert.Throws<InvalidOperationException>(() => new StubBound
-		{
-			Text = BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
-				.TwoWay((vm, val) => vm.Minutes = val)
-				.ConvertTo(val => val.ToString())
-		});
+		Assert.Equal(120, viewModel.Minutes);
 	}
 
 	[Fact]
 	public void UpdateOn_StoresTrigger()
 	{
-		BindingExpression<MovieViewModel, string, string> binding = BindingFactory
+		WritableBindingExpression<string?> binding = BindingFactory
 			.Bind((MovieViewModel vm) => vm.Title)
 			.TwoWay((vm, val) => vm.Title = val ?? "")
 			.UpdateOn(UpdateTrigger.FocusLost);
@@ -356,6 +459,15 @@ public class BindingTests
 	{
 		ArgumentException error = Assert.Throws<ArgumentException>(() =>
 			BindingFactory.Bind((MovieViewModel vm) => vm.Title.ToUpper()));
+
+		Assert.Contains("plain member access", error.Message);
+	}
+
+	[Fact]
+	public void Path_RejectsCast()
+	{
+		ArgumentException error = Assert.Throws<ArgumentException>(() =>
+			BindingFactory.Bind((MovieViewModel vm) => (object)vm.Title));
 
 		Assert.Contains("plain member access", error.Message);
 	}

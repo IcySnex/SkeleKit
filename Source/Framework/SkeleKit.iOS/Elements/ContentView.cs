@@ -404,13 +404,21 @@ public abstract class ContentView<TViewModel> : ContentView
 	where TViewModel : class
 {
 	/// <summary>
+	/// Starts a binding that can only write control values to the ViewModel.
+	/// </summary>
+	/// <returns>A source-only binding builder.</returns>
+	protected static ToSourceBindingBuilder<TViewModel> Bind() =>
+		BindingFactory.Bind<TViewModel>();
+
+
+	/// <summary>
 	/// Binds one way to a ViewModel property.
 	/// </summary>
 	/// <typeparam name="T">The bound value type.</typeparam>
 	/// <param name="read">The ViewModel property to read.</param>
 	/// <param name="path">The source lambda, captured automatically to derive the property path.</param>
 	/// <returns>The binding expression.</returns>
-	protected static BindingExpression<TViewModel, T, T> Bind<T>(
+	protected static BindingExpression<TViewModel, TViewModel, T> Bind<T>(
 		Func<TViewModel, T> read,
 		[CallerArgumentExpression(nameof(read))] string? path = null) =>
 		BindingFactory.Bind(read, path);

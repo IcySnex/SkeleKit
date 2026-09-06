@@ -75,10 +75,10 @@ public sealed class MainView : ContentView<MainViewModel>
             {
                 new Label
                 {
-              	    Text = Bind(vm => vm.Count)
-                      .ConvertTo(val => $"Count: + {val}")
+                    Text = Bind(vm => vm.Count)
+                        .ConvertTo(val => $"Count: {val}")
                 },
-                
+
                 new Button
                 {
                     Text = "Click me",

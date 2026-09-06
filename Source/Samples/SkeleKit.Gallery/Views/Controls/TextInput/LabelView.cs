@@ -75,8 +75,8 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 		SegmentedControl sizing = new()
 		{
 			SelectedIndex = Bind(vm => vm.UsesExplicitSize)
-				.TwoWay((vm, val) => vm.UsesExplicitSize = val)
 				.ConvertTo(val => val ? 1 : 0)
+				.TwoWay((vm, val) => vm.UsesExplicitSize = val)
 				.ConvertFrom(val => val is 1),
 			SelectionChanged = index =>
 			{

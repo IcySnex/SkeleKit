@@ -19,9 +19,7 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes><![CDATA[- Prioritize automatic image sources as symbols before bundle.
-- Add Microsoft logging configuration and framework diagnostics.
-- Add shared application configuration to the application builder.]]></PackageReleaseNotes>
+        <PackageReleaseNotes><![CDATA[- Overhaul binding API with strongly typed fluent modes and directional converters.]]></PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 

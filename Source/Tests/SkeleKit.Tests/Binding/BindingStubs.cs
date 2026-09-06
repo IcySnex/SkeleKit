@@ -116,4 +116,34 @@ class StubBound : View
 		Size.Zero;
 }
 
+class StubDoubleBound : View
+{
+	double value;
+	Binding<double>? valueBinding;
+
+	public Bindable<double> Value
+	{
+		get => value;
+		set => valueBinding = Register(valueBinding, value, ApplyValue);
+	}
+
+	public double Current =>
+		value;
+
+	void ApplyValue(
+		double value) =>
+		Set(ref this.value, value, affectsMeasure: false);
+
+	public void SimulateEdit(
+		double value)
+	{
+		Set(ref this.value, value, affectsMeasure: false);
+		valueBinding?.PushToSource(value);
+	}
+
+	protected override Size MeasureOverride(
+		Size availableSize) =>
+		Size.Zero;
+}
+
 class StubPage : ContentView;

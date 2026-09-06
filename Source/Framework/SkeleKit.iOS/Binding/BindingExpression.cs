@@ -37,23 +37,20 @@ public class BindingExpression<T>
 }
 
 /// <summary>
-/// A typed binding configured fluently before it attaches to a control.
+/// A typed binding whose observable path can still be extended or configured.
 /// </summary>
-/// <typeparam name="TSource">The binding source type.</typeparam>
-/// <typeparam name="TValue">The value type on the source.</typeparam>
-/// <typeparam name="TTarget">The value type presented to the control.</typeparam>
-public sealed class BindingExpression<TSource, TValue, TTarget> : BindingExpression<TTarget?>
+/// <typeparam name="TSource">The root binding source type.</typeparam>
+/// <typeparam name="TOwner">The object that owns the selected value.</typeparam>
+/// <typeparam name="TValue">The selected source value type.</typeparam>
+public sealed class BindingExpression<TSource, TOwner, TValue> : BindingExpression<TValue?>
 	where TSource : class
+	where TOwner : class?
 {
 	readonly Func<TSource, TValue> read;
-	readonly Action<TSource, TValue?>? write;
-	readonly Func<TValue, TTarget> convertTo;
-	readonly Func<TTarget, TValue>? convertFrom;
-	readonly bool canAppendPath;
+	readonly Func<TSource, TOwner?> resolveOwner;
 	readonly Func<object, object?>? pathStep;
 
 	internal Func<TSource, TValue> Read => read;
-	internal bool CanAppendPath => canAppendPath && Mode is BindingMode.OneWay;
 	internal Func<object, object?> CreatePathStep() =>
 		pathStep ?? (source => read((TSource)source));
 
@@ -61,26 +58,15 @@ public sealed class BindingExpression<TSource, TValue, TTarget> : BindingExpress
 	internal BindingExpression(
 		BindingSegment[] segments,
 		Func<TSource, TValue> read,
-		Action<TSource, TValue?>? write,
-		Func<TValue, TTarget> convertTo,
-		Func<TTarget, TValue>? convertFrom,
-		BindingMode mode,
-		UpdateTrigger trigger = UpdateTrigger.PropertyChanged,
-		bool canAppendPath = false,
+		Func<TSource, TOwner?> resolveOwner,
 		Func<object, object?>? pathStep = null) : base(
 			segments,
-			source => convertTo(read((TSource)source)),
-			write is null || convertFrom is null
-				? null
-				: (source, val) => write((TSource)source, convertFrom(val!)),
-			mode,
-			trigger)
+			source => read((TSource)source),
+			null,
+			BindingMode.OneWay)
 	{
 		this.read = read;
-		this.write = write;
-		this.convertTo = convertTo;
-		this.convertFrom = convertFrom;
-		this.canAppendPath = canAppendPath;
+		this.resolveOwner = resolveOwner;
 		this.pathStep = pathStep;
 	}
 
@@ -88,146 +74,282 @@ public sealed class BindingExpression<TSource, TValue, TTarget> : BindingExpress
 	/// <summary>
 	/// Reads once whenever a binding context attaches, without observing later changes.
 	/// </summary>
-	/// <exception cref="InvalidOperationException">The binding direction or mode was already changed.</exception>
-	/// <returns>The one-time binding.</returns>
-	public BindingExpression<TSource, TValue, TTarget> Once()
-	{
-		if (Mode is not BindingMode.OneWay)
-			throw new InvalidOperationException("Once() can only configure a one-way binding.");
-
-		return Copy(mode: BindingMode.OneTime);
-	}
+	/// <returns>A one-time binding that can still convert its control value.</returns>
+	public OneTimeBindingExpression<TSource, TValue> Once() =>
+		new(Segments, read);
 
 	/// <summary>
 	/// Adds control-to-source updates to this binding.
 	/// </summary>
-	/// <param name="write">Writes the control value back to the source.</param>
-	/// <exception cref="InvalidOperationException">The binding direction or mode was already changed.</exception>
-	/// <returns>The two-way binding.</returns>
-	public BindingExpression<TSource, TValue, TTarget> TwoWay(
-		Action<TSource, TValue?> write)
+	/// <param name="write">Writes the control value to the object that owns the selected property.</param>
+	/// <returns>The writable binding.</returns>
+	public WritableBindingExpression<TValue?> TwoWay(
+		Action<TOwner, TValue?> write)
 	{
 		ArgumentNullException.ThrowIfNull(write);
 
-		if (Mode is not BindingMode.OneWay)
-			throw new InvalidOperationException("TwoWay(...) can only configure a one-way binding.");
-
-		return Copy(write: write, mode: BindingMode.TwoWay);
-	}
-
-	/// <summary>
-	/// Uses this source property only as the destination for control changes.
-	/// </summary>
-	/// <param name="write">Writes the control value to the source.</param>
-	/// <exception cref="InvalidOperationException">The binding direction or mode was already changed.</exception>
-	/// <returns>The control-to-source binding.</returns>
-	public BindingExpression<TSource, TValue, TTarget> ToSource(
-		Action<TSource, TValue?> write)
-	{
-		ArgumentNullException.ThrowIfNull(write);
-
-		if (Mode is not BindingMode.OneWay)
-			throw new InvalidOperationException("ToSource(...) can only configure a one-way binding.");
-
-		return Copy(write: write, mode: BindingMode.OneWayToSource);
+		return new(
+			Segments,
+			Getter,
+			(source, value) =>
+			{
+				if (resolveOwner((TSource)source) is TOwner owner)
+					write(owner, value);
+			},
+			BindingMode.TwoWay);
 	}
 
 	/// <summary>
 	/// Converts source values before applying them to the control.
 	/// </summary>
-	/// <typeparam name="TConverted">The control value type after conversion.</typeparam>
-	/// <param name="converter">Converts source values to control values.</param>
-	/// <returns>The converted binding.</returns>
-	public BindingExpression<TSource, TValue, TConverted> ConvertTo<TConverted>(
-		Func<TValue, TConverted> converter)
+	/// <typeparam name="TTarget">The control value type after conversion.</typeparam>
+	/// <param name="convert">Converts source values to control values.</param>
+	/// <returns>A converted one-way binding that can optionally become two-way.</returns>
+	public ForwardConvertedBindingExpression<TSource, TOwner, TValue, TTarget> ConvertTo<TTarget>(
+		Func<TValue, TTarget> convert)
 	{
-		ArgumentNullException.ThrowIfNull(converter);
+		ArgumentNullException.ThrowIfNull(convert);
 
-		return new(
-			Segments,
-			read,
-			write,
-			converter,
+		return new(Segments, read, resolveOwner, convert);
+	}
+}
+
+/// <summary>
+/// A one-time binding whose value can still be converted.
+/// </summary>
+/// <typeparam name="TSource">The root binding source type.</typeparam>
+/// <typeparam name="TValue">The selected source value type.</typeparam>
+public sealed class OneTimeBindingExpression<TSource, TValue> : BindingExpression<TValue?>
+	where TSource : class
+{
+	readonly Func<TSource, TValue> read;
+
+	internal OneTimeBindingExpression(
+		BindingSegment[] segments,
+		Func<TSource, TValue> read) : base(
+			segments,
+			source => read((TSource)source),
 			null,
-			Mode,
-			Trigger,
-			pathStep: pathStep);
+			BindingMode.OneTime)
+	{
+		this.read = read;
 	}
 
-	/// <summary>
-	/// Converts control values before writing them to the source.
-	/// </summary>
-	/// <param name="converter">Converts control values to source values.</param>
-	/// <exception cref="InvalidOperationException">The binding is not two-way or source-only.</exception>
-	/// <returns>The converted binding.</returns>
-	public BindingExpression<TSource, TValue, TTarget> ConvertFrom(
-		Func<TTarget, TValue> converter)
-	{
-		ArgumentNullException.ThrowIfNull(converter);
-
-		if (write is null)
-			throw new InvalidOperationException("ConvertFrom(...) needs TwoWay(...) or ToSource(...).");
-
-		return Copy(convertFrom: converter);
-	}
 
 	/// <summary>
-	/// Sets the control value type and converts it before writing to a source-only binding.
+	/// Converts the value before applying it to the control.
 	/// </summary>
-	/// <typeparam name="TConverted">The value type supplied by the control.</typeparam>
-	/// <param name="converter">Converts control values to source values.</param>
-	/// <exception cref="InvalidOperationException">The binding is not source-only.</exception>
-	/// <returns>The converted source-only binding.</returns>
-	public BindingExpression<TSource, TValue, TConverted> ConvertFrom<TConverted>(
-		Func<TConverted, TValue> converter)
+	/// <typeparam name="TTarget">The control value type after conversion.</typeparam>
+	/// <param name="convert">Converts source values to control values.</param>
+	/// <returns>The converted one-time binding.</returns>
+	public BindingExpression<TTarget?> ConvertTo<TTarget>(
+		Func<TValue, TTarget> convert)
 	{
-		ArgumentNullException.ThrowIfNull(converter);
-
-		if (Mode is not BindingMode.OneWayToSource || write is null)
-			throw new InvalidOperationException("Changing the control value type with ConvertFrom(...) is only supported after ToSource(...).");
+		ArgumentNullException.ThrowIfNull(convert);
 
 		return new(
 			Segments,
-			read,
-			write,
-			_ => default!,
-			converter,
-			Mode,
-			Trigger,
-			pathStep: pathStep);
+			source => convert(read((TSource)source)),
+			null,
+			BindingMode.OneTime);
+	}
+}
+
+/// <summary>
+/// A converted one-way binding that can optionally become two-way.
+/// </summary>
+/// <typeparam name="TSource">The root binding source type.</typeparam>
+/// <typeparam name="TOwner">The object that owns the selected value.</typeparam>
+/// <typeparam name="TValue">The selected source value type.</typeparam>
+/// <typeparam name="TTarget">The value type presented to the control.</typeparam>
+public sealed class ForwardConvertedBindingExpression<TSource, TOwner, TValue, TTarget> : BindingExpression<TTarget?>
+	where TSource : class
+	where TOwner : class?
+{
+	readonly Func<TSource, TOwner?> resolveOwner;
+
+	internal ForwardConvertedBindingExpression(
+		BindingSegment[] segments,
+		Func<TSource, TValue> read,
+		Func<TSource, TOwner?> resolveOwner,
+		Func<TValue, TTarget> convert) : base(
+			segments,
+			source => convert(read((TSource)source)),
+			null,
+			BindingMode.OneWay)
+	{
+		this.resolveOwner = resolveOwner;
+	}
+
+
+	/// <summary>
+	/// Adds a source writer and requires a return conversion to complete the two-way binding.
+	/// </summary>
+	/// <param name="write">Writes a converted value to the object that owns the selected property.</param>
+	/// <returns>An incomplete two-way binding awaiting <c>ConvertFrom(...)</c>.</returns>
+	public ReverseConversionBuilder<TSource, TOwner, TValue, TTarget> TwoWay(
+		Action<TOwner, TValue> write)
+	{
+		ArgumentNullException.ThrowIfNull(write);
+
+		return new(Segments, Getter, resolveOwner, write);
+	}
+}
+
+/// <summary>
+/// A converted two-way binding awaiting its required control-to-source conversion.
+/// </summary>
+/// <typeparam name="TSource">The root binding source type.</typeparam>
+/// <typeparam name="TOwner">The object that owns the selected value.</typeparam>
+/// <typeparam name="TValue">The selected source value type.</typeparam>
+/// <typeparam name="TTarget">The value type presented to the control.</typeparam>
+public sealed class ReverseConversionBuilder<TSource, TOwner, TValue, TTarget>
+	where TSource : class
+	where TOwner : class?
+{
+	readonly BindingSegment[] segments;
+	readonly Func<object, TTarget?> getter;
+	readonly Func<TSource, TOwner?> resolveOwner;
+	readonly Action<TOwner, TValue> write;
+
+	internal ReverseConversionBuilder(
+		BindingSegment[] segments,
+		Func<object, TTarget?> getter,
+		Func<TSource, TOwner?> resolveOwner,
+		Action<TOwner, TValue> write)
+	{
+		this.segments = segments;
+		this.getter = getter;
+		this.resolveOwner = resolveOwner;
+		this.write = write;
+	}
+
+
+	/// <summary>
+	/// Converts control values back to source values and completes the two-way binding.
+	/// </summary>
+	/// <param name="convert">Converts nullable control values back to source values.</param>
+	/// <returns>The completed writable binding.</returns>
+	public WritableBindingExpression<TTarget?> ConvertFrom(
+		Func<TTarget?, TValue> convert)
+	{
+		ArgumentNullException.ThrowIfNull(convert);
+
+		return new(
+			segments,
+			getter,
+			(source, value) =>
+			{
+				if (resolveOwner((TSource)source) is TOwner owner)
+					write(owner, convert(value));
+			},
+			BindingMode.TwoWay);
+	}
+}
+
+/// <summary>
+/// Starts a binding that only writes control values to its root source.
+/// </summary>
+/// <typeparam name="TSource">The root binding source type.</typeparam>
+public sealed class ToSourceBindingBuilder<TSource>
+	where TSource : class
+{
+	internal ToSourceBindingBuilder()
+	{ }
+
+
+	/// <summary>
+	/// Uses the control value only as input to the source.
+	/// </summary>
+	/// <typeparam name="TValue">The source value type.</typeparam>
+	/// <param name="write">Writes the control value to the root source.</param>
+	/// <returns>The source-only binding.</returns>
+	public ToSourceBindingExpression<TSource, TValue> ToSource<TValue>(
+		Action<TSource, TValue?> write)
+	{
+		ArgumentNullException.ThrowIfNull(write);
+
+		return new(write);
+	}
+}
+
+/// <summary>
+/// A source-only binding that can optionally convert the incoming control value.
+/// </summary>
+/// <typeparam name="TSource">The root binding source type.</typeparam>
+/// <typeparam name="TValue">The source value type.</typeparam>
+public sealed class ToSourceBindingExpression<TSource, TValue> : BindingExpression<TValue?>
+	where TSource : class
+{
+	readonly Action<TSource, TValue?> write;
+
+	internal ToSourceBindingExpression(
+		Action<TSource, TValue?> write) : base(
+			[],
+			static _ => default,
+			(source, value) => write((TSource)source, value),
+			BindingMode.OneWayToSource)
+	{
+		this.write = write;
+	}
+
+
+	/// <summary>
+	/// Converts an incoming control value before writing it to the source.
+	/// </summary>
+	/// <typeparam name="TTarget">The control value type.</typeparam>
+	/// <param name="convert">Converts nullable control values to source values.</param>
+	/// <returns>The converted source-only binding.</returns>
+	public WritableBindingExpression<TTarget?> ConvertFrom<TTarget>(
+		Func<TTarget?, TValue?> convert)
+	{
+		ArgumentNullException.ThrowIfNull(convert);
+
+		return new(
+			[],
+			static _ => default,
+			(source, value) => write((TSource)source, convert(value)),
+			BindingMode.OneWayToSource);
 	}
 
 	/// <summary>
 	/// Chooses when control changes are written to the source.
 	/// </summary>
-	/// <param name="trigger">When to write the control value back.</param>
-	/// <exception cref="InvalidOperationException">The binding is not two-way or source-only.</exception>
-	/// <returns>The binding with the selected update trigger.</returns>
-	public BindingExpression<TSource, TValue, TTarget> UpdateOn(
-		UpdateTrigger trigger)
-	{
-		if (write is null)
-			throw new InvalidOperationException("UpdateOn(...) needs TwoWay(...) or ToSource(...).");
+	/// <param name="trigger">When to write control changes.</param>
+	/// <returns>The source-only binding with the selected trigger.</returns>
+	public WritableBindingExpression<TValue?> UpdateOn(
+		UpdateTrigger trigger) =>
+		new(Segments, Getter, Setter!, Mode, trigger);
+}
 
-		return Copy(trigger: trigger);
-	}
+/// <summary>
+/// A writable binding whose path, conversion, and mode are complete.
+/// </summary>
+/// <typeparam name="T">The value type presented to the control.</typeparam>
+public sealed class WritableBindingExpression<T> : BindingExpression<T>
+{
+	internal WritableBindingExpression(
+		BindingSegment[] segments,
+		Func<object, T?> getter,
+		Action<object, T?> setter,
+		BindingMode mode,
+		UpdateTrigger trigger = UpdateTrigger.PropertyChanged) : base(
+			segments,
+			getter,
+			setter,
+			mode,
+			trigger)
+	{ }
 
 
-	BindingExpression<TSource, TValue, TTarget> Copy(
-		Action<TSource, TValue?>? write = null,
-		Func<TTarget, TValue>? convertFrom = null,
-		BindingMode? mode = null,
-		UpdateTrigger? trigger = null) =>
-		new(
-			Segments,
-			read,
-			write ?? this.write,
-			convertTo,
-			convertFrom ?? this.convertFrom,
-			mode ?? Mode,
-			trigger ?? Trigger,
-			canAppendPath,
-			pathStep);
+	/// <summary>
+	/// Chooses when control changes are written to the source.
+	/// </summary>
+	/// <param name="trigger">When to write control changes.</param>
+	/// <returns>The writable binding with the selected trigger.</returns>
+	public WritableBindingExpression<T> UpdateOn(
+		UpdateTrigger trigger) =>
+		new(Segments, Getter, Setter!, Mode, trigger);
 }
 
 /// <summary>
@@ -239,38 +361,31 @@ public static class BindingExpressionPathExtensions
 	/// Continues a binding through an observable reference and observes the returned property.
 	/// </summary>
 	/// <typeparam name="TSource">The root binding source type.</typeparam>
+	/// <typeparam name="TOwner">The object that owns the current value.</typeparam>
 	/// <typeparam name="TMiddle">The current reference type.</typeparam>
 	/// <typeparam name="TNext">The property type returned by the next path segment.</typeparam>
 	/// <param name="expression">The binding to continue.</param>
 	/// <param name="next">Reads the next property from the current reference.</param>
 	/// <param name="path">The path lambda, captured automatically to derive its property name.</param>
-	/// <exception cref="InvalidOperationException">The path follows a binding mode or converter, or its intermediate value is not a reference type.</exception>
 	/// <returns>A binding that observes the added path segment.</returns>
-	public static BindingExpression<TSource, TNext?, TNext?> Path<TSource, TMiddle, TNext>(
-		this BindingExpression<TSource, TMiddle, TMiddle> expression,
+	public static BindingExpression<TSource, TMiddle, TNext> Path<TSource, TOwner, TMiddle, TNext>(
+		this BindingExpression<TSource, TOwner, TMiddle> expression,
 		Func<TMiddle, TNext> next,
 		[CallerArgumentExpression(nameof(next))] string? path = null)
 		where TSource : class
+		where TOwner : class?
+		where TMiddle : class?
 	{
 		ArgumentNullException.ThrowIfNull(expression);
 		ArgumentNullException.ThrowIfNull(next);
-
-		if (!expression.CanAppendPath)
-			throw new InvalidOperationException("Path(...) must come before binding modes and converters.");
-		if (typeof(TMiddle).IsValueType)
-			throw new InvalidOperationException("Path(...) requires a reference-valued intermediate object.");
 
 		BindingSegment[] segments = [.. expression.Segments, new(BindingFactory.LeafName(path), null)];
 		segments[^2] = segments[^2] with { Step = expression.CreatePathStep() };
 
 		return new(
 			segments,
-			source => expression.Read(source) is TMiddle middle ? next(middle) : default,
-			null,
-			static val => val,
-			static val => val,
-			BindingMode.OneWay,
-			canAppendPath: true,
+			source => expression.Read(source) is TMiddle middle ? next(middle) : default!,
+			source => expression.Read(source),
 			pathStep: source => next((TMiddle)source));
 	}
 }
@@ -305,6 +420,8 @@ public static class BindingFactory
 		string[] parts = body.Split('.');
 		if (parts.Length < 2)
 			throw new ArgumentException($"Binding path '{expression}' must access at least one property.");
+		if (!IsIdentifier(parts[0].TrimEnd('?', '!')))
+			throw new ArgumentException($"Binding path '{expression}' must be plain member access (no calls, indexers or casts).");
 
 		string[] names = parts[1..];
 		foreach (string name in names)
@@ -345,22 +462,26 @@ public static class BindingFactory
 
 
 	/// <summary>
+	/// Starts a binding that can only write control values to a source.
+	/// </summary>
+	/// <typeparam name="TSource">The binding source type.</typeparam>
+	/// <returns>A source-only binding builder.</returns>
+	public static ToSourceBindingBuilder<TSource> Bind<TSource>()
+		where TSource : class =>
+		new();
+
+
+	/// <summary>
 	/// Starts a one-way binding that reads a source property.
 	/// </summary>
 	/// <typeparam name="TSource">The binding source type.</typeparam>
-	/// <typeparam name="T">The property value type.</typeparam>
-	/// <param name="read">Reads the property from the source.</param>
+	/// <typeparam name="TValue">The property value type.</typeparam>
+	/// <param name="read">The source property to read.</param>
 	/// <param name="path">The captured source expression used to identify the property path.</param>
-	/// <returns>A one-way binding expression.</returns>
-	public static BindingExpression<TSource, T, T> Bind<TSource, T>(
-		Func<TSource, T> read,
-		[CallerArgumentExpression(nameof(read))] string? path = null) where TSource : class =>
-		new(
-			ParsePath(path),
-			read,
-			null,
-			static val => val,
-			static val => val,
-			BindingMode.OneWay,
-			canAppendPath: true);
+	/// <returns>A binding whose path can be extended or converted.</returns>
+	public static BindingExpression<TSource, TSource, TValue> Bind<TSource, TValue>(
+		Func<TSource, TValue> read,
+		[CallerArgumentExpression(nameof(read))] string? path = null)
+		where TSource : class =>
+		new(ParsePath(path), read, source => source);
 }
