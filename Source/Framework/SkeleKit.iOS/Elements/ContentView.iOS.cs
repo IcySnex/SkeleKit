@@ -34,7 +34,7 @@ public abstract partial class ContentView
 	}
 
 	partial void ApplySearchTextCore() =>
-		Host?.ApplySearchText(SearchText.Value);
+		Host?.ApplySearchText(SearchText.Value ?? string.Empty);
 
 	partial void ApplySearchScopeCore() =>
 		Host?.ApplySearchScope(SearchScopeIndex.Value);

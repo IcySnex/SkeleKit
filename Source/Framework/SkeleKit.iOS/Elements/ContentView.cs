@@ -198,13 +198,13 @@ public abstract partial class ContentView : Panel
 	/// <summary>
 	/// The search field's text.
 	/// </summary>
-	public Bindable<string?> SearchText
+	public Bindable<string> SearchText
 	{
 		get => searchText;
-		set => searchTextBinding = Register(searchTextBinding, value, value => Set(ref searchText, value, ApplySearchText, affectsMeasure: false));
+		set => searchTextBinding = Register(searchTextBinding, value, value => Set(ref searchText, value ?? string.Empty, ApplySearchText, affectsMeasure: false));
 	}
-	string? searchText;
-	Binding<string?>? searchTextBinding;
+	string searchText = string.Empty;
+	Binding<string>? searchTextBinding;
 
 	/// <summary>
 	/// The selected search scope index.
@@ -318,6 +318,8 @@ public abstract partial class ContentView : Panel
 	internal void NotifySearch(
 		string text)
 	{
+		text ??= string.Empty;
+
 		Set(ref searchText, text, affectsMeasure: false);
 		searchTextBinding?.PushToSource(text);
 		SearchChanged?.Invoke(text);

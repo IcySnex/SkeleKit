@@ -269,7 +269,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 
 
 	static TextEditor Editor(
-		string? text = null) =>
+		string text = "") =>
 		new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Stretch,

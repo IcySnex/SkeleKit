@@ -63,7 +63,7 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(EditSummary))]
 	[NotifyPropertyChangedFor(nameof(BindingCode))]
-	string? text = "Build native iOS interfaces\nwith clean C# composition.";
+	string text = "Build native iOS interfaces\nwith clean C# composition.";
 
 	public string EditSummary
 	{
@@ -224,7 +224,7 @@ internal sealed partial class TextEditorViewModel : ShowcaseViewModel
 
 	[RelayCommand]
 	void ClearText() =>
-		Text = null;
+		Text = string.Empty;
 
 	static IReadOnlyList<Span> Code(
 		string value) =>

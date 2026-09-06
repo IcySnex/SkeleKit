@@ -29,7 +29,7 @@ internal sealed partial class BindingViewModel : ShowcaseViewModel
 	double oneWayValue = 24;
 
 	[ObservableProperty]
-	string? twoWayText = "SkeleKit";
+	string twoWayText = "SkeleKit";
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(SelectedItemLabel))]

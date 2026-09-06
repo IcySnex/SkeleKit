@@ -16,7 +16,7 @@ internal sealed partial class PanelsViewModel : ShowcaseViewModel
 	double panelPadding = 16;
 
 	[ObservableProperty]
-	string? inheritedText = "Gallery context";
+	string inheritedText = "Gallery context";
 
 
 	public string ChildCountLabel

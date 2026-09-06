@@ -48,7 +48,7 @@ public class SecureField : TextField
 		if (Ui.SecureTextEntry == secure)
 			return;
 
-		string? text = Ui.Text;
+		string text = Ui.Text ?? string.Empty;
 		(nint Start, nint End)? selection = SelectionOffsets();
 		bool focused = Ui.IsFirstResponder;
 
@@ -64,7 +64,7 @@ public class SecureField : TextField
 				if (enabled)
 					Ui.BecomeFirstResponder();
 
-				if (text is not null)
+				if (text.Length > 0)
 				{
 					Ui.Text = "";
 					Ui.InsertText(text);

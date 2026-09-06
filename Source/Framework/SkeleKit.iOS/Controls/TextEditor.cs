@@ -15,13 +15,13 @@ public class TextEditor : Control
 	/// <summary>
 	/// The current text.
 	/// </summary>
-	public Bindable<string?> Text
+	public Bindable<string> Text
 	{
 		get => text;
-		set => textBinding = Register(textBinding, value, value => Set(ref text, value, ApplyText));
+		set => textBinding = Register(textBinding, value, value => Set(ref text, value ?? string.Empty, ApplyText));
 	}
-	string? text;
-	Binding<string?>? textBinding;
+	string text = string.Empty;
+	Binding<string>? textBinding;
 
 	/// <summary>
 	/// What the editor holds, so the system can offer autofill.
@@ -167,10 +167,10 @@ public class TextEditor : Control
 
 	void OnChanged()
 	{
-		string? value = Ui.Text;
+		string value = Ui.Text ?? string.Empty;
 
 		Set(ref text, value);
-		TextChanged?.Invoke(value ?? "");
+		TextChanged?.Invoke(value);
 
 		if (textBinding?.Trigger is UpdateTrigger.PropertyChanged)
 			textBinding.PushToSource(value);
@@ -179,7 +179,7 @@ public class TextEditor : Control
 	void OnEditingEnded()
 	{
 		if (textBinding?.Trigger is UpdateTrigger.FocusLost)
-			textBinding.PushToSource(Ui.Text);
+			textBinding.PushToSource(Ui.Text ?? string.Empty);
 	}
 
 

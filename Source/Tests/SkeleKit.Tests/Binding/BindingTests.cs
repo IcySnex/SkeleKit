@@ -48,7 +48,7 @@ public class BindingTests
 		StubPage page = new()
 		{
 			SearchText = BindingFactory.Bind((MovieViewModel vm) => vm.Query)
-				.TwoWay((vm, val) => vm.Query = val ?? ""),
+				.TwoWay((vm, val) => vm.Query = val),
 			SearchScopeIndex = BindingFactory.Bind((MovieViewModel vm) => vm.SearchScope)
 				.TwoWay((vm, val) => vm.SearchScope = val)
 		};
@@ -68,6 +68,18 @@ public class BindingTests
 
 		Assert.Equal("commands", page.SearchText.Value);
 		Assert.Equal(3, page.SearchScopeIndex.Value);
+	}
+
+	[Fact]
+	public void SearchText_NormalizesNullToEmpty()
+	{
+		StubPage page = new() { SearchText = (string)null! };
+
+		Assert.Equal(string.Empty, page.SearchText.Value);
+
+		page.NotifySearch(null!);
+
+		Assert.Equal(string.Empty, page.SearchText.Value);
 	}
 
 	[Fact]

@@ -21,7 +21,7 @@ public readonly struct Bindable<T>
 	/// <param name="expression">The evaluation rule for the property.</param>
 	/// <returns>The wrapped binding expression.</returns>
 	public static implicit operator Bindable<T>(
-		BindingExpression<T> expression) =>
+		BindingExpression<T?> expression) =>
 		new(expression);
 
 
@@ -37,10 +37,10 @@ public readonly struct Bindable<T>
 	}
 
 	Bindable(
-		BindingExpression<T> expression)
+		BindingExpression<T?> expression)
 	{
 		Value = default;
-		Expression = expression;
+		Expression = (BindingExpression<T>)(object)expression;
 	}
 
 

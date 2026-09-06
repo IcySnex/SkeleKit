@@ -25,7 +25,7 @@ internal sealed partial class SecureFieldViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(Strength))]
 	[NotifyPropertyChangedFor(nameof(StrengthLabel))]
 	[NotifyPropertyChangedFor(nameof(EntryCode))]
-	string? text;
+	string text = string.Empty;
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(EntryCode))]
@@ -113,7 +113,7 @@ internal sealed partial class SecureFieldViewModel : ShowcaseViewModel
 
 	[RelayCommand]
 	void ClearText() =>
-		Text = null;
+		Text = string.Empty;
 
 	[RelayCommand]
 	void Submit() =>

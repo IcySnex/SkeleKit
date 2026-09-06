@@ -99,7 +99,7 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(BindingCode))]
-	string? text;
+	string text = string.Empty;
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(BindingCode))]
@@ -281,7 +281,7 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 
 	[RelayCommand]
 	void ClearText() =>
-		Text = null;
+		Text = string.Empty;
 
 	[RelayCommand]
 	void Submit() =>

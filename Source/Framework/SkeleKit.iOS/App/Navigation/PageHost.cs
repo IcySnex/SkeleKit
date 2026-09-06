@@ -643,7 +643,7 @@ internal sealed class PageHost : UIViewController
 		};
 
 		search.SearchBar.Placeholder = placeholder;
-		search.SearchBar.Text = page.SearchText.Value;
+		search.SearchBar.Text = page.SearchText.Value ?? string.Empty;
 		search.SearchBar.TextChanged += (_, e) =>
 		{
 			if (page.HidesSearchScopesWhenEmpty)
@@ -690,7 +690,7 @@ internal sealed class PageHost : UIViewController
 	}
 
 	internal void ApplySearchText(
-		string? value)
+		string value)
 	{
 		if (search is null)
 			return;
