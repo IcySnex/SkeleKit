@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace SkeleKit;
 
@@ -8,7 +9,8 @@ namespace SkeleKit;
 /// </summary>
 public sealed class SkeleApplicationBuilder
 {
-	internal SkeleApplicationBuilder() { }
+	internal SkeleApplicationBuilder() =>
+		Services.AddLogging();
 
 
 	internal readonly ServiceCollection Services = [];
@@ -34,6 +36,18 @@ public sealed class SkeleApplicationBuilder
 		Action<IServiceCollection> configure)
 	{
 		configure(Services);
+		return this;
+	}
+
+	/// <summary>
+	/// Configures Microsoft logging for application and framework services.
+	/// </summary>
+	/// <param name="configure">Adds and configures logging providers.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder ConfigureLogging(
+		Action<ILoggingBuilder> configure)
+	{
+		Services.AddLogging(configure);
 		return this;
 	}
 
