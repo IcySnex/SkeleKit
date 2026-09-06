@@ -82,21 +82,13 @@ public sealed class BindingExpression<TSource, TOwner, TValue> : BindingExpressi
 	/// Adds control-to-source updates to this binding.
 	/// </summary>
 	/// <param name="write">Writes the control value to the object that owns the selected property.</param>
-	/// <returns>The writable binding.</returns>
-	public WritableBindingExpression<TValue?> TwoWay(
-		Action<TOwner, TValue?> write)
+	/// <returns>A two-way binding that can still convert its control value.</returns>
+	public TwoWayBindingExpression<TSource, TOwner, TValue> TwoWay(
+		Action<TOwner, TValue> write)
 	{
 		ArgumentNullException.ThrowIfNull(write);
 
-		return new(
-			Segments,
-			Getter,
-			(source, value) =>
-			{
-				if (resolveOwner((TSource)source) is TOwner owner)
-					write(owner, value);
-			},
-			BindingMode.TwoWay);
+		return new(Segments, read, resolveOwner, write);
 	}
 
 	/// <summary>
@@ -104,13 +96,17 @@ public sealed class BindingExpression<TSource, TOwner, TValue> : BindingExpressi
 	/// </summary>
 	/// <typeparam name="TTarget">The control value type after conversion.</typeparam>
 	/// <param name="convert">Converts source values to control values.</param>
-	/// <returns>A converted one-way binding that can optionally become two-way.</returns>
-	public ForwardConvertedBindingExpression<TSource, TOwner, TValue, TTarget> ConvertTo<TTarget>(
+	/// <returns>The converted one-way binding.</returns>
+	public BindingExpression<TTarget?> ConvertTo<TTarget>(
 		Func<TValue, TTarget> convert)
 	{
 		ArgumentNullException.ThrowIfNull(convert);
 
-		return new(Segments, read, resolveOwner, convert);
+		return new(
+			Segments,
+			source => convert(read((TSource)source)),
+			null,
+			BindingMode.OneWay);
 	}
 }
 
@@ -156,44 +152,61 @@ public sealed class OneTimeBindingExpression<TSource, TValue> : BindingExpressio
 }
 
 /// <summary>
-/// A converted one-way binding that can optionally become two-way.
+/// A two-way binding whose value can still be converted.
 /// </summary>
 /// <typeparam name="TSource">The root binding source type.</typeparam>
 /// <typeparam name="TOwner">The object that owns the selected value.</typeparam>
 /// <typeparam name="TValue">The selected source value type.</typeparam>
-/// <typeparam name="TTarget">The value type presented to the control.</typeparam>
-public sealed class ForwardConvertedBindingExpression<TSource, TOwner, TValue, TTarget> : BindingExpression<TTarget?>
+public sealed class TwoWayBindingExpression<TSource, TOwner, TValue> : BindingExpression<TValue?>
 	where TSource : class
 	where TOwner : class?
 {
+	readonly Func<TSource, TValue> read;
 	readonly Func<TSource, TOwner?> resolveOwner;
+	readonly Action<TOwner, TValue> write;
 
-	internal ForwardConvertedBindingExpression(
+	internal TwoWayBindingExpression(
 		BindingSegment[] segments,
 		Func<TSource, TValue> read,
 		Func<TSource, TOwner?> resolveOwner,
-		Func<TValue, TTarget> convert) : base(
+		Action<TOwner, TValue> write) : base(
 			segments,
-			source => convert(read((TSource)source)),
-			null,
-			BindingMode.OneWay)
+			source => read((TSource)source),
+			(source, value) =>
+			{
+				if (resolveOwner((TSource)source) is TOwner owner)
+					write(owner, value!);
+			},
+			BindingMode.TwoWay)
 	{
+		this.read = read;
 		this.resolveOwner = resolveOwner;
+		this.write = write;
 	}
 
 
 	/// <summary>
-	/// Adds a source writer and requires a return conversion to complete the two-way binding.
+	/// Converts source values before applying them to the control.
 	/// </summary>
-	/// <param name="write">Writes a converted value to the object that owns the selected property.</param>
-	/// <returns>An incomplete two-way binding awaiting <c>ConvertFrom(...)</c>.</returns>
-	public ReverseConversionBuilder<TSource, TOwner, TValue, TTarget> TwoWay(
-		Action<TOwner, TValue> write)
+	/// <typeparam name="TTarget">The control value type after conversion.</typeparam>
+	/// <param name="convert">Converts source values to control values.</param>
+	/// <returns>An incomplete converted binding awaiting <c>ConvertFrom(...)</c>.</returns>
+	public TwoWayConversionBuilder<TSource, TOwner, TValue, TTarget> ConvertTo<TTarget>(
+		Func<TValue, TTarget> convert)
 	{
-		ArgumentNullException.ThrowIfNull(write);
+		ArgumentNullException.ThrowIfNull(convert);
 
-		return new(Segments, Getter, resolveOwner, write);
+		return new(Segments, read, resolveOwner, write, convert);
 	}
+
+	/// <summary>
+	/// Chooses when control changes are written to the source.
+	/// </summary>
+	/// <param name="trigger">When to write control changes.</param>
+	/// <returns>The two-way binding with the selected trigger.</returns>
+	public WritableBindingExpression<TValue?> UpdateOn(
+		UpdateTrigger trigger) =>
+		new(Segments, Getter, Setter!, Mode, trigger);
 }
 
 /// <summary>
@@ -203,7 +216,7 @@ public sealed class ForwardConvertedBindingExpression<TSource, TOwner, TValue, T
 /// <typeparam name="TOwner">The object that owns the selected value.</typeparam>
 /// <typeparam name="TValue">The selected source value type.</typeparam>
 /// <typeparam name="TTarget">The value type presented to the control.</typeparam>
-public sealed class ReverseConversionBuilder<TSource, TOwner, TValue, TTarget>
+public sealed class TwoWayConversionBuilder<TSource, TOwner, TValue, TTarget>
 	where TSource : class
 	where TOwner : class?
 {
@@ -212,14 +225,15 @@ public sealed class ReverseConversionBuilder<TSource, TOwner, TValue, TTarget>
 	readonly Func<TSource, TOwner?> resolveOwner;
 	readonly Action<TOwner, TValue> write;
 
-	internal ReverseConversionBuilder(
+	internal TwoWayConversionBuilder(
 		BindingSegment[] segments,
-		Func<object, TTarget?> getter,
+		Func<TSource, TValue> read,
 		Func<TSource, TOwner?> resolveOwner,
-		Action<TOwner, TValue> write)
+		Action<TOwner, TValue> write,
+		Func<TValue, TTarget> convert)
 	{
 		this.segments = segments;
-		this.getter = getter;
+		getter = source => convert(read((TSource)source));
 		this.resolveOwner = resolveOwner;
 		this.write = write;
 	}
@@ -265,7 +279,7 @@ public sealed class ToSourceBindingBuilder<TSource>
 	/// <param name="write">Writes the control value to the root source.</param>
 	/// <returns>The source-only binding.</returns>
 	public ToSourceBindingExpression<TSource, TValue> ToSource<TValue>(
-		Action<TSource, TValue?> write)
+		Action<TSource, TValue> write)
 	{
 		ArgumentNullException.ThrowIfNull(write);
 
@@ -281,13 +295,13 @@ public sealed class ToSourceBindingBuilder<TSource>
 public sealed class ToSourceBindingExpression<TSource, TValue> : BindingExpression<TValue?>
 	where TSource : class
 {
-	readonly Action<TSource, TValue?> write;
+	readonly Action<TSource, TValue> write;
 
 	internal ToSourceBindingExpression(
-		Action<TSource, TValue?> write) : base(
+		Action<TSource, TValue> write) : base(
 			[],
 			static _ => default,
-			(source, value) => write((TSource)source, value),
+			(source, value) => write((TSource)source, value!),
 			BindingMode.OneWayToSource)
 	{
 		this.write = write;
@@ -301,7 +315,7 @@ public sealed class ToSourceBindingExpression<TSource, TValue> : BindingExpressi
 	/// <param name="convert">Converts nullable control values to source values.</param>
 	/// <returns>The converted source-only binding.</returns>
 	public WritableBindingExpression<TTarget?> ConvertFrom<TTarget>(
-		Func<TTarget?, TValue?> convert)
+		Func<TTarget?, TValue> convert)
 	{
 		ArgumentNullException.ThrowIfNull(convert);
 

@@ -19,7 +19,7 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes><![CDATA[- Overhaul binding API with strongly typed fluent modes and directional converters.]]></PackageReleaseNotes>
+        <PackageReleaseNotes><![CDATA[- Adjust binding converter position.]]></PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 
