@@ -20,6 +20,54 @@ public abstract partial class Panel : View
 	} = Thickness.Zero;
 
 	/// <summary>
+	/// Edges where the containing page's UIKit system margins are added to <see cref="Padding"/>.
+	/// </summary>
+	/// <remarks>
+	/// This insets the panel's children without changing the panel's own bounds. The default is <see cref="LayoutEdges.None"/>.
+	/// </remarks>
+	public LayoutEdges SystemInsetEdges
+	{
+		get;
+		set => Set(ref field, value);
+	} = LayoutEdges.None;
+
+	/// <summary>
+	/// The fixed padding plus the selected system insets resolved from the containing page.
+	/// </summary>
+	protected Thickness ContentInsets
+	{
+		get
+		{
+			Thickness padding = Padding;
+			LayoutEdges edges = SystemInsetEdges;
+			if (edges == LayoutEdges.None)
+				return padding;
+
+			ContentView? page = null;
+			for (View? view = this; view is not null; view = view.Parent)
+			{
+				if (view is ContentView found)
+				{
+					page = found;
+					break;
+				}
+			}
+
+			Thickness system = page?.PageSystemInsets ?? Thickness.Zero;
+			bool rightToLeft = page?.PageIsRightToLeft ?? false;
+			LayoutEdges leftEdge = rightToLeft ? LayoutEdges.Trailing : LayoutEdges.Leading;
+			LayoutEdges rightEdge = rightToLeft ? LayoutEdges.Leading : LayoutEdges.Trailing;
+			double leftInset = rightToLeft ? system.Right : system.Left;
+			double rightInset = rightToLeft ? system.Left : system.Right;
+			return new(
+				padding.Left + (edges.HasFlag(leftEdge) ? leftInset : 0),
+				padding.Top + (edges.HasFlag(LayoutEdges.Top) ? system.Top : 0),
+				padding.Right + (edges.HasFlag(rightEdge) ? rightInset : 0),
+				padding.Bottom + (edges.HasFlag(LayoutEdges.Bottom) ? system.Bottom : 0));
+		}
+	}
+
+	/// <summary>
 	/// Creates the panel and its <see cref="Children"/> collection.
 	/// </summary>
 	protected Panel()

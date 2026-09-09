@@ -344,6 +344,7 @@ internal sealed class PageHost : UIViewController
 		Page = fresh;
 		fresh.Host = this;
 
+		UpdateSystemInsets();
 		InstallPage();
 		NavigationController?.SetNavigationBarHidden(fresh.HidesNavigationBar, false);
 		ApplyLeaveGuard();
@@ -860,6 +861,7 @@ internal sealed class PageHost : UIViewController
 		if (Page is null)
 			return;
 
+		UpdateSystemInsets();
 		InstallPage();
 
 		// numeric keyboards have no return key, so tapping outside is the only way out
@@ -958,6 +960,27 @@ internal sealed class PageHost : UIViewController
 		View?.LayoutIfNeeded();
 	}
 
+	public override void ViewLayoutMarginsDidChange()
+	{
+		base.ViewLayoutMarginsDidChange();
+
+		UpdateSystemInsets();
+	}
+
+	void UpdateSystemInsets()
+	{
+		if (Page is not ContentView page)
+			return;
+
+		NSDirectionalEdgeInsets insets = SystemMinimumLayoutMargins;
+		page.UpdatePageSystemInsets(new(
+			insets.Leading,
+			insets.Top,
+			insets.Trailing,
+			insets.Bottom),
+			View?.EffectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirection.RightToLeft);
+	}
+
 	public override void ViewDidLayoutSubviews()
 	{
 		base.ViewDidLayoutSubviews();
@@ -965,6 +988,7 @@ internal sealed class PageHost : UIViewController
 		if (Page is null)
 			return;
 
+		UpdateSystemInsets();
 		UIEdgeInsets safe = View!.SafeAreaInsets;
 		Page.PageSafeArea = usesSystemScrollInsets
 			? Thickness.Zero

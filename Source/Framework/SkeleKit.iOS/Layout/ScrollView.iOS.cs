@@ -282,7 +282,7 @@ public partial class ScrollView : ISystemInsetScroll
 
 		bool vertical = Orientation == Orientation.Vertical;
 		Thickness bled = BledInsets;
-		Thickness padding = Padding;
+		Thickness padding = ContentInsets;
 
 		double padLeft = padding.Left + (vertical ? bled.Left : 0);
 		double padRight = padding.Right + (vertical ? bled.Right : 0);

@@ -135,7 +135,8 @@ public class Grid : Panel
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
-		availableSize = availableSize.Deflate(Padding);
+		Thickness insets = ContentInsets;
+		availableSize = availableSize.Deflate(insets);
 
 		IReadOnlyList<GridLength> columns = EffectiveTracks(Columns);
 		IReadOnlyList<GridLength> rows = EffectiveTracks(Rows);
@@ -159,13 +160,14 @@ public class Grid : Panel
 
 		return new Size(
 			Sum(columnWidths) + columnGaps,
-			Sum(rowHeights) + rowGaps).Inflate(Padding);
+			Sum(rowHeights) + rowGaps).Inflate(insets);
 	}
 
 	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
+		Thickness insets = ContentInsets;
 		IReadOnlyList<GridLength> columns = EffectiveTracks(Columns);
 		IReadOnlyList<GridLength> rows = EffectiveTracks(Rows);
 
@@ -177,8 +179,8 @@ public class Grid : Panel
 			GridChild placement = PlacementOf(child, columns.Count, rows.Count);
 
 			Rect cell = new(
-				Padding.Left + columnOffsets[placement.Column],
-				Padding.Top + rowOffsets[placement.Row],
+				insets.Left + columnOffsets[placement.Column],
+				insets.Top + rowOffsets[placement.Row],
 				SpanSize(columnWidths, placement.Column, placement.ColumnSpan, ColumnSpacing),
 				SpanSize(rowHeights, placement.Row, placement.RowSpan, RowSpacing));
 

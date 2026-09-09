@@ -8,6 +8,22 @@ namespace SkeleKit;
 /// </summary>
 public abstract partial class ContentView : Panel
 {
+	internal Thickness PageSystemInsets { get; private set; } = Thickness.Zero;
+	internal bool PageIsRightToLeft { get; private set; }
+
+	internal void UpdatePageSystemInsets(
+		Thickness insets,
+		bool isRightToLeft = false)
+	{
+		if (PageSystemInsets == insets && PageIsRightToLeft == isRightToLeft)
+			return;
+
+		PageSystemInsets = insets;
+		PageIsRightToLeft = isRightToLeft;
+		InvalidateSubtree();
+	}
+
+
 	/// <summary>
 	/// The navigation bar title.
 	/// </summary>
@@ -371,14 +387,15 @@ public abstract partial class ContentView : Panel
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
-		Size inner = availableSize.Deflate(Padding);
+		Thickness insets = ContentInsets;
+		Size inner = availableSize.Deflate(insets);
 
 		if (Content is not View content)
-			return new(Padding.Horizontal, Padding.Vertical);
+			return new(insets.Horizontal, insets.Vertical);
 
 		content.Measure(inner);
 
-		return content.DesiredSize.Inflate(Padding);
+		return content.DesiredSize.Inflate(insets);
 	}
 
 	/// <inheritdoc/>
@@ -387,8 +404,9 @@ public abstract partial class ContentView : Panel
 	{
 		if (Content is View content)
 		{
+			Thickness insets = ContentInsets;
 			PrepareContentLayoutCore(content);
-			content.Arrange(new(new(Padding.Left, Padding.Top), finalSize.Deflate(Padding)));
+			content.Arrange(new(new(insets.Left, insets.Top), finalSize.Deflate(insets)));
 		}
 
 		return finalSize;

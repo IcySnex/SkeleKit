@@ -29,8 +29,9 @@ public class StackPanel : Panel
 		Size availableSize)
 	{
 		bool vertical = Orientation == Orientation.Vertical;
+		Thickness insets = ContentInsets;
 
-		Size inner = availableSize.Deflate(Padding);
+		Size inner = availableSize.Deflate(insets);
 
 		double along = 0;
 		double across = 0;
@@ -68,7 +69,7 @@ public class StackPanel : Panel
 			? new(across, along)
 			: new(along, across);
 
-		return desiredSize.Inflate(Padding);
+		return desiredSize.Inflate(insets);
 	}
 
 	/// <inheritdoc/>
@@ -76,8 +77,9 @@ public class StackPanel : Panel
 		Size finalSize)
 	{
 		bool vertical = Orientation == Orientation.Vertical;
+		Thickness insets = ContentInsets;
 
-		Size inner = finalSize.Deflate(Padding);
+		Size inner = finalSize.Deflate(insets);
 
 		double offset = 0;
 		bool first = true;
@@ -96,8 +98,8 @@ public class StackPanel : Panel
 
 			Size desired = child.DesiredSize;
 			Rect slot = vertical
-				? new(Padding.Left, Padding.Top + offset, inner.Width, desired.Height)
-				: new(Padding.Left + offset, Padding.Top, desired.Width, inner.Height);
+				? new(insets.Left, insets.Top + offset, inner.Width, desired.Height)
+				: new(insets.Left + offset, insets.Top, desired.Width, inner.Height);
 
 			child.Arrange(slot);
 			offset += vertical ? desired.Height : desired.Width;

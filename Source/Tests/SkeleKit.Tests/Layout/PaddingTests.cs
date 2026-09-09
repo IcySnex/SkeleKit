@@ -136,6 +136,64 @@ public class PaddingTests
 		Assert.Equal(200, leaf.ArrangedBounds.Width);
 	}
 
+	[Fact]
+	public void SystemInsetEdges_AddSelectedPageInsetsToPadding()
+	{
+		StubLeaf leaf = new(10, 10);
+		Overlay content = new()
+		{
+			Padding = new(2, 3, 4, 5),
+			SystemInsetEdges = LayoutEdges.Horizontal,
+			Children = { leaf }
+		};
+		TestPage page = new() { Content = content };
+		page.UpdatePageSystemInsets(new(20, 10, 30, 40));
+
+		page.Measure(new(200, 100));
+		page.Arrange(new(0, 0, 200, 100));
+
+		Assert.Equal(new Rect(0, 0, 200, 100), content.ArrangedBounds);
+		Assert.Equal(new Rect(22, 3, 144, 92), leaf.ArrangedBounds);
+		Assert.Equal(new Thickness(2, 3, 4, 5), content.Padding);
+	}
+
+	[Fact]
+	public void SystemInsetChange_InvalidatesDescendantMeasurement()
+	{
+		Overlay content = new()
+		{
+			SystemInsetEdges = LayoutEdges.All,
+			Children = { new StubLeaf(40, 20) }
+		};
+		TestPage page = new() { Content = content };
+
+		page.Measure(new(200, 200));
+		Assert.Equal(new Size(40, 20), page.DesiredSize);
+
+		page.UpdatePageSystemInsets(new(10, 20, 30, 40));
+		page.Measure(new(200, 200));
+
+		Assert.Equal(new Size(80, 80), page.DesiredSize);
+	}
+
+	[Fact]
+	public void SystemInsetEdges_UseLeadingAndTrailingInRightToLeftLayout()
+	{
+		StubLeaf leaf = new(10, 10);
+		Overlay content = new()
+		{
+			SystemInsetEdges = LayoutEdges.Leading,
+			Children = { leaf }
+		};
+		TestPage page = new() { Content = content };
+		page.UpdatePageSystemInsets(new(20, 0, 30, 0), isRightToLeft: true);
+
+		page.Measure(new(100, 40));
+		page.Arrange(new(0, 0, 100, 40));
+
+		Assert.Equal(new Rect(0, 0, 80, 40), leaf.ArrangedBounds);
+	}
+
 
 	sealed class TestPage : ContentView;
 }

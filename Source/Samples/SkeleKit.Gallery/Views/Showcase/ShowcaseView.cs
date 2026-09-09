@@ -28,7 +28,8 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 
 		Sections = new()
 		{
-			Padding = new(16, 12, 16, 32),
+			Padding = new(0, 12, 0, 32),
+			SystemInsetEdges = LayoutEdges.Horizontal,
 			Spacing = 28
 		};
 

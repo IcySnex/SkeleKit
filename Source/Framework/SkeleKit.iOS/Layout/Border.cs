@@ -5,7 +5,18 @@ namespace SkeleKit;
 /// </summary>
 public partial class Border : Panel
 {
-	Thickness Inset => new(Padding.Left + StrokeThickness, Padding.Top + StrokeThickness, Padding.Right + StrokeThickness, Padding.Bottom + StrokeThickness);
+	Thickness Inset
+	{
+		get
+		{
+			Thickness insets = ContentInsets;
+			return new(
+				insets.Left + StrokeThickness,
+				insets.Top + StrokeThickness,
+				insets.Right + StrokeThickness,
+				insets.Bottom + StrokeThickness);
+		}
+	}
 
 
 	/// <summary>

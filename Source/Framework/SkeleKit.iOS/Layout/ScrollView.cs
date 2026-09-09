@@ -174,10 +174,11 @@ public partial class ScrollView : Panel
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
-		Size inner = availableSize.Deflate(Padding);
+		Thickness insets = ContentInsets;
+		Size inner = availableSize.Deflate(insets);
 		View? content = Content;
 		if (content is null)
-			return new(Padding.Horizontal, Padding.Vertical);
+			return new(insets.Horizontal, insets.Vertical);
 
 		bool vertical = Orientation == Orientation.Vertical;
 		Size probe = vertical
@@ -195,7 +196,7 @@ public partial class ScrollView : Panel
 			? desired.Height
 			: Fill(inner.Height, desired.Height);
 
-		return new Size(width, height).Inflate(Padding);
+		return new Size(width, height).Inflate(insets);
 	}
 
 	/// <inheritdoc/>

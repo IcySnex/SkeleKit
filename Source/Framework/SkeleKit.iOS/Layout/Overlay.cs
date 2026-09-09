@@ -9,7 +9,8 @@ public class Overlay : Panel
 	protected override Size MeasureOverride(
 		Size availableSize)
 	{
-		Size inner = availableSize.Deflate(Padding);
+		Thickness insets = ContentInsets;
+		Size inner = availableSize.Deflate(insets);
 
 		double width = 0;
 		double height = 0;
@@ -25,14 +26,15 @@ public class Overlay : Panel
 			height = Math.Max(height, child.DesiredSize.Height);
 		}
 
-		return new Size(width, height).Inflate(Padding);
+		return new Size(width, height).Inflate(insets);
 	}
 
 	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
-		Rect bounds = new(new(Padding.Left, Padding.Top), finalSize.Deflate(Padding));
+		Thickness insets = ContentInsets;
+		Rect bounds = new(new(insets.Left, insets.Top), finalSize.Deflate(insets));
 
 		foreach (View child in Children)
 			child.Arrange(bounds);
