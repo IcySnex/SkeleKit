@@ -86,4 +86,13 @@ public class LerpTests
 
 		Assert.True(double.IsNaN(ViewState.Lerp(a, b, 0.5).Width));
 	}
+
+	[Fact]
+	public void ViewState_Lerp_HoldsCornerCurveUntilAnimationSettles()
+	{
+		ViewState a = default(ViewState) with { CornerCurve = CornerCurve.Circular };
+		ViewState b = default(ViewState) with { CornerCurve = CornerCurve.Continuous };
+
+		Assert.Equal(CornerCurve.Circular, ViewState.Lerp(a, b, 0.5).CornerCurve);
+	}
 }

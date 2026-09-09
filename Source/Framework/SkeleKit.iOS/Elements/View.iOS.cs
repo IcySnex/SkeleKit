@@ -268,9 +268,16 @@ public abstract partial class View
 
 		gradientLayer.Frame = native.Bounds;
 		gradientLayer.CornerRadius = (nfloat)CornerRadius;
+		gradientLayer.CornerCurve = NativeCornerCurve(CornerCurve);
 
 		CATransaction.Commit();
 	}
+
+	static CACornerCurve NativeCornerCurve(
+		CornerCurve curve) =>
+		curve is CornerCurve.Continuous
+			? CACornerCurve.Continuous
+			: CACornerCurve.Circular;
 
 	void DropGradient()
 	{
@@ -443,6 +450,7 @@ public abstract partial class View
 		}
 
 		materialView.Layer.CornerRadius = (nfloat)CornerRadius;
+		materialView.Layer.CornerCurve = NativeCornerCurve(CornerCurve);
 		materialView.ClipsToBounds = CornerRadius > 0;
 	}
 
@@ -639,6 +647,7 @@ public abstract partial class View
 
 		ApplyShadow();
 		native.Layer.CornerRadius = glass ? 0 : (nfloat)CornerRadius;
+		native.Layer.CornerCurve = NativeCornerCurve(CornerCurve);
 
 		ApplyTransform();
 	}

@@ -634,6 +634,16 @@ public abstract partial class View
 	double cornerRadius;
 
 	/// <summary>
+	/// The shape used to draw <see cref="CornerRadius"/>. Circular by default.
+	/// </summary>
+	public CornerCurve CornerCurve
+	{
+		get => cornerCurve;
+		set => Set(ref cornerCurve, value, ApplyVisualState, affectsMeasure: false);
+	}
+	CornerCurve cornerCurve = SkeleKit.CornerCurve.Circular;
+
+	/// <summary>
 	/// A drop shadow behind the view, or null for none.
 	/// </summary>
 	/// <remarks>
@@ -706,7 +716,7 @@ public abstract partial class View
 	private protected bool HasTransform => translation != Point.Zero || Math.Abs(scale - 1) > 0.00001 || Math.Abs(rotation) > 0.00001;
 
 	internal ViewState Capture() =>
-		new(translation, scale, rotation, opacity, cornerRadius, background, width, height, margin);
+		new(translation, scale, rotation, opacity, cornerRadius, cornerCurve, background, width, height, margin);
 
 	internal void Apply(
 		ViewState state)
@@ -716,6 +726,7 @@ public abstract partial class View
 		rotation = state.Rotation;
 		opacity = state.Opacity;
 		cornerRadius = state.CornerRadius;
+		cornerCurve = state.CornerCurve;
 		background = state.Background;
 
 		ApplyIfRealized(ApplyTransform);
