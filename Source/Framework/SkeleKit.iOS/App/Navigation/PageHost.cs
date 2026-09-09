@@ -452,18 +452,33 @@ internal sealed class PageHost : UIViewController
 			_ => UINavigationItemBackButtonDisplayMode.Default
 		};
 
-		NavigationItem.LargeTitleDisplayMode = page.TitleStyle is TitleStyle.Large
-			? UINavigationItemLargeTitleDisplayMode.Always
-			: UINavigationItemLargeTitleDisplayMode.Never;
-
-		// the stack owns large titles; a page asking for one turns them on for the bar
-		if (page.TitleStyle is TitleStyle.Large && NavigationController is UINavigationController stack)
-			stack.NavigationBar.PrefersLargeTitles = true;
+		ApplyTitleStyle(page);
 
 		ApplyBarAppearance(page);
 
 		ApplyToolbar(page);
 		ApplySearch(page);
+	}
+
+	void ApplyTitleStyle(
+		ContentView page)
+	{
+		bool automaticLarge = NavigationController is SkeleApplication.SkeleStack
+			{
+				UsesLargeTitlesByDefault: true
+			};
+
+		NavigationItem.LargeTitleDisplayMode = page.TitleStyle switch
+		{
+			TitleStyle.Large => UINavigationItemLargeTitleDisplayMode.Always,
+			TitleStyle.Inline => UINavigationItemLargeTitleDisplayMode.Never,
+			_ => automaticLarge
+				? UINavigationItemLargeTitleDisplayMode.Always
+				: UINavigationItemLargeTitleDisplayMode.Never
+		};
+
+		if (page.TitleStyle is TitleStyle.Large && NavigationController is UINavigationController navigation)
+			navigation.NavigationBar.PrefersLargeTitles = true;
 	}
 
 	void ApplyBarAppearance(

@@ -5,6 +5,12 @@ namespace SkeleKit;
 /// </summary>
 public enum TitleStyle
 {
+
+	/// <summary>
+	/// Follows the navigation stack's large-title preference.
+	/// </summary>
+	Automatic,
+	
 	/// <summary>
 	/// The standard inline title.
 	/// </summary>

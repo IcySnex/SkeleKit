@@ -4,6 +4,9 @@ namespace SkeleKit.Tests.Elements;
 
 public class ContentViewLifecycleTests
 {
+	sealed class EmptyView : ContentView
+	{ }
+
 	sealed class LifecycleView : ContentView
 	{
 		public List<string> Events { get; } = [];
@@ -20,6 +23,14 @@ public class ContentViewLifecycleTests
 
 		protected override void OnDisappeared() =>
 			Events.Add("Disappeared");
+	}
+
+	[Fact]
+	public void TitleStyle_DefaultsToAutomatic()
+	{
+		EmptyView view = new();
+
+		Assert.Equal(TitleStyle.Automatic, view.TitleStyle);
 	}
 
 

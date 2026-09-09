@@ -35,7 +35,7 @@ public sealed class TabsBuilder
 
 
 	/// <summary>
-	/// Enables large, expanding navigation titles for the tab pages.
+	/// Uses large, expanding navigation titles for tab pages whose title style is automatic.
 	/// </summary>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder LargeTitles()

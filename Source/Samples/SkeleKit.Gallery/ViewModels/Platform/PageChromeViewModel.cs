@@ -7,6 +7,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 {
 	static readonly List<PageChromeTitleOption> TitleOptions =
 	[
+		new("Automatic", TitleStyle.Automatic, "TitleStyle.Automatic"),
 		new("Large", TitleStyle.Large, "TitleStyle.Large"),
 		new("Inline", TitleStyle.Inline, "TitleStyle.Inline")
 	];

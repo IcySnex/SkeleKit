@@ -60,9 +60,23 @@ public class SkeleApplication
 
 	internal sealed class SkeleStack : UINavigationController
 	{
+		internal bool UsesLargeTitlesByDefault { get; }
+
+
 		public SkeleStack(
-			UIViewController root) : base(root)
-		{ }
+			UIViewController root,
+			bool prefersLargeTitlesByDefault = false) : base(root)
+		{
+			UsesLargeTitlesByDefault = prefersLargeTitlesByDefault;
+			NavigationBar.PrefersLargeTitles = prefersLargeTitlesByDefault;
+		}
+
+		public SkeleStack(
+			bool prefersLargeTitlesByDefault)
+		{
+			UsesLargeTitlesByDefault = prefersLargeTitlesByDefault;
+			NavigationBar.PrefersLargeTitles = prefersLargeTitlesByDefault;
+		}
 
 		public SkeleStack(
 			ObjCRuntime.NativeHandle handle) : base(handle)
@@ -466,12 +480,7 @@ public class SkeleApplication
 			new(registry.CreatePage(view!, Services));
 
 		UINavigationController Stack(Type? view, bool prefersLargeTitles = false)
-		{
-			UINavigationController stack = new SkeleStack(Page(view));
-			stack.NavigationBar.PrefersLargeTitles = prefersLargeTitles;
-
-			return stack;
-		}
+			=> new SkeleStack(Page(view), prefersLargeTitles);
 
 		switch (shell)
 		{
@@ -518,8 +527,7 @@ public class SkeleApplication
 						// only the outermost group manages the stack; nested ones inherit it
 						if (!grouped)
 						{
-							UINavigationController shared = new();
-							shared.NavigationBar.PrefersLargeTitles = tabsBuilder!.UseLargeTitles;
+							UINavigationController shared = new SkeleStack(tabsBuilder!.UseLargeTitles);
 
 							native.ManagingNavigationController = shared;
 						}

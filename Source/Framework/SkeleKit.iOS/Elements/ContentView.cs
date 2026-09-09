@@ -34,9 +34,9 @@ public abstract partial class ContentView : Panel
 	} = true;
 
 	/// <summary>
-	/// Whether the title is shown large and collapses as the content scrolls.
+	/// How the navigation title is displayed. By default, it follows the navigation stack.
 	/// </summary>
-	public TitleStyle TitleStyle { get; set; } = TitleStyle.Inline;
+	public TitleStyle TitleStyle { get; set; } = TitleStyle.Automatic;
 
 	/// <summary>
 	/// Hides the navigation bar for this page.
