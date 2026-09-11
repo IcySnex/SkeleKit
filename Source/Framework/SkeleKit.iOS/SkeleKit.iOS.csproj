@@ -19,7 +19,8 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes><![CDATA[- Allow independent hot reload ports.]]></PackageReleaseNotes>
+        <PackageReleaseNotes><![CDATA[- Add optional size, weight, scale, colors, and multicolor configuration to ImageSource.Symbol.
+- Honor source-level symbol config across images, buttons, text fields, tabs, toolbars, menus, sliders, map pins and other icon consumers.]]></PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 
