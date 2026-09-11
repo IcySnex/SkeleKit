@@ -530,7 +530,7 @@ public abstract partial class View
 		if (pressed is not null && pressRecognizer is null)
 		{
 			UILongPressGestureRecognizer recognizer = null!;
-			recognizer = new(() =>
+			recognizer = new PassivePressGestureRecognizer(() =>
 			{
 				switch (recognizer.State)
 				{
@@ -857,6 +857,18 @@ public abstract partial class View
 		}
 	}
 
+}
+
+/// <summary>
+/// Observes touch-down state without competing with the view's actual tap, drag or other gestures.
+/// Another recognizer may still prevent it, which restores the pressed state when scrolling begins.
+/// </summary>
+sealed class PassivePressGestureRecognizer(
+	Action action) : UILongPressGestureRecognizer(action)
+{
+	public override bool CanPreventGestureRecognizer(
+		UIGestureRecognizer preventedGestureRecognizer) =>
+		false;
 }
 
 internal sealed class ContextMenuDelegate : NSObject, IUIContextMenuInteractionDelegate
