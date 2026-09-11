@@ -112,7 +112,7 @@ internal sealed class ReloadEngine
 					AddType(type);
 					break;
 				case IMethodSymbol value:
-					AddType(value.ContainingType);
+					AddType(EmittedContainingType(value));
 					AddType(value.ReturnType);
 					foreach (IParameterSymbol parameter in value.Parameters)
 						AddType(parameter.Type);
@@ -120,17 +120,17 @@ internal sealed class ReloadEngine
 						AddType(argument);
 					break;
 				case IFieldSymbol value:
-					AddType(value.ContainingType);
+					AddType(EmittedContainingType(value));
 					AddType(value.Type);
 					break;
 				case IPropertySymbol value:
-					AddType(value.ContainingType);
+					AddType(EmittedContainingType(value));
 					AddType(value.Type);
 					foreach (IParameterSymbol parameter in value.Parameters)
 						AddType(parameter.Type);
 					break;
 				case IEventSymbol value:
-					AddType(value.ContainingType);
+					AddType(EmittedContainingType(value));
 					AddType(value.Type);
 					break;
 			}
@@ -164,6 +164,18 @@ internal sealed class ReloadEngine
 				break;
 			}
 		}
+	}
+
+	static INamedTypeSymbol? EmittedContainingType(
+		ISymbol symbol)
+	{
+		INamedTypeSymbol? containing = symbol.ContainingType;
+
+		// Roslyn models a C# extension-block member as belonging to an unnameable marker
+		// type, but emits its callable static wrapper on the class containing the block.
+		return containing?.IsExtension == true
+			? containing.ContainingType ?? containing
+			: containing;
 	}
 
 	static string FullMetadataName(
@@ -411,15 +423,15 @@ internal sealed class ReloadEngine
 			symbol switch
 			{
 				ITypeSymbol type => UnsafeType(type),
-				IMethodSymbol value => UnsafeType(value.ContainingType)
+				IMethodSymbol value => UnsafeType(EmittedContainingType(value))
 					|| UnsafeType(value.ReturnType)
 					|| value.Parameters.Any(parameter => UnsafeType(parameter.Type))
 					|| value.TypeArguments.Any(UnsafeType),
-				IFieldSymbol value => UnsafeType(value.ContainingType) || UnsafeType(value.Type),
-				IPropertySymbol value => UnsafeType(value.ContainingType)
+				IFieldSymbol value => UnsafeType(EmittedContainingType(value)) || UnsafeType(value.Type),
+				IPropertySymbol value => UnsafeType(EmittedContainingType(value))
 					|| UnsafeType(value.Type)
 					|| value.Parameters.Any(parameter => UnsafeType(parameter.Type)),
-				IEventSymbol value => UnsafeType(value.ContainingType) || UnsafeType(value.Type),
+				IEventSymbol value => UnsafeType(EmittedContainingType(value)) || UnsafeType(value.Type),
 				_ => false
 			};
 

@@ -1,7 +1,7 @@
 <idea-plugin require-restart="true">
     <id>com.skelekit.hotreload</id>
     <name>SkeleKit Hot Reload</name>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <vendor url="https://github.com/IcySnex/SkeleKit">IcySnex</vendor>
 
     <depends>com.intellij.modules.platform</depends>
@@ -15,8 +15,7 @@
 
     <change-notes><![CDATA[
     <ul>
-      <li>Support simultaneous hot reload sessions for separate SkeleKit solutions.</li>
-      <li>Fix debugger routing when using project-specific reload ports.</li>
+      <li>Resolve extension methods to it's static methods.</li>
     </ul>
   ]]></change-notes>
 
