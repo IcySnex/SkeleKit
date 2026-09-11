@@ -1,4 +1,5 @@
 using SkeleKit.Gallery.ViewModels.Framework.Layout;
+using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.Views.Showcase;
 
 namespace SkeleKit.Gallery.Views.Framework.Layout;
@@ -25,7 +26,8 @@ internal sealed class BorderView : ShowcaseView<BorderViewModel>
 			Stroke = Colors.Blue,
 			StrokeThickness = viewModel.StrokeThickness,
 			Background = Colors.Blue.WithAlpha(0.16),
-			CornerRadius = viewModel.CornerRadius,
+			CornerRadius = viewModel.EffectiveCornerRadius,
+			CornerCurve = viewModel.SelectedCornerCurve.Value,
 
 			Child = new Label
 			{
@@ -47,6 +49,29 @@ internal sealed class BorderView : ShowcaseView<BorderViewModel>
 				.TwoWay((vm, val) => vm.CornerRadius = val),
 			ValueChanged = value => frame.CornerRadius = value
 		};
+		View cornerRadiusSetting = LabeledSlider(
+			"Corner radius",
+			Bind(vm => vm.CornerRadiusLabel),
+			cornerRadius);
+		cornerRadiusSetting.IsVisible = Bind(vm => vm.UsesCustomCornerRadius);
+
+		Picker<ShowcaseOption<double?>> systemCornerRadius = new()
+		{
+			MinWidth = 150,
+			ItemsSource = viewModel.SystemCornerRadii,
+			SelectedItem = Bind(vm => vm.SelectedSystemCornerRadius)
+				.TwoWay((vm, val) => vm.SelectedSystemCornerRadius = val!),
+			SelectionChanged = option => frame.CornerRadius = option.Value ?? viewModel.CornerRadius
+		};
+
+		Picker<ShowcaseOption<CornerCurve>> cornerCurve = new()
+		{
+			MinWidth = 150,
+			ItemsSource = viewModel.CornerCurves,
+			SelectedItem = Bind(vm => vm.SelectedCornerCurve)
+				.TwoWay((vm, val) => vm.SelectedCornerCurve = val!),
+			SelectionChanged = option => frame.CornerCurve = option.Value
+		};
 
 		Slider stroke = new()
 		{
@@ -60,10 +85,12 @@ internal sealed class BorderView : ShowcaseView<BorderViewModel>
 
 		AddShowcase(
 			"Corner radius & stroke",
-			"Adjust the outline around one text child.",
+			"Compare custom and system corner geometry, then adjust the outline around one text child.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(frame, 200),
-				LabeledSlider("Corner radius", Bind(vm => vm.CornerRadiusLabel), cornerRadius),
+				SettingRow("System corner radius", systemCornerRadius),
+				cornerRadiusSetting,
+				SettingRow("Corner curve", cornerCurve),
 				LabeledSlider("Stroke width", Bind(vm => vm.StrokeLabel), stroke)),
 			Code(vm => vm.FrameCode));
 	}

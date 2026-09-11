@@ -1,13 +1,44 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using SkeleKit.Gallery.Models;
 using SkeleKit.Gallery.ViewModels.Showcase;
 
 namespace SkeleKit.Gallery.ViewModels.Framework.Layout;
 
 internal sealed partial class BorderViewModel : ShowcaseViewModel
 {
+	public BorderViewModel()
+	{
+		SelectedSystemCornerRadius = SystemCornerRadii[0];
+		SelectedCornerCurve = CornerCurves[0];
+	}
+
+
+	public List<ShowcaseOption<double?>> SystemCornerRadii { get; } =
+	[
+		new("None", null),
+		new("GroupedList", SystemCornerRadius.GroupedList)
+	];
+
+	public List<ShowcaseOption<CornerCurve>> CornerCurves { get; } =
+	[
+		new("Circular", CornerCurve.Circular),
+		new("Continuous", CornerCurve.Continuous)
+	];
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(UsesCustomCornerRadius))]
+	[NotifyPropertyChangedFor(nameof(EffectiveCornerRadius))]
+	[NotifyPropertyChangedFor(nameof(FrameCode))]
+	ShowcaseOption<double?> selectedSystemCornerRadius = null!;
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(FrameCode))]
+	ShowcaseOption<CornerCurve> selectedCornerCurve = null!;
+
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(CornerRadiusLabel))]
+	[NotifyPropertyChangedFor(nameof(EffectiveCornerRadius))]
 	[NotifyPropertyChangedFor(nameof(FrameCode))]
 	double cornerRadius = 20;
 
@@ -15,6 +46,12 @@ internal sealed partial class BorderViewModel : ShowcaseViewModel
 	[NotifyPropertyChangedFor(nameof(StrokeLabel))]
 	[NotifyPropertyChangedFor(nameof(FrameCode))]
 	double strokeThickness = 2;
+
+	public bool UsesCustomCornerRadius =>
+		SelectedSystemCornerRadius.Value is null;
+
+	public double EffectiveCornerRadius =>
+		SelectedSystemCornerRadius.Value ?? CornerRadius;
 
 	public string CornerRadiusLabel =>
 		$"{Number(CornerRadius)} pt";
@@ -32,7 +69,8 @@ internal sealed partial class BorderViewModel : ShowcaseViewModel
 				Stroke = Colors.Blue,
 				StrokeThickness = {{Number(StrokeThickness)}},
 				Background = Colors.Blue.WithAlpha(0.16),
-				CornerRadius = {{Number(CornerRadius)}},
+				CornerRadius = {{CornerRadiusCode}},
+				CornerCurve = CornerCurve.{{SelectedCornerCurve.Value}},
 
 				Child = new Label
 				{
@@ -45,6 +83,11 @@ internal sealed partial class BorderViewModel : ShowcaseViewModel
 				}
 			};
 			""");
+
+	string CornerRadiusCode =>
+		SelectedSystemCornerRadius.Value is not null
+			? "SystemCornerRadius.GroupedList"
+			: Number(CornerRadius);
 
 
 	static IReadOnlyList<Span> Code(
