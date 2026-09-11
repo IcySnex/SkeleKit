@@ -13,7 +13,7 @@ internal abstract class CatalogView<TViewModel> : TintView<TViewModel>
 		Color accent) : base(viewModel, accent)
 	{
 		Title = title;
-		BackgroundStyle = PageBackground.Grouped;
+		Background = Colors.GroupedBackground;
 
 		ToolbarItems.Add(new()
 		{

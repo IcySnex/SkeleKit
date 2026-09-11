@@ -10,7 +10,7 @@ internal sealed class ContentViewViewModel : ShowcaseViewModel
 			ContentView page = new()
 			{
 				Title = "Content",
-				BackgroundStyle = PageBackground.Grouped,
+				Background = Colors.GroupedBackground,
 				Content = new StackPanel
 				{
 					Padding = 16,

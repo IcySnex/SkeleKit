@@ -10,7 +10,7 @@ internal sealed class ShowcaseCodeView : ContentView
 		Title = title;
 		Tint = tint;
 		BarTint = tint;
-		BackgroundStyle = PageBackground.Default;
+		Background = Colors.Background;
 
 		Content = new ScrollView
 		{

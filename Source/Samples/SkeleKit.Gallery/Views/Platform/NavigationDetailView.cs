@@ -11,7 +11,7 @@ internal sealed class NavigationDetailView : ContentView<NavigationDetailViewMod
 		Title = Bind(vm => vm.Title);
 		TitleStyle = TitleStyle.Inline;
 		BackButtonStyle = BackButtonStyle.Generic;
-		BackgroundStyle = PageBackground.Grouped;
+		Background = Colors.GroupedBackground;
 
 		Content = new ScrollView
 		{

@@ -10,6 +10,15 @@ public abstract partial class ContentView : Panel
 {
 	internal Thickness PageSystemInsets { get; private set; } = Thickness.Zero;
 	internal bool PageIsRightToLeft { get; private set; }
+	internal Thickness PageSafeArea { get; private set; } = Thickness.Zero;
+	internal double PageKeyboardCover { get; private set; }
+	internal double PageKeyboardOffset { get; private set; }
+
+
+	protected ContentView()
+	{
+		Background = Colors.Background;
+	}
 
 	internal void UpdatePageSystemInsets(
 		Thickness insets,
@@ -20,6 +29,22 @@ public abstract partial class ContentView : Panel
 
 		PageSystemInsets = insets;
 		PageIsRightToLeft = isRightToLeft;
+		InvalidateSubtree();
+	}
+
+	internal void UpdatePageLayout(
+		Thickness safeArea,
+		double keyboardCover = 0,
+		double keyboardOffset = 0)
+	{
+		if (PageSafeArea == safeArea
+			&& PageKeyboardCover == keyboardCover
+			&& PageKeyboardOffset == keyboardOffset)
+			return;
+
+		PageSafeArea = safeArea;
+		PageKeyboardCover = keyboardCover;
+		PageKeyboardOffset = keyboardOffset;
 		InvalidateSubtree();
 	}
 
@@ -36,9 +61,16 @@ public abstract partial class ContentView : Panel
 	Binding<string?>? titleBinding;
 
 	/// <summary>
-	/// Which edges the page keeps clear of the safe area.
+	/// Which edges the page's content keeps clear of the safe area.
 	/// </summary>
-	public SafeAreaEdges SafeAreaEdges { get; set; } = SafeAreaEdges.All;
+	/// <remarks>
+	/// The page itself always fills the controller, so its background extends beneath system UI.
+	/// </remarks>
+	public SafeAreaEdges SafeAreaEdges
+	{
+		get;
+		set => Set(ref field, value);
+	} = SafeAreaEdges.All;
 
 	/// <summary>
 	/// Whether scrolling content passes under the navigation bar so the bar blurs over it.
@@ -58,11 +90,6 @@ public abstract partial class ContentView : Panel
 	/// Hides the navigation bar for this page.
 	/// </summary>
 	public bool HidesNavigationBar { get; set; }
-
-	/// <summary>
-	/// The page's background style.
-	/// </summary>
-	public PageBackground BackgroundStyle { get; set; } = PageBackground.Default;
 
 	/// <summary>
 	/// The back button title the next pushed page shows, or null for this page's title.
@@ -383,12 +410,33 @@ public abstract partial class ContentView : Panel
 		ApplyTabBadgeCore();
 
 
-	/// <inheritdoc/>
-	protected override Size MeasureOverride(
-		Size availableSize)
+	Thickness PageContentInsets
 	{
-		Thickness insets = ContentInsets;
-		Size inner = availableSize.Deflate(insets);
+		get
+		{
+			Thickness content = ContentInsets;
+			Thickness safe = PageSafeArea;
+			SafeAreaEdges edges = SafeAreaEdges;
+
+			return new(
+				content.Left + (edges.HasFlag(SafeAreaEdges.Leading) ? safe.Left : 0),
+				content.Top + (edges.HasFlag(SafeAreaEdges.Top) ? safe.Top : 0),
+				content.Right + (edges.HasFlag(SafeAreaEdges.Trailing) ? safe.Right : 0),
+				content.Bottom + (edges.HasFlag(SafeAreaEdges.Bottom) ? safe.Bottom : 0));
+		}
+	}
+
+	Size MeasureContent(
+		Size availableSize,
+		Thickness insets,
+		double bottomCover = 0)
+	{
+		Thickness constraints = new(
+			insets.Left,
+			insets.Top,
+			insets.Right,
+			insets.Bottom + bottomCover);
+		Size inner = availableSize.Deflate(constraints);
 
 		if (Content is not View content)
 			return new(insets.Horizontal, insets.Vertical);
@@ -398,15 +446,30 @@ public abstract partial class ContentView : Panel
 		return content.DesiredSize.Inflate(insets);
 	}
 
+	internal Size MeasurePageContent(
+		Size availableSize) =>
+		MeasureContent(availableSize, ContentInsets);
+
+
+	/// <inheritdoc/>
+	protected override Size MeasureOverride(
+		Size availableSize) =>
+		MeasureContent(availableSize, PageContentInsets, PageKeyboardCover);
+
 	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
 		if (Content is View content)
 		{
-			Thickness insets = ContentInsets;
+			Thickness insets = PageContentInsets;
+			Size contentSize = finalSize.Deflate(new(
+				insets.Left,
+				insets.Top,
+				insets.Right,
+				insets.Bottom + PageKeyboardCover));
 			PrepareContentLayoutCore(content);
-			content.Arrange(new(new(insets.Left, insets.Top), finalSize.Deflate(insets)));
+			content.Arrange(new(insets.Left, insets.Top - PageKeyboardOffset, contentSize.Width, contentSize.Height));
 		}
 
 		return finalSize;

@@ -33,6 +33,15 @@ public class ContentViewLifecycleTests
 		Assert.Equal(TitleStyle.Automatic, view.TitleStyle);
 	}
 
+	[Fact]
+	public void Background_DefaultsToSystemBackground()
+	{
+		EmptyView view = new();
+
+		SolidBrush background = Assert.IsType<SolidBrush>(view.Background);
+		Assert.Equal(Colors.Background, background.Color);
+	}
+
 
 	[Fact]
 	public void Notifications_InvokeMatchingLifecycleHooks()

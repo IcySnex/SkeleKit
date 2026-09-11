@@ -9,7 +9,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 		AboutViewModel viewModel) : base(viewModel)
 	{
 		Title = "SkeleKit";
-		BackgroundStyle = PageBackground.Grouped;
+		Background = Colors.GroupedBackground;
 
 		ToolbarItems.Add(new()
 		{

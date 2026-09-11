@@ -82,24 +82,6 @@ internal sealed class PageHost : UIViewController
 		return false;
 	}
 
-	static CGRect Inset(
-		CGRect bounds,
-		UIEdgeInsets insets,
-		SafeAreaEdges edges)
-	{
-		nfloat top = edges.HasFlag(SafeAreaEdges.Top) ? insets.Top : 0;
-		nfloat bottom = edges.HasFlag(SafeAreaEdges.Bottom) ? insets.Bottom : 0;
-		nfloat leading = edges.HasFlag(SafeAreaEdges.Leading) ? insets.Left : 0;
-		nfloat trailing = edges.HasFlag(SafeAreaEdges.Trailing) ? insets.Right : 0;
-
-		return new(
-			bounds.X + leading,
-			bounds.Y + top,
-			bounds.Width - leading - trailing,
-			bounds.Height - top - bottom);
-	}
-
-
 	internal static void ReloadLive()
 	{
 		if (!MetadataUpdater.IsSupported)
@@ -263,7 +245,7 @@ internal sealed class PageHost : UIViewController
 		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Trailing))
 			width -= safe.Right;
 
-		Size desired = page.HostMeasure(new(Math.Max(0, width), maximum));
+		Size desired = page.MeasurePageContent(new(Math.Max(0, width), maximum));
 
 		return desired.Height + ChromeHeight(page);
 	}
@@ -436,12 +418,8 @@ internal sealed class PageHost : UIViewController
 	void ApplyChrome(
 		ContentView page)
 	{
-		View!.BackgroundColor = page.BackgroundStyle switch
-		{
-			PageBackground.Grouped => UIColor.SystemGroupedBackground,
-			PageBackground.None => UIColor.Clear,
-			_ => UIColor.SystemBackground
-		};
+		// ContentView owns the visible page fill; the controller must not introduce another background.
+		View!.BackgroundColor = UIColor.Clear;
 
 		NavigationItem.Title = page.Title.Value;
 		NavigationItem.Prompt = page.Prompt.Value;
@@ -990,30 +968,26 @@ internal sealed class PageHost : UIViewController
 
 		UpdateSystemInsets();
 		UIEdgeInsets safe = View!.SafeAreaInsets;
-		Page.PageSafeArea = usesSystemScrollInsets
-			? Thickness.Zero
+		Thickness pageSafeArea = usesSystemScrollInsets
+			? new(safe.Left, 0, safe.Right, 0)
 			: new(safe.Left, safe.Top, safe.Right, safe.Bottom);
-
-		SafeAreaEdges frameEdges = usesSystemScrollInsets
-			? Page.SafeAreaEdges & (SafeAreaEdges.Leading | SafeAreaEdges.Trailing)
-			: Page.SafeAreaEdges;
-		CGRect frame = Inset(View.Bounds, safe, frameEdges);
+		CGRect frame = View.Bounds;
+		nfloat availableWidth = frame.Width;
+		if (Page.SafeAreaEdges.HasFlag(SafeAreaEdges.Leading))
+			availableWidth -= safe.Left;
+		if (Page.SafeAreaEdges.HasFlag(SafeAreaEdges.Trailing))
+			availableWidth -= safe.Right;
 		nfloat chrome = (nfloat)ChromeHeight(Page);
 
-		if (contentWidth != frame.Width || contentChrome != chrome)
+		if (contentWidth != availableWidth || contentChrome != chrome)
 		{
-			contentWidth = frame.Width;
+			contentWidth = availableWidth;
 			contentChrome = chrome;
 			ContentMeasureInvalidated();
 		}
 
-		CGRect shrunk = new(
-			frame.X,
-			frame.Y,
-			frame.Width,
-			(nfloat)Math.Max(0, frame.Height - keyboardCover));
-
-		Page.Native.Frame = shrunk;
+		Page.UpdatePageLayout(pageSafeArea, keyboardCover);
+		Page.ApplyHostFrame(new(frame.X, frame.Y, frame.Width, frame.Height));
 
 		if (keyboardCover <= 0 || keyboardFocus is not UIView focused)
 			return;
@@ -1021,15 +995,14 @@ internal sealed class PageHost : UIViewController
 		Page.Native.LayoutIfNeeded();
 
 		CGRect target = focused.ConvertRectToView(focused.Bounds, View);
-		nfloat hidden = target.GetMaxY() + 8 - shrunk.GetMaxY();
+		nfloat bottomInset = Page.SafeAreaEdges.HasFlag(SafeAreaEdges.Bottom) ? safe.Bottom : 0;
+		nfloat visibleBottom = frame.GetMaxY() - bottomInset - keyboardCover;
+		nfloat hidden = target.GetMaxY() + 8 - visibleBottom;
 
 		if (hidden > 0)
 		{
-			Page.Native.Frame = new(
-				shrunk.X,
-				shrunk.Y - (nfloat)Math.Min(hidden, keyboardCover),
-				shrunk.Width,
-				shrunk.Height);
+			Page.UpdatePageLayout(pageSafeArea, keyboardCover, Math.Min(hidden, keyboardCover));
+			Page.Native.LayoutIfNeeded();
 		}
 	}
 

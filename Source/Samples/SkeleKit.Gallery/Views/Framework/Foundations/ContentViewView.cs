@@ -62,7 +62,7 @@ internal sealed class ContentViewCompositionDemo : ContentView
 	public ContentViewCompositionDemo()
 	{
 		Title = "Content";
-		BackgroundStyle = PageBackground.Grouped;
+		Background = Colors.GroupedBackground;
 
 		Content = new ScrollView
 		{
@@ -137,7 +137,7 @@ internal sealed class ContentViewLifecycleDemo : ContentView
 	{
 		Title = "Lifecycle";
 		TitleStyle = TitleStyle.Inline;
-		BackgroundStyle = PageBackground.Grouped;
+		Background = Colors.GroupedBackground;
 		HidesTabBar = true;
 
 		Switch guard = new()
@@ -256,7 +256,7 @@ internal sealed class ContentViewLifecycleCoverDemo : ContentView
 	{
 		Title = "Cover page";
 		HidesTabBar = true;
-		BackgroundStyle = PageBackground.Grouped;
+		Background = Colors.GroupedBackground;
 
 		Content = new Label
 		{

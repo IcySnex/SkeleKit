@@ -23,27 +23,6 @@ public enum TitleStyle
 }
 
 /// <summary>
-/// The page's background.
-/// </summary>
-public enum PageBackground
-{
-	/// <summary>
-	/// The system background.
-	/// </summary>
-	Default,
-
-	/// <summary>
-	/// The grouped background, for settings-style pages.
-	/// </summary>
-	Grouped,
-
-	/// <summary>
-	/// No background at all.
-	/// </summary>
-	None
-}
-
-/// <summary>
 /// How the next pushed page's back button represents this page.
 /// </summary>
 public enum BackButtonStyle

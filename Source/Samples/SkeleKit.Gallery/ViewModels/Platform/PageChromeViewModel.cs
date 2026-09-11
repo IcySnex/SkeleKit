@@ -14,9 +14,12 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 
 	static readonly List<PageChromeBackgroundOption> BackgroundOptions =
 	[
-		new("Default", PageBackground.Default, "PageBackground.Default"),
-		new("Grouped", PageBackground.Grouped, "PageBackground.Grouped"),
-		new("None", PageBackground.None, "PageBackground.None")
+		new("Default", Colors.Background, "Colors.Background"),
+		new("Grouped", Colors.GroupedBackground, "Colors.GroupedBackground"),
+		new(
+			"Gradient",
+			LinearGradient.Vertical(Colors.Teal, Colors.Indigo),
+			"LinearGradient.Vertical(Colors.Teal, Colors.Indigo)")
 	];
 
 	static readonly List<PageChromeStatusBarOption> StatusBarOptions =
@@ -107,7 +110,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 			ShowsPrompt,
 			SelectedSafeArea.Value,
 			HidesNavigationBar,
-			SelectedBackground.Value,
+			SelectedBackground,
 			SelectedStatusBar.Value,
 			SelectedAccentColors.Value,
 			HidesTabBar,
@@ -129,7 +132,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 				Prompt = {{(ShowsPrompt ? "\"ContentView\"" : "null")}},
 				SafeAreaEdges = {{SelectedSafeArea.Code}},
 				HidesNavigationBar = {{Bool(HidesNavigationBar)}},
-				BackgroundStyle = {{SelectedBackground.Code}},
+				Background = {{SelectedBackground.Code}},
 				StatusBar = {{SelectedStatusBar.Code}},
 				BarTint = {{SelectedAccentColors.Code}},
 				TitleColor = {{SelectedAccentColors.Code}},
@@ -183,7 +186,7 @@ internal sealed record PageChromeTitleOption(
 
 internal sealed record PageChromeBackgroundOption(
 	string Title,
-	PageBackground Value,
+	Brush Value,
 	string Code);
 
 internal sealed record PageChromeStatusBarOption(
@@ -206,7 +209,7 @@ internal sealed record PageChromeConfiguration(
 	bool ShowsPrompt,
 	SafeAreaEdges SafeAreaEdges,
 	bool HidesNavigationBar,
-	PageBackground BackgroundStyle,
+	PageChromeBackgroundOption Background,
 	StatusBarStyle StatusBar,
 	Color? AccentColor,
 	bool HidesTabBar,

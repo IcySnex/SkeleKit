@@ -3,7 +3,6 @@ namespace SkeleKit;
 public abstract partial class ContentView
 {
 	internal PageHost? Host { get; set; }
-	internal Thickness PageSafeArea { get; set; } = Thickness.Zero;
 
 	View? automaticScrollBleed;
 

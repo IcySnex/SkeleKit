@@ -455,12 +455,18 @@ public abstract partial class View
 	}
 
 	partial void ApplyFrame(
+		Rect frame) =>
+		ApplyNativeFrame(Bleed(frame));
+
+	internal void ApplyHostFrame(
+		Rect frame) =>
+		ApplyNativeFrame(frame);
+
+	void ApplyNativeFrame(
 		Rect frame)
 	{
 		if (native is null)
 			return;
-
-		frame = Bleed(frame);
 
 		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
 		bool resized = native.Bounds.Size != next.Size;

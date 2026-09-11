@@ -16,7 +16,7 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 		Color tint) : base(viewModel, tint)
 	{
 		Title = title;
-		BackgroundStyle = PageBackground.Grouped;
+		Background = Colors.GroupedBackground;
 		BackButtonStyle = BackButtonStyle.Generic;
 
 		appearanceItem = new()

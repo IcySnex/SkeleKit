@@ -124,6 +124,66 @@ public class PaddingTests
 	}
 
 	[Fact]
+	public void ContentView_SafeAreaInsetsContentButNotPage()
+	{
+		StubLeaf leaf = new(40, 20);
+		TestPage page = new() { Content = leaf };
+		page.UpdatePageLayout(new(5, 10, 15, 20));
+
+		page.Measure(new(100, 80));
+		page.Arrange(new(0, 0, 100, 80));
+
+		Assert.Equal(new Rect(0, 0, 100, 80), page.ArrangedBounds);
+		Assert.Equal(new Rect(5, 10, 80, 50), leaf.ArrangedBounds);
+	}
+
+	[Fact]
+	public void ContentView_SafeAreaEdgesSelectContentInsets()
+	{
+		StubLeaf leaf = new(40, 20);
+		TestPage page = new()
+		{
+			SafeAreaEdges = SafeAreaEdges.Top | SafeAreaEdges.Leading,
+			Content = leaf
+		};
+		page.UpdatePageLayout(new(5, 10, 15, 20));
+
+		page.Measure(new(100, 80));
+		page.Arrange(new(0, 0, 100, 80));
+
+		Assert.Equal(new Rect(5, 10, 95, 70), leaf.ArrangedBounds);
+	}
+
+	[Fact]
+	public void ContentView_KeyboardConstrainsAndOffsetsOnlyContent()
+	{
+		StubLeaf leaf = new(40, 20);
+		TestPage page = new() { Content = leaf };
+		page.UpdatePageLayout(new(5, 10, 15, 20), keyboardCover: 25, keyboardOffset: 12);
+
+		page.Measure(new(100, 80));
+		page.Arrange(new(0, 0, 100, 80));
+
+		Assert.Equal(new Rect(0, 0, 100, 80), page.ArrangedBounds);
+		Assert.Equal(new Rect(5, -2, 80, 25), leaf.ArrangedBounds);
+	}
+
+	[Fact]
+	public void ContentView_IntrinsicContentMeasurementExcludesPageInsets()
+	{
+		TestPage page = new()
+		{
+			Padding = 10,
+			Content = new StubLeaf(40, 20)
+		};
+		page.UpdatePageLayout(new(5, 10, 15, 20));
+
+		Size desired = page.MeasurePageContent(Size.Infinity);
+
+		Assert.Equal(new Size(60, 40), desired);
+	}
+
+	[Fact]
 	public void Padding_Zero_ChangesNothing()
 	{
 		StubLeaf leaf = new(40, 20);

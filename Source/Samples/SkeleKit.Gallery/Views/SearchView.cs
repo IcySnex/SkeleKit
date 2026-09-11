@@ -12,7 +12,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 		SearchViewModel viewModel) : base(viewModel, Colors.Label)
 	{
 		Title = "Search";
-		BackgroundStyle = PageBackground.Grouped;
+		Background = Colors.GroupedBackground;
 		SearchPlaceholder = "Search SkeleKit";
 		HidesSearchScopesWhenEmpty = true;
 		SearchText = Bind(vm => vm.Query)

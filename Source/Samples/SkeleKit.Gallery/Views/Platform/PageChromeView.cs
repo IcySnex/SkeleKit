@@ -154,7 +154,7 @@ internal sealed class PageChromeDemo : ContentView
 		Prompt = configuration.ShowsPrompt ? "ContentView" : null;
 		SafeAreaEdges = configuration.SafeAreaEdges;
 		HidesNavigationBar = configuration.HidesNavigationBar;
-		BackgroundStyle = configuration.BackgroundStyle;
+		Background = configuration.Background.Value;
 		StatusBar = configuration.StatusBar;
 		BarTint = configuration.AccentColor;
 		TitleColor = configuration.AccentColor;
@@ -217,7 +217,7 @@ internal sealed class PageChromeDemo : ContentView
 					ConfigurationCard(
 						("Title", configuration.TitleStyle.ToString()),
 						("Prompt", configuration.ShowsPrompt ? "Visible" : "Hidden"),
-						("Background", configuration.BackgroundStyle.ToString()),
+						("Background", configuration.Background.Title),
 						("Safe area", configuration.SafeAreaEdges.ToString()),
 						("Tab bar", configuration.HidesTabBar ? "Hidden" : "Visible")),
 
@@ -308,7 +308,7 @@ internal sealed class PageChromeSearchDemo : ContentView
 	{
 		Title = "Search";
 		TitleStyle = TitleStyle.Large;
-		BackgroundStyle = PageBackground.Grouped;
+		Background = Colors.GroupedBackground;
 		SearchPlaceholder = "Search gallery";
 		HidesSearchBarWhenScrolling = configuration.HidesSearchBarWhenScrolling;
 
