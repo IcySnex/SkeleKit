@@ -48,7 +48,27 @@ public class ColorTests
 
 		Assert.Null(color.System);
 		Assert.Equal(1.0, color.Red);
-		Assert.Equal((0.0, 0.0, 0.0, 1.0), color.Dark);
+		Assert.Equal(Colors.White, color.Pair!.Light);
+		Assert.Equal(Colors.Black, color.Pair.Dark);
+	}
+
+	[Fact]
+	public void Dynamic_PreservesSystemColors()
+	{
+		Color color = Color.Dynamic(Colors.Background, Colors.SecondaryBackground);
+
+		Assert.Null(color.System);
+		Assert.Equal(SystemColor.Background, color.Pair!.Light.System);
+		Assert.Equal(SystemColor.SecondaryBackground, color.Pair.Dark.System);
+	}
+
+	[Fact]
+	public void Dynamic_PreservesNestedDynamicColors()
+	{
+		Color nested = Color.Dynamic(Colors.Red, Colors.Blue);
+		Color color = Color.Dynamic(Colors.White, nested);
+
+		Assert.Equal(nested, color.Pair!.Dark);
 	}
 
 	[Fact]
@@ -57,6 +77,7 @@ public class ColorTests
 		Color color = Color.Dynamic(Colors.White, Colors.Black).WithAlpha(0.5);
 
 		Assert.Equal(0.5, color.Alpha);
-		Assert.Equal(0.5, color.Dark!.Value.Alpha);
+		Assert.Equal(0.5, color.Pair!.Light.Alpha);
+		Assert.Equal(0.5, color.Pair.Dark.Alpha);
 	}
 }

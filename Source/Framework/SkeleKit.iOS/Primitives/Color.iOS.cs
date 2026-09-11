@@ -51,19 +51,18 @@ internal static class ColorInterop
 	public static UIColor ToUIColor(
 		this Color color)
 	{
-		if (color.System is SystemColor system)
-			return Resolve(system).ColorWithAlpha((nfloat)color.Alpha);
-
-		if (color.Dark.HasValue)
+		if (color.Pair is Color.DynamicPair pair)
 		{
-			(double Red, double Green, double Blue, double Alpha) dark = color.Dark.Value;
-
-			UIColor light = Rgba(color.Red, color.Green, color.Blue, color.Alpha);
-			UIColor darker = Rgba(dark.Red, dark.Green, dark.Blue, dark.Alpha);
+			UIColor light = pair.Light.ToUIColor();
+			UIColor dark = pair.Dark.ToUIColor();
 
 			return UIColor.FromDynamicProvider(traits =>
-				traits.UserInterfaceStyle is UIUserInterfaceStyle.Dark ? darker : light);
+				(traits.UserInterfaceStyle is UIUserInterfaceStyle.Dark ? dark : light)
+				.GetResolvedColor(traits));
 		}
+
+		if (color.System is SystemColor system)
+			return Resolve(system).ColorWithAlpha((nfloat)color.Alpha);
 
 		return Rgba(color.Red, color.Green, color.Blue, color.Alpha);
 	}

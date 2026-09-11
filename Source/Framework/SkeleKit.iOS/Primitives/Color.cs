@@ -48,6 +48,11 @@ public readonly record struct Color(
 	double Blue,
 	double Alpha)
 {
+	internal sealed record DynamicPair(
+		Color Light,
+		Color Dark);
+
+
 	internal static Color? Lerp(
 		Color a,
 		Color b,
@@ -60,22 +65,25 @@ public readonly record struct Color(
 		if (a.System is not null || b.System is not null)
 			return null;
 
-		Color mixed = new(
-			Mix(a.Red, b.Red),
-			Mix(a.Green, b.Green),
-			Mix(a.Blue, b.Blue),
-			Mix(a.Alpha, b.Alpha));
-
-		if (a.Dark is null && b.Dark is null)
-			return mixed;
-
-		(double Red, double Green, double Blue, double Alpha) darkA = a.Dark ?? (a.Red, a.Green, a.Blue, a.Alpha);
-		(double Red, double Green, double Blue, double Alpha) darkB = b.Dark ?? (b.Red, b.Green, b.Blue, b.Alpha);
-
-		return mixed with
+		if (a.Pair is null && b.Pair is null)
 		{
-			Dark = (Mix(darkA.Red, darkB.Red), Mix(darkA.Green, darkB.Green), Mix(darkA.Blue, darkB.Blue), Mix(darkA.Alpha, darkB.Alpha))
-		};
+			return new(
+				Mix(a.Red, b.Red),
+				Mix(a.Green, b.Green),
+				Mix(a.Blue, b.Blue),
+				Mix(a.Alpha, b.Alpha));
+		}
+
+		Color lightA = a.Pair?.Light ?? a;
+		Color lightB = b.Pair?.Light ?? b;
+		Color darkA = a.Pair?.Dark ?? a;
+		Color darkB = b.Pair?.Dark ?? b;
+		Color? light = Lerp(lightA, lightB, t);
+		Color? dark = Lerp(darkA, darkB, t);
+
+		return light is Color mixedLight && dark is Color mixedDark
+			? Dynamic(mixedLight, mixedDark)
+			: null;
 	}
 
 
@@ -88,7 +96,7 @@ public readonly record struct Color(
 	public static Color Dynamic(
 		Color light,
 		Color dark) =>
-		light with { System = null, Dark = (dark.Red, dark.Green, dark.Blue, dark.Alpha) };
+		light with { System = null, Pair = new(light, dark) };
 
 	/// <summary>
 	/// Creates a color from 8-bit channel values (0..255).
@@ -136,7 +144,7 @@ public readonly record struct Color(
 
 
 	internal SystemColor? System { get; init; }
-	internal (double Red, double Green, double Blue, double Alpha)? Dark { get; init; }
+	internal DynamicPair? Pair { get; init; }
 
 
 	/// <summary>
@@ -145,10 +153,16 @@ public readonly record struct Color(
 	/// <param name="alpha">The replacement alpha channel.</param>
 	/// <returns>A copy with the replacement alpha.</returns>
 	public Color WithAlpha(
-		double alpha) =>
-		this with
+		double alpha)
+	{
+		DynamicPair? pair = Pair;
+
+		return this with
 		{
 			Alpha = alpha,
-			Dark = Dark.HasValue ? (Dark.Value.Red, Dark.Value.Green, Dark.Value.Blue, alpha) : null
+			Pair = pair is null
+				? null
+				: new(pair.Light.WithAlpha(alpha), pair.Dark.WithAlpha(alpha))
 		};
+	}
 }

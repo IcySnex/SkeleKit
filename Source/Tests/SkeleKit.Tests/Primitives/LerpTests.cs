@@ -24,8 +24,8 @@ public class LerpTests
 		Color mixed = Color.Lerp(a, b, 0.5)!.Value;
 
 		Assert.Equal(0.5, mixed.Red, 3);
-		Assert.NotNull(mixed.Dark);
-		Assert.Equal(0.5, mixed.Dark!.Value.Red, 3);
+		Assert.NotNull(mixed.Pair);
+		Assert.Equal(0.5, mixed.Pair!.Dark.Red, 3);
 	}
 
 	[Fact]

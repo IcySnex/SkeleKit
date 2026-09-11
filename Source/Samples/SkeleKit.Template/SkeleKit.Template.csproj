@@ -18,6 +18,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="SkeleKit.iOS" Version="0.1.12" />
+        <PackageReference Include="SkeleKit.iOS" Version="0.1.13" />
     </ItemGroup>
 </Project>
