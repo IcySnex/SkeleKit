@@ -9,6 +9,10 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	internal const string CellId = "SkeleCell";
 	internal const string HeaderId = "SkeleHeader";
 	internal const string FooterId = "SkeleFooter";
+	internal const string LayoutHeaderKind = "SkeleLayoutHeader";
+	internal const string LayoutFooterKind = "SkeleLayoutFooter";
+	internal const string LayoutHeaderId = "SkeleLayoutHeader";
+	internal const string LayoutFooterId = "SkeleLayoutFooter";
 
 	readonly Dictionary<object, ItemKey> keys = new(ReferenceEqualityComparer.Instance);
 	readonly List<NSNumber> sectionKeys = [];
@@ -25,7 +29,10 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	{
 		bool carousel = Layout.Kind is CollectionLayoutKind.Carousel;
 
-		CollectionHost collection = new(this, CreateLayout(Layout, HeaderTemplate is not null, FooterTemplate is not null))
+		CollectionHost collection = new(this, CreateLayout(
+			Layout,
+			SectionHeaderTemplate is not null,
+			SectionFooterTemplate is not null))
 		{
 			BackgroundColor = UIColor.Clear,
 
@@ -45,6 +52,14 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			typeof(SkeleHeader),
 			UICollectionElementKindSection.Footer,
 			FooterId);
+		collection.RegisterClassForSupplementaryView(
+			typeof(SkeleHeader),
+			new NSString(LayoutHeaderKind),
+			LayoutHeaderId);
+		collection.RegisterClassForSupplementaryView(
+			typeof(SkeleHeader),
+			new NSString(LayoutFooterKind),
+			LayoutFooterId);
 
 		data = new(this, collection, CellFor)
 		{
@@ -516,6 +531,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		UnhookSources();
 		ClearEmptyHost();
 		StopObservingRefreshCommand();
+		Header?.Unrealize();
+		Footer?.Unrealize();
 
 		if (refresh is not null)
 			refresh.ValueChanged -= OnNativeRefreshTriggered;
@@ -549,6 +566,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 				hosted.ReapplyVisuals();
 		}
 
+		Header?.ReapplyVisuals();
+		Footer?.ReapplyVisuals();
 		EmptyView?.ReapplyVisuals();
 	}
 
@@ -563,6 +582,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 				hosted.TintChanged();
 		}
 
+		if (Header is { LocalTint: null } header)
+			header.TintChanged();
+
+		if (Footer is { LocalTint: null } footer)
+			footer.TintChanged();
+
 		if (EmptyView is View empty && empty.LocalTint is null)
 			empty.TintChanged();
 	}
@@ -570,6 +595,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	// the row tapped on the way out un-highlights on the way back; edit-mode checkmarks stay
 	internal override void PageWillAppear()
 	{
+		Header?.PageWillAppear();
+		Footer?.PageWillAppear();
+
 		if (!IsRealized || isEditing)
 			return;
 
@@ -755,6 +783,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		string kind,
 		NSIndexPath indexPath)
 	{
+		if (kind == LayoutHeaderKind)
+			return LayoutBoundaryFor(collectionView, kind, indexPath, Header, LayoutHeaderId);
+
+		if (kind == LayoutFooterKind)
+			return LayoutBoundaryFor(collectionView, kind, indexPath, Footer, LayoutFooterId);
+
 		bool footer = kind == UICollectionElementKindSectionKey.Footer.ToString();
 
 		SkeleHeader header = (SkeleHeader)collectionView.DequeueReusableSupplementaryView(
@@ -778,6 +812,27 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		}
 
 		return header;
+	}
+
+	SkeleHeader LayoutBoundaryFor(
+		UICollectionView collectionView,
+		string kind,
+		NSIndexPath indexPath,
+		View? content,
+		string reuseId)
+	{
+		SkeleHeader boundary = (SkeleHeader)collectionView.DequeueReusableSupplementaryView(
+			new NSString(kind),
+			reuseId,
+			indexPath);
+
+		if (boundary.Hosted is null && content is View view)
+		{
+			view.TintHost = this;
+			boundary.Attach(view);
+		}
+
+		return boundary;
 	}
 
 	void ICollectionHost.SyncEmptyState() =>
@@ -959,10 +1014,10 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			$"CollectionView<{typeof(TItem).Name}> needs an ItemTemplate.");
 
 	internal ItemView<TSection>? CreateHeaderView() =>
-		HeaderTemplate?.Invoke();
+		SectionHeaderTemplate?.Invoke();
 
 	internal ItemView<TSection>? CreateFooterView() =>
-		FooterTemplate?.Invoke();
+		SectionFooterTemplate?.Invoke();
 
 	internal void Select(
 		int section,
@@ -980,27 +1035,51 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		bool headers,
 		bool footers)
 	{
+		UICollectionViewCompositionalLayout result;
+
 		// per-section: one compositional layout whose provider picks each section's own arrangement
 		if (SectionLayout is Func<TSection, CollectionLayout> perSection)
 		{
-			return new((index, environment) =>
+			result = new((index, environment) =>
 				Section(SectionAt((int)index) is TSection section ? perSection(section) : layout, headers, footers, environment));
+			return AddLayoutBoundaries(result);
 		}
 
-		switch (layout.Kind)
+		result = layout.Kind switch
 		{
-			case CollectionLayoutKind.Grid:
+			CollectionLayoutKind.Grid =>
 				// absolute row heights from our measure; estimated sizing breaks the peek portal
-				return new((_, environment) =>
-					GridSection(layout, headers, footers, environment.Container.EffectiveContentSize.Width));
+				new((_, environment) =>
+					GridSection(layout, headers, footers, environment.Container.EffectiveContentSize.Width)),
 
-			case CollectionLayoutKind.Carousel:
-				return new(CarouselSection(layout, headers, footers));
+			CollectionLayoutKind.Carousel =>
+				new(CarouselSection(layout, headers, footers)),
 
-			case CollectionLayoutKind.List:
-			default:
-				return UICollectionViewCompositionalLayout.GetLayout(ListConfiguration(layout, headers, footers));
-		}
+			_ => UICollectionViewCompositionalLayout.GetLayout(ListConfiguration(layout, headers, footers))
+		};
+
+		return AddLayoutBoundaries(result);
+	}
+
+	UICollectionViewCompositionalLayout AddLayoutBoundaries(
+		UICollectionViewCompositionalLayout layout)
+	{
+		List<NSCollectionLayoutBoundarySupplementaryItem> boundaries = [];
+
+		if (Header is not null)
+			boundaries.Add(Boundary(LayoutHeaderKind, footer: false));
+
+		if (Footer is not null)
+			boundaries.Add(Boundary(LayoutFooterKind, footer: true));
+
+		if (boundaries.Count == 0)
+			return layout;
+
+		UICollectionViewCompositionalLayoutConfiguration configuration = layout.Configuration;
+		configuration.BoundarySupplementaryItems = [.. boundaries];
+		layout.Configuration = configuration;
+
+		return layout;
 	}
 
 	NSCollectionLayoutSection Section(
@@ -1087,11 +1166,18 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	static NSCollectionLayoutBoundarySupplementaryItem Boundary(
 		bool footer) =>
+		Boundary(
+			(footer ? UICollectionElementKindSectionKey.Footer : UICollectionElementKindSectionKey.Header).ToString(),
+			footer);
+
+	static NSCollectionLayoutBoundarySupplementaryItem Boundary(
+		string kind,
+		bool footer) =>
 		NSCollectionLayoutBoundarySupplementaryItem.Create(
 			NSCollectionLayoutSize.Create(
 				NSCollectionLayoutDimension.CreateFractionalWidth(1f),
 				NSCollectionLayoutDimension.CreateEstimated(44)),
-			(footer ? UICollectionElementKindSectionKey.Footer : UICollectionElementKindSectionKey.Header).ToString(),
+			kind,
 			footer ? NSRectAlignment.Bottom : NSRectAlignment.Top);
 
 	ItemView<TItem>? sizingCell;

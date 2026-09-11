@@ -93,14 +93,34 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	public Func<ItemView<TItem>>? ItemTemplate { get; set; }
 
 	/// <summary>
-	/// Builds a section header. Bound to the section model.
+	/// One view above every section. It scrolls with the collection.
 	/// </summary>
-	public Func<ItemView<TSection>>? HeaderTemplate { get; set; }
+	public View? Header
+	{
+		get => header;
+		set => SetBoundaryContent(ref header, value);
+	}
+	View? header;
 
 	/// <summary>
-	/// Builds a section footer. Bound to the section model.
+	/// One view below every section. It scrolls with the collection.
 	/// </summary>
-	public Func<ItemView<TSection>>? FooterTemplate { get; set; }
+	public View? Footer
+	{
+		get => footer;
+		set => SetBoundaryContent(ref footer, value);
+	}
+	View? footer;
+
+	/// <summary>
+	/// Builds a header for each section. Bound to the section model.
+	/// </summary>
+	public Func<ItemView<TSection>>? SectionHeaderTemplate { get; set; }
+
+	/// <summary>
+	/// Builds a footer for each section. Bound to the section model.
+	/// </summary>
+	public Func<ItemView<TSection>>? SectionFooterTemplate { get; set; }
 
 	/// <summary>
 	/// How the items are arranged.
@@ -190,6 +210,31 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 	/// Shown instead of the items while the source is empty.
 	/// </summary>
 	public View? EmptyView { get; set; }
+
+
+	void SetBoundaryContent(
+		ref View? field,
+		View? value)
+	{
+		if (ReferenceEquals(field, value))
+			return;
+
+		field?.SetParent(null);
+		field = value;
+		field?.SetParent(this);
+	}
+
+	private protected override void PropagateBindingContext()
+	{
+		Header?.OnBindingContextChanged();
+		Footer?.OnBindingContextChanged();
+	}
+
+	private protected override void InvalidateChildren()
+	{
+		Header?.InvalidateSubtree();
+		Footer?.InvalidateSubtree();
+	}
 
 	/// <summary>
 	/// Command invoked when the user pulls to refresh.

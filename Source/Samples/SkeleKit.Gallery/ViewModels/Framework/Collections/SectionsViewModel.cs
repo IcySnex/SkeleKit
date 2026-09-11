@@ -24,10 +24,12 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 			"""
 			CollectionView<SectionEntry, CollectionSection> collection = new()
 			{
+				Header = new CollectionPageHeader(),
+				Footer = new CollectionPageFooter(),
 				GroupedItemsSource = Bind(vm => vm.Sections),
 				ItemTemplate = static () => new SectionCell(),
-				HeaderTemplate = static () => new CollectionHeader(),
-				FooterTemplate = static () => new CollectionFooter(),
+				SectionHeaderTemplate = static () => new CollectionHeader(),
+				SectionFooterTemplate = static () => new CollectionFooter(),
 				Layout = CollectionLayout.List(),
 				SectionLayout = section => section.Layout switch
 				{

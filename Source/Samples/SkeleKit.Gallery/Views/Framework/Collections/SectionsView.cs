@@ -13,10 +13,12 @@ internal sealed class SectionsView : ShowcaseView<SectionsViewModel>
 
 		Content = new CollectionView<SectionEntry, CollectionSection>
 		{
+			Header = new CollectionPageHeader(),
+			Footer = new CollectionPageFooter(),
 			GroupedItemsSource = Bind(vm => vm.Sections),
 			ItemTemplate = static () => new SectionCell(),
-			HeaderTemplate = static () => new CollectionHeader(),
-			FooterTemplate = static () => new CollectionFooter(),
+			SectionHeaderTemplate = static () => new CollectionHeader(),
+			SectionFooterTemplate = static () => new CollectionFooter(),
 			Layout = CollectionLayout.List(),
 			SectionLayout = section => section.Layout switch
 			{
@@ -28,6 +30,59 @@ internal sealed class SectionsView : ShowcaseView<SectionsViewModel>
 			},
 			HighlightsSelection = false,
 			ShowsSeparators = false
+		};
+	}
+}
+
+internal sealed class CollectionPageHeader : Border
+{
+	public CollectionPageHeader()
+	{
+		Margin = new(16, 12, 16, 4);
+		Padding = 16;
+		CornerRadius = 16;
+		Background = Colors.Teal.WithAlpha(0.14);
+
+		Child = new StackPanel
+		{
+			Spacing = 3,
+
+			Children =
+			{
+				new Label
+				{
+					Text = "Collection header",
+					TextStyle = TextStyle.Title3,
+					FontWeight = FontWeight.Semibold
+				},
+
+				new Label
+				{
+					Text = "One view above every section, scrolling with the collection.",
+					TextStyle = TextStyle.Subheadline,
+					TextColor = Colors.SecondaryLabel,
+					MaxLines = 2
+				}
+			}
+		};
+	}
+}
+
+internal sealed class CollectionPageFooter : Border
+{
+	public CollectionPageFooter()
+	{
+		Margin = new(16, 8, 16, 16);
+		Padding = 12;
+		CornerRadius = 14;
+		Background = Colors.SecondaryGroupedBackground;
+
+		Child = new Label
+		{
+			Text = "Collection footer",
+			TextStyle = TextStyle.Footnote,
+			TextColor = Colors.SecondaryLabel,
+			TextAlignment = TextAlignment.Center
 		};
 	}
 }
