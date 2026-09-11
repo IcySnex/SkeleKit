@@ -19,9 +19,8 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes><![CDATA[- Fix automatic and per-page large-title behavior
-- Add SystemInsetEdges for UIKit system layout margins
-- Add continuous corner curves and the system grouped-list corner radius.]]></PackageReleaseNotes>
+        <PackageReleaseNotes><![CDATA[- Make ContentView backgrounds fill the full page and remove BackgroundStyle.
+- Fix SystemCornerRadius.GroupedList always resolving to zero.]]></PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 
