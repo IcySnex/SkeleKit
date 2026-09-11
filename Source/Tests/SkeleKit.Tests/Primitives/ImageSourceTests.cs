@@ -11,6 +11,32 @@ public class ImageSourceTests
 
 		Assert.Equal(ImageSourceKind.Symbol, source.Kind);
 		Assert.Equal("star.fill", source.Value);
+		Assert.True(double.IsNaN(source.SymbolSize));
+		Assert.Null(source.SymbolWeight);
+		Assert.Equal(SymbolScale.Default, source.SymbolScale);
+		Assert.Empty(source.SymbolColors);
+		Assert.False(source.PrefersMulticolor);
+	}
+
+	[Fact]
+	public void Symbol_CarriesRenderingConfiguration()
+	{
+		Color[] colors = [Colors.Blue, Colors.Purple];
+
+		ImageSource source = ImageSource.Symbol(
+			"cloud.sun.fill",
+			size: 24,
+			weight: FontWeight.Semibold,
+			scale: SymbolScale.Large,
+			prefersMulticolor: true,
+			colors: colors);
+		colors[0] = Colors.Red;
+
+		Assert.Equal(24, source.SymbolSize);
+		Assert.Equal(FontWeight.Semibold, source.SymbolWeight);
+		Assert.Equal(SymbolScale.Large, source.SymbolScale);
+		Assert.Equal([Colors.Blue, Colors.Purple], source.SymbolColors);
+		Assert.True(source.PrefersMulticolor);
 	}
 
 	[Fact]

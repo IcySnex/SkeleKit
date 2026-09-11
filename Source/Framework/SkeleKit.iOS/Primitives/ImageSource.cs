@@ -15,6 +15,25 @@ public readonly partial struct ImageSource
 		new(ImageSourceKind.Symbol, name);
 
 	/// <summary>
+	/// An image from an SF Symbol name with rendering configuration.
+	/// </summary>
+	/// <param name="name">The name of the system symbol.</param>
+	/// <param name="size">The symbol's point size, or NaN to let the consuming control choose.</param>
+	/// <param name="weight">The symbol's stroke weight, or null to let the consuming control choose.</param>
+	/// <param name="scale">The symbol's relative scale within its font metrics.</param>
+	/// <param name="prefersMulticolor">Whether to prefer the symbol's built-in multicolor rendition.</param>
+	/// <param name="colors">Colors for hierarchical or palette rendering.</param>
+	/// <returns>An image source configured for a symbol.</returns>
+	public static ImageSource Symbol(
+		string name,
+		double size = double.NaN,
+		FontWeight? weight = null,
+		SymbolScale scale = SymbolScale.Default,
+		bool prefersMulticolor = false,
+		params Color[] colors) =>
+		new(ImageSourceKind.Symbol, name, size, weight, scale, prefersMulticolor, colors);
+
+	/// <summary>
 	/// An image from a bundle asset name.
 	/// </summary>
 	/// <param name="name">The name of the asset in the bundle.</param>
@@ -56,10 +75,22 @@ public readonly partial struct ImageSource
 
 	ImageSource(
 		ImageSourceKind kind,
-		string value)
+		string value,
+		double symbolSize = double.NaN,
+		FontWeight? symbolWeight = null,
+		SymbolScale symbolScale = SymbolScale.Default,
+		bool prefersMulticolor = false,
+		Color[]? symbolColors = null)
 	{
 		Kind = kind;
 		Value = value;
+		SymbolSize = symbolSize;
+		SymbolWeight = symbolWeight;
+		SymbolScale = symbolScale;
+		PrefersMulticolor = prefersMulticolor;
+		this.symbolColors = symbolColors is null or { Length: 0 }
+			? null
+			: Array.AsReadOnly(symbolColors.ToArray());
 	}
 
 	ImageSource(
@@ -78,6 +109,32 @@ public readonly partial struct ImageSource
 	/// The symbol name, bundle asset name, or URL.
 	/// </summary>
 	public string Value { get; }
+
+	/// <summary>
+	/// The symbol's point size, or NaN to let the consuming control choose.
+	/// </summary>
+	public double SymbolSize { get; }
+
+	/// <summary>
+	/// The symbol's stroke weight, or null to let the consuming control choose.
+	/// </summary>
+	public FontWeight? SymbolWeight { get; }
+
+	/// <summary>
+	/// The symbol's relative scale within its font metrics.
+	/// </summary>
+	public SymbolScale SymbolScale { get; }
+
+	/// <summary>
+	/// Colors for the symbol's layers: one gives the hierarchical look, while several define a palette.
+	/// </summary>
+	public IReadOnlyList<Color> SymbolColors => symbolColors ?? Array.Empty<Color>();
+	readonly IReadOnlyList<Color>? symbolColors;
+
+	/// <summary>
+	/// Whether a symbol with a built-in multicolor rendition should use it.
+	/// </summary>
+	public bool PrefersMulticolor { get; }
 
 	internal byte[]? Bytes { get; }
 }

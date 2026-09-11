@@ -5,6 +5,9 @@ namespace SkeleKit;
 /// </summary>
 public class SecureField : TextField
 {
+	static readonly UIImageSymbolConfiguration RevealIconConfiguration = UIImageSymbolConfiguration.Create(15);
+
+
 	UIButton? revealButton;
 
 
@@ -23,7 +26,7 @@ public class SecureField : TextField
 		if (revealButton is null)
 			return;
 
-		UIImage? glyph = UIImage.GetSystemImage(Ui.SecureTextEntry ? "eye" : "eye.slash", IconConfiguration);
+		UIImage? glyph = UIImage.GetSystemImage(Ui.SecureTextEntry ? "eye" : "eye.slash", RevealIconConfiguration);
 		revealButton.SetImage(glyph, UIControlState.Normal);
 
 		if (glyph is not null)

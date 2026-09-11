@@ -150,45 +150,12 @@ public class Image : Control
 	}
 
 	void ApplySymbolConfiguration()
-	{
-		UIImageSymbolConfiguration? configuration = null;
-
-		void Add(UIImageSymbolConfiguration next) =>
-			configuration = configuration is null
-				? next
-				: (UIImageSymbolConfiguration)configuration.GetConfiguration(next);
-
-		if (!double.IsNaN(SymbolSize))
-			Add(UIImageSymbolConfiguration.Create((nfloat)SymbolSize));
-
-		if (SymbolWeight is FontWeight weight)
-			Add(UIImageSymbolConfiguration.Create(Weight(weight)));
-
-		if (SymbolScale is not SymbolScale.Default)
-		{
-			Add(UIImageSymbolConfiguration.Create(SymbolScale switch
-			{
-				SymbolScale.Small => UIImageSymbolScale.Small,
-				SymbolScale.Large => UIImageSymbolScale.Large,
-				_ => UIImageSymbolScale.Medium
-			}));
-		}
-
-		switch (SymbolColors.Count)
-		{
-			case 1:
-				Add(UIImageSymbolConfiguration.Create(SymbolColors[0].ToUIColor()));
-				break;
-			case > 1:
-				Add(UIImageSymbolConfiguration.Create([.. SymbolColors.Select(color => color.ToUIColor())]));
-				break;
-		}
-
-		if (PrefersMulticolor)
-			Add(UIImageSymbolConfiguration.ConfigurationPreferringMulticolor);
-
-		Ui.PreferredSymbolConfiguration = configuration;
-	}
+		=> Ui.PreferredSymbolConfiguration = ImageSource.CreateSymbolConfiguration(
+			SymbolSize,
+			SymbolWeight,
+			SymbolScale,
+			SymbolColors,
+			PrefersMulticolor);
 
 	void ApplySymbolEffect()
 	{
@@ -252,17 +219,10 @@ public class Image : Control
 		ImageSource source) =>
 		source.Kind switch
 		{
-			ImageSourceKind.Symbol => Symbol(source.Value),
-			ImageSourceKind.Auto => Symbol(source.Value) ?? UIImage.FromBundle(source.Value),
+			ImageSourceKind.Symbol or ImageSourceKind.Auto => source.ResolveLocal(symbolValue),
 			ImageSourceKind.Url => throw new InvalidOperationException("A URL source must be loaded asynchronously."),
 			_ => source.ResolveLocal()
 		};
-
-	UIImage? Symbol(
-		string name) =>
-		double.IsNaN(symbolValue)
-			? UIImage.GetSystemImage(name)
-			: UIImage.GetSystemImage(name, Math.Clamp(symbolValue, 0, 1), UIImageSymbolConfiguration.UnspecifiedConfiguration);
 
 	static NSSymbolEffect Effect(
 		SymbolEffect effect) =>
@@ -274,21 +234,6 @@ public class Image : Control
 			SymbolEffect.Breathe => NSSymbolBreatheEffect.Create(),
 			SymbolEffect.Wiggle => NSSymbolWiggleEffect.Create(),
 			_ => NSSymbolRotateEffect.Create()
-		};
-
-	static UIImageSymbolWeight Weight(
-		FontWeight weight) =>
-		weight switch
-		{
-			FontWeight.UltraLight => UIImageSymbolWeight.UltraLight,
-			FontWeight.Thin => UIImageSymbolWeight.Thin,
-			FontWeight.Light => UIImageSymbolWeight.Light,
-			FontWeight.Medium => UIImageSymbolWeight.Medium,
-			FontWeight.Semibold => UIImageSymbolWeight.Semibold,
-			FontWeight.Bold => UIImageSymbolWeight.Bold,
-			FontWeight.Heavy => UIImageSymbolWeight.Heavy,
-			FontWeight.Black => UIImageSymbolWeight.Black,
-			_ => UIImageSymbolWeight.Regular
 		};
 
 	// ReSharper disable once AsyncVoidMethod

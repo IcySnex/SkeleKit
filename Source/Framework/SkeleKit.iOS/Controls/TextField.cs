@@ -69,9 +69,6 @@ public class TextField : Control
 	}
 
 
-	private protected static readonly UIImageSymbolConfiguration IconConfiguration = UIImageSymbolConfiguration.Create(15);
-
-
 	(UIToolbar Bar, UIBarButtonItem[] Items)? accessoryBar;
 	AccessoryHost? accessoryHost;
 	UIImageView? leadingView;
@@ -462,7 +459,7 @@ public class TextField : Control
 
 	private protected static UIImage? ResolveIcon(
 		ImageSource source) =>
-		source.ResolveLocal(IconConfiguration);
+		source.ResolveLocal(defaultSymbolSize: 15);
 
 	static UIImageView IconView(
 		UIImage image) =>

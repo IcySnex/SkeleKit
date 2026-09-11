@@ -224,9 +224,9 @@ public class Button : Control
 				}
 				: iconSize;
 
-			configuration.PreferredSymbolConfigurationForImage = UIImageSymbolConfiguration.Create(
-				(nfloat)points,
-				UIImageSymbolWeight.Medium);
+			configuration.PreferredSymbolConfigurationForImage = iconSource.CreateSymbolConfiguration(
+				points,
+				FontWeight.Medium);
 
 			configuration.ImagePlacement = iconPlacement switch
 			{
