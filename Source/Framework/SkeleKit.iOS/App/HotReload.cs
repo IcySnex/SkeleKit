@@ -6,7 +6,18 @@ namespace SkeleKit;
 
 internal static class HotReload
 {
-	const int Port = 9988;
+	const int LegacyPort = 9988;
+	static readonly int Port = ResolvePort();
+
+
+	static int ResolvePort()
+	{
+		string? configured = Environment.GetEnvironmentVariable("SKELEKIT_HOT_RELOAD_PORT");
+
+		return int.TryParse(configured, out int port) && port is > 0 and <= 65535
+			? port
+			: LegacyPort;
+	}
 
 
 	// ReSharper disable once FunctionNeverReturns

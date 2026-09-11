@@ -8,8 +8,7 @@ internal sealed class NativeBridge(
 	string solutionFile,
 	Action<string> log)
 {
-	// the in-app agent dials this one, so unlike the debug ports it cannot move
-	const int ReloadPort = 9988;
+	const int LegacyReloadPort = 9988;
 	const int DebounceMilliseconds = 150;
 
 	static void Accept(
@@ -135,6 +134,7 @@ internal sealed class NativeBridge(
 
 	public int AppPort { get; private set; }
 	public int RiderPort { get; private set; }
+	public int ReloadPort { get; private set; }
 
 
 	void OnApp(
@@ -634,9 +634,10 @@ internal sealed class NativeBridge(
 		Socket appListener = Bind(0);
 		AppPort = ((IPEndPoint)appListener.LocalEndPoint).Port;
 
-		Socket? reloadListener = TryBind(ReloadPort);
-		if (reloadListener is null)
-			log($"port {ReloadPort} is taken, so the app cannot be asked to rebuild its UI after a reload");
+		// Keep the original port when possible so apps built against older SkeleKit
+		// packages still work. Newer apps receive this bridge's actual port at launch.
+		Socket reloadListener = TryBind(LegacyReloadPort) ?? Bind(0);
+		ReloadPort = ((IPEndPoint)reloadListener.LocalEndPoint).Port;
 
 		RiderPort = FreePort();
 		debuggerWorker = new(RiderPort);

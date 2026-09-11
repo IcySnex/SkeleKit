@@ -17,11 +17,12 @@ class BridgePortPublisher : ProjectActivity {
             return
 
         var published: String? = null
+        val property = PreparePortsAdvice.bridgePortsProperty(project.locationHash)
 
         fun clearPublished(message: String) {
             if (published != null &&
-                System.getProperty(PreparePortsAdvice.BRIDGE_PORTS_PROPERTY) == published) {
-                System.clearProperty(PreparePortsAdvice.BRIDGE_PORTS_PROPERTY)
+                System.getProperty(property) == published) {
+                System.clearProperty(property)
                 LOG.info(message)
             }
         }
@@ -38,7 +39,7 @@ class BridgePortPublisher : ProjectActivity {
                     clearPublished("[SkeleKit] bridge down; iOS debug ports left alone")
                 } else {
                     published = value
-                    System.setProperty(PreparePortsAdvice.BRIDGE_PORTS_PROPERTY, value)
+                    System.setProperty(property, value)
                     LOG.info("[SkeleKit] bridge ports: $value")
                 }
             }

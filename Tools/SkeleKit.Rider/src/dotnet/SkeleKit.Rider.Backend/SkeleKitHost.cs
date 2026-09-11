@@ -52,7 +52,7 @@ public sealed class SkeleKitHost
 				return;
 
 			locks.ExecuteOrQueueEx(lifetime, "SkeleKit bridge ports", () =>
-				solution.GetProtocolSolution().GetSkeleKitModel().BridgePorts.Value = $"{bridge.AppPort}:{bridge.RiderPort}");
+				solution.GetProtocolSolution().GetSkeleKitModel().BridgePorts.Value = $"{bridge.AppPort}:{bridge.RiderPort}:{bridge.ReloadPort}");
 		})
 		{
 			IsBackground = true,

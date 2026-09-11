@@ -34,7 +34,9 @@ class IosPortInstrumenter : ProjectActivity {
                 .disableClassFormatChanges()
                 .type(named(IOS_SESSION_HANDLER))
                 .transform { builder, _, _, _, _ ->
-                    builder.visit(Advice.to(PreparePortsAdvice::class.java).on(named("preparePortsForDebugging")))
+                    builder
+                        .visit(Advice.to(PreparePortsAdvice::class.java).on(named("preparePortsForDebugging")))
+                        .visit(Advice.to(PrepareEnvironmentAdvice::class.java).on(named("runApplicationWithDebugging")))
                 }
                 .installOn(instrumentation)
 

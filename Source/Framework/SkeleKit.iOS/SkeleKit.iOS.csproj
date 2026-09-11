@@ -19,8 +19,7 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes><![CDATA[- Make ContentView backgrounds fill the full page and remove BackgroundStyle.
-- Fix SystemCornerRadius.GroupedList always resolving to zero.]]></PackageReleaseNotes>
+        <PackageReleaseNotes><![CDATA[- Allow independent hot reload ports.]]></PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 
