@@ -62,7 +62,13 @@ internal static class ColorInterop
 		}
 
 		if (color.System is SystemColor system)
-			return Resolve(system).ColorWithAlpha((nfloat)color.Alpha);
+		{
+			UIColor resolved = Resolve(system);
+
+			return color.HasSystemAlphaOverride
+				? resolved.ColorWithAlpha((nfloat)color.Alpha)
+				: resolved;
+		}
 
 		return Rgba(color.Red, color.Green, color.Blue, color.Alpha);
 	}

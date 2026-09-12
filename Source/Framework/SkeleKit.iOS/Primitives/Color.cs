@@ -145,6 +145,7 @@ public readonly record struct Color(
 
 	internal SystemColor? System { get; init; }
 	internal DynamicPair? Pair { get; init; }
+	internal bool HasSystemAlphaOverride { get; init; }
 
 
 	/// <summary>
@@ -160,6 +161,7 @@ public readonly record struct Color(
 		return this with
 		{
 			Alpha = alpha,
+			HasSystemAlphaOverride = System is not null,
 			Pair = pair is null
 				? null
 				: new(pair.Light.WithAlpha(alpha), pair.Dark.WithAlpha(alpha))

@@ -21,6 +21,7 @@ public class ColorTests
 		Color red = Colors.Red;
 
 		Assert.Equal(SystemColor.Red, red.System);
+		Assert.False(red.HasSystemAlphaOverride);
 		Assert.Equal(Color.FromHex(0xFF3B30) with { System = SystemColor.Red }, red);
 	}
 
@@ -31,6 +32,7 @@ public class ColorTests
 
 		Assert.Equal(SystemColor.Label, faded.System);
 		Assert.Equal(0.5, faded.Alpha);
+		Assert.True(faded.HasSystemAlphaOverride);
 	}
 
 	[Fact]
@@ -79,5 +81,14 @@ public class ColorTests
 		Assert.Equal(0.5, color.Alpha);
 		Assert.Equal(0.5, color.Pair!.Light.Alpha);
 		Assert.Equal(0.5, color.Pair.Dark.Alpha);
+	}
+
+	[Fact]
+	public void WithAlpha_MarksSystemColorsInsideDynamicPair()
+	{
+		Color color = Color.Dynamic(Colors.SecondaryLabel, Colors.TertiaryLabel).WithAlpha(0.4);
+
+		Assert.True(color.Pair!.Light.HasSystemAlphaOverride);
+		Assert.True(color.Pair.Dark.HasSystemAlphaOverride);
 	}
 }
