@@ -147,7 +147,7 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 
 
 	[ObservableProperty]
-	string menuStatus = "Choose an action or a density.";
+	string menuStatus = "Choose an action.";
 
 	public IReadOnlyList<Span> MenuCode =>
 		Code(
@@ -163,18 +163,6 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 				Icon = ImageSource.Symbol("square.and.arrow.up"),
 				Command = viewModel.SelectMenuCommand,
 				CommandParameter = "Share"
-			});
-
-			Button density = new()
-			{
-				Text = "Density",
-				SelectsFromMenu = true
-			};
-			density.Menu.Add(new()
-			{
-				Text = "Comfortable",
-				Command = viewModel.SelectMenuCommand,
-				CommandParameter = "Comfortable"
 			});
 			""");
 

@@ -241,35 +241,9 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			CommandParameter = "Delete"
 		});
 
-		Button density = new()
-		{
-			HorizontalAlignment = HorizontalAlignment.Center,
-			Text = "Density",
-			Kind = ButtonStyle.Tinted,
-			SelectsFromMenu = true
-		};
-		density.Menu.Add(new()
-		{
-			Text = "Compact",
-			Command = viewModel.SelectMenuCommand,
-			CommandParameter = "Compact"
-		});
-		density.Menu.Add(new()
-		{
-			Text = "Comfortable",
-			Command = viewModel.SelectMenuCommand,
-			CommandParameter = "Comfortable"
-		});
-		density.Menu.Add(new()
-		{
-			Text = "Spacious",
-			Command = viewModel.SelectMenuCommand,
-			CommandParameter = "Spacious"
-		});
-
 		AddShowcase(
 			"Menus",
-			"Compare an action menu with a selection menu that adopts the chosen title.",
+			"Present related actions from a native button menu.",
 			ShowcaseBox.Canvas(
 				new StackPanel
 				{
@@ -279,18 +253,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 
 					Children =
 					{
-						new StackPanel
-						{
-							HorizontalAlignment = HorizontalAlignment.Center,
-							Orientation = Orientation.Horizontal,
-							Spacing = 12,
-
-							Children =
-							{
-								actions,
-								density
-							}
-						},
+						actions,
 
 						new Label
 						{

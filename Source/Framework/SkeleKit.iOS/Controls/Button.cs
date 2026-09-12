@@ -7,8 +7,6 @@ namespace SkeleKit;
 /// </summary>
 public class Button : Control
 {
-	UIAction[]? menuActions;
-
 	UIButton Ui => (UIButton)Native;
 
 
@@ -132,15 +130,6 @@ public class Button : Control
 	public IList<MenuAction> Menu { get; } = [];
 
 	/// <summary>
-	/// When true the <see cref="Menu"/> acts as a popup picker: choosing an entry shows it as the button's title and fires its command.
-	/// </summary>
-	public bool SelectsFromMenu
-	{
-		get;
-		set => Set(ref field, value, ApplyMenu, affectsMeasure: false);
-	}
-
-	/// <summary>
 	/// Command invoked on tap; its CanExecute drives the enabled state.
 	/// </summary>
 	public ICommand? Command
@@ -229,13 +218,13 @@ public class Button : Control
 		if (Menu.Count == 0)
 			return;
 
-		menuActions = new UIAction[Menu.Count];
+		UIAction[] actions = new UIAction[Menu.Count];
 
 		for (int index = 0; index < Menu.Count; index++)
 		{
 			MenuAction entry = Menu[index];
 
-			menuActions[index] = UIAction.Create(
+			actions[index] = UIAction.Create(
 				entry.Text,
 				entry.Icon?.ResolveLocal(),
 				null,
@@ -243,18 +232,14 @@ public class Button : Control
 				{
 					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(entry.CommandParameter))
 						entryCommand.Execute(entry.CommandParameter);
-
-					if (SelectsFromMenu)
-						CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(RefreshSelectedMenuLayout);
 				});
 
 			if (entry.IsDestructive)
-				menuActions[index].Attributes = UIMenuElementAttributes.Destructive;
+				actions[index].Attributes = UIMenuElementAttributes.Destructive;
 		}
 
-		Ui.Menu = UIMenu.Create(menuActions);
+		Ui.Menu = UIMenu.Create(actions);
 		Ui.ShowsMenuAsPrimaryAction = true;
-		Ui.ChangesSelectionAsPrimaryAction = SelectsFromMenu;
 	}
 
 	void RefreshConfigurationLayout()
@@ -262,15 +247,6 @@ public class Button : Control
 		Ui.InvalidateIntrinsicContentSize();
 		Ui.SetNeedsLayout();
 		Ui.LayoutIfNeeded();
-	}
-
-	void RefreshSelectedMenuLayout()
-	{
-		if (!IsRealized)
-			return;
-
-		RefreshConfigurationLayout();
-		InvalidateMeasure();
 	}
 
 	void ApplyIsEnabled()
