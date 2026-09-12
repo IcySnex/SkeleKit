@@ -147,6 +147,8 @@ public abstract partial class View
 
 	private protected virtual bool OwnsNative => true;
 
+	private protected virtual bool SupportsLayeredBackground => false;
+
 	internal Thickness BledInsets
 	{
 		get
@@ -251,10 +253,10 @@ public abstract partial class View
 	void RequirePanel(
 		string fill)
 	{
-		if (this is not Panel)
+		if (!SupportsLayeredBackground)
 		{
 			throw new InvalidOperationException(
-				$"{fill} background needs a panel (Border, Overlay, StackPanel, ...); {GetType().Name} draws its own content, which the fill would cover.");
+				$"{fill} background needs a layout container (Border, Overlay, StackPanel, ...); {GetType().Name} draws its own content, which the fill would cover.");
 		}
 	}
 

@@ -28,9 +28,9 @@ internal static class Keyboards
 			case TextField or TextEditor:
 				inputs.Add(view);
 				return;
-			case Panel panel:
+			case Container container:
 				{
-					foreach (View child in panel.Children)
+					foreach (View child in container.LogicalChildren)
 						Collect(child, inputs);
 					break;
 				}

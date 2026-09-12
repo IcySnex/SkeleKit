@@ -23,6 +23,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	bool snapshotQueued;
 	bool usesSystemContentInsets;
+	bool layoutInsetsSynced;
+	Thickness layoutInsets;
 	nfloat keyboardCover;
 
 	private protected override UIView CreateNative()
@@ -30,11 +32,11 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		bool carousel = Layout.Kind is CollectionLayoutKind.Carousel;
 
 		CollectionHost collection = new(this, CreateLayout(
-			Layout,
 			SectionHeaderTemplate is not null,
 			SectionFooterTemplate is not null))
 		{
 			BackgroundColor = UIColor.Clear,
+			InsetsLayoutMarginsFromSafeArea = false,
 
 			AlwaysBounceVertical = !carousel,
 			AlwaysBounceHorizontal = carousel,
@@ -805,6 +807,11 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (header.Hosted is ItemView<TSection> hosted)
 			hosted.Item = SectionAt(indexPath.Section);
 
+		CollectionLayout sectionLayout = LayoutForSection(indexPath.Section);
+		header.SetContentInsets(sectionLayout is { Kind: CollectionLayoutKind.List, Grouped: false }
+			? () => new(ContentInsets.Left, 0, ContentInsets.Right, 0)
+			: null);
+
 		if (!footer)
 		{
 			int section = indexPath.Section;
@@ -832,7 +839,20 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			boundary.Attach(view);
 		}
 
+		bool footer = kind == LayoutFooterKind;
+		boundary.SetContentInsets(() => LayoutBoundaryInsets(footer));
+
 		return boundary;
+	}
+
+	Thickness LayoutBoundaryInsets(
+		bool footer)
+	{
+		Thickness insets = ContentInsets;
+
+		return footer
+			? new(insets.Left, 0, insets.Right, insets.Bottom)
+			: new(insets.Left, insets.Top, insets.Right, 0);
 	}
 
 	void ICollectionHost.SyncEmptyState() =>
@@ -902,6 +922,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (!IsRealized)
 			return;
 
+		SyncLayoutInsets();
+
 		// while refreshing, UIKit holds the spinner open through the top inset; writing ours over
 		// it collapses the spinner mid-spin. It restores our inset when EndRefreshing runs a sync
 		if (refresh is { Refreshing: true })
@@ -924,6 +946,17 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			Ui.VerticalScrollIndicatorInsets = insets;
 			Ui.HorizontalScrollIndicatorInsets = insets;
 		}
+	}
+
+	void SyncLayoutInsets()
+	{
+		Thickness insets = ContentInsets;
+		if (layoutInsetsSynced && layoutInsets == insets)
+			return;
+
+		layoutInsets = insets;
+		layoutInsetsSynced = true;
+		Ui.CollectionViewLayout.InvalidateLayout();
 	}
 
 	void SyncEmptyState()
@@ -949,6 +982,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			Ui.BackgroundView = host;
 		}
 
+		host.ContentInsets = ContentInsets;
 		host.KeyboardCover = keyboardCover;
 		host.Hidden = !IsEmpty;
 	}
@@ -1031,35 +1065,32 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	}
 
 	UICollectionViewCompositionalLayout CreateLayout(
-		CollectionLayout layout,
 		bool headers,
 		bool footers)
 	{
-		UICollectionViewCompositionalLayout result;
+		bool mixed = SectionLayout is not null;
 
-		// per-section: one compositional layout whose provider picks each section's own arrangement
-		if (SectionLayout is Func<TSection, CollectionLayout> perSection)
+		// A provider keeps the collection's outer insets explicit and additive. UIKit's inset-grouped
+		// list spacing remains intact inside them instead of silently replacing the requested margin.
+		UICollectionViewCompositionalLayout result = new((index, environment) =>
 		{
-			result = new((index, environment) =>
-				Section(SectionAt((int)index) is TSection section ? perSection(section) : layout, headers, footers, environment));
-			return AddLayoutBoundaries(result);
-		}
+			CollectionLayout selected = LayoutForSection((int)index);
 
-		result = layout.Kind switch
-		{
-			CollectionLayoutKind.Grid =>
-				// absolute row heights from our measure; estimated sizing breaks the peek portal
-				new((_, environment) =>
-					GridSection(layout, headers, footers, environment.Container.EffectiveContentSize.Width)),
-
-			CollectionLayoutKind.Carousel =>
-				new(CarouselSection(layout, headers, footers)),
-
-			_ => UICollectionViewCompositionalLayout.GetLayout(ListConfiguration(layout, headers, footers))
-		};
+			return ApplyCollectionInsets(
+				Section(selected, headers, footers, environment, mixed),
+				(int)index,
+				selected);
+		});
 
 		return AddLayoutBoundaries(result);
 	}
+
+	CollectionLayout LayoutForSection(
+		int index) =>
+		SectionLayout is Func<TSection, CollectionLayout> perSection
+		&& SectionAt(index) is TSection section
+			? perSection(section)
+			: Layout;
 
 	UICollectionViewCompositionalLayout AddLayoutBoundaries(
 		UICollectionViewCompositionalLayout layout)
@@ -1072,11 +1103,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (Footer is not null)
 			boundaries.Add(Boundary(LayoutFooterKind, footer: true));
 
-		if (boundaries.Count == 0)
-			return layout;
-
 		UICollectionViewCompositionalLayoutConfiguration configuration = layout.Configuration;
-		configuration.BoundarySupplementaryItems = [.. boundaries];
+		configuration.ContentInsetsReference = UIContentInsetsReference.None;
+
+		if (boundaries.Count > 0)
+			configuration.BoundarySupplementaryItems = [.. boundaries];
+
 		layout.Configuration = configuration;
 
 		return layout;
@@ -1086,13 +1118,49 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		CollectionLayout layout,
 		bool headers,
 		bool footers,
-		INSCollectionLayoutEnvironment environment) =>
+		INSCollectionLayoutEnvironment environment,
+		bool mixed) =>
 		layout.Kind switch
 		{
-			CollectionLayoutKind.Grid => GridSection(layout, headers, footers, environment.Container.EffectiveContentSize.Width),
-			CollectionLayoutKind.Carousel => CarouselSection(layout, headers, footers, (nfloat)Math.Max(1, RowHeight(layout.ItemWidth))),
+			CollectionLayoutKind.Grid => GridSection(
+				layout,
+				headers,
+				footers,
+				(nfloat)Math.Max(1, environment.Container.EffectiveContentSize.Width - ContentInsets.Horizontal)),
+			CollectionLayoutKind.Carousel => CarouselSection(
+				layout,
+				headers,
+				footers,
+				mixed ? (nfloat)Math.Max(1, RowHeight(layout.ItemWidth)) : null),
 			_ => NSCollectionLayoutSection.GetSection(ListConfiguration(layout, headers, footers), environment)
 		};
+
+	NSCollectionLayoutSection ApplyCollectionInsets(
+		NSCollectionLayoutSection section,
+		int index,
+		CollectionLayout layout)
+	{
+		Thickness outer = ContentInsets;
+
+		// Inset-grouped lists already use UIKit's horizontal system margins. Count those as
+		// satisfying SystemInsetEdges instead of doubling them; explicit Padding stays additive.
+		if (layout is { Kind: CollectionLayoutKind.List, Grouped: true })
+			outer = new(Padding.Left, outer.Top, Padding.Right, outer.Bottom);
+
+		NSDirectionalEdgeInsets current = section.ContentInsets;
+		bool rightToLeft = Ui.EffectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirection.RightToLeft;
+		nfloat leading = (nfloat)(rightToLeft ? outer.Right : outer.Left);
+		nfloat trailing = (nfloat)(rightToLeft ? outer.Left : outer.Right);
+
+		section.ContentInsetsReference = UIContentInsetsReference.None;
+		section.ContentInsets = new(
+			current.Top + (Header is null && index == 0 ? (nfloat)outer.Top : 0),
+			current.Leading + leading,
+			current.Bottom + (Footer is null && index == SectionCount - 1 ? (nfloat)outer.Bottom : 0),
+			current.Trailing + trailing);
+
+		return section;
+	}
 
 	UICollectionLayoutListConfiguration ListConfiguration(
 		CollectionLayout layout,
@@ -1475,6 +1543,7 @@ internal sealed class CollectionHost : UICollectionView
 internal sealed class EmptyCollectionHost : UIView
 {
 	nfloat keyboardCover;
+	Thickness contentInsets;
 
 
 	public EmptyCollectionHost(
@@ -1491,6 +1560,19 @@ internal sealed class EmptyCollectionHost : UIView
 
 
 	internal View? Content { get; }
+
+	internal Thickness ContentInsets
+	{
+		get => contentInsets;
+		set
+		{
+			if (contentInsets == value)
+				return;
+
+			contentInsets = value;
+			SetNeedsLayout();
+		}
+	}
 
 	internal nfloat KeyboardCover
 	{
@@ -1513,9 +1595,12 @@ internal sealed class EmptyCollectionHost : UIView
 		if (Content is not View)
 			return;
 
-		nfloat height = (nfloat)Math.Max(0, Bounds.Height - keyboardCover);
-		Content.Measure(new(Bounds.Width, height));
-		Content.Arrange(new(0, 0, Bounds.Width, height));
+		Size available = new(
+			Math.Max(0, Bounds.Width - contentInsets.Horizontal),
+			Math.Max(0, Bounds.Height - contentInsets.Vertical - keyboardCover));
+
+		Content.Measure(available);
+		Content.Arrange(new(contentInsets.Left, contentInsets.Top, available.Width, available.Height));
 	}
 }
 
@@ -1708,6 +1793,7 @@ internal sealed class SkeleHeader(
 	UITapGestureRecognizer? tap;
 	Action? toggle;
 	bool expanded;
+	Func<Thickness>? contentInsets;
 
 
 	public View? Hosted { get; private set; }
@@ -1719,6 +1805,13 @@ internal sealed class SkeleHeader(
 		Hosted = view;
 
 		AddSubview(view.Realize());
+	}
+
+	public void SetContentInsets(
+		Func<Thickness>? insets)
+	{
+		contentInsets = insets;
+		SetNeedsLayout();
 	}
 
 	public void SetExpandable(
@@ -1784,10 +1877,12 @@ internal sealed class SkeleHeader(
 		if (Hosted is null)
 			return layoutAttributes;
 
-		Hosted.Measure(new(layoutAttributes.Frame.Width, double.PositiveInfinity));
+		Thickness insets = contentInsets?.Invoke() ?? Thickness.Zero;
+		double width = Math.Max(0, layoutAttributes.Frame.Width - insets.Horizontal);
+		Hosted.Measure(new(width, double.PositiveInfinity));
 
 		CGRect frame = layoutAttributes.Frame;
-		frame.Height = (nfloat)Hosted.DesiredSize.Height;
+		frame.Height = (nfloat)(Hosted.DesiredSize.Height + insets.Vertical);
 		layoutAttributes.Frame = frame;
 
 		return layoutAttributes;
@@ -1797,16 +1892,23 @@ internal sealed class SkeleHeader(
 	{
 		base.LayoutSubviews();
 
+		Thickness insets = contentInsets?.Invoke() ?? Thickness.Zero;
 		nfloat rightInset = 0;
 
 		if (chevron is { Hidden: false })
 		{
 			CGSize size = chevron.Bounds.Size;
-			chevron.Center = new(Bounds.Width - ChevronEdge - size.Width / 2, Bounds.Height / 2);
+			chevron.Center = new(
+				Bounds.Width - (nfloat)insets.Right - ChevronEdge - size.Width / 2,
+				Bounds.Height / 2);
 			rightInset = size.Width + ChevronEdge + ChevronGap;
 		}
 
-		Hosted?.Arrange(new(0, 0, Bounds.Width - rightInset, Bounds.Height));
+		Hosted?.Arrange(new(
+			insets.Left,
+			insets.Top,
+			Math.Max(0, Bounds.Width - insets.Horizontal - rightInset),
+			Math.Max(0, Bounds.Height - insets.Vertical)));
 	}
 
 	void OnHeaderTapped()

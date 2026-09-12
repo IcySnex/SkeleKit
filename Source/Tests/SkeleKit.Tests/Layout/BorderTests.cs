@@ -42,12 +42,15 @@ public class BorderTests
 	[Fact]
 	public void ChildSetter_ReplacesPreviousChild()
 	{
-		Border border = new() { Child = new StubLeaf(1, 1) };
+		StubLeaf original = new(1, 1);
+		Border border = new() { Child = original };
 		StubLeaf replacement = new(50, 50);
 
 		border.Child = replacement;
 
-		Assert.Equal(1, border.Children.Count);
 		Assert.Same(replacement, border.Child);
+		Assert.Null(original.Parent);
+		Assert.Same(border, replacement.Parent);
+		Assert.Null(typeof(Border).GetProperty("Children"));
 	}
 }

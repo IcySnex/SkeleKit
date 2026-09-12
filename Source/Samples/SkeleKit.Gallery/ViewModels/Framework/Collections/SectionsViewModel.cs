@@ -24,6 +24,7 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 			"""
 			CollectionView<SectionEntry, CollectionSection> collection = new()
 			{
+				SystemInsetEdges = LayoutEdges.Horizontal,
 				Header = new CollectionPageHeader(),
 				Footer = new CollectionPageFooter(),
 				GroupedItemsSource = Bind(vm => vm.Sections),

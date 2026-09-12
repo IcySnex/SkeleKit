@@ -190,6 +190,7 @@ internal sealed class ViewView : ShowcaseView<ViewViewModel>
 		commandCard.LongPressCommand = recordInteraction;
 		commandCard.LongPressCommandParameter = "Long press";
 		commandCard.LongPressDuration = 0.7;
+		commandCard.Pressed = pressed => commandCard.Opacity = pressed ? 0.65 : 1;
 
 		Border gestureCard = InteractionCard("Drag, pinch, rotate");
 		gestureCard.Panned = gesture => Pan(gestureCard, status, gesture);

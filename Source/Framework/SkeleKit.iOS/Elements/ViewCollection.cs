@@ -3,7 +3,7 @@ using System.Collections;
 namespace SkeleKit;
 
 /// <summary>
-/// The children of a <see cref="Panel"/>, raising a change callback so the panel can relayout.
+/// The children of a <see cref="Panel"/>, raising a change callback so its container can relayout.
 /// </summary>
 public sealed class ViewCollection : IEnumerable<View>
 {

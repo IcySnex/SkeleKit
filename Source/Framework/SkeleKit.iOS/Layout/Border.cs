@@ -3,7 +3,7 @@ namespace SkeleKit;
 /// <summary>
 /// Wraps a single child with padding and an optional stroke; also the generic padding container.
 /// </summary>
-public partial class Border : Panel
+public partial class Border : Decorator
 {
 	Thickness Inset
 	{
@@ -39,21 +39,6 @@ public partial class Border : Panel
 		get;
 		set => Set(ref field, value, ApplyStroke);
 	}
-
-	/// <summary>
-	/// The single wrapped child.
-	/// </summary>
-	public View? Child
-	{
-		get => Children.Count > 0 ? Children[0] : null;
-		set
-		{
-			Children.Clear();
-			if (value is not null)
-				Children.Add(value);
-		}
-	}
-
 	void ApplyStroke() =>
 		ApplyStrokeCore();
 

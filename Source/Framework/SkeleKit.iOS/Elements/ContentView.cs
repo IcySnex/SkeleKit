@@ -4,9 +4,9 @@ using System.Windows.Input;
 namespace SkeleKit;
 
 /// <summary>
-/// A full screen: compose its tree into <see cref="Content"/> in the constructor.
+/// A full screen: compose its tree into <see cref="ContentHost.Content"/> in the constructor.
 /// </summary>
-public abstract partial class ContentView : Panel
+public abstract partial class ContentView : ContentHost
 {
 	internal Thickness PageSystemInsets { get; private set; } = Thickness.Zero;
 	internal bool PageIsRightToLeft { get; private set; }
@@ -279,23 +279,6 @@ public abstract partial class ContentView : Panel
 	/// Invoked when the user cancels out of the search field.
 	/// </summary>
 	public Action? SearchCanceled { get; set; }
-
-	/// <summary>
-	/// The page's element tree.
-	/// </summary>
-	public View? Content
-	{
-		get => Children.Count > 0 ? Children[0] : null;
-		set
-		{
-			Children.Clear();
-
-			if (value is not null)
-				Children.Add(value);
-		}
-	}
-
-
 	void ApplyTitle() =>
 		ApplyTitleCore();
 

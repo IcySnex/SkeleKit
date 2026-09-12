@@ -5,7 +5,7 @@ namespace SkeleKit;
 /// <summary>
 /// A scrolling container for a single child.
 /// </summary>
-public partial class ScrollView : Panel
+public partial class ScrollView : ContentHost
 {
 	static double Fill(
 		double available,
@@ -126,22 +126,6 @@ public partial class ScrollView : Panel
 		get;
 		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
 	}
-
-	/// <summary>
-	/// The single scrollable child.
-	/// </summary>
-	public View? Content
-	{
-		get => Children.Count > 0 ? Children[0] : null;
-		set
-		{
-			Children.Clear();
-			if (value is not null)
-				Children.Add(value);
-		}
-	}
-
-
 	void ApplyKeyboardDismiss() =>
 		ApplyKeyboardDismissCore();
 

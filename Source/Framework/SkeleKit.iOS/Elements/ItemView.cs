@@ -6,7 +6,7 @@ namespace SkeleKit;
 /// The element tree for one item in a <c>CollectionView</c>.
 /// </summary>
 /// <typeparam name="TItem">The item type the cell shows.</typeparam>
-public abstract class ItemView<TItem> : Panel
+public abstract class ItemView<TItem> : ContentHost
 	where TItem : class
 {
 	/// <summary>
@@ -24,23 +24,6 @@ public abstract class ItemView<TItem> : Panel
 			OnItemChanged(value);
 		}
 	}
-
-	/// <summary>
-	/// The cell's element tree.
-	/// </summary>
-	public View? Content
-	{
-		get => Children.Count > 0 ? Children[0] : null;
-		set
-		{
-			Children.Clear();
-
-			if (value is not null)
-				Children.Add(value);
-		}
-	}
-
-
 	/// <summary>
 	/// Raised whenever this recycled view receives a different item.
 	/// </summary>

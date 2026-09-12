@@ -135,9 +135,9 @@ internal sealed class PageHost : UIViewController
 		if (view.Scrolls)
 			return view;
 
-		if (view is Panel panel)
+		if (view is Container container)
 		{
-			foreach (View child in panel.Children)
+			foreach (View child in container.LogicalChildren)
 			{
 				if (FindScrolling(child) is View match)
 					return match;

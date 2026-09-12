@@ -1,38 +1,47 @@
 namespace SkeleKit;
 
-public abstract partial class Panel
+public abstract partial class Container
 {
+	private protected override bool SupportsLayeredBackground => true;
+
+	// Most containers directly mirror LogicalChildren into their native host. Controls such as
+	// CollectionView inherit the layout contract but let UIKit own the native child hierarchy.
+	private protected virtual bool SynchronizesNativeChildren => true;
+
 	private protected override UIView CreateNative() =>
 		new LayoutHost(this);
 
-	private protected override void OnRealized() =>
-		SyncNativeChildren();
+	private protected override void OnRealized()
+	{
+		if (SynchronizesNativeChildren)
+			SyncNativeChildren();
+	}
 
 	private protected override void OnUnrealized()
 	{
-		foreach (View child in Children)
+		foreach (View child in LogicalChildren)
 			child.Unrealize();
 	}
 
 	partial void OnChildrenChanged()
 	{
-		if (IsRealized)
+		if (IsRealized && SynchronizesNativeChildren)
 			SyncNativeChildren();
 	}
 
 	private protected override void ChildHostChanged()
 	{
-		if (IsRealized)
+		if (IsRealized && SynchronizesNativeChildren)
 			SyncNativeChildren();
 	}
 
-	// diff the host's subviews against Children: keep what is still there, only add/remove/move
+	// diff the host's subviews against logical children: keep what is still there, only add/remove/move
 	void SyncNativeChildren()
 	{
 		UIView host = ChildHost;
 
 		HashSet<UIView> wanted = [];
-		foreach (View child in Children)
+		foreach (View child in LogicalChildren)
 		{
 			if (child.IsRealized)
 				wanted.Add(child.Native);
@@ -49,9 +58,9 @@ public abstract partial class Panel
 		// in the layout host a material background holds subview 0; the effect's content view is clean
 		int offset = ReferenceEquals(host, Native) && BackgroundView is not null ? 1 : 0;
 
-		for (int index = 0; index < Children.Count; index++)
+		for (int index = 0; index < LogicalChildren.Count; index++)
 		{
-			UIView native = Children[index].Realize();
+			UIView native = LogicalChildren[index].Realize();
 
 			// already in the right slot: leave it alone. Re-inserting a UITextField would make it
 			// resign first responder, so never touch a subview that has not moved

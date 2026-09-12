@@ -140,6 +140,8 @@ internal sealed partial class ViewViewModel(
 				LongPressCommandParameter = "Long press",
 				LongPressDuration = 0.7
 			};
+			commandCard.Pressed = pressed =>
+				commandCard.Opacity = pressed ? 0.65 : 1;
 
 			Border gestureCard = new();
 			gestureCard.ContextMenu.Add(new()

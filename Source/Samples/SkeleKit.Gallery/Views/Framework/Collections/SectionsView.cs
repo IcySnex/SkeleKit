@@ -13,6 +13,7 @@ internal sealed class SectionsView : ShowcaseView<SectionsViewModel>
 
 		Content = new CollectionView<SectionEntry, CollectionSection>
 		{
+			SystemInsetEdges = LayoutEdges.Horizontal,
 			Header = new CollectionPageHeader(),
 			Footer = new CollectionPageFooter(),
 			GroupedItemsSource = Bind(vm => vm.Sections),
@@ -38,7 +39,7 @@ internal sealed class CollectionPageHeader : Border
 {
 	public CollectionPageHeader()
 	{
-		Margin = new(16, 12, 16, 4);
+		Margin = new(0, 12, 0, 4);
 		Padding = 16;
 		CornerRadius = 16;
 		Background = Colors.Teal.WithAlpha(0.14);
@@ -72,7 +73,7 @@ internal sealed class CollectionPageFooter : Border
 {
 	public CollectionPageFooter()
 	{
-		Margin = new(16, 8, 16, 16);
+		Margin = new(0, 8, 0, 16);
 		Padding = 12;
 		CornerRadius = 14;
 		Background = Colors.SecondaryGroupedBackground;
@@ -117,7 +118,7 @@ internal sealed class SectionCell : ItemView<SectionEntry>
 	{
 		bool featured = item?.IsFeatured is true;
 		container.Height = featured ? 76 : 64;
-		container.Margin = featured ? Thickness.Zero : new(16, 3);
+		container.Margin = featured ? Thickness.Zero : new(0, 3);
 		container.Background = featured
 			? Colors.Teal.WithAlpha(0.14)
 			: Colors.SecondaryGroupedBackground;
@@ -167,7 +168,7 @@ internal sealed class CollectionHeader : ItemView<CollectionSection>
 		CollectionSection? section) =>
 		container.Margin = section?.Layout is CollectionLayoutKind.Carousel
 			? new(0, 8, 8, 5)
-			: new(16, 8, 16, 5);
+			: new(0, 8, 0, 5);
 }
 
 internal sealed class CollectionFooter : ItemView<CollectionSection>
@@ -190,7 +191,5 @@ internal sealed class CollectionFooter : ItemView<CollectionSection>
 
 	protected override void OnItemChanged(
 		CollectionSection? section) =>
-		label.Margin = section?.Layout is CollectionLayoutKind.Carousel
-			? new(0, 3, 0, 3)
-			: new(16, 3, 16, 3);
+		label.Margin = new(0, 3);
 }

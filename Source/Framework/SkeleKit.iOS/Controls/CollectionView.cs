@@ -17,7 +17,7 @@ public class CollectionView<TItem> : CollectionView<TItem, ISection<TItem>>
 /// </summary>
 /// <typeparam name="TItem">The item type.</typeparam>
 /// <typeparam name="TSection">The section model the header and footer templates bind to.</typeparam>
-public partial class CollectionView<TItem, TSection> : View, ICollectionHost
+public partial class CollectionView<TItem, TSection> : Container, ICollectionHost
 	where TItem : class
 	where TSection : class, ISection<TItem>
 {
@@ -34,6 +34,11 @@ public partial class CollectionView<TItem, TSection> : View, ICollectionHost
 
 
 	private protected override bool ClipsByDefault => true;
+
+	private protected override bool SupportsLayeredBackground => false;
+
+	// UIKit owns the collection's cells and supplementary views. They are not Container children.
+	private protected override bool SynchronizesNativeChildren => false;
 
 	internal override bool Scrolls => true;
 
