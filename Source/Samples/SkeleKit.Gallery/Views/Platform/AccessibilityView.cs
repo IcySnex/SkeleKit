@@ -42,8 +42,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 						VerticalAlignment = VerticalAlignment.Center,
 						Width = 24,
 						Height = 24,
-						Source = ImageSource.Symbol("accessibility"),
-						SymbolSize = 20,
+						Source = ImageSource.Symbol("accessibility", size: 20),
 						Tint = Colors.Teal
 					},
 
@@ -174,8 +173,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 								{
 									Width = 40,
 									Height = 40,
-									Source = ImageSource.Symbol("photo"),
-									SymbolSize = 28,
+									Source = ImageSource.Symbol("photo", size: 28),
 									AccessibilityLabel = "Sample image",
 									AccessibilityTraits = AccessibilityTraits.Image,
 									IsAccessibilityElement = true
@@ -237,8 +235,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 						VerticalAlignment = VerticalAlignment.Center,
 						Width = 42,
 						Height = 42,
-						Source = ImageSource.Symbol("square.stack.3d.up.fill"),
-						SymbolSize = 30,
+						Source = ImageSource.Symbol("square.stack.3d.up.fill", size: 30),
 						Tint = Colors.Teal
 					},
 

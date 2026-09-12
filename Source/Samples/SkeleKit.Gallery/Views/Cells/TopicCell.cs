@@ -16,9 +16,7 @@ internal sealed class TopicCell : ItemView<GalleryTopic>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			Source = Bind(topic => topic.Symbol)
-				.ConvertTo(ImageSource.Symbol),
-			SymbolSize = 19,
-			SymbolWeight = FontWeight.Semibold
+				.ConvertTo(symbol => ImageSource.Symbol(symbol, size: 19, weight: FontWeight.Semibold))
 		};
 
 		iconBackground = new()
@@ -77,9 +75,7 @@ internal sealed class TopicCell : ItemView<GalleryTopic>
 				{
 					HorizontalAlignment = HorizontalAlignment.Center,
 					VerticalAlignment = VerticalAlignment.Center,
-					Source = ImageSource.Symbol("chevron.right"),
-					SymbolSize = 12,
-					SymbolWeight = FontWeight.Semibold,
+					Source = ImageSource.Symbol("chevron.right", size: 12, weight: FontWeight.Semibold),
 					Tint = Colors.TertiaryLabel
 				}.Column(2)
 			}

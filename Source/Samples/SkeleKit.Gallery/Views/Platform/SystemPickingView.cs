@@ -93,8 +93,7 @@ internal sealed class SystemPickingView : ShowcaseView<SystemPickingViewModel>
 								HorizontalAlignment = HorizontalAlignment.Center,
 								Width = 72,
 								Height = 62,
-								Source = ImageSource.Symbol("doc.fill"),
-								SymbolSize = 54,
+								Source = ImageSource.Symbol("doc.fill", size: 54),
 								Tint = Colors.Mint
 							},
 

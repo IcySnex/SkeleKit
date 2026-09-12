@@ -71,12 +71,24 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Width = 120,
 			Height = 110,
-			Source = ImageSource.Symbol("cloud.sun.rain.fill"),
-			SymbolSize = viewModel.SymbolSize,
-			SymbolWeight = viewModel.SelectedWeight.Value,
-			SymbolScale = viewModel.SelectedScale.Value,
-			PrefersMulticolor = viewModel.PrefersMulticolor
+			Source = ImageSource.Symbol(
+				"cloud.sun.rain.fill",
+				size: viewModel.SymbolSize,
+				weight: viewModel.SelectedWeight.Value,
+				scale: viewModel.SelectedScale.Value,
+				prefersMulticolor: viewModel.PrefersMulticolor)
 		};
+		void UpdateSymbol(
+			double? size = null,
+			FontWeight? weight = null,
+			SymbolScale? scale = null,
+			bool? multicolor = null) =>
+			symbol.Source = ImageSource.Symbol(
+				"cloud.sun.rain.fill",
+				size: size ?? viewModel.SymbolSize,
+				weight: weight ?? viewModel.SelectedWeight.Value,
+				scale: scale ?? viewModel.SelectedScale.Value,
+				prefersMulticolor: multicolor ?? viewModel.PrefersMulticolor);
 
 		Slider size = new()
 		{
@@ -85,7 +97,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 				.TwoWay((vm, val) => vm.SymbolSize = val),
 			Minimum = 32,
 			Maximum = 96,
-			ValueChanged = value => symbol.SymbolSize = value
+			ValueChanged = value => UpdateSymbol(size: value)
 		};
 
 		Picker<ShowcaseOption<FontWeight>> weight = new()
@@ -94,7 +106,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 			ItemsSource = viewModel.Weights,
 			SelectedItem = Bind(vm => vm.SelectedWeight)
 				.TwoWay((vm, val) => vm.SelectedWeight = val!),
-			SelectionChanged = option => symbol.SymbolWeight = option.Value
+			SelectionChanged = option => UpdateSymbol(weight: option.Value)
 		};
 
 		Picker<ShowcaseOption<SymbolScale>> scale = new()
@@ -103,17 +115,14 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 			ItemsSource = viewModel.Scales,
 			SelectedItem = Bind(vm => vm.SelectedScale)
 				.TwoWay((vm, val) => vm.SelectedScale = val!),
-			SelectionChanged = option => symbol.SymbolScale = option.Value
+			SelectionChanged = option => UpdateSymbol(scale: option.Value)
 		};
 
 		Switch multicolor = new()
 		{
 			IsOn = Bind(vm => vm.PrefersMulticolor)
 				.TwoWay((vm, val) => vm.PrefersMulticolor = val),
-			Toggled = value =>
-			{
-				symbol.PrefersMulticolor = value;
-			}
+			Toggled = value => UpdateSymbol(multicolor: value)
 		};
 
 		AddShowcase(
@@ -137,8 +146,7 @@ internal sealed class ImageView : ShowcaseView<ImageViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Width = 120,
 			Height = 110,
-			Source = ImageSource.Symbol("speaker.wave.3.fill"),
-			SymbolSize = 72,
+			Source = ImageSource.Symbol("speaker.wave.3.fill", size: 72),
 			SymbolValue = Bind(vm => vm.SymbolValue),
 			SymbolEffect = viewModel.SelectedEffect.Value
 		};

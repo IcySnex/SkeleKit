@@ -31,9 +31,7 @@ internal sealed class NavigationSheetView : ContentView<NavigationSheetViewModel
 					new Image
 					{
 						HorizontalAlignment = HorizontalAlignment.Center,
-						Source = ImageSource.Symbol("rectangle.portrait.bottomhalf.filled"),
-						SymbolSize = 38,
-						SymbolWeight = FontWeight.Semibold,
+						Source = ImageSource.Symbol("rectangle.portrait.bottomhalf.filled", size: 38, weight: FontWeight.Semibold),
 						Tint = Colors.Green
 					},
 

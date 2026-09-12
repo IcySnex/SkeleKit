@@ -116,11 +116,12 @@ internal sealed partial class ImageViewModel : ShowcaseViewModel
 			$$"""
 			new Image
 			{
-				Source = ImageSource.Symbol("cloud.sun.rain.fill"),
-				SymbolSize = {{SymbolSize:0}},
-				SymbolWeight = FontWeight.{{SelectedWeight.Value}},
-				SymbolScale = SymbolScale.{{SelectedScale.Value}},
-				PrefersMulticolor = {{Boolean(PrefersMulticolor)}}
+				Source = ImageSource.Symbol(
+					"cloud.sun.rain.fill",
+					size: {{SymbolSize:0}},
+					weight: FontWeight.{{SelectedWeight.Value}},
+					scale: SymbolScale.{{SelectedScale.Value}},
+					prefersMulticolor: {{Boolean(PrefersMulticolor)}})
 			};
 			""")
 	];
@@ -131,8 +132,7 @@ internal sealed partial class ImageViewModel : ShowcaseViewModel
 			$$"""
 			new Image
 			{
-				Source = ImageSource.Symbol("speaker.wave.3.fill"),
-				SymbolSize = 72,
+				Source = ImageSource.Symbol("speaker.wave.3.fill", size: 72),
 				SymbolValue = Bind(vm => vm.SymbolValue),
 				SymbolEffect = SymbolEffect.{{SelectedEffect.Value}}
 			};

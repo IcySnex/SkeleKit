@@ -73,47 +73,6 @@ public class Image : Control
 	Stretch stretch = Stretch.Uniform;
 
 	/// <summary>
-	/// The symbol's point size, or NaN for its natural size.
-	/// </summary>
-	public double SymbolSize
-	{
-		get;
-		set => Set(ref field, value, ApplySymbolConfiguration);
-	} = double.NaN;
-
-	/// <summary>
-	/// The symbol's stroke weight, or null for its default.
-	/// </summary>
-	public FontWeight? SymbolWeight
-	{
-		get;
-		set => Set(ref field, value, ApplySymbolConfiguration);
-	}
-
-	/// <summary>
-	/// The symbol's relative scale within its font metrics.
-	/// </summary>
-	public SymbolScale SymbolScale
-	{
-		get;
-		set => Set(ref field, value, ApplySymbolConfiguration);
-	}
-
-	/// <summary>
-	/// Colors for the symbol's layers: one gives the hierarchical look, several assign the palette explicitly.
-	/// </summary>
-	public IList<Color> SymbolColors { get; } = [];
-
-	/// <summary>
-	/// Whether a symbol with a built-in multicolor rendition uses it.
-	/// </summary>
-	public bool PrefersMulticolor
-	{
-		get;
-		set => Set(ref field, value, ApplySymbolConfiguration, affectsMeasure: false);
-	}
-
-	/// <summary>
 	/// A value from 0 to 1 driving a variable symbol's layers, such as a wifi or speaker level, or NaN for none.
 	/// </summary>
 	public Bindable<double> SymbolValue
@@ -148,14 +107,6 @@ public class Image : Control
 		if (stretch is Stretch.UniformToFill)
 			Ui.ClipsToBounds = true;
 	}
-
-	void ApplySymbolConfiguration()
-		=> Ui.PreferredSymbolConfiguration = ImageSource.CreateSymbolConfiguration(
-			SymbolSize,
-			SymbolWeight,
-			SymbolScale,
-			SymbolColors,
-			PrefersMulticolor);
 
 	void ApplySymbolEffect()
 	{
@@ -286,7 +237,6 @@ public class Image : Control
 	private protected override void ApplyProperties()
 	{
 		ApplyStretch();
-		ApplySymbolConfiguration();
 		ApplySource();
 		ApplySymbolEffect();
 	}

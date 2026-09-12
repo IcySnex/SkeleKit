@@ -300,8 +300,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 
 			Child = new Image
 			{
-				Source = ImageSource.Symbol("leaf.fill"),
-				SymbolSize = 18,
+				Source = ImageSource.Symbol("leaf.fill", size: 18),
 				Tint = Colors.White
 			}
 		};
@@ -323,8 +322,7 @@ internal sealed class MapView : ShowcaseView<MapViewModel>
 				{
 					new Image
 					{
-						Source = ImageSource.Symbol("square.stack.3d.up.fill"),
-						SymbolSize = 14,
+						Source = ImageSource.Symbol("square.stack.3d.up.fill", size: 14),
 						Tint = Colors.White
 					},
 

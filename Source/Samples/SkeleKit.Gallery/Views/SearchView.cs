@@ -61,9 +61,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 						{
 							HorizontalAlignment = HorizontalAlignment.Center,
 							VerticalAlignment = VerticalAlignment.Center,
-							Source = ImageSource.Symbol("magnifyingglass"),
-							SymbolSize = 28,
-							SymbolWeight = FontWeight.Semibold,
+							Source = ImageSource.Symbol("magnifyingglass", size: 28, weight: FontWeight.Semibold),
 							Tint = Colors.Label
 						}
 					},

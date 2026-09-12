@@ -23,8 +23,7 @@ public sealed class GalleryTabAccessory : Overlay
 			{
 				new Image
 				{
-					Source = ImageSource.Symbol("waveform"),
-					SymbolSize = 22,
+					Source = ImageSource.Symbol("waveform", size: 22),
 					Width = 30,
 					Height = 30,
 					Tint = Colors.Green,

@@ -39,8 +39,7 @@ internal sealed class LifecycleDiView : ShowcaseView<LifecycleDiViewModel>
 						{
 							HorizontalAlignment = HorizontalAlignment.Center,
 							Source = Bind(vm => vm.StatusIcon)
-								.ConvertTo(ImageSource.Symbol),
-							SymbolSize = 30,
+								.ConvertTo(symbol => ImageSource.Symbol(symbol, size: 30)),
 							Tint = Colors.Green
 						},
 

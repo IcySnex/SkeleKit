@@ -43,8 +43,7 @@ internal sealed class HapticsView : ShowcaseView<HapticsViewModel>
 						VerticalAlignment = VerticalAlignment.Center,
 						Width = 24,
 						Height = 24,
-						Source = ImageSource.Symbol("iphone.gen3.radiowaves.left.and.right"),
-						SymbolSize = 20,
+						Source = ImageSource.Symbol("iphone.gen3.radiowaves.left.and.right", size: 20),
 						Tint = Colors.Teal
 					},
 
