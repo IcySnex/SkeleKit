@@ -779,6 +779,11 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (cell.Hosted is ItemView<TItem> view && identifier is ItemKey { Item: TItem item })
 			view.Item = item;
 
+		CollectionLayout layout = LayoutForSection(indexPath.Section);
+		cell.SetAutomaticMinimumHeight(layout.Kind is CollectionLayoutKind.List
+			? SystemListMetrics.MinimumRowHeight(layout.Grouped)
+			: 0);
+
 		return cell;
 	}
 
@@ -1750,6 +1755,7 @@ internal sealed class SkeleCell(
 	public View? Hosted { get; private set; }
 
 	Brush? highlight;
+	double automaticMinimumHeight;
 
 	public void Attach(
 		View view,
@@ -1777,6 +1783,10 @@ internal sealed class SkeleCell(
 		if (accessories.Count > 0)
 			Accessories = [.. accessories];
 	}
+
+	public void SetAutomaticMinimumHeight(
+		double value) =>
+		automaticMinimumHeight = value;
 
 	bool lit;
 
@@ -1810,8 +1820,17 @@ internal sealed class SkeleCell(
 
 		Hosted.Measure(new(layoutAttributes.Frame.Width, double.PositiveInfinity));
 
+		double height = Hosted.DesiredSize.Height;
+		if (double.IsNaN(Hosted.Height) && double.IsNaN(Hosted.MinHeight))
+		{
+			height = Math.Max(height, automaticMinimumHeight);
+
+			if (double.IsFinite(Hosted.MaxHeight))
+				height = Math.Min(height, Hosted.MaxHeight + Hosted.Margin.Vertical);
+		}
+
 		CGRect frame = layoutAttributes.Frame;
-		frame.Height = (nfloat)Hosted.DesiredSize.Height;
+		frame.Height = (nfloat)height;
 		layoutAttributes.Frame = frame;
 
 		return layoutAttributes;

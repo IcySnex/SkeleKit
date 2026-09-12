@@ -503,13 +503,13 @@ public abstract partial class View
 	} = double.PositiveInfinity;
 
 	/// <summary>
-	/// Minimum height in points.
+	/// Minimum height in points, or NaN to let the parent supply its contextual default.
 	/// </summary>
 	public double MinHeight
 	{
 		get;
 		set => Set(ref field, value);
-	}
+	} = double.NaN;
 
 	/// <summary>
 	/// Maximum height in points.
@@ -912,6 +912,9 @@ public abstract partial class View
 		double min,
 		double max)
 	{
+		if (double.IsNaN(min))
+			min = 0;
+
 		double high = double.IsNaN(explicitLength) ? double.PositiveInfinity : explicitLength;
 		double low = double.IsNaN(explicitLength) ? 0 : explicitLength;
 

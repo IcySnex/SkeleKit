@@ -26,6 +26,17 @@ file sealed class FixedView : View
 public class ViewLayoutTests
 {
 	[Fact]
+	public void MinHeight_DefaultsToUnspecifiedWithoutAffectingMeasurement()
+	{
+		FixedView view = new(100, 40);
+
+		view.Measure(Size.Infinity);
+
+		Assert.True(double.IsNaN(view.MinHeight));
+		Assert.Equal(40, view.DesiredSize.Height);
+	}
+
+	[Fact]
 	public void Measure_AddsMarginToDesiredSize()
 	{
 		FixedView view = new(100, 40) { Margin = new Thickness(10) };
