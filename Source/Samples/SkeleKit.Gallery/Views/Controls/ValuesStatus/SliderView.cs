@@ -56,8 +56,8 @@ internal sealed class SliderView : ShowcaseView<SliderViewModel>
 				.TwoWay((vm, val) => vm.ShowsIcons = val),
 			Toggled = value =>
 			{
-			slider.MinIcon = value ? ImageSource.Symbol("speaker.fill") : (ImageSource?)null;
-			slider.MaxIcon = value ? ImageSource.Symbol("speaker.wave.3.fill") : (ImageSource?)null;
+			slider.MinIcon = value ? ImageSource.Symbol("speaker.fill") : null;
+			slider.MaxIcon = value ? ImageSource.Symbol("speaker.wave.3.fill") : null;
 			}
 		};
 

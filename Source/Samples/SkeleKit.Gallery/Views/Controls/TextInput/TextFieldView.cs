@@ -225,7 +225,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 			{
 				field.LeadingIcon = value
 					? ImageSource.Symbol("character.cursor.ibeam")
-					: (ImageSource?)null;
+					: null;
 			}
 		};
 
@@ -252,7 +252,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 			{
 				field.TrailingIcon = index is 1
 					? ImageSource.Symbol("checkmark.circle.fill")
-					: (ImageSource?)null;
+					: null;
 				field.ClearButton = index is 0
 					? viewModel.SelectedClearButton.Value
 					: ClearButton.Never;

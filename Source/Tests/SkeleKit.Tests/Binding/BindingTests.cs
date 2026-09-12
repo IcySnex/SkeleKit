@@ -168,6 +168,15 @@ public class BindingTests
 	}
 
 	[Fact]
+	public void Converter_AssignsReferenceResultToNullableTargetWithoutCast()
+	{
+		Bindable<ImageSource?> converted = BindingFactory.Bind((MovieViewModel vm) => vm.Title)
+			.ConvertTo(ImageSource.Symbol);
+
+		Assert.NotNull(converted.Expression);
+	}
+
+	[Fact]
 	public void Literal_AppliesWithoutContext()
 	{
 		StubBound view = new() { Text = "literal" };

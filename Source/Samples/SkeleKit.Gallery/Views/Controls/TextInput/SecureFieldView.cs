@@ -141,7 +141,7 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 			{
 				field.TrailingIcon = value
 					? ImageSource.Symbol("checkmark.circle.fill")
-					: (ImageSource?)null;
+					: null;
 			}
 		};
 

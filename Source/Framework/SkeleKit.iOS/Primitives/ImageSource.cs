@@ -3,7 +3,7 @@ namespace SkeleKit;
 /// <summary>
 /// Describes where an image comes from, without touching UIKit.
 /// </summary>
-public readonly partial struct ImageSource
+public sealed partial record ImageSource
 {
 	/// <summary>
 	/// An image from an SF Symbol name.

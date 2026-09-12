@@ -1,6 +1,6 @@
 namespace SkeleKit;
 
-public readonly partial struct ImageSource
+public sealed partial record ImageSource
 {
 	internal UIImage? ResolveLocal(
 		double symbolValue = double.NaN,
