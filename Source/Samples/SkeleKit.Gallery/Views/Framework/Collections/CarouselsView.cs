@@ -23,7 +23,7 @@ internal sealed class CarouselsView : ShowcaseView<CarouselsViewModel>
 					itemWidth: 260,
 					spacing: 16,
 					snap: snap),
-				HighlightsSelection = false
+				RetainsSelection = false
 			};
 
 		carouselHost.Child = CreateCarousel(SnapFor(viewModel.SnapIndex));

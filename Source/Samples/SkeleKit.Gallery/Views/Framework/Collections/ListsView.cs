@@ -51,7 +51,11 @@ internal sealed class ListsView : ShowcaseView<ListsViewModel>
 
 internal sealed class ListCell : ItemView<ListEntry>
 {
-	public ListCell() =>
+	public ListCell()
+	{
+		Background = Colors.SecondaryGroupedBackground;
+		HighlightBackground = Colors.Teal.WithAlpha(0.16);
+
 		Content = new Border
 		{
 			Height = 52,
@@ -64,4 +68,5 @@ internal sealed class ListCell : ItemView<ListEntry>
 				TextStyle = TextStyle.Body
 			}
 		};
+	}
 }

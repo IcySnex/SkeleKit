@@ -38,7 +38,7 @@ internal abstract class CatalogView<TViewModel> : TintView<TViewModel>
 			SectionHeaderTemplate = static () => new SectionHeaderView(),
 			Layout = CollectionLayout.List(grouped: true),
 			ItemCommand = viewModel.OpenTopicCommand,
-			HighlightsSelection = true,
+			RetainsSelection = true,
 			IgnoresSafeArea = SafeAreaEdges.Top | SafeAreaEdges.Bottom,
 			Scrolled = offset => glow.Opacity = Math.Clamp(1 - Math.Max(0, offset) / 120, 0, 1)
 		};

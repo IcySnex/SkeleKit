@@ -769,7 +769,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 			cell.Attach(
 				created,
-				HighlightsSelection ? HighlightColor?.ToUIColor() ?? UIColor.SystemGray4 : null,
+				created.HighlightBackground,
 				MultiSelects,
 				ReorderCommand is not null);
 		}
@@ -1365,7 +1365,7 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 			return;
 		}
 
-		if (!element.HighlightsSelection)
+		if (!element.RetainsSelection)
 			collectionView.DeselectItem(indexPath, true);
 
 		element.Select(indexPath.Section, indexPath.Row);
@@ -1706,11 +1706,11 @@ internal sealed class SkeleCell(
 {
 	public View? Hosted { get; private set; }
 
-	UIColor? highlight;
+	Brush? highlight;
 
 	public void Attach(
 		View view,
-		UIColor? highlight,
+		Brush? highlight,
 		bool multiselects,
 		bool reorders)
 	{
@@ -1749,12 +1749,7 @@ internal sealed class SkeleCell(
 
 		lit = wantsLit;
 
-		UIBackgroundConfiguration background = UIBackgroundConfiguration.ClearConfiguration;
-
-		if (wantsLit)
-			background.BackgroundColor = highlight;
-
-		BackgroundConfiguration = background;
+		Hosted?.SetBackgroundOverride(wantsLit ? highlight : null);
 	}
 
 	public override void LayoutSubviews()

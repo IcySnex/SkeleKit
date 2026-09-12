@@ -167,14 +167,12 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	public Thickness? SeparatorInsets { get; set; }
 
 	/// <summary>
-	/// Whether a tapped row shows a highlight until the page is next appeared.
+	/// Whether a tapped row remains selected until the page next appears.
 	/// </summary>
-	public bool HighlightsSelection { get; set; } = true;
-
-	/// <summary>
-	/// The tapped row's highlight color, or null for the system gray.
-	/// </summary>
-	public Color? HighlightColor { get; set; }
+	/// <remarks>
+	/// The row appearance is defined by <see cref="ItemView{TItem}.HighlightBackground"/>.
+	/// </remarks>
+	public bool RetainsSelection { get; set; } = true;
 
 	/// <summary>
 	/// Maps a section to its letter in the fast-scroll index, or null for no index.

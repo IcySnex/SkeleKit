@@ -10,6 +10,11 @@ public abstract class ItemView<TItem> : ContentHost
 	where TItem : class
 {
 	/// <summary>
+	/// The background shown while the cell is pressed or selected, or null for no highlight.
+	/// </summary>
+	public Brush? HighlightBackground { get; set; } = Colors.Gray4;
+
+	/// <summary>
 	/// The item this cell shows. Swapped on reuse; the bindings re-fire.
 	/// </summary>
 	public TItem? Item

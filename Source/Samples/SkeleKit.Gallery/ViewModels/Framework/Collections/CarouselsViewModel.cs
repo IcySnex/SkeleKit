@@ -31,7 +31,7 @@ internal sealed partial class CarouselsViewModel : ShowcaseViewModel
 						itemWidth: 260,
 						spacing: 16,
 						snap: snap),
-					HighlightsSelection = false
+					RetainsSelection = false
 				};
 
 			Border host = new()

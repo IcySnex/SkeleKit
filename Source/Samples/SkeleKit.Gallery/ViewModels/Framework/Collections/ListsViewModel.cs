@@ -36,12 +36,17 @@ internal sealed partial class ListsViewModel : ShowcaseViewModel
 
 			sealed class ListCell : ItemView<ListEntry>
 			{
-				public ListCell() =>
+				public ListCell()
+				{
+					Background = Colors.SecondaryGroupedBackground;
+					HighlightBackground = Colors.Teal.WithAlpha(0.16);
+
 					Content = new Border
 					{
 						Height = 52,
 						Child = new Label { Text = Bind(item => item.Title) }
 					};
+				}
 			}
 			""");
 

@@ -27,4 +27,21 @@ public sealed class ItemViewTests
 		Assert.Same(item, view.ChangedTo);
 		Assert.Same(item, view.BindingContext);
 	}
+
+	[Fact]
+	public void HighlightBackground_DefaultsToSystemGray()
+	{
+		TestItemView view = new();
+		SolidBrush brush = Assert.IsType<SolidBrush>(view.HighlightBackground);
+
+		Assert.Equal(Colors.Gray4, brush.Color);
+	}
+
+	[Fact]
+	public void HighlightBackground_CanBeDisabled()
+	{
+		TestItemView view = new() { HighlightBackground = null };
+
+		Assert.Null(view.HighlightBackground);
+	}
 }

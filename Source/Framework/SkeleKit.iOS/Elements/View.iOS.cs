@@ -129,6 +129,7 @@ public abstract partial class View
 	UIAccessibilityTrait? defaultTraits;
 	CAGradientLayer? gradientLayer;
 	UIVisualEffectView? materialView;
+	Brush? backgroundOverride;
 
 	Thickness PageSafeArea
 	{
@@ -168,7 +169,9 @@ public abstract partial class View
 
 	internal UIView? BackgroundView => materialView;
 
-	internal UIView ChildHost => materialView is UIVisualEffectView material && Background is Material { Kind: MaterialKind.Glass }
+	Brush? EffectiveBackground => backgroundOverride ?? Background;
+
+	internal UIView ChildHost => materialView is UIVisualEffectView material && EffectiveBackground is Material { Kind: MaterialKind.Glass }
 		? material.ContentView
 		: Native;
 
@@ -333,7 +336,7 @@ public abstract partial class View
 		if (native is null)
 			return;
 
-		switch (Background)
+		switch (EffectiveBackground)
 		{
 			case SolidBrush solid:
 				DropGradient();
@@ -366,6 +369,23 @@ public abstract partial class View
 		}
 
 		ChildHostChanged();
+	}
+
+	// UIKit cells drive this from their native highlighted/selected configuration state. Keeping
+	// the override out of Background preserves the view's declared normal appearance.
+	internal void SetBackgroundOverride(
+		Brush? background)
+	{
+		if (ReferenceEquals(backgroundOverride, background))
+			return;
+
+		bool clearsToNativeDefault = background is null && Background is null;
+		backgroundOverride = background;
+
+		if (clearsToNativeDefault && native is not null)
+			native.BackgroundColor = UIColor.Clear;
+
+		ApplyVisualState();
 	}
 
 	void ApplyShadow()
@@ -649,7 +669,7 @@ public abstract partial class View
 		// a clipped layer cannot draw a shadow: the shadow is outside the bounds. A corner radius alone
 		// still clips (an Image must round its content), a shadow turns that off. Glass rounds by
 		// corner configuration instead: a layer clip would scissor its rim lensing
-		bool glass = Background is Material { Kind: MaterialKind.Glass } && OperatingSystem.IsIOSVersionAtLeast(26);
+		bool glass = EffectiveBackground is Material { Kind: MaterialKind.Glass } && OperatingSystem.IsIOSVersionAtLeast(26);
 
 		native.ClipsToBounds = ClipsToBounds || CornerRadius > 0 && Shadow is null && !glass || ClipsByDefault;
 

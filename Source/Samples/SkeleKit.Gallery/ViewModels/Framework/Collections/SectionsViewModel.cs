@@ -40,7 +40,7 @@ internal sealed class SectionsViewModel : ShowcaseViewModel
 						snap: CarouselSnap.ItemPeek),
 					_ => CollectionLayout.List()
 				},
-				HighlightsSelection = false,
+				RetainsSelection = false,
 				ShowsSeparators = false
 			};
 

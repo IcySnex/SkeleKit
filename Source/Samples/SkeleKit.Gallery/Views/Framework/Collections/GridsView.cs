@@ -34,7 +34,7 @@ internal sealed class GridsView : ShowcaseView<GridsViewModel>
 			ItemsSource = viewModel.Items,
 			ItemTemplate = static () => new GridCell(),
 			Layout = CollectionLayout.Grid(columns: 3, spacing: 12),
-			HighlightsSelection = false,
+			RetainsSelection = false,
 
 			EmptyView = new Label
 			{
