@@ -98,6 +98,14 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	public Func<ItemView<TItem>>? ItemTemplate { get; set; }
 
 	/// <summary>
+	/// Chooses a strongly typed cell template from each item's runtime type.
+	/// </summary>
+	/// <remarks>
+	/// Takes precedence over <see cref="ItemTemplate"/>. Register every concrete runtime item type before the collection is realized.
+	/// </remarks>
+	public ItemTemplateSelector<TItem>? ItemTemplateSelector { get; set; }
+
+	/// <summary>
 	/// One view above every section. It scrolls with the collection.
 	/// </summary>
 	public View? Header
@@ -136,7 +144,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// Gives each section its own layout, or null to arrange every section with <see cref="Layout"/>.
 	/// </summary>
 	/// <remarks>
-	/// Mixes arrangements in one collection, like a carousel row above a list. Every section shares the one <see cref="ItemTemplate"/>.
+	/// Mixes arrangements in one collection, like a carousel row above a list. Every section shares the configured item template or selector.
 	/// </remarks>
 	public Func<TSection, CollectionLayout>? SectionLayout { get; set; }
 

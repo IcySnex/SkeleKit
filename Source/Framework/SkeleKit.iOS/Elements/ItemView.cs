@@ -2,11 +2,20 @@ using System.Runtime.CompilerServices;
 
 namespace SkeleKit;
 
+internal interface ICollectionItemView
+{
+	View View { get; }
+
+	Brush? HighlightBackground { get; }
+
+	void SetItem(object? item);
+}
+
 /// <summary>
 /// The element tree for one item in a <c>CollectionView</c>.
 /// </summary>
 /// <typeparam name="TItem">The item type the cell shows.</typeparam>
-public abstract class ItemView<TItem> : ContentHost
+public abstract class ItemView<TItem> : ContentHost, ICollectionItemView
 	where TItem : class
 {
 	/// <summary>
@@ -79,4 +88,22 @@ public abstract class ItemView<TItem> : ContentHost
 		Func<TItem, T> read,
 		[CallerArgumentExpression(nameof(read))] string? path = null) =>
 		BindingFactory.Bind(read, path);
+
+
+	View ICollectionItemView.View => this;
+
+	void ICollectionItemView.SetItem(
+		object? item)
+	{
+		if (item is null)
+		{
+			Item = null;
+			return;
+		}
+
+		if (item is not TItem typed)
+			throw new ArgumentException($"An ItemView<{typeof(TItem).Name}> cannot display {item.GetType().Name}.", nameof(item));
+
+		Item = typed;
+	}
 }

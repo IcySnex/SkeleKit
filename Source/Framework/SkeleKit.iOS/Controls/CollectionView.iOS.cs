@@ -16,10 +16,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	readonly Dictionary<object, ItemKey> keys = new(ReferenceEqualityComparer.Instance);
 	readonly List<NSNumber> sectionKeys = [];
+	readonly Dictionary<ItemTemplateRegistration<TItem>, ICollectionItemView> sizingViews = [];
 
 	CollectionSource? data;
 	CollectionDelegate<TItem, TSection>? selection;
 	EmptyCollectionHost? emptyHost;
+	ItemTemplateRegistration<TItem>? defaultItemTemplate;
 
 	bool snapshotQueued;
 	bool usesSystemContentInsets;
@@ -32,6 +34,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	private protected override UIView CreateNative()
 	{
 		bool carousel = Layout.Kind is CollectionLayoutKind.Carousel;
+		defaultItemTemplate = ItemTemplateSelector is null && ItemTemplate is Func<ItemView<TItem>> template
+			? ItemTemplateRegistration<TItem>.CreateDefault(CellId, template)
+			: null;
 
 		CollectionHost collection = new(this, CreateLayout(
 			SectionHeaderTemplate is not null,
@@ -47,7 +52,15 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			AutomaticallyAdjustsScrollIndicatorInsets = false
 		};
 
-		collection.RegisterClassForCell(typeof(SkeleCell), CellId);
+		if (ItemTemplateSelector is ItemTemplateSelector<TItem> selector)
+		{
+			foreach (ItemTemplateRegistration<TItem> itemTemplate in selector.Templates)
+				collection.RegisterClassForCell(typeof(SkeleCell), itemTemplate.ReuseIdentifier);
+		}
+		else
+		{
+			collection.RegisterClassForCell(typeof(SkeleCell), CellId);
+		}
 		collection.RegisterClassForSupplementaryView(
 			typeof(SkeleHeader),
 			UICollectionElementKindSection.Header,
@@ -761,23 +774,26 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		NSIndexPath indexPath,
 		NSObject identifier)
 	{
-		SkeleCell cell = (SkeleCell)collectionView.DequeueReusableCell(CellId, indexPath);
+		if (identifier is not ItemKey { Item: TItem item })
+			throw new InvalidOperationException("The collection snapshot contains an invalid item identifier.");
+
+		ItemTemplateRegistration<TItem> itemTemplate = TemplateFor(item);
+		SkeleCell cell = (SkeleCell)collectionView.DequeueReusableCell(itemTemplate.ReuseIdentifier, indexPath);
 
 		// the tree is built once per recycled cell, then only rebound
 		if (cell.Hosted is null)
 		{
-			ItemView<TItem> created = CreateItemView();
-			created.TintHost = this;
+			ICollectionItemView created = CreateItemView(itemTemplate);
 
 			cell.Attach(
-				created,
+				created.View,
 				created.HighlightBackground,
 				MultiSelects,
 				ReorderCommand is not null);
 		}
 
-		if (cell.Hosted is ItemView<TItem> view && identifier is ItemKey { Item: TItem item })
-			view.Item = item;
+		if (cell.Hosted is ICollectionItemView view)
+			view.SetItem(item);
 
 		CollectionLayout layout = LayoutForSection(indexPath.Section);
 		cell.SetAutomaticMinimumHeight(layout.Kind is CollectionLayoutKind.List
@@ -1056,10 +1072,20 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		UIView.Animate(duration, ApplyKeyboardLayout);
 	}
 
-	internal ItemView<TItem> CreateItemView() =>
-		ItemTemplate?.Invoke()
+	ItemTemplateRegistration<TItem> TemplateFor(
+		TItem item) =>
+		ItemTemplateSelector?.Select(item)
+		?? defaultItemTemplate
 		?? throw new InvalidOperationException(
-			$"CollectionView<{typeof(TItem).Name}> needs an ItemTemplate.");
+			$"CollectionView<{typeof(TItem).Name}> needs an ItemTemplate or ItemTemplateSelector.");
+
+	ICollectionItemView CreateItemView(
+		ItemTemplateRegistration<TItem> template)
+	{
+		ICollectionItemView created = template.Build();
+		created.View.TintHost = this;
+		return created;
+	}
 
 	internal ItemView<TSection>? CreateHeaderView() =>
 		SectionHeaderTemplate?.Invoke();
@@ -1295,22 +1321,35 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			kind,
 			footer ? NSRectAlignment.Bottom : NSRectAlignment.Top);
 
-	ItemView<TItem>? sizingCell;
 	bool sizedWithItem;
 
 	double RowHeight(
 		double width)
 	{
-		sizingCell ??= CreateItemView();
+		TItem? item = ItemAt(0, 0);
+		ItemTemplateRegistration<TItem>? itemTemplate = item is not null
+			? TemplateFor(item)
+			: defaultItemTemplate;
 
-		if (ItemAt(0, 0) is TItem item)
+		// A selector cannot choose a template before the first item exists. The first
+		// real snapshot invalidates the layout and replaces this temporary estimate.
+		if (itemTemplate is null)
+			return 44;
+
+		if (!sizingViews.TryGetValue(itemTemplate, out ICollectionItemView? sizingView))
 		{
-			sizingCell.Item = item;
+			sizingView = CreateItemView(itemTemplate);
+			sizingViews.Add(itemTemplate, sizingView);
+		}
+
+		if (item is not null)
+		{
+			sizingView.SetItem(item);
 			sizedWithItem = true;
 		}
 
-		sizingCell.Measure(new(width, double.PositiveInfinity));
-		return sizingCell.DesiredSize.Height;
+		sizingView.View.Measure(new(width, double.PositiveInfinity));
+		return sizingView.View.DesiredSize.Height;
 	}
 
 	NSCollectionLayoutSection GridSection(
