@@ -6,7 +6,7 @@
 		<Deterministic>true</Deterministic>
 		<ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
 
-		<SkeleKitPackageVersion>0.1.14</SkeleKitPackageVersion>
+		<SkeleKitPackageVersion>0.1.15</SkeleKitPackageVersion>
 
 		<ValidateXcodeVersion>false</ValidateXcodeVersion>
 	</PropertyGroup>

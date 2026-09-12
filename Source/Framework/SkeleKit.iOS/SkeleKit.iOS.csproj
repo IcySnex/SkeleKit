@@ -19,8 +19,17 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes><![CDATA[- Add collection-wide Header and Footer views.
-- Rename HeaderTemplate and FooterTemplate to SectionHeaderTemplate and SectionFooterTemplate.]]></PackageReleaseNotes>
+        <PackageReleaseNotes><![CDATA[- Support ItemTemplate selectors for CollectionView.
+- Allow binding to a specific object instead of view's context.
+- Refine container API: Panel exposes Children, Border exposes Child, and ContentView, ScrollView, and ItemView expose Content.
+- Allow style, size, padding and indicator customization for Picker.
+- Remove SelectsFromMenu and IconSize from Button.
+- Let ItemView own its normal and highlighted backgrounds.
+- Auto size ItemView height using MinHeight.
+- Make ImageSource sealed record instead of struct.
+- Fix alpha not working for system colors.
+- Fix navigation always using tab stack instead of inside modals.
+- Fix Pressed action subscription suppressing TapCommand.]]></PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 
