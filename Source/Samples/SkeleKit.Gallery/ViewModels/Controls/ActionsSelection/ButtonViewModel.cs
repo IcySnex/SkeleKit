@@ -101,12 +101,11 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 			new Button
 			{
 				Text = "Save",
-				Icon = ImageSource.Symbol("square.and.arrow.down"),
+				Icon = ImageSource.Symbol("square.and.arrow.down", size: {{Number(IconSize)}}),
 				Subtitle = {{NullableString(ShowsSubtitle, "Updated moments ago")}},
 				Kind = ButtonStyle.Tinted,
 				Size = ButtonSize.Large,
 				IconPlacement = IconPlacement.{{SelectedPlacement.Value}},
-				IconSize = {{Number(IconSize)}},
 				IconSpacing = {{Number(IconSpacing)}},
 				Padding = new Thickness({{Number(HorizontalPadding)}}, 12)
 			};

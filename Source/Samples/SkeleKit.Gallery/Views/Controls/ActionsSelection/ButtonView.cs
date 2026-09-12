@@ -70,12 +70,12 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			Text = "Save",
-			Icon = ImageSource.Symbol("square.and.arrow.down"),
+			Icon = Bind(vm => vm.IconSize)
+				.ConvertTo(value => ImageSource.Symbol("square.and.arrow.down", size: value)),
 			Subtitle = "Updated moments ago",
 			Kind = ButtonStyle.Tinted,
 			Size = ButtonSize.Large,
 			IconPlacement = viewModel.SelectedPlacement.Value,
-			IconSize = viewModel.IconSize,
 			IconSpacing = viewModel.IconSpacing,
 			Padding = new(viewModel.HorizontalPadding, 12)
 		};
@@ -105,8 +105,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 			Maximum = 28,
 			Step = 1,
 			Value = Bind(vm => vm.IconSize)
-				.TwoWay((vm, val) => vm.IconSize = val),
-			ValueChanged = value => button.IconSize = value
+				.TwoWay((vm, val) => vm.IconSize = val)
 		};
 
 		Slider iconSpacing = new()

@@ -74,16 +74,6 @@ public class Button : Control
 	IconPlacement iconPlacement = IconPlacement.Leading;
 
 	/// <summary>
-	/// The SF Symbol icon's point size, or NaN to match the size class. Other images keep their intrinsic size.
-	/// </summary>
-	public double IconSize
-	{
-		get => iconSize;
-		set => Set(ref iconSize, value, ApplyConfiguration);
-	}
-	double iconSize = double.NaN;
-
-	/// <summary>
 	/// Points between the icon (or spinner) and the text.
 	/// </summary>
 	public double IconSpacing
@@ -181,15 +171,13 @@ public class Button : Control
 		{
 			configuration.Image = iconSource.ResolveLocal();
 
-			double points = double.IsNaN(iconSize)
-				? size switch
-				{
-					ButtonSize.Mini => 10,
-					ButtonSize.Small => 11,
-					ButtonSize.Large => 15,
-					_ => 13
-				}
-				: iconSize;
+			double points = size switch
+			{
+				ButtonSize.Mini => 10,
+				ButtonSize.Small => 11,
+				ButtonSize.Large => 15,
+				_ => 13
+			};
 
 			configuration.PreferredSymbolConfigurationForImage = iconSource.CreateSymbolConfiguration(
 				points,
