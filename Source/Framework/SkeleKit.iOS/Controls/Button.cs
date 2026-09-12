@@ -180,23 +180,7 @@ public class Button : Control
 
 	void ApplyConfiguration()
 	{
-		bool glassy = OperatingSystem.IsIOSVersionAtLeast(26);
-
-		UIButtonConfiguration configuration = kind switch
-		{
-			ButtonStyle.Gray => UIButtonConfiguration.GrayButtonConfiguration,
-			ButtonStyle.Tinted => UIButtonConfiguration.TintedButtonConfiguration,
-			ButtonStyle.Filled or ButtonStyle.FilledCapsule => UIButtonConfiguration.FilledButtonConfiguration,
-			ButtonStyle.Glass when glassy => UIButtonConfiguration.GlassButtonConfiguration,
-			ButtonStyle.ProminentGlass => glassy
-				? UIButtonConfiguration.ProminentGlassButtonConfiguration
-				: UIButtonConfiguration.FilledButtonConfiguration,
-			ButtonStyle.ClearGlass when glassy => UIButtonConfiguration.ClearGlassButtonConfiguration,
-			_ => UIButtonConfiguration.PlainButtonConfiguration
-		};
-
-		if (kind is ButtonStyle.FilledCapsule)
-			configuration.CornerStyle = UIButtonConfigurationCornerStyle.Capsule;
+		UIButtonConfiguration configuration = NativeButtonConfiguration.Create(kind, Tint, isDestructive);
 
 		configuration.Title = text;
 		configuration.Subtitle = subtitle;
@@ -249,30 +233,6 @@ public class Button : Control
 				(nfloat)insets.Left,
 				(nfloat)insets.Bottom,
 				(nfloat)insets.Right);
-		}
-
-		bool filled = kind is ButtonStyle.Filled or ButtonStyle.FilledCapsule or ButtonStyle.ProminentGlass;
-
-		if (isDestructive)
-		{
-			configuration.BaseForegroundColor = UIColor.SystemRed;
-
-			if (filled)
-			{
-				configuration.BaseBackgroundColor = UIColor.SystemRed;
-				configuration.BaseForegroundColor = UIColor.White;
-			}
-		}
-		// a configuration paints from its own colors, not the view tint
-		else if (Tint is Color tint)
-		{
-			UIColor color = tint.ToUIColor();
-
-			if (filled || kind is ButtonStyle.Tinted)
-				configuration.BaseBackgroundColor = color;
-
-			if (!filled)
-				configuration.BaseForegroundColor = color;
 		}
 
 		Ui.Configuration = configuration;

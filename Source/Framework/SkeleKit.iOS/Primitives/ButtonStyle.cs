@@ -1,7 +1,7 @@
 namespace SkeleKit;
 
 /// <summary>
-/// The visual treatment of a <c>Button</c>.
+/// The visual treatment of a button-based control such as <c>Button</c> or <c>Picker</c>.
 /// </summary>
 public enum ButtonStyle
 {

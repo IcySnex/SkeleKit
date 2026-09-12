@@ -30,6 +30,26 @@ public class Picker<TItem> : Control
 	Binding<IReadOnlyList<TItem>?>? itemsBinding;
 
 	/// <summary>
+	/// The picker's native button style.
+	/// </summary>
+	public ButtonStyle Kind
+	{
+		get => kind;
+		set => Set(ref kind, value, ApplyConfiguration);
+	}
+	ButtonStyle kind = ButtonStyle.Gray;
+
+	/// <summary>
+	/// Whether a popup indicator appears after the selected item's title.
+	/// </summary>
+	public bool ShowsIndicator
+	{
+		get => showsIndicator;
+		set => Set(ref showsIndicator, value, ApplyConfiguration);
+	}
+	bool showsIndicator = true;
+
+	/// <summary>
 	/// The selected item, or null for none.
 	/// </summary>
 	public Bindable<TItem?> SelectedItem
@@ -128,7 +148,22 @@ public class Picker<TItem> : Control
 		}
 
 		Ui.Menu = UIMenu.Create(actions);
-		Ui.SetTitle(selected is TItem current ? ItemTitle(current) : placeholder, UIControlState.Normal);
+		ApplyConfiguration();
+	}
+
+	void ApplyConfiguration()
+	{
+		UIButtonConfiguration configuration = NativeButtonConfiguration.Create(kind, Tint);
+		configuration.Title = selected is TItem current ? ItemTitle(current) : placeholder;
+		configuration.TitleLineBreakMode = UILineBreakMode.TailTruncation;
+		configuration.Indicator = showsIndicator
+			? UIButtonConfigurationIndicator.Popup
+			: UIButtonConfigurationIndicator.None;
+
+		Ui.Configuration = configuration;
+		Ui.InvalidateIntrinsicContentSize();
+		Ui.SetNeedsLayout();
+		InvalidateMeasure();
 	}
 
 	void OnSelected(
@@ -142,9 +177,8 @@ public class Picker<TItem> : Control
 
 
 	private protected override UIView CreateNative() =>
-		new UIButton(UIButtonType.System)
+		new UIButton
 		{
-			Configuration = UIButtonConfiguration.GrayButtonConfiguration,
 			ShowsMenuAsPrimaryAction = true
 		};
 
@@ -156,4 +190,11 @@ public class Picker<TItem> : Control
 
 	private protected override void OnUnrealized() =>
 		UnhookItems();
+
+
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			ApplyConfiguration();
+	}
 }
