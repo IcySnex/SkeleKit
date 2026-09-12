@@ -53,6 +53,7 @@ internal sealed partial class PickerViewModel : ShowcaseViewModel
 			Picker<PickerDestination> picker = new()
 			{
 				Kind = ButtonStyle.Plain,
+				Padding = Thickness.Zero,
 				ShowsIndicator = true,
 				ItemsSource = destinations,
 				SelectedItem = Bind(vm => vm.SelectedDestination)

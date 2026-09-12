@@ -40,6 +40,26 @@ public class Picker<TItem> : Control
 	ButtonStyle kind = ButtonStyle.Gray;
 
 	/// <summary>
+	/// The built-in size class.
+	/// </summary>
+	public ButtonSize Size
+	{
+		get => size;
+		set => Set(ref size, value, ApplyConfiguration);
+	}
+	ButtonSize size = ButtonSize.Medium;
+
+	/// <summary>
+	/// Padding around the title and indicator, or null for the size class default.
+	/// </summary>
+	public Thickness? Padding
+	{
+		get => padding;
+		set => Set(ref padding, value, ApplyConfiguration);
+	}
+	Thickness? padding;
+
+	/// <summary>
 	/// Whether a popup indicator appears after the selected item's title.
 	/// </summary>
 	public bool ShowsIndicator
@@ -156,6 +176,7 @@ public class Picker<TItem> : Control
 		UIButtonConfiguration configuration = NativeButtonConfiguration.Create(kind, Tint);
 		configuration.Title = selected is TItem current ? ItemTitle(current) : placeholder;
 		configuration.TitleLineBreakMode = UILineBreakMode.TailTruncation;
+		NativeButtonConfiguration.ApplyLayout(configuration, size, padding);
 		configuration.Indicator = showsIndicator
 			? UIButtonConfigurationIndicator.Popup
 			: UIButtonConfigurationIndicator.None;

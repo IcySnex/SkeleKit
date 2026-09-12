@@ -186,13 +186,7 @@ public class Button : Control
 		configuration.Subtitle = subtitle;
 		configuration.TitleLineBreakMode = UILineBreakMode.TailTruncation;
 		configuration.SubtitleLineBreakMode = UILineBreakMode.TailTruncation;
-		configuration.ButtonSize = size switch
-		{
-			ButtonSize.Mini => UIButtonConfigurationSize.Mini,
-			ButtonSize.Small => UIButtonConfigurationSize.Small,
-			ButtonSize.Large => UIButtonConfigurationSize.Large,
-			_ => UIButtonConfigurationSize.Medium
-		};
+		NativeButtonConfiguration.ApplyLayout(configuration, size, padding);
 
 		if (icon is ImageSource iconSource)
 		{
@@ -225,15 +219,6 @@ public class Button : Control
 
 		if ((icon is not null || isLoading) && text is not null)
 			configuration.ImagePadding = (nfloat)iconSpacing;
-
-		if (padding is Thickness insets)
-		{
-			configuration.ContentInsets = new(
-				(nfloat)insets.Top,
-				(nfloat)insets.Left,
-				(nfloat)insets.Bottom,
-				(nfloat)insets.Right);
-		}
 
 		Ui.Configuration = configuration;
 		RefreshConfigurationLayout();

@@ -22,6 +22,7 @@ internal sealed class PickerView : ShowcaseView<PickerViewModel>
 			HorizontalAlignment = HorizontalAlignment.Center,
 			MinWidth = 220,
 			Kind = ButtonStyle.Plain,
+			Padding = Thickness.Zero,
 			ShowsIndicator = true,
 			ItemsSource = Bind(vm => vm.Destinations),
 			SelectedItem = Bind(vm => vm.SelectedDestination)

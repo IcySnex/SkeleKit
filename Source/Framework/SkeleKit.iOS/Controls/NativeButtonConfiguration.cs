@@ -50,4 +50,27 @@ internal static class NativeButtonConfiguration
 
 		return configuration;
 	}
+
+	public static void ApplyLayout(
+		UIButtonConfiguration configuration,
+		ButtonSize size,
+		Thickness? padding)
+	{
+		configuration.ButtonSize = size switch
+		{
+			ButtonSize.Mini => UIButtonConfigurationSize.Mini,
+			ButtonSize.Small => UIButtonConfigurationSize.Small,
+			ButtonSize.Large => UIButtonConfigurationSize.Large,
+			_ => UIButtonConfigurationSize.Medium
+		};
+
+		if (padding is Thickness insets)
+		{
+			configuration.ContentInsets = new(
+				(nfloat)insets.Top,
+				(nfloat)insets.Left,
+				(nfloat)insets.Bottom,
+				(nfloat)insets.Right);
+		}
+	}
 }
