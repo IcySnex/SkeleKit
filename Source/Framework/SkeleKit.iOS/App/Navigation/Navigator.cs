@@ -9,7 +9,7 @@ namespace SkeleKit;
 internal sealed class Navigator(
 	ViewRegistry registry,
 	IServiceProvider services,
-	Func<UINavigationController?> currentStack) : INavigator
+	Func<UINavigationController?> activeStack) : INavigator
 {
 	readonly ILogger<Navigator> logger = services.GetRequiredService<ILogger<Navigator>>();
 
@@ -293,7 +293,7 @@ internal sealed class Navigator(
 
 	void Prune()
 	{
-		UIViewController[] stack = currentStack()?.ViewControllers ?? [];
+		UIViewController[] stack = activeStack()?.ViewControllers ?? [];
 
 		hosts.RemoveAll(host => !stack.Contains(host) && host.PresentingViewController is null);
 	}
@@ -324,7 +324,7 @@ internal sealed class Navigator(
 	public Task PushAsync(
 		object viewModel)
 	{
-		if (currentStack() is not UINavigationController stack)
+		if (activeStack() is not UINavigationController stack)
 			throw new InvalidOperationException("There is no navigation stack to push onto.");
 
 		PageHost host = Track(registry.CreatePage(viewModel, services));
@@ -339,7 +339,7 @@ internal sealed class Navigator(
 	public Task PushViewAsync(
 		Type view)
 	{
-		if (currentStack() is not UINavigationController stack)
+		if (activeStack() is not UINavigationController stack)
 			throw new InvalidOperationException("There is no navigation stack to push onto.");
 
 		PageHost host = Track(registry.CreatePage(view, services));
@@ -351,7 +351,7 @@ internal sealed class Navigator(
 	public Task PushViewAsync(
 		ContentView page)
 	{
-		if (currentStack() is not UINavigationController stack)
+		if (activeStack() is not UINavigationController stack)
 			throw new InvalidOperationException("There is no navigation stack to push onto.");
 
 		stack.PushViewController(Host(page), true);
@@ -361,7 +361,7 @@ internal sealed class Navigator(
 
 	public Task PopAsync()
 	{
-		if (currentStack() is UINavigationController stack)
+		if (activeStack() is UINavigationController stack)
 			stack.PopViewController(true);
 		else
 			logger.LogWarning("Failed to pop because no navigation stack is active.");
@@ -373,7 +373,7 @@ internal sealed class Navigator(
 
 	public Task PopToRootAsync()
 	{
-		if (currentStack() is UINavigationController stack)
+		if (activeStack() is UINavigationController stack)
 			stack.PopToRootViewController(true);
 		else
 			logger.LogWarning("Failed to pop to root because no navigation stack is active.");

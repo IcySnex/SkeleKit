@@ -103,13 +103,44 @@ public class SkeleApplication
 			.FirstOrDefault(window => window.IsKeyWindow)?
 			.RootViewController;
 
-	static UINavigationController? CurrentStack() =>
+	static UINavigationController? CurrentShellStack() =>
 		Root() switch
 		{
 			UITabBarController tabs => tabs.SelectedViewController as UINavigationController,
 			UINavigationController stack => stack,
 			_ => null
 		};
+
+	static UINavigationController? ActiveStack()
+	{
+		UIViewController? controller = Root();
+		UINavigationController? active = null;
+
+		while (controller is not null)
+		{
+			if (controller is UINavigationController stack)
+				active = stack;
+
+			// A presentation is visually above its presenter's container hierarchy.
+			// Follow it first, then continue through the selected/visible child so the
+			// deepest presented navigation controller becomes the active stack.
+			UIViewController? next = controller.PresentedViewController
+				?? controller switch
+				{
+					UITabBarController tabs => tabs.SelectedViewController,
+					UINavigationController navigation => navigation.TopViewController,
+					UISplitViewController split => split.ViewControllers.LastOrDefault(),
+					_ => null
+				};
+
+			if (next is null || ReferenceEquals(next, controller))
+				break;
+
+			controller = next;
+		}
+
+		return active;
+	}
 
 	static UITabBarController? CurrentTabs() =>
 		Root() as UITabBarController;
@@ -224,7 +255,7 @@ public class SkeleApplication
 		Backgrounded = builder.LifecycleBackground;
 		Foregrounded = builder.LifecycleForeground;
 
-		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, CurrentStack));
+		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, ActiveStack));
 		builder.Services.AddSingleton<ISharer, Sharer>();
 		builder.Services.AddSingleton<ISystemPicker, SystemPicker>();
 		builder.Services.AddSingleton<IHaptics, Haptics>();
@@ -423,7 +454,7 @@ public class SkeleApplication
 			|| CurrentTabs() is not UITabBarController tabs)
 			return;
 
-		bool barHidden = (CurrentStack()?.TopViewController as PageHost)?.HidesBottomBarWhenPushed is true;
+		bool barHidden = (CurrentShellStack()?.TopViewController as PageHost)?.HidesBottomBarWhenPushed is true;
 
 		tabs.SetBottomAccessory(AccessoryWanted && !barHidden ? Accessory : null, animated: true);
 	}
@@ -436,7 +467,7 @@ public class SkeleApplication
 	internal void CompleteTabSelection(
 		PageHost host)
 	{
-		if (!IsSwitchingTabs || !ReferenceEquals(CurrentStack()?.TopViewController, host))
+		if (!IsSwitchingTabs || !ReferenceEquals(CurrentShellStack()?.TopViewController, host))
 			return;
 
 		IsSwitchingTabs = false;
