@@ -25,6 +25,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	bool usesSystemContentInsets;
 	bool layoutInsetsSynced;
 	Thickness layoutInsets;
+	Thickness? insetGroupedHeaderInsets;
+	Thickness? insetGroupedFooterInsets;
 	nfloat keyboardCover;
 
 	private protected override UIView CreateNative()
@@ -849,6 +851,10 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		bool footer)
 	{
 		Thickness insets = ContentInsets;
+		Thickness? grouped = footer ? insetGroupedFooterInsets : insetGroupedHeaderInsets;
+
+		if (grouped is Thickness horizontal)
+			insets = new(horizontal.Left, insets.Top, horizontal.Right, insets.Bottom);
 
 		return footer
 			? new(insets.Left, 0, insets.Right, insets.Bottom)
@@ -860,6 +866,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	void ICollectionHost.SyncInsets() =>
 		SyncInsets();
+
+	void ICollectionHost.SyncInsetGroupedBoundaryInsets() =>
+		SyncInsetGroupedBoundaryInsets();
 
 	void ICollectionHost.KeyboardChanged(
 		Rect keyboard,
@@ -1153,13 +1162,46 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		nfloat trailing = (nfloat)(rightToLeft ? outer.Left : outer.Right);
 
 		section.ContentInsetsReference = UIContentInsetsReference.None;
-		section.ContentInsets = new(
+		NSDirectionalEdgeInsets applied = new(
 			current.Top + (Header is null && index == 0 ? (nfloat)outer.Top : 0),
 			current.Leading + leading,
 			current.Bottom + (Footer is null && index == SectionCount - 1 ? (nfloat)outer.Bottom : 0),
 			current.Trailing + trailing);
+		section.ContentInsets = applied;
 
 		return section;
+	}
+
+	internal void SyncInsetGroupedBoundaryInsets()
+	{
+		Thickness? header = ResolvedInsetGroupedInsets(0, insetGroupedHeaderInsets);
+		Thickness? footer = ResolvedInsetGroupedInsets(SectionCount - 1, insetGroupedFooterInsets);
+
+		if (insetGroupedHeaderInsets == header && insetGroupedFooterInsets == footer)
+			return;
+
+		insetGroupedHeaderInsets = header;
+		insetGroupedFooterInsets = footer;
+		Ui.CollectionViewLayout.InvalidateLayout();
+	}
+
+	Thickness? ResolvedInsetGroupedInsets(
+		int section,
+		Thickness? previous)
+	{
+		if (section < 0 || LayoutForSection(section) is not { Kind: CollectionLayoutKind.List, Grouped: true })
+			return null;
+
+		if (CountIn(section) == 0
+			|| Ui.GetLayoutAttributesForItem(NSIndexPath.FromRowSection(0, section)) is not UICollectionViewLayoutAttributes attributes)
+			return previous;
+
+		CGRect frame = attributes.Frame;
+		return new(
+			Math.Max(0, frame.GetMinX()),
+			0,
+			Math.Max(0, Ui.Bounds.Width - frame.GetMaxX()),
+			0);
 	}
 
 	UICollectionLayoutListConfiguration ListConfiguration(
@@ -1527,6 +1569,7 @@ internal sealed class CollectionHost : UICollectionView
 
 		base.LayoutSubviews();
 
+		element?.SyncInsetGroupedBoundaryInsets();
 		element?.SyncEmptyState();
 	}
 

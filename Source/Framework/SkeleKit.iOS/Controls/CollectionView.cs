@@ -789,6 +789,8 @@ internal interface ICollectionHost
 
 	void SyncInsets();
 
+	void SyncInsetGroupedBoundaryInsets();
+
 	bool CanMove(
 		int section,
 		int index);
