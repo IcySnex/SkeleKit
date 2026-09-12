@@ -212,6 +212,76 @@ public class BindingTests
 	}
 
 	[Fact]
+	public void ExplicitSource_DoesNotNeedOrFollowBindingContext()
+	{
+		MovieViewModel source = new() { Title = "Interstellar" };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind(source, vm => vm.Title)
+		};
+
+		Assert.Equal("Interstellar", view.Current);
+
+		view.BindingContext = new MovieViewModel { Title = "Dune" };
+		source.Title = "Arrival";
+
+		Assert.Equal("Arrival", view.Current);
+	}
+
+	[Fact]
+	public void ExplicitSource_TwoWayWritesDirectlyToSource()
+	{
+		MovieViewModel source = new() { Title = "Interstellar" };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind(source, vm => vm.Title)
+				.TwoWay((vm, value) => vm.Title = value ?? "")
+		};
+
+		view.SimulateEdit("Dune");
+
+		Assert.Equal("Dune", source.Title);
+	}
+
+	[Fact]
+	public void ExplicitSource_ReassignmentDetachesPreviousSource()
+	{
+		MovieViewModel previous = new() { Title = "Interstellar" };
+		MovieViewModel current = new() { Title = "Dune" };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind(previous, vm => vm.Title)
+		};
+
+		view.Text = BindingFactory.Bind(current, vm => vm.Title);
+		previous.Title = "Arrival";
+
+		Assert.Equal("Dune", view.Current);
+
+		current.Title = "Tenet";
+
+		Assert.Equal("Tenet", view.Current);
+	}
+
+	[Fact]
+	public void ExplicitSource_SurvivesPathAndConversion()
+	{
+		MovieViewModel source = new() { Movie = new() { Name = "Interstellar" } };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind(source, vm => vm.Movie)
+				.Path(movie => movie?.Name)
+				.ConvertTo(name => name?.ToUpperInvariant())
+		};
+
+		Assert.Equal("INTERSTELLAR", view.Current);
+
+		source.Movie!.Name = "Dune";
+
+		Assert.Equal("DUNE", view.Current);
+	}
+
+	[Fact]
 	public void Path_ResubscribesWhenIntermediateReplaced()
 	{
 		MovieViewModel viewModel = new() { Movie = new() { Name = "Interstellar" } };

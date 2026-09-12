@@ -78,6 +78,7 @@ internal sealed class Binding<T>(
 		object? source)
 	{
 		Detach();
+		source = expression.Source ?? source;
 
 		if (expression.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource
 			&& expression.Setter is null)

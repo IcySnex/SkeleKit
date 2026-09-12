@@ -15,7 +15,7 @@ public readonly struct BindableList<TItem>
 {
 	static BindingExpression<IReadOnlyList<TItem>?> Widen<TList>(
 		BindingExpression<TList?> expression) where TList : class, IReadOnlyList<TItem> =>
-		new(expression.Segments, source => expression.Getter(source), null, expression.Mode);
+		new(expression.Segments, source => expression.Getter(source), null, expression.Mode, source: expression.Source);
 
 
 	/// <summary>

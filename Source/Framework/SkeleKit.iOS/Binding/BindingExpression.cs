@@ -20,19 +20,22 @@ public class BindingExpression<T>
 	internal Action<object, T?>? Setter { get; }
 	internal BindingMode Mode { get; }
 	internal UpdateTrigger Trigger { get; }
+	internal object? Source { get; }
 
 	internal BindingExpression(
 		BindingSegment[] segments,
 		Func<object, T?> getter,
 		Action<object, T?>? setter,
 		BindingMode mode,
-		UpdateTrigger trigger = UpdateTrigger.PropertyChanged)
+		UpdateTrigger trigger = UpdateTrigger.PropertyChanged,
+		object? source = null)
 	{
 		Segments = segments;
 		Getter = getter;
 		Setter = setter;
 		Mode = mode;
 		Trigger = trigger;
+		Source = source;
 	}
 }
 
@@ -59,11 +62,13 @@ public sealed class BindingExpression<TSource, TOwner, TValue> : BindingExpressi
 		BindingSegment[] segments,
 		Func<TSource, TValue> read,
 		Func<TSource, TOwner?> resolveOwner,
-		Func<object, object?>? pathStep = null) : base(
+		Func<object, object?>? pathStep = null,
+		object? source = null) : base(
 			segments,
 			source => read((TSource)source),
 			null,
-			BindingMode.OneWay)
+			BindingMode.OneWay,
+			source: source)
 	{
 		this.read = read;
 		this.resolveOwner = resolveOwner;
@@ -76,7 +81,7 @@ public sealed class BindingExpression<TSource, TOwner, TValue> : BindingExpressi
 	/// </summary>
 	/// <returns>A one-time binding that can still convert its control value.</returns>
 	public OneTimeBindingExpression<TSource, TValue> Once() =>
-		new(Segments, read);
+		new(Segments, read, Source);
 
 	/// <summary>
 	/// Adds control-to-source updates to this binding.
@@ -88,7 +93,7 @@ public sealed class BindingExpression<TSource, TOwner, TValue> : BindingExpressi
 	{
 		ArgumentNullException.ThrowIfNull(write);
 
-		return new(Segments, read, resolveOwner, write);
+		return new(Segments, read, resolveOwner, write, Source);
 	}
 
 	/// <summary>
@@ -102,7 +107,7 @@ public sealed class BindingExpression<TSource, TOwner, TValue> : BindingExpressi
 	{
 		ArgumentNullException.ThrowIfNull(convert);
 
-		return new(Segments, read, resolveOwner, convert);
+		return new(Segments, read, resolveOwner, convert, Source);
 	}
 }
 
@@ -118,11 +123,13 @@ public sealed class OneTimeBindingExpression<TSource, TValue> : BindingExpressio
 
 	internal OneTimeBindingExpression(
 		BindingSegment[] segments,
-		Func<TSource, TValue> read) : base(
+		Func<TSource, TValue> read,
+		object? source = null) : base(
 			segments,
 			source => read((TSource)source),
 			null,
-			BindingMode.OneTime)
+			BindingMode.OneTime,
+			source: source)
 	{
 		this.read = read;
 	}
@@ -143,7 +150,8 @@ public sealed class OneTimeBindingExpression<TSource, TValue> : BindingExpressio
 			Segments,
 			source => convert(read((TSource)source)),
 			null,
-			BindingMode.OneTime);
+			BindingMode.OneTime,
+			source: Source);
 	}
 }
 
@@ -164,11 +172,13 @@ public sealed class ConvertedBindingExpression<TSource, TOwner, TValue, TTarget>
 		BindingSegment[] segments,
 		Func<TSource, TValue> read,
 		Func<TSource, TOwner?> resolveOwner,
-		Func<TValue, TTarget> convert) : base(
+		Func<TValue, TTarget> convert,
+		object? source = null) : base(
 			segments,
 			source => convert(read((TSource)source)),
 			null,
-			BindingMode.OneWay)
+			BindingMode.OneWay,
+			source: source)
 	{
 		this.resolveOwner = resolveOwner;
 	}
@@ -184,7 +194,7 @@ public sealed class ConvertedBindingExpression<TSource, TOwner, TValue, TTarget>
 	{
 		ArgumentNullException.ThrowIfNull(convert);
 
-		return new(Segments, Getter, resolveOwner, convert);
+		return new(Segments, Getter, resolveOwner, convert, Source);
 	}
 }
 
@@ -202,7 +212,8 @@ public sealed class TwoWayBindingExpression<TSource, TOwner, TValue> : BindingEx
 		BindingSegment[] segments,
 		Func<TSource, TValue> read,
 		Func<TSource, TOwner?> resolveOwner,
-		Action<TOwner, TValue> write) : base(
+		Action<TOwner, TValue> write,
+		object? source = null) : base(
 			segments,
 			source => read((TSource)source),
 			(source, value) =>
@@ -210,7 +221,8 @@ public sealed class TwoWayBindingExpression<TSource, TOwner, TValue> : BindingEx
 				if (resolveOwner((TSource)source) is TOwner owner)
 					write(owner, value!);
 			},
-			BindingMode.TwoWay)
+			BindingMode.TwoWay,
+			source: source)
 	{ }
 
 	/// <summary>
@@ -220,7 +232,7 @@ public sealed class TwoWayBindingExpression<TSource, TOwner, TValue> : BindingEx
 	/// <returns>The two-way binding with the selected trigger.</returns>
 	public WritableBindingExpression<TValue?> UpdateOn(
 		UpdateTrigger trigger) =>
-		new(Segments, Getter, Setter!, Mode, trigger);
+		new(Segments, Getter, Setter!, Mode, trigger, Source);
 }
 
 /// <summary>
@@ -238,17 +250,20 @@ public sealed class ConvertedTwoWayBindingBuilder<TSource, TOwner, TValue, TTarg
 	readonly Func<object, TTarget?> getter;
 	readonly Func<TSource, TOwner?> resolveOwner;
 	readonly Func<TTarget?, TValue> convert;
+	readonly object? source;
 
 	internal ConvertedTwoWayBindingBuilder(
 		BindingSegment[] segments,
 		Func<object, TTarget?> getter,
 		Func<TSource, TOwner?> resolveOwner,
-		Func<TTarget?, TValue> convert)
+		Func<TTarget?, TValue> convert,
+		object? source = null)
 	{
 		this.segments = segments;
 		this.getter = getter;
 		this.resolveOwner = resolveOwner;
 		this.convert = convert;
+		this.source = source;
 	}
 
 
@@ -270,7 +285,8 @@ public sealed class ConvertedTwoWayBindingBuilder<TSource, TOwner, TValue, TTarg
 				if (resolveOwner((TSource)source) is TOwner owner)
 					write(owner, convert(value));
 			},
-			BindingMode.TwoWay);
+			BindingMode.TwoWay,
+			source: source);
 	}
 }
 
@@ -360,12 +376,14 @@ public sealed class WritableBindingExpression<T> : BindingExpression<T>
 		Func<object, T?> getter,
 		Action<object, T?> setter,
 		BindingMode mode,
-		UpdateTrigger trigger = UpdateTrigger.PropertyChanged) : base(
+		UpdateTrigger trigger = UpdateTrigger.PropertyChanged,
+		object? source = null) : base(
 			segments,
 			getter,
 			setter,
 			mode,
-			trigger)
+			trigger,
+			source)
 	{ }
 
 
@@ -376,7 +394,7 @@ public sealed class WritableBindingExpression<T> : BindingExpression<T>
 	/// <returns>The writable binding with the selected trigger.</returns>
 	public WritableBindingExpression<T> UpdateOn(
 		UpdateTrigger trigger) =>
-		new(Segments, Getter, Setter!, Mode, trigger);
+		new(Segments, Getter, Setter!, Mode, trigger, Source);
 }
 
 /// <summary>
@@ -413,7 +431,8 @@ public static class BindingExpressionPathExtensions
 			segments,
 			source => expression.Read(source) is TMiddle middle ? next(middle) : default!,
 			source => expression.Read(source),
-			pathStep: source => next((TMiddle)source));
+			pathStep: source => next((TMiddle)source),
+			source: expression.Source);
 	}
 }
 
@@ -511,4 +530,25 @@ public static class BindingFactory
 		[CallerArgumentExpression(nameof(read))] string? path = null)
 		where TSource : class =>
 		new(ParsePath(path), read, source => source);
+
+	/// <summary>
+	/// Starts a binding against a specific source instead of the receiving view's binding context.
+	/// </summary>
+	/// <typeparam name="TSource">The binding source type.</typeparam>
+	/// <typeparam name="TValue">The property value type.</typeparam>
+	/// <param name="source">The object the binding reads and observes.</param>
+	/// <param name="read">The source property to read.</param>
+	/// <param name="path">The captured source expression used to identify the property path.</param>
+	/// <returns>A binding whose path can be extended, converted, or made two-way.</returns>
+	public static BindingExpression<TSource, TSource, TValue> Bind<TSource, TValue>(
+		TSource source,
+		Func<TSource, TValue> read,
+		[CallerArgumentExpression(nameof(read))] string? path = null)
+		where TSource : class
+	{
+		ArgumentNullException.ThrowIfNull(source);
+		ArgumentNullException.ThrowIfNull(read);
+
+		return new(ParsePath(path), read, value => value, source: source);
+	}
 }
