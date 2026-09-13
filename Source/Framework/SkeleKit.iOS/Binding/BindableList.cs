@@ -28,6 +28,15 @@ public readonly struct BindableList<TItem>
 		new(value);
 
 	/// <summary>
+	/// Wraps an active binding to an array-typed source property.
+	/// </summary>
+	/// <param name="expression">The evaluation rule for the property.</param>
+	/// <returns>A list source using the binding expression.</returns>
+	public static implicit operator BindableList<TItem>(
+		BindingExpression<TItem[]?> expression) =>
+		new(Widen(expression));
+
+	/// <summary>
 	/// Wraps a list literal.
 	/// </summary>
 	/// <param name="value">The items to show.</param>

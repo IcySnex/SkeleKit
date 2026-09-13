@@ -213,6 +213,17 @@ public class BindingTests
 	}
 
 	[Fact]
+	public void ArrayBinding_AssignsToBindableList()
+	{
+		MovieViewModel viewModel = new() { Options = ["System", "Light", "Dark"] };
+		BindableList<string> bound = BindingFactory.Bind(viewModel, vm => vm.Options);
+
+		IReadOnlyList<string>? current = bound.Expression?.Getter(viewModel);
+
+		Assert.Equal(viewModel.Options, current);
+	}
+
+	[Fact]
 	public void Literal_AppliesWithoutContext()
 	{
 		StubBound view = new() { Text = "literal" };
