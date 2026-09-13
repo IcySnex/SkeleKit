@@ -504,6 +504,31 @@ internal sealed class PageHost : UIViewController
 			bar.TintColor = EffectiveBarTint(page);
 	}
 
+	void ApplyThemeChange()
+	{
+		if (Page is not ContentView page)
+			return;
+
+		page.ReapplyVisuals();
+
+		if (!IsViewLoaded)
+			return;
+
+		// Navigation appearances retain resolved colors on iOS 26. Reassign the
+		// visible page's appearance and tint when its interface style changes.
+		ApplyBarAppearance(page);
+
+		if (!ReferenceEquals(NavigationController?.TopViewController, this))
+			return;
+
+		ApplyNavigationTint(page);
+		ApplyToolbarTint(page);
+		SetNeedsStatusBarAppearanceUpdate();
+
+		NavigationController?.NavigationBar.SetNeedsLayout();
+		NavigationController?.NavigationBar.LayoutIfNeeded();
+	}
+
 	void ApplyKeyboard(
 		NSNotification notification,
 		bool hiding)
@@ -851,7 +876,7 @@ internal sealed class PageHost : UIViewController
 			FirstResponder(View!) is not UIView focused || !IsWithin(focused, touch.View);
 		View!.AddGestureRecognizer(dismissKeyboard);
 
-		themeChange = RegisterForTraitChanges([typeof(UITraitUserInterfaceStyle)], (_, _) => Page?.ReapplyVisuals());
+		themeChange = RegisterForTraitChanges([typeof(UITraitUserInterfaceStyle)], (_, _) => ApplyThemeChange());
 	}
 
 	public override void ViewWillAppear(

@@ -106,7 +106,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	public ItemTemplateSelector<TItem>? ItemTemplateSelector { get; set; }
 
 	/// <summary>
-	/// One view above every section. It scrolls with the collection.
+	/// One view above every section. It scrolls with the collection unless <see cref="PinsHeader"/> is enabled.
 	/// </summary>
 	public View? Header
 	{
@@ -114,6 +114,14 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		set => SetBoundaryContent(ref header, value);
 	}
 	View? header;
+
+	/// <summary>
+	/// Keeps <see cref="Header"/> visible at the collection's top edge while its content scrolls beneath it.
+	/// </summary>
+	/// <remarks>
+	/// On iOS 26 and later, the header also participates in the collection's native top scroll-edge effect.
+	/// </remarks>
+	public bool PinsHeader { get; set; }
 
 	/// <summary>
 	/// One view below every section. It scrolls with the collection.
@@ -245,7 +253,11 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	{
 		Header?.InvalidateSubtree();
 		Footer?.InvalidateSubtree();
+		EmptyView?.InvalidateSubtree();
+		InvalidateVirtualizedChildren();
 	}
+
+	partial void InvalidateVirtualizedChildren();
 
 	/// <summary>
 	/// Command invoked when the user pulls to refresh.

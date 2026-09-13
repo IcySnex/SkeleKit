@@ -621,6 +621,31 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			empty.TintChanged();
 	}
 
+	partial void InvalidateVirtualizedChildren()
+	{
+		foreach (ICollectionItemView itemView in itemViews)
+			itemView.View.InvalidateSubtree();
+
+		if (!IsRealized)
+			return;
+
+		foreach (UICollectionViewCell nativeCell in Ui.VisibleCells)
+		{
+			if (nativeCell is not SkeleCell cell
+				|| Ui.IndexPathForCell(cell) is not NSIndexPath indexPath)
+				continue;
+
+			CollectionLayout layout = LayoutForSection(indexPath.Section);
+			cell.SetAutomaticMinimumHeight(layout.Kind is CollectionLayoutKind.List
+				? SystemListMetrics.MinimumRowHeight(layout.Grouped)
+				: 0);
+		}
+
+		Ui.CollectionViewLayout.InvalidateLayout();
+		emptyHost?.SetNeedsLayout();
+		Ui.SetNeedsLayout();
+	}
+
 	// the row tapped on the way out un-highlights on the way back; edit-mode checkmarks stay
 	internal override void PageWillAppear()
 	{
@@ -876,6 +901,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		bool footer = kind == LayoutFooterKind;
 		boundary.SetContentInsets(() => LayoutBoundaryInsets(footer));
+		boundary.SetScrollEdgeContainer(!footer && PinsHeader ? collectionView : null);
 
 		return boundary;
 	}
@@ -1173,7 +1199,11 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		List<NSCollectionLayoutBoundarySupplementaryItem> boundaries = [];
 
 		if (Header is not null)
-			boundaries.Add(Boundary(LayoutHeaderKind, footer: false));
+		{
+			NSCollectionLayoutBoundarySupplementaryItem header = Boundary(LayoutHeaderKind, footer: false);
+			header.PinToVisibleBounds = PinsHeader;
+			boundaries.Add(header);
+		}
 
 		if (Footer is not null)
 			boundaries.Add(Boundary(LayoutFooterKind, footer: true));
@@ -1946,6 +1976,7 @@ internal sealed class SkeleHeader(
 	Action? toggle;
 	bool expanded;
 	Func<Thickness>? contentInsets;
+	UIScrollEdgeElementContainerInteraction? scrollEdgeContainer;
 
 
 	public View? Hosted { get; private set; }
@@ -1964,6 +1995,37 @@ internal sealed class SkeleHeader(
 	{
 		contentInsets = insets;
 		SetNeedsLayout();
+	}
+
+	public void SetScrollEdgeContainer(
+		UIScrollView? scrollView)
+	{
+		if (!OperatingSystem.IsIOSVersionAtLeast(26))
+			return;
+
+		if (scrollView is null)
+		{
+			if (scrollEdgeContainer is not null)
+			{
+				RemoveInteraction(scrollEdgeContainer);
+				scrollEdgeContainer.Dispose();
+				scrollEdgeContainer = null;
+			}
+
+			return;
+		}
+
+		if (scrollEdgeContainer is null)
+		{
+			scrollEdgeContainer = new()
+			{
+				Edge = UIRectEdge.Top
+			};
+			AddInteraction(scrollEdgeContainer);
+		}
+
+		scrollEdgeContainer.ScrollView = scrollView;
+		scrollView.TopEdgeEffect.Style = UIScrollEdgeEffectStyle.SoftStyle;
 	}
 
 	public void SetExpandable(
@@ -2067,5 +2129,18 @@ internal sealed class SkeleHeader(
 	{
 		SetExpanded(!expanded, animated: true);
 		toggle?.Invoke();
+	}
+
+	protected override void Dispose(
+		bool disposing)
+	{
+		if (disposing && scrollEdgeContainer is not null)
+		{
+			RemoveInteraction(scrollEdgeContainer);
+			scrollEdgeContainer.Dispose();
+			scrollEdgeContainer = null;
+		}
+
+		base.Dispose(disposing);
 	}
 }
