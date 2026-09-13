@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Windows.Input;
 
 namespace SkeleKit;
@@ -236,9 +237,12 @@ public class SkeleApplication
 	readonly bool preferLargeTitles;
 	readonly TabsBuilder? tabsBuilder;
 	readonly Type? rootView;
+	IReadOnlyList<IApplicationLifecycle> lifecycleServices = [];
 	Color? tint;
 	Appearance appearance;
 	TabBarMinimize tabBarMinimizeBehavior;
+	bool nativeApplicationStarted;
+	int lifecycleStopped;
 
 	internal SkeleApplication(
 		SkeleApplicationBuilder builder)
@@ -251,9 +255,6 @@ public class SkeleApplication
 		tint = builder.Tint;
 		appearance = builder.Appearance;
 		tabBarMinimizeBehavior = tabsBuilder?.Minimize ?? TabBarMinimize.Never;
-
-		Backgrounded = builder.LifecycleBackground;
-		Foregrounded = builder.LifecycleForeground;
 
 		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, ActiveStack));
 		builder.Services.AddSingleton<ISharer, Sharer>();
@@ -283,9 +284,6 @@ public class SkeleApplication
 
 	internal bool AccessoryWanted => accessoryContent?.IsVisible.Value is true;
 	internal bool IsSwitchingTabs { get; private set; }
-
-	internal Action? Backgrounded { get; set; }
-	internal Action? Foregrounded { get; set; }
 
 	internal UIUserInterfaceStyle UserInterfaceStyle =>
 		appearance switch
@@ -317,7 +315,9 @@ public class SkeleApplication
 			if (tint == value)
 				return;
 
-			if (Current == this && PageHost.InteractiveTintTransition is IUIViewControllerTransitionCoordinator transition)
+			if (Current == this
+				&& nativeApplicationStarted
+				&& PageHost.InteractiveTintTransition is IUIViewControllerTransitionCoordinator transition)
 			{
 				transition.NotifyWhenInteractionChanges(context =>
 				{
@@ -332,7 +332,7 @@ public class SkeleApplication
 
 			tint = value;
 
-			if (Current == this)
+			if (Current == this && nativeApplicationStarted)
 				ApplyTint();
 		}
 	}
@@ -350,7 +350,7 @@ public class SkeleApplication
 
 			appearance = value;
 
-			if (Current == this)
+			if (Current == this && nativeApplicationStarted)
 				ApplyAppearance();
 		}
 	}
@@ -372,7 +372,7 @@ public class SkeleApplication
 
 			tabBarMinimizeBehavior = value;
 
-			if (Current == this)
+			if (Current == this && nativeApplicationStarted)
 				ApplyTabBarMinimize();
 		}
 	}
@@ -473,11 +473,64 @@ public class SkeleApplication
 		IsSwitchingTabs = false;
 	}
 
+	async Task InvokeLifecycleAsync(
+		Func<IApplicationLifecycle, Task> callback,
+		bool reverse = false)
+	{
+		if (reverse)
+		{
+			for (int i = lifecycleServices.Count - 1; i >= 0; i--)
+				await callback(lifecycleServices[i]);
+
+			return;
+		}
+
+		foreach (IApplicationLifecycle lifecycle in lifecycleServices)
+			await callback(lifecycle);
+	}
+
+	void ObserveLifecycle(
+		Task transition,
+		string name) =>
+		ObserveLifecycleCore(transition, name);
+
+	async void ObserveLifecycleCore(
+		Task transition,
+		string name)
+	{
+		try
+		{
+			await transition;
+		}
+		catch (Exception exception)
+		{
+			Services.GetRequiredService<ILogger<SkeleApplication>>()
+				.LogError(exception, "Application lifecycle transition {Transition} failed.", name);
+		}
+	}
+
 	internal void NotifyBackground() =>
-		Backgrounded?.Invoke();
+		ObserveLifecycle(
+			InvokeLifecycleAsync(lifecycle => lifecycle.EnterBackgroundAsync(), reverse: true),
+			nameof(IApplicationLifecycle.EnterBackgroundAsync));
 
 	internal void NotifyForeground() =>
-		Foregrounded?.Invoke();
+		ObserveLifecycle(
+			InvokeLifecycleAsync(lifecycle => lifecycle.EnterForegroundAsync()),
+			nameof(IApplicationLifecycle.EnterForegroundAsync));
+
+	internal void NotifyNativeApplicationStarted() =>
+		nativeApplicationStarted = true;
+
+	internal void NotifyStopping()
+	{
+		if (Interlocked.Exchange(ref lifecycleStopped, 1) != 0)
+			return;
+
+		ObserveLifecycle(
+			InvokeLifecycleAsync(lifecycle => lifecycle.StopAsync(), reverse: true),
+			nameof(IApplicationLifecycle.StopAsync));
+	}
 
 	internal void AttachBubbleInterceptor(
 		UITabBarController controller)
@@ -725,7 +778,20 @@ public class SkeleApplication
 		string[] args)
 	{
 		Current = this;
+		lifecycleServices = Services.GetServices<IApplicationLifecycle>().ToArray();
+		InvokeLifecycleAsync(lifecycle => lifecycle.StartAsync())
+			.GetAwaiter()
+			.GetResult();
+
 		HotReload.Start();
-		UIApplication.Main(args, null, typeof(SkeleApplicationDelegate));
+
+		try
+		{
+			UIApplication.Main(args, null, typeof(SkeleApplicationDelegate));
+		}
+		finally
+		{
+			NotifyStopping();
+		}
 	}
 }

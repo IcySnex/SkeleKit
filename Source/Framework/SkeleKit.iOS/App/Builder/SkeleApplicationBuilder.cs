@@ -1,6 +1,8 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace SkeleKit;
@@ -27,10 +29,6 @@ public sealed class SkeleApplicationBuilder
 	internal Type? RootView;
 	internal Color? Tint;
 	internal Appearance Appearance;
-
-	internal Action? LifecycleBackground { get; private set; }
-	internal Action? LifecycleForeground { get; private set; }
-
 
 	/// <summary>
 	/// Registers core dependencies and application services into the container.
@@ -105,17 +103,18 @@ public sealed class SkeleApplicationBuilder
 	}
 
 	/// <summary>
-	/// Registers app lifecycle hooks, invoked as the app leaves for and returns from the background.
+	/// Registers a singleton application lifecycle service.
 	/// </summary>
-	/// <param name="background">Invoked when the app enters the background, or null.</param>
-	/// <param name="foreground">Invoked when the app returns to the foreground, or null.</param>
+	/// <typeparam name="TLifecycle">The lifecycle service type.</typeparam>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public SkeleApplicationBuilder UseLifecycle(
-		Action? background = null,
-		Action? foreground = null)
+	public SkeleApplicationBuilder UseLifecycle<
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TLifecycle>()
+		where TLifecycle : class, IApplicationLifecycle
 	{
-		LifecycleBackground = background;
-		LifecycleForeground = foreground;
+		Services.TryAddSingleton<TLifecycle>();
+		Services.AddSingleton<IApplicationLifecycle>(provider =>
+			provider.GetRequiredService<TLifecycle>());
+
 		return this;
 	}
 

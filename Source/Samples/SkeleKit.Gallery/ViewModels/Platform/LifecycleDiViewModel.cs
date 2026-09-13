@@ -9,7 +9,7 @@ internal enum GalleryLifecyclePhase
 	Background
 }
 
-internal sealed partial class LifecycleDiViewModel : ShowcaseViewModel
+internal sealed partial class LifecycleDiViewModel : ShowcaseViewModel, IApplicationLifecycle
 {
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(StatusTitle))]
@@ -44,15 +44,17 @@ internal sealed partial class LifecycleDiViewModel : ShowcaseViewModel
 	[
 		new(
 			"""
-			AppLifecycle lifecycle = new();
-
 			SkeleApplication.CreateBuilder()
-				.UseServices(services => services.AddSingleton(lifecycle))
-				.UseLifecycle(
-					background: lifecycle.EnteredBackground,
-					foreground: lifecycle.EnteredForeground)
+				.UseLifecycle<AppLifecycle>()
 				.Build()
 				.Run(args);
+
+			sealed class AppLifecycle : IApplicationLifecycle
+			{
+				public Task StartAsync() => LoadConfigurationAsync();
+
+				public Task EnterBackgroundAsync() => SaveAsync();
+			}
 			""")
 	];
 
@@ -96,17 +98,21 @@ internal sealed partial class LifecycleDiViewModel : ShowcaseViewModel
 	];
 
 
-	internal void EnteredBackground()
+	public Task EnterBackgroundAsync()
 	{
 		BackgroundCount++;
 		Phase = GalleryLifecyclePhase.Background;
 		LastTransition = $"Background at {DateTime.Now:HH:mm:ss}";
+
+		return Task.CompletedTask;
 	}
 
-	internal void EnteredForeground()
+	public Task EnterForegroundAsync()
 	{
 		ForegroundCount++;
 		Phase = GalleryLifecyclePhase.Foreground;
 		LastTransition = $"Foreground at {DateTime.Now:HH:mm:ss}";
+
+		return Task.CompletedTask;
 	}
 }

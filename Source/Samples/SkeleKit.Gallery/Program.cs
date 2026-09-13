@@ -85,13 +85,7 @@ SkeleApplication.CreateBuilder()
 	})
 	.UseTheme(theme => theme.Style(GalleryStyles.ImplicitCard))
 	.UseTint(Colors.Indigo)
-	.UseLifecycle(
-		background: () => SkeleApplication.Current?.Services
-			.GetRequiredService<LifecycleDiViewModel>()
-			.EnteredBackground(),
-		foreground: () => SkeleApplication.Current?.Services
-			.GetRequiredService<LifecycleDiViewModel>()
-			.EnteredForeground())
+	.UseLifecycle<LifecycleDiViewModel>()
 	.Tabs(tabs => tabs
 		.LargeTitles()
 		.Accessory<GalleryTabAccessory>()
