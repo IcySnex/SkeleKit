@@ -1,10 +1,10 @@
 namespace SkeleKit;
 
 /// <summary>
-/// A styled run of text inside a <see cref="Label"/>'s <see cref="Label.Spans"/>.
+/// A styled run of text inside a <see cref="Label"/>'s or <see cref="TextView"/>'s spans.
 /// </summary>
 /// <remarks>
-/// Every unset visual property follows the label; a set one overrides it for this run alone.
+/// Every unset visual property follows the containing control; a set one overrides it for this run alone.
 /// </remarks>
 public class Span
 {
@@ -40,22 +40,30 @@ public class Span
 	public bool Bold { get; set; }
 
 	/// <summary>
-	/// The run's font weight, or null to follow the label.
+	/// The run's font weight, or null to follow the containing control.
 	/// </summary>
 	public FontWeight? FontWeight { get; set; }
 
 	/// <summary>
-	/// The run's font design, or null to follow the label.
+	/// The run's font design, or null to follow the containing control.
 	/// </summary>
 	public FontDesign? FontDesign { get; set; }
 
 	/// <summary>
-	/// The run's font size in points, or NaN to follow the label.
+	/// The run's Dynamic Type text style, or null to follow the containing control.
+	/// </summary>
+	/// <remarks>
+	/// An explicit <see cref="FontSize"/> takes precedence over this style.
+	/// </remarks>
+	public TextStyle? TextStyle { get; set; }
+
+	/// <summary>
+	/// The run's font size in points, or NaN to follow its text style or the containing control.
 	/// </summary>
 	public double FontSize { get; set; } = double.NaN;
 
 	/// <summary>
-	/// The run's text color, or null to follow the label.
+	/// The run's text color, or null to follow the containing control.
 	/// </summary>
 	public Color? TextColor { get; set; }
 

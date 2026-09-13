@@ -318,9 +318,10 @@ public class TextView : Control
 		FontWeight w = span.Bold ? FontWeight.Bold : span.FontWeight ?? weight;
 		FontDesign d = span.FontDesign ?? design;
 		double size = double.IsNaN(span.FontSize) ? fontSize : span.FontSize;
+		TextStyle? style = span.TextStyle ?? textStyle;
 
-		return FontSpec.UsesTextStyle(textStyle, size)
-			? Fonts.Preferred(textStyle!.Value, w, d)
+		return FontSpec.UsesTextStyle(style, size)
+			? Fonts.Preferred(style!.Value, w, d)
 			: Fonts.Scaled(FontSpec.SizeOf(size), w, d);
 	}
 

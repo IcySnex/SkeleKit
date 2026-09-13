@@ -217,7 +217,7 @@ public class Label : Control
 		UIStringAttributes attributes = new()
 		{
 			ParagraphStyle = BuildParagraph(),
-			Font = FontFor(weight, design, fontSize),
+			Font = FontFor(weight, design, fontSize, textStyle),
 			ForegroundColor = textColor?.ToUIColor() ?? UIColor.Label
 		};
 
@@ -247,7 +247,7 @@ public class Label : Control
 
 	void ApplyFont()
 	{
-		Ui.Font = FontFor(weight, design, fontSize);
+		Ui.Font = FontFor(weight, design, fontSize, textStyle);
 
 		if (spans is { Count: > 0 })
 			ApplySpans();
@@ -256,9 +256,10 @@ public class Label : Control
 	UIFont FontFor(
 		FontWeight fontWeight,
 		FontDesign fontDesign,
-		double size) =>
-		FontSpec.UsesTextStyle(textStyle, size)
-			? Fonts.Preferred(textStyle!.Value, fontWeight, fontDesign, maxFontSize)
+		double size,
+		TextStyle? style) =>
+		FontSpec.UsesTextStyle(style, size)
+			? Fonts.Preferred(style!.Value, fontWeight, fontDesign, maxFontSize)
 			: Fonts.Scaled(FontSpec.SizeOf(size), fontWeight, fontDesign, maxFontSize);
 
 	void ApplyTruncation()
@@ -336,7 +337,8 @@ public class Label : Control
 		FontFor(
 			span.Bold ? SkeleKit.FontWeight.Bold : span.FontWeight ?? weight,
 			span.FontDesign ?? design,
-			double.IsNaN(span.FontSize) ? fontSize : span.FontSize);
+			double.IsNaN(span.FontSize) ? fontSize : span.FontSize,
+			span.TextStyle ?? textStyle);
 
 
 	private protected override UIView CreateNative() =>

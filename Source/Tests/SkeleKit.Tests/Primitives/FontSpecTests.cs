@@ -34,4 +34,23 @@ public class FontSpecTests
 	{
 		Assert.Equal(24, FontSpec.SizeOf(24));
 	}
+
+	[Fact]
+	public void SpanTextStyle_OverridesTheContainingStyle()
+	{
+		Span span = new("heading") { TextStyle = TextStyle.Headline };
+		TextStyle? containingStyle = TextStyle.Body;
+
+		Assert.Equal(TextStyle.Headline, span.TextStyle ?? containingStyle);
+		Assert.True(FontSpec.UsesTextStyle(span.TextStyle ?? containingStyle, double.NaN));
+	}
+
+	[Fact]
+	public void SpanWithoutTextStyle_InheritsTheContainingStyle()
+	{
+		Span span = new("body");
+		TextStyle? containingStyle = TextStyle.Body;
+
+		Assert.Equal(TextStyle.Body, span.TextStyle ?? containingStyle);
+	}
 }
