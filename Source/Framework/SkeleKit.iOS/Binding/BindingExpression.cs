@@ -54,6 +54,7 @@ public sealed class BindingExpression<TSource, TOwner, TValue> : BindingExpressi
 	readonly Func<object, object?>? pathStep;
 
 	internal Func<TSource, TValue> Read => read;
+	internal Func<TSource, TOwner?> ResolveOwner => resolveOwner;
 	internal Func<object, object?> CreatePathStep() =>
 		pathStep ?? (source => read((TSource)source));
 
@@ -93,7 +94,7 @@ public sealed class BindingExpression<TSource, TOwner, TValue> : BindingExpressi
 	{
 		ArgumentNullException.ThrowIfNull(write);
 
-		return new(Segments, read, resolveOwner, write, Source);
+		return new(this, write);
 	}
 
 	/// <summary>
@@ -208,22 +209,39 @@ public sealed class TwoWayBindingExpression<TSource, TOwner, TValue> : BindingEx
 	where TSource : class
 	where TOwner : class?
 {
+	readonly BindingExpression<TSource, TOwner, TValue> expression;
+	readonly Action<TOwner, TValue> write;
+
+
 	internal TwoWayBindingExpression(
-		BindingSegment[] segments,
-		Func<TSource, TValue> read,
-		Func<TSource, TOwner?> resolveOwner,
-		Action<TOwner, TValue> write,
-		object? source = null) : base(
-			segments,
-			source => read((TSource)source),
+		BindingExpression<TSource, TOwner, TValue> expression,
+		Action<TOwner, TValue> write) : base(
+			expression.Segments,
+			expression.Getter,
 			(source, value) =>
 			{
-				if (resolveOwner((TSource)source) is TOwner owner)
+				if (expression.ResolveOwner((TSource)source) is TOwner owner)
 					write(owner, value!);
 			},
 			BindingMode.TwoWay,
-			source: source)
-	{ }
+			source: expression.Source)
+	{
+		this.expression = expression;
+		this.write = write;
+	}
+
+	/// <summary>
+	/// Returns the typed source binding and writer used to compose this two-way binding.
+	/// </summary>
+	/// <param name="expression">The original readable binding path.</param>
+	/// <param name="write">The original control-to-source writer.</param>
+	public void Deconstruct(
+		out BindingExpression<TSource, TOwner, TValue> expression,
+		out Action<TOwner, TValue> write)
+	{
+		expression = this.expression;
+		write = this.write;
+	}
 
 	/// <summary>
 	/// Chooses when control changes are written to the source.

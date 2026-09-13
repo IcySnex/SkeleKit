@@ -177,6 +177,33 @@ public class BindingTests
 	}
 
 	[Fact]
+	public void TwoWay_DeconstructsForRecomposition()
+	{
+		MovieViewModel viewModel = new() { Minutes = 169 };
+		TwoWayBindingExpression<MovieViewModel, MovieViewModel, int> original =
+			BindingFactory.Bind((MovieViewModel vm) => vm.Minutes)
+				.TwoWay((vm, value) => vm.Minutes = value);
+		var (expression, write) = original;
+
+		StubBound view = new()
+		{
+			Text = expression
+				.ConvertTo(value => $"{value} min")
+				.ConvertFrom(value => int.Parse(value![..^4]))
+				.TwoWay(write)
+		};
+		view.BindingContext = viewModel;
+
+		Assert.Equal("169 min", view.Current);
+
+		view.SimulateEdit("120 min");
+		Assert.Equal(120, viewModel.Minutes);
+
+		viewModel.Minutes = 95;
+		Assert.Equal("95 min", view.Current);
+	}
+
+	[Fact]
 	public void OneWay_DoesNotPushToSource()
 	{
 		MovieViewModel viewModel = new() { Title = "Interstellar" };
