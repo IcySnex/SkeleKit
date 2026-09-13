@@ -42,6 +42,42 @@ public class BindingTests
 	}
 
 	[Fact]
+	public void Tint_TracksSourceChanges()
+	{
+		MovieViewModel viewModel = new() { Accent = Colors.Indigo };
+		StubBound view = new() { Tint = BindingFactory.Bind((MovieViewModel vm) => vm.Accent) };
+		view.BindingContext = viewModel;
+
+		Assert.Equal(Colors.Indigo, view.Tint.Value);
+
+		viewModel.Accent = Colors.Pink;
+
+		Assert.Equal(Colors.Pink, view.Tint.Value);
+	}
+
+	[Fact]
+	public void Tint_BoundNullRestoresInheritance()
+	{
+		MovieViewModel viewModel = new() { Accent = Colors.Pink };
+		StubBound child = new()
+		{
+			Tint = BindingFactory.Bind((MovieViewModel vm) => vm.Accent)
+		};
+		StackPanel parent = new()
+		{
+			BindingContext = viewModel,
+			Tint = Colors.Indigo,
+			Children = { child }
+		};
+
+		Assert.Equal(Colors.Pink, child.Tint.Value);
+
+		viewModel.Accent = null;
+
+		Assert.Equal(parent.Tint.Value, child.Tint.Value);
+	}
+
+	[Fact]
 	public void SearchState_RoundTrips()
 	{
 		MovieViewModel viewModel = new() { Query = "SkeleKit", SearchScope = 1 };

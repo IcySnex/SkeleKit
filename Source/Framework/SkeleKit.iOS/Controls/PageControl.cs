@@ -85,7 +85,7 @@ public class PageControl : Control
 	void ApplyColors()
 	{
 		Ui.PageIndicatorTintColor = dotColor?.ToUIColor();
-		Ui.CurrentPageIndicatorTintColor = (currentDotColor ?? Tint)?.ToUIColor();
+		Ui.CurrentPageIndicatorTintColor = (currentDotColor ?? EffectiveTint)?.ToUIColor();
 	}
 
 	void ApplyBehavior()

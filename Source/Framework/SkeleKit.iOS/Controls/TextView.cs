@@ -251,7 +251,7 @@ public class TextView : Control
 		};
 
 		UIColor baseColor = textColor?.ToUIColor() ?? UIColor.Label;
-		UIColor link = linkColor?.ToUIColor() ?? Tint?.ToUIColor() ?? UIColor.Link;
+		UIColor link = linkColor?.ToUIColor() ?? EffectiveTint?.ToUIColor() ?? UIColor.Link;
 
 		// links use the view's own link style; per-run colors touch plain runs only
 		Ui.WeakLinkTextAttributes = new UIStringAttributes

@@ -159,7 +159,7 @@ public class Button : Control
 
 	void ApplyConfiguration()
 	{
-		UIButtonConfiguration configuration = NativeButtonConfiguration.Create(kind, Tint, isDestructive);
+		UIButtonConfiguration configuration = NativeButtonConfiguration.Create(kind, EffectiveTint, isDestructive);
 
 		configuration.Title = text;
 		configuration.Subtitle = subtitle;

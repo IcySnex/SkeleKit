@@ -72,7 +72,7 @@ public class ViewPropertyTests
 			Children = { child }
 		};
 
-		Assert.Equal(Colors.Indigo, child.Tint);
+		Assert.Equal(Colors.Indigo, child.Tint.Value);
 	}
 
 	[Fact]
@@ -85,7 +85,7 @@ public class ViewPropertyTests
 			Children = { child }
 		};
 
-		Assert.Equal(Colors.Pink, child.Tint);
+		Assert.Equal(Colors.Pink, child.Tint.Value);
 	}
 
 	[Fact]
@@ -98,9 +98,9 @@ public class ViewPropertyTests
 			Children = { child }
 		};
 
-		child.Tint = null;
+		child.Tint = default;
 
-		Assert.Equal(Colors.Indigo, child.Tint);
+		Assert.Equal(Colors.Indigo, child.Tint.Value);
 	}
 
 	[Fact]

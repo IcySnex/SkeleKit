@@ -173,7 +173,7 @@ public class Picker<TItem> : Control
 
 	void ApplyConfiguration()
 	{
-		UIButtonConfiguration configuration = NativeButtonConfiguration.Create(kind, Tint);
+		UIButtonConfiguration configuration = NativeButtonConfiguration.Create(kind, EffectiveTint);
 		configuration.Title = selected is TItem current ? ItemTitle(current) : placeholder;
 		configuration.TitleLineBreakMode = UILineBreakMode.TailTruncation;
 		NativeButtonConfiguration.ApplyLayout(configuration, size, padding);

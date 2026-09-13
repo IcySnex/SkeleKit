@@ -51,7 +51,7 @@ public class Switch : Control
 	void ApplyColors()
 	{
 		// ignores the view tint, needs its own colors
-		Ui.OnTintColor = (onColor ?? Tint)?.ToUIColor();
+		Ui.OnTintColor = (onColor ?? EffectiveTint)?.ToUIColor();
 		Ui.ThumbTintColor = thumbColor?.ToUIColor();
 	}
 

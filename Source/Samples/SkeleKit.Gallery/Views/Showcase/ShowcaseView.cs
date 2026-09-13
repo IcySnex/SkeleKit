@@ -50,7 +50,7 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 		{
 			Icon = ImageSource.Symbol("chevron.left.forwardslash.chevron.right"),
 			Command = Command.From(() =>
-				_ = Navigator.PushViewAsync(new ShowcaseCodeView(title, source(), Tint ?? Colors.Label)))
+				_ = Navigator.PushViewAsync(new ShowcaseCodeView(title, source(), Tint.Value ?? Colors.Label)))
 		});
 
 	protected static View Code(

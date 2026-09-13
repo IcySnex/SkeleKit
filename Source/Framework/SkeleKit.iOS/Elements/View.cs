@@ -577,12 +577,19 @@ public abstract partial class View
 	/// <remarks>
 	/// Inherited from the parent unless set here, falling back to the app tint.
 	/// </remarks>
-	public Color? Tint
+	public Bindable<Color?> Tint
 	{
-		get => tint ?? (Parent ?? TintHost)?.Tint ?? ApplicationTint();
-		set => Set(ref tint, value, ApplyTint, affectsMeasure: false);
+		get => EffectiveTint;
+		set => tintBinding = Register(
+			tintBinding,
+			value,
+			value => Set(ref tint, value, ApplyTint, affectsMeasure: false));
 	}
 	Color? tint;
+	Binding<Color?>? tintBinding;
+
+	internal Color? EffectiveTint =>
+		tint ?? (Parent ?? TintHost)?.EffectiveTint ?? ApplicationTint();
 
 	static Color? ApplicationTint()
 	{

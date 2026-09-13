@@ -14,6 +14,13 @@ class Notifier : INotifyPropertyChanged
 
 class MovieViewModel : Notifier
 {
+	Color? accent;
+	public Color? Accent
+	{
+		get => accent;
+		set { accent = value; Raise(); }
+	}
+
 	string title = "";
 	public string Title
 	{
