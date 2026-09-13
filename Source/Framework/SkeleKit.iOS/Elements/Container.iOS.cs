@@ -18,6 +18,9 @@ public abstract partial class Container
 	}
 
 	private protected override void OnUnrealized()
+		=> UnrealizeChildren();
+
+	private protected override void UnrealizeChildren()
 	{
 		foreach (View child in LogicalChildren)
 			child.Unrealize();

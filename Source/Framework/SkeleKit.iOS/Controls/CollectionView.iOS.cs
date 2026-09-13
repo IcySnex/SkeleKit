@@ -17,6 +17,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	readonly Dictionary<object, ItemKey> keys = new(ReferenceEqualityComparer.Instance);
 	readonly List<NSNumber> sectionKeys = [];
 	readonly Dictionary<ItemTemplateRegistration<TItem>, ICollectionItemView> sizingViews = [];
+	readonly HashSet<ICollectionItemView> itemViews = [];
 
 	CollectionSource? data;
 	CollectionDelegate<TItem, TSection>? selection;
@@ -548,6 +549,17 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		UnhookSources();
 		ClearEmptyHost();
 		StopObservingRefreshCommand();
+
+		foreach (ICollectionItemView itemView in itemViews)
+		{
+			itemView.View.Unrealize();
+			itemView.View.TintHost = null;
+		}
+
+		itemViews.Clear();
+		sizingViews.Clear();
+		sizedWithItem = false;
+
 		Header?.Unrealize();
 		Footer?.Unrealize();
 
@@ -1084,14 +1096,27 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	{
 		ICollectionItemView created = template.Build();
 		created.View.TintHost = this;
+		itemViews.Add(created);
+		return created;
+	}
+
+	ItemView<TSection>? CreateSectionView(
+		Func<ItemView<TSection>>? template)
+	{
+		ItemView<TSection>? created = template?.Invoke();
+		if (created is null)
+			return null;
+
+		created.TintHost = this;
+		itemViews.Add(created);
 		return created;
 	}
 
 	internal ItemView<TSection>? CreateHeaderView() =>
-		SectionHeaderTemplate?.Invoke();
+		CreateSectionView(SectionHeaderTemplate);
 
 	internal ItemView<TSection>? CreateFooterView() =>
-		SectionFooterTemplate?.Invoke();
+		CreateSectionView(SectionFooterTemplate);
 
 	internal void Select(
 		int section,
@@ -1102,6 +1127,16 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		if (command.CanExecute(item))
 			command.Execute(item);
+	}
+
+	internal bool CanSelect(
+		int section,
+		int index)
+	{
+		if (ItemAt(section, index) is not TItem item)
+			return false;
+
+		return ItemActivation is not ICommand command || command.CanExecute(item);
 	}
 
 	UICollectionViewCompositionalLayout CreateLayout(
@@ -1440,6 +1475,27 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 	where TItem : class
 	where TSection : class, ISection<TItem>
 {
+	bool CanInteract(
+		UICollectionView collectionView,
+		NSIndexPath indexPath)
+	{
+		if (collectionView.CellForItem(indexPath) is SkeleCell { Hosted: { } hosted }
+			&& !hosted.IsInteractionEnabled)
+			return false;
+
+		return element.EditingNow || element.CanSelect(indexPath.Section, indexPath.Row);
+	}
+
+	public override bool ShouldHighlightItem(
+		UICollectionView collectionView,
+		NSIndexPath indexPath) =>
+		CanInteract(collectionView, indexPath);
+
+	public override bool ShouldSelectItem(
+		UICollectionView collectionView,
+		NSIndexPath indexPath) =>
+		CanInteract(collectionView, indexPath);
+
 	// PageWillAppear releases it, so it stays lit under a pushed page
 	public override void ItemSelected(
 		UICollectionView collectionView,

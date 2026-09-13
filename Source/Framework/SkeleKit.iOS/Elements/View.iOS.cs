@@ -725,6 +725,9 @@ public abstract partial class View
 	private protected virtual void OnUnrealized()
 	{ }
 
+	private protected virtual void UnrealizeChildren()
+	{ }
+
 	private protected virtual void ChildHostChanged()
 	{ }
 
@@ -782,7 +785,11 @@ public abstract partial class View
 	public void Unrealize()
 	{
 		if (native is null)
+		{
+			DetachBindings();
+			UnrealizeChildren();
 			return;
+		}
 
 		OnUnrealized();
 		DetachBindings();

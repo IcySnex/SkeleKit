@@ -232,6 +232,7 @@ public abstract partial class View
 	}
 	bool isEnabled = true;
 	Binding<bool>? isEnabledBinding;
+	internal bool IsInteractionEnabled => isEnabled;
 
 	/// <summary>
 	/// The iPad pointer effect shown when a trackpad or mouse hovers this view, or None (the default).
