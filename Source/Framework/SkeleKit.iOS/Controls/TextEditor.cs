@@ -87,7 +87,7 @@ public class TextEditor : Control
 	View? keyboardAccessory;
 
 	/// <summary>
-	/// Font size in points.
+	/// Base font size in points, scaled by Dynamic Type.
 	/// </summary>
 	public Bindable<double> FontSize
 	{
@@ -96,6 +96,29 @@ public class TextEditor : Control
 	}
 	double fontSize = 17;
 	Binding<double>? fontSizeBinding;
+
+	/// <summary>
+	/// The smallest point size Dynamic Type may produce, or NaN for no lower bound.
+	/// </summary>
+	public double MinFontSize
+	{
+		get => minFontSize;
+		set => Set(ref minFontSize, value, ApplyFont);
+	}
+	double minFontSize = double.NaN;
+
+	/// <summary>
+	/// The largest point size Dynamic Type may produce, or NaN for no upper bound.
+	/// </summary>
+	/// <remarks>
+	/// Set this and <see cref="MinFontSize"/> to the same value for fixed-size text.
+	/// </remarks>
+	public double MaxFontSize
+	{
+		get => maxFontSize;
+		set => Set(ref maxFontSize, value, ApplyFont);
+	}
+	double maxFontSize = double.NaN;
 
 	/// <summary>
 	/// The weight the text is drawn at.
@@ -127,7 +150,7 @@ public class TextEditor : Control
 		Ui.Text = text;
 
 	void ApplyFont() =>
-		Ui.Font = Fonts.Scaled(fontSize, fontWeight, fontDesign);
+		Ui.Font = Fonts.Scaled(fontSize, fontWeight, fontDesign, minFontSize, maxFontSize);
 
 	void ApplyToolbar()
 	{
@@ -190,6 +213,11 @@ public class TextEditor : Control
 			Editable = true,
 			AdjustsFontForContentSizeCategory = true
 		};
+		view.RegisterForTraitChanges([typeof(UITraitPreferredContentSizeCategory)], (_, _) =>
+		{
+			if (!double.IsNaN(minFontSize))
+				ApplyFont();
+		});
 
 		view.Changed += (_, _) => OnChanged();
 		view.Ended += (_, _) => OnEditingEnded();
@@ -214,7 +242,7 @@ public class TextEditor : Control
 
 		CGSize fit = view.SizeThatFits(ClampToFinite(availableSize));
 
-		UIFont font = view.Font ?? Fonts.Scaled(fontSize, bold: false);
+		UIFont font = view.Font ?? Fonts.Scaled(fontSize, FontWeight.Regular, FontDesign.Default, minFontSize, maxFontSize);
 		UIEdgeInsets inset = view.TextContainerInset;
 		nfloat lineFloor = (nfloat)Math.Ceiling(font.LineHeight) + inset.Top + inset.Bottom;
 

@@ -58,9 +58,22 @@ public class Span
 	public TextStyle? TextStyle { get; set; }
 
 	/// <summary>
-	/// The run's font size in points, or NaN to follow its text style or the containing control.
+	/// The run's base font size in points, scaled by Dynamic Type, or NaN to follow its text style or the containing control.
 	/// </summary>
 	public double FontSize { get; set; } = double.NaN;
+
+	/// <summary>
+	/// The smallest point size Dynamic Type may produce, or NaN to follow the containing control.
+	/// </summary>
+	public double MinFontSize { get; set; } = double.NaN;
+
+	/// <summary>
+	/// The largest point size Dynamic Type may produce, or NaN to follow the containing control.
+	/// </summary>
+	/// <remarks>
+	/// Set this and <see cref="MinFontSize"/> to the same value for a fixed-size run.
+	/// </remarks>
+	public double MaxFontSize { get; set; } = double.NaN;
 
 	/// <summary>
 	/// The run's text color, or null to follow the containing control.

@@ -36,6 +36,37 @@ public class FontSpecTests
 	}
 
 	[Fact]
+	public void UnboundedSize_IsUnchanged()
+	{
+		Assert.Equal(18, FontSpec.ConstrainSize(18, double.NaN, double.NaN));
+	}
+
+	[Fact]
+	public void Size_IsClampedToMinimum()
+	{
+		Assert.Equal(15, FontSpec.ConstrainSize(12, 15, double.NaN));
+	}
+
+	[Fact]
+	public void Size_IsClampedToMaximum()
+	{
+		Assert.Equal(20, FontSpec.ConstrainSize(24, double.NaN, 20));
+	}
+
+	[Fact]
+	public void EqualBounds_ProduceFixedSize()
+	{
+		Assert.Equal(15, FontSpec.ConstrainSize(8, 15, 15));
+		Assert.Equal(15, FontSpec.ConstrainSize(30, 15, 15));
+	}
+
+	[Fact]
+	public void MinimumAboveMaximum_IsRejected()
+	{
+		Assert.Throws<ArgumentOutOfRangeException>(() => FontSpec.ConstrainSize(17, 18, 16));
+	}
+
+	[Fact]
 	public void SpanTextStyle_OverridesTheContainingStyle()
 	{
 		Span span = new("heading") { TextStyle = TextStyle.Headline };

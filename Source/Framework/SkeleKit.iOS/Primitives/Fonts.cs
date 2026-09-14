@@ -44,25 +44,42 @@ internal static class Fonts
 			_ => UIFontDescriptorSystemDesign.Default
 		};
 	
-	// NaN = no cap; anything else is the point size Dynamic Type may not scale past
+	// NaN = no bound; equal bounds produce a fixed point size.
 	static UIFont Scale(
 		UIFontMetrics metrics,
 		UIFont font,
+		double min,
 		double max) =>
-		double.IsNaN(max)
-			? metrics.GetScaledFont(font)
-			: metrics.GetScaledFont(font, (nfloat)max);
+		Constrain(
+			double.IsNaN(max)
+				? metrics.GetScaledFont(font)
+				: metrics.GetScaledFont(font, (nfloat)max),
+			min,
+			max);
+
+	static UIFont Constrain(
+		UIFont font,
+		double min,
+		double max)
+	{
+		double size = FontSpec.ConstrainSize((double)font.PointSize, min, max);
+
+		return Math.Abs((double)font.PointSize - size) > 0.001
+			? font.WithSize((nfloat)size)
+			: font;
+	}
 
 
 	public static UIFont Scaled(
 		double size,
 		bool bold) =>
-		Scaled(size, bold ? FontWeight.Bold : FontWeight.Regular, FontDesign.Default);
+		Scaled(size, bold ? FontWeight.Bold : FontWeight.Regular, FontDesign.Default, double.NaN, double.NaN);
 
 	public static UIFont Scaled(
 		double size,
 		FontWeight weight,
 		FontDesign design,
+		double min = double.NaN,
 		double max = double.NaN)
 	{
 		UIFont font = UIFont.SystemFontOfSize((nfloat)size, Weight(weight));
@@ -71,18 +88,22 @@ internal static class Fonts
 			&& font.FontDescriptor.CreateWithDesign(Design(design)) is UIFontDescriptor descriptor)
 			font = UIFont.FromDescriptor(descriptor, (nfloat)size);
 
-		return Scale(UIFontMetrics.DefaultMetrics, font, max);
+		return Scale(UIFontMetrics.DefaultMetrics, font, min, max);
 	}
 
 	public static UIFont Preferred(
 		TextStyle style,
 		FontWeight weight,
 		FontDesign design,
+		double min = double.NaN,
 		double max = double.NaN)
 	{
 		UIFontTextStyle native = Style(style);
 
-		if (weight is FontWeight.Regular && design is FontDesign.Default && double.IsNaN(max))
+		if (weight is FontWeight.Regular
+			&& design is FontDesign.Default
+			&& double.IsNaN(min)
+			&& double.IsNaN(max))
 			return UIFont.GetPreferredFontForTextStyle(native);
 
 		UIFontDescriptor descriptor = UIFontDescriptor.GetPreferredDescriptorForTextStyle(
@@ -95,6 +116,6 @@ internal static class Fonts
 			&& font.FontDescriptor.CreateWithDesign(Design(design)) is UIFontDescriptor designed)
 			font = UIFont.FromDescriptor(designed, descriptor.PointSize);
 
-		return Scale(UIFontMetrics.GetMetrics(native.GetConstant()!), font, max);
+		return Scale(UIFontMetrics.GetMetrics(native.GetConstant()!), font, min, max);
 	}
 }

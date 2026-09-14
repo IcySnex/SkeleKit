@@ -93,7 +93,7 @@ public class TextView : Control
 	TextStyle? textStyle;
 
 	/// <summary>
-	/// Explicit font size in points, overriding <see cref="TextStyle"/>.
+	/// Base font size in points, scaled by Dynamic Type and overriding <see cref="TextStyle"/>.
 	/// </summary>
 	/// <remarks>
 	/// NaN falls back to the text style, or 17 points without one.
@@ -104,6 +104,29 @@ public class TextView : Control
 		set => Set(ref fontSize, value, ApplyText);
 	}
 	double fontSize = double.NaN;
+
+	/// <summary>
+	/// The smallest point size Dynamic Type may produce, or NaN for no lower bound.
+	/// </summary>
+	public double MinFontSize
+	{
+		get => minFontSize;
+		set => Set(ref minFontSize, value, ApplyText);
+	}
+	double minFontSize = double.NaN;
+
+	/// <summary>
+	/// The largest point size Dynamic Type may produce, or NaN for no upper bound.
+	/// </summary>
+	/// <remarks>
+	/// Set this and <see cref="MinFontSize"/> to the same value for fixed-size text.
+	/// </remarks>
+	public double MaxFontSize
+	{
+		get => maxFontSize;
+		set => Set(ref maxFontSize, value, ApplyText);
+	}
+	double maxFontSize = double.NaN;
 
 	/// <summary>
 	/// The base font weight the runs build on.
@@ -327,10 +350,26 @@ public class TextView : Control
 		FontDesign d = span.FontDesign ?? design;
 		double size = double.IsNaN(span.FontSize) ? fontSize : span.FontSize;
 		TextStyle? style = span.TextStyle ?? textStyle;
+		double min = double.IsNaN(span.MinFontSize) ? minFontSize : span.MinFontSize;
+		double max = double.IsNaN(span.MaxFontSize) ? maxFontSize : span.MaxFontSize;
 
 		return FontSpec.UsesTextStyle(style, size)
-			? Fonts.Preferred(style!.Value, w, d)
-			: Fonts.Scaled(FontSpec.SizeOf(size), w, d);
+			? Fonts.Preferred(style!.Value, w, d, min, max)
+			: Fonts.Scaled(FontSpec.SizeOf(size), w, d, min, max);
+	}
+
+	bool HasMinimumFontSize()
+	{
+		if (!double.IsNaN(minFontSize))
+			return true;
+
+		foreach (Span span in spans ?? [])
+		{
+			if (!double.IsNaN(span.MinFontSize))
+				return true;
+		}
+
+		return false;
 	}
 
 	Link? LinkFor(
@@ -359,6 +398,11 @@ public class TextView : Control
 		};
 
 		view.TextContainer.LineFragmentPadding = 0;
+		view.RegisterForTraitChanges([typeof(UITraitPreferredContentSizeCategory)], (_, _) =>
+		{
+			if (HasMinimumFontSize())
+				ApplyText();
+		});
 
 		peer = new(this);
 		view.Delegate = peer;

@@ -44,7 +44,7 @@ public class Label : Control
 	TextStyle? textStyle;
 
 	/// <summary>
-	/// Explicit font size in points, overriding <see cref="TextStyle"/>.
+	/// Base font size in points, scaled by Dynamic Type and overriding <see cref="TextStyle"/>.
 	/// </summary>
 	/// <remarks>
 	/// NaN falls back to the text style, or 17 points without one.
@@ -182,8 +182,21 @@ public class Label : Control
 	double autoShrink;
 
 	/// <summary>
+	/// The smallest point size Dynamic Type may produce, or NaN for no lower bound.
+	/// </summary>
+	public double MinFontSize
+	{
+		get => minFontSize;
+		set => Set(ref minFontSize, value, ApplyFont);
+	}
+	double minFontSize = double.NaN;
+
+	/// <summary>
 	/// The largest point size Dynamic Type may scale the text to, or NaN to follow the accessibility sizes all the way up.
 	/// </summary>
+	/// <remarks>
+	/// Set this and <see cref="MinFontSize"/> to the same value for fixed-size text.
+	/// </remarks>
 	public double MaxFontSize
 	{
 		get => maxFontSize;
@@ -260,8 +273,8 @@ public class Label : Control
 		double size,
 		TextStyle? style) =>
 		FontSpec.UsesTextStyle(style, size)
-			? Fonts.Preferred(style!.Value, fontWeight, fontDesign, maxFontSize)
-			: Fonts.Scaled(FontSpec.SizeOf(size), fontWeight, fontDesign, maxFontSize);
+			? Fonts.Preferred(style!.Value, fontWeight, fontDesign, minFontSize, maxFontSize)
+			: Fonts.Scaled(FontSpec.SizeOf(size), fontWeight, fontDesign, minFontSize, maxFontSize);
 
 	void ApplyTruncation()
 	{
@@ -342,19 +355,56 @@ public class Label : Control
 
 	UIFont FontFor(
 		Span span) =>
-		FontFor(
-			span.Bold ? SkeleKit.FontWeight.Bold : span.FontWeight ?? weight,
-			span.FontDesign ?? design,
-			double.IsNaN(span.FontSize) ? fontSize : span.FontSize,
-			span.TextStyle ?? textStyle);
+		FontFor(span,
+			double.IsNaN(span.MinFontSize) ? minFontSize : span.MinFontSize,
+			double.IsNaN(span.MaxFontSize) ? maxFontSize : span.MaxFontSize);
+
+	UIFont FontFor(
+		Span span,
+		double min,
+		double max)
+	{
+		FontWeight spanWeight = span.Bold ? SkeleKit.FontWeight.Bold : span.FontWeight ?? weight;
+		FontDesign spanDesign = span.FontDesign ?? design;
+		double spanSize = double.IsNaN(span.FontSize) ? fontSize : span.FontSize;
+		TextStyle? spanStyle = span.TextStyle ?? textStyle;
+
+		return FontSpec.UsesTextStyle(spanStyle, spanSize)
+			? Fonts.Preferred(spanStyle!.Value, spanWeight, spanDesign, min, max)
+			: Fonts.Scaled(FontSpec.SizeOf(spanSize), spanWeight, spanDesign, min, max);
+	}
+
+	bool HasMinimumFontSize()
+	{
+		if (!double.IsNaN(minFontSize))
+			return true;
+
+		foreach (Span span in spans ?? [])
+		{
+			if (!double.IsNaN(span.MinFontSize))
+				return true;
+		}
+
+		return false;
+	}
 
 
-	private protected override UIView CreateNative() =>
-		new UILabel
+	private protected override UIView CreateNative()
+	{
+		UILabel label = new()
 		{
 			BackgroundColor = UIColor.Clear,
 			AdjustsFontForContentSizeCategory = true
 		};
+
+		label.RegisterForTraitChanges([typeof(UITraitPreferredContentSizeCategory)], (_, _) =>
+		{
+			if (HasMinimumFontSize())
+				ApplyFont();
+		});
+
+		return label;
+	}
 
 	private protected override void ApplyProperties()
 	{
