@@ -82,6 +82,28 @@ public abstract partial class ContentView : ContentHost
 	} = true;
 
 	/// <summary>
+	/// A fixed, full-width view below the navigation title that shares the navigation bar's visual treatment.
+	/// </summary>
+	/// <remarks>
+	/// Scrolling content passes beneath this view and UIKit includes its measured height in the top content inset.
+	/// </remarks>
+	public View? NavigationAccessory
+	{
+		get => navigationAccessory;
+		set
+		{
+			if (ReferenceEquals(navigationAccessory, value))
+				return;
+
+			navigationAccessory?.SetParent(null);
+			navigationAccessory = value;
+			navigationAccessory?.SetParent(this);
+			ApplyNavigationAccessoryCore();
+		}
+	}
+	View? navigationAccessory;
+
+	/// <summary>
 	/// How the navigation title is displayed. By default, it follows the navigation stack.
 	/// </summary>
 	public TitleStyle TitleStyle { get; set; } = TitleStyle.Automatic;
@@ -303,6 +325,8 @@ public abstract partial class ContentView : ContentHost
 
 	partial void ApplyLeaveGuardCore();
 
+	partial void ApplyNavigationAccessoryCore();
+
 
 	/// <summary>
 	/// Raised once, the first time the page is realized.
@@ -388,6 +412,38 @@ public abstract partial class ContentView : ContentHost
 
 	internal void NotifyDisappeared() =>
 		OnDisappeared();
+
+	private protected override void PropagateBindingContext()
+	{
+		base.PropagateBindingContext();
+		NavigationAccessory?.OnBindingContextChanged();
+	}
+
+	private protected override void InvalidateChildren()
+	{
+		base.InvalidateChildren();
+		NavigationAccessory?.InvalidateSubtree();
+	}
+
+	internal override void ReapplyVisuals()
+	{
+		base.ReapplyVisuals();
+		NavigationAccessory?.ReapplyVisuals();
+	}
+
+	internal override void PageWillAppear()
+	{
+		base.PageWillAppear();
+		NavigationAccessory?.PageWillAppear();
+	}
+
+	internal override void TintChanged()
+	{
+		base.TintChanged();
+
+		if (NavigationAccessory is { LocalTint: null } accessory)
+			accessory.TintChanged();
+	}
 
 	internal void ApplyTabBadge() =>
 		ApplyTabBadgeCore();

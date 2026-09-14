@@ -42,6 +42,23 @@ public class ContentViewLifecycleTests
 		Assert.Equal(Colors.Background, background.Color);
 	}
 
+	[Fact]
+	public void NavigationAccessory_BelongsToPageAndDetachesWhenReplaced()
+	{
+		EmptyView page = new();
+		Border first = new();
+		Border second = new();
+
+		page.NavigationAccessory = first;
+
+		Assert.Same(page, first.Parent);
+
+		page.NavigationAccessory = second;
+
+		Assert.Null(first.Parent);
+		Assert.Same(page, second.Parent);
+	}
+
 
 	[Fact]
 	public void Notifications_InvokeMatchingLifecycleHooks()

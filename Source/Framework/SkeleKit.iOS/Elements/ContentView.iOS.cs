@@ -56,6 +56,9 @@ public abstract partial class ContentView
 	partial void ApplyLeaveGuardCore() =>
 		Host?.ApplyLeaveGuard();
 
+	partial void ApplyNavigationAccessoryCore() =>
+		Host?.NavigationAccessoryChanged();
+
 
 	private protected override void OnRealized()
 	{
@@ -72,6 +75,12 @@ public abstract partial class ContentView
 		NotifyUnloaded();
 
 		base.OnUnrealized();
+	}
+
+	private protected override void UnrealizeChildren()
+	{
+		base.UnrealizeChildren();
+		NavigationAccessory?.Unrealize();
 	}
 
 	partial void PrepareContentLayoutCore(

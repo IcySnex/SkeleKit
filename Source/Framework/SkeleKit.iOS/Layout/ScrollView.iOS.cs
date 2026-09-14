@@ -403,9 +403,11 @@ public partial class ScrollView : ISystemInsetScroll
 	}
 }
 
-internal sealed class ScrollHost : UIScrollView
+internal sealed class ScrollHost : UIScrollView, INavigationAccessoryScrollSource
 {
 	readonly ScrollView? element;
+
+	public event Action<double>? ScrollOffsetChanged;
 
 	public ScrollHost(
 		ScrollView element)
@@ -441,7 +443,9 @@ internal sealed class ScrollHost : UIScrollView
 		{
 			base.ContentOffset = value;
 
-			element?.OnScrolled(value.Y + AdjustedContentInset.Top);
+			double offset = value.Y + AdjustedContentInset.Top;
+			element?.OnScrolled(offset);
+			ScrollOffsetChanged?.Invoke(offset);
 
 			if (!Dragging)
 				element?.OnDragEnded();

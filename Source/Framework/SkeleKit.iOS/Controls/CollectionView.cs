@@ -118,9 +118,6 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// <summary>
 	/// Keeps <see cref="Header"/> visible at the collection's top edge while its content scrolls beneath it.
 	/// </summary>
-	/// <remarks>
-	/// On iOS 26 and later, the header also participates in the collection's native top scroll-edge effect.
-	/// </remarks>
 	public bool PinsHeader { get; set; }
 
 	/// <summary>

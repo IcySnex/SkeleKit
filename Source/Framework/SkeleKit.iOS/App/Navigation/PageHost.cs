@@ -4,6 +4,11 @@ using ObjCRuntime;
 
 namespace SkeleKit;
 
+internal interface INavigationAccessoryScrollSource
+{
+	event Action<double>? ScrollOffsetChanged;
+}
+
 internal sealed class PageHost : UIViewController
 {
 	sealed class SheetGuard : UIAdaptivePresentationControllerDelegate
@@ -168,6 +173,16 @@ internal sealed class PageHost : UIViewController
 	UINavigationBarAppearance? savedScrollEdgeAppearance;
 	UINavigationBarAppearance? savedCompactScrollEdgeAppearance;
 	bool preservesNavigationBarAppearance;
+	UIView? navigationAccessoryHost;
+	UIVisualEffectView? navigationAccessoryMaterial;
+	View? hostedNavigationAccessory;
+	INavigationAccessoryScrollSource? navigationAccessoryScrollSource;
+	UIScrollEdgeElementContainerInteraction? navigationAccessoryScrollEdge;
+	UIScrollView? navigationAccessoryEdgeScrollView;
+	UIScrollEdgeEffectStyle? navigationAccessoryPreviousTopEdgeStyle;
+	nfloat navigationAccessoryHeight;
+	nfloat navigationAccessoryBaseInset;
+	double navigationAccessoryScrollOffset;
 
 	public PageHost(
 		ContentView page)
@@ -295,6 +310,7 @@ internal sealed class PageHost : UIViewController
 		if (Page is not ContentView page)
 			return;
 
+		RemoveNavigationAccessory();
 		ApplyChrome(page);
 
 		UIView native = page.Realize();
@@ -305,8 +321,209 @@ internal sealed class PageHost : UIViewController
 
 		View!.AddSubview(native);
 
-		if (FindScrolling(page)?.Native is UIScrollView scroll)
+		UIScrollView? scroll = FindScrolling(page)?.Native as UIScrollView;
+		if (scroll is not null)
 			SetContentScrollView(scroll, NSDirectionalRectEdge.Top | NSDirectionalRectEdge.Bottom);
+
+		InstallNavigationAccessory(page, scroll);
+	}
+
+	internal void NavigationAccessoryChanged()
+	{
+		if (!IsViewLoaded || Page is not ContentView page)
+			return;
+
+		RemoveNavigationAccessory();
+		InstallNavigationAccessory(page, FindScrolling(page)?.Native as UIScrollView);
+		ApplyBarAppearance(page);
+		SetNavigationAccessoryActive(
+			ReferenceEquals(NavigationController?.TopViewController, this)
+			&& !page.HidesNavigationBar);
+
+		View?.SetNeedsLayout();
+		NavigationController?.NavigationBar.SetNeedsLayout();
+	}
+
+	void InstallNavigationAccessory(
+		ContentView page,
+		UIScrollView? scrollView)
+	{
+		if (page.NavigationAccessory is not View accessory
+			|| View is not UIView controllerView
+			|| NavigationController is not UINavigationController navigation
+			|| page.HidesNavigationBar)
+			return;
+
+		UINavigationBar navigationBar = navigation.NavigationBar;
+		hostedNavigationAccessory = accessory;
+		navigationAccessoryBaseInset = AdditionalSafeAreaInsets.Top;
+
+		navigationAccessoryHost = new()
+		{
+			AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleTopMargin,
+			ClipsToBounds = false,
+			Hidden = true,
+			UserInteractionEnabled = false
+		};
+		navigationAccessoryScrollOffset = scrollView is null
+			? 0
+			: scrollView.ContentOffset.Y + scrollView.AdjustedContentInset.Top;
+
+		if (OperatingSystem.IsIOSVersionAtLeast(26))
+		{
+			if (scrollView is not null)
+			{
+				navigationAccessoryEdgeScrollView = scrollView;
+				navigationAccessoryPreviousTopEdgeStyle = scrollView.TopEdgeEffect.Style;
+				navigationAccessoryScrollEdge = new()
+				{
+					Edge = UIRectEdge.Top,
+					ScrollView = scrollView
+				};
+				navigationAccessoryHost.AddInteraction(navigationAccessoryScrollEdge);
+				scrollView.TopEdgeEffect.Style = UIScrollEdgeEffectStyle.SoftStyle;
+			}
+		}
+		else
+		{
+			navigationAccessoryMaterial = new(
+				UIBlurEffect.FromStyle(UIBlurEffectStyle.SystemChromeMaterial))
+			{
+				Alpha = 0,
+				AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
+				Hidden = true,
+				UserInteractionEnabled = false
+			};
+			// UINavigationBar may reorder its private content views after layout.
+			navigationAccessoryMaterial.Layer.ZPosition = -1;
+			navigationBar.InsertSubview(navigationAccessoryMaterial, 0);
+
+			if (scrollView is INavigationAccessoryScrollSource source)
+			{
+				navigationAccessoryScrollSource = source;
+				source.ScrollOffsetChanged += UpdateNavigationAccessoryMaterial;
+			}
+		}
+
+		navigationAccessoryHost.AddSubview(accessory.Realize());
+		navigationBar.AddSubview(navigationAccessoryHost);
+		SetNavigationAccessoryActive(
+			ReferenceEquals(navigation.TopViewController, this)
+			&& !navigation.NavigationBarHidden);
+
+		controllerView.SetNeedsLayout();
+		navigationBar.SetNeedsLayout();
+	}
+
+	void RemoveNavigationAccessory()
+	{
+		if (navigationAccessoryHost is null && hostedNavigationAccessory is null)
+			return;
+
+		if (navigationAccessoryScrollEdge is not null)
+		{
+			navigationAccessoryHost?.RemoveInteraction(navigationAccessoryScrollEdge);
+			navigationAccessoryScrollEdge.Dispose();
+			navigationAccessoryScrollEdge = null;
+		}
+		if (OperatingSystem.IsIOSVersionAtLeast(26)
+			&& navigationAccessoryEdgeScrollView is UIScrollView edgeScroll
+			&& navigationAccessoryPreviousTopEdgeStyle is UIScrollEdgeEffectStyle previousStyle
+			&& edgeScroll.TopEdgeEffect.Style.Equals(UIScrollEdgeEffectStyle.SoftStyle))
+			edgeScroll.TopEdgeEffect.Style = previousStyle;
+		navigationAccessoryEdgeScrollView = null;
+		navigationAccessoryPreviousTopEdgeStyle = null;
+
+		if (navigationAccessoryScrollSource is not null)
+			navigationAccessoryScrollSource.ScrollOffsetChanged -= UpdateNavigationAccessoryMaterial;
+		navigationAccessoryScrollSource = null;
+
+		hostedNavigationAccessory?.Unrealize();
+		hostedNavigationAccessory = null;
+
+		navigationAccessoryMaterial?.RemoveFromSuperview();
+		navigationAccessoryMaterial?.Dispose();
+		navigationAccessoryMaterial = null;
+
+		navigationAccessoryHost?.RemoveFromSuperview();
+		navigationAccessoryHost?.Dispose();
+		navigationAccessoryHost = null;
+		navigationAccessoryHeight = 0;
+		navigationAccessoryScrollOffset = 0;
+
+		UIEdgeInsets additional = AdditionalSafeAreaInsets;
+		additional.Top = navigationAccessoryBaseInset;
+		AdditionalSafeAreaInsets = additional;
+	}
+
+	void SetNavigationAccessoryActive(
+		bool active)
+	{
+		if (navigationAccessoryHost is not UIView host)
+			return;
+
+		host.Hidden = !active;
+		if (navigationAccessoryMaterial is UIVisualEffectView material)
+			material.Hidden = !active;
+
+		if (!active || NavigationController?.NavigationBar is not UINavigationBar navigationBar)
+			return;
+
+		UpdateNavigationAccessoryMaterial(navigationAccessoryScrollOffset);
+		navigationBar.BringSubviewToFront(host);
+		View?.SetNeedsLayout();
+		navigationBar.SetNeedsLayout();
+	}
+
+	void LayoutNavigationAccessory()
+	{
+		if (navigationAccessoryHost is not UIView host
+			|| hostedNavigationAccessory is not View accessory
+			|| View is not UIView controllerView
+			|| NavigationController is not UINavigationController navigation
+			|| navigation.NavigationBarHidden)
+			return;
+
+		UINavigationBar navigationBar = navigation.NavigationBar;
+		double width = navigationBar.Bounds.Width;
+		accessory.Measure(new(width, double.PositiveInfinity));
+		nfloat height = (nfloat)Math.Max(0, accessory.DesiredSize.Height);
+
+		if (Math.Abs((double)(height - navigationAccessoryHeight)) > 0.5)
+		{
+			navigationAccessoryHeight = height;
+			UIEdgeInsets additional = AdditionalSafeAreaInsets;
+			additional.Top = navigationAccessoryBaseInset + height;
+			AdditionalSafeAreaInsets = additional;
+		}
+
+		host.Frame = new(0, navigationBar.Bounds.Height, (nfloat)width, navigationAccessoryHeight);
+		if (navigationAccessoryMaterial is UIVisualEffectView material)
+		{
+			CGRect barFrame = navigationBar.ConvertRectToView(navigationBar.Bounds, controllerView);
+			nfloat materialTop = -barFrame.Y;
+			material.Frame = new(
+				0,
+				materialTop,
+				(nfloat)width,
+				-materialTop + navigationBar.Bounds.Height + navigationAccessoryHeight);
+			UpdateNavigationAccessoryMaterial(navigationAccessoryScrollOffset);
+		}
+
+		accessory.Arrange(new(0, 0, width, navigationAccessoryHeight));
+		navigationBar.BringSubviewToFront(host);
+	}
+
+	void UpdateNavigationAccessoryMaterial(
+		double offset)
+	{
+		navigationAccessoryScrollOffset = offset;
+		if (navigationAccessoryMaterial is not UIVisualEffectView material)
+			return;
+
+		nfloat alpha = (nfloat)Math.Clamp(offset / 8, 0, 1);
+		if (Math.Abs((double)(material.Alpha - alpha)) > 0.001)
+			material.Alpha = alpha;
 	}
 
 	void Reload()
@@ -442,10 +659,7 @@ internal sealed class PageHost : UIViewController
 	void ApplyTitleStyle(
 		ContentView page)
 	{
-		bool automaticLarge = NavigationController is SkeleApplication.SkeleStack
-			{
-				UsesLargeTitlesByDefault: true
-			};
+		bool automaticLarge = UsesAutomaticLargeTitle();
 
 		NavigationItem.LargeTitleDisplayMode = page.TitleStyle switch
 		{
@@ -460,6 +674,12 @@ internal sealed class PageHost : UIViewController
 			navigation.NavigationBar.PrefersLargeTitles = true;
 	}
 
+	bool UsesAutomaticLargeTitle() =>
+		NavigationController is SkeleApplication.SkeleStack
+		{
+			UsesLargeTitlesByDefault: true
+		};
+
 	void ApplyBarAppearance(
 		ContentView page)
 	{
@@ -472,10 +692,16 @@ internal sealed class PageHost : UIViewController
 		}
 
 		UINavigationBar? bar = NavigationController?.NavigationBar;
-		UINavigationBarAppearance standard = bar?.StandardAppearance.Copy() as UINavigationBarAppearance ?? new();
-		UINavigationBarAppearance edge = page.ScrollsUnderBars
-			? bar?.ScrollEdgeAppearance?.Copy() as UINavigationBarAppearance ?? Transparent()
-			: standard.Copy() as UINavigationBarAppearance ?? new();
+		bool continuousAccessory = page.NavigationAccessory is not null
+			&& !OperatingSystem.IsIOSVersionAtLeast(26);
+		UINavigationBarAppearance standard = continuousAccessory
+			? Transparent()
+			: bar?.StandardAppearance.Copy() as UINavigationBarAppearance ?? new();
+		UINavigationBarAppearance edge = continuousAccessory
+			? Transparent()
+			: page.ScrollsUnderBars
+				? bar?.ScrollEdgeAppearance?.Copy() as UINavigationBarAppearance ?? Transparent()
+				: standard.Copy() as UINavigationBarAppearance ?? new();
 
 		UIStringAttributes titleAttributes = new()
 		{
@@ -827,6 +1053,7 @@ internal sealed class PageHost : UIViewController
 	{
 		if (disposing)
 		{
+			RemoveNavigationAccessory();
 			RemoveLive(this);
 			menuActions.Clear();
 			themeChange?.Dispose();
@@ -902,6 +1129,7 @@ internal sealed class PageHost : UIViewController
 		}
 
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
+		SetNavigationAccessoryActive(!Page.HidesNavigationBar);
 		ApplyBarAppearance(Page);
 
 		// a bottom toolbar and the floating tab bar share the same edge: the toolbar only shows when
@@ -939,6 +1167,7 @@ internal sealed class PageHost : UIViewController
 
 		if (Page is ContentView page)
 		{
+			SetNavigationAccessoryActive(!page.HidesNavigationBar);
 			ApplyBarAppearance(page);
 			ApplyToolbar(page);
 			NavigationController?.NavigationBar.SetNeedsLayout();
@@ -951,6 +1180,7 @@ internal sealed class PageHost : UIViewController
 	{
 		base.ViewWillDisappear(animated);
 
+		SetNavigationAccessoryActive(false);
 		PreserveNavigationBarAppearance();
 		Page?.NotifyDisappearing();
 	}
@@ -991,6 +1221,7 @@ internal sealed class PageHost : UIViewController
 		if (Page is null)
 			return;
 
+		LayoutNavigationAccessory();
 		UpdateSystemInsets();
 		UIEdgeInsets safe = View!.SafeAreaInsets;
 		Thickness pageSafeArea = usesSystemScrollInsets
@@ -1038,6 +1269,8 @@ internal sealed class PageHost : UIViewController
 
 		RestoreNavigationBarAppearance();
 		Page?.NotifyDisappeared();
+		if (!ReferenceEquals(NavigationController?.TopViewController, this))
+			SetNavigationAccessoryActive(false);
 
 		if (IsMovingFromParentViewController)
 			Page?.Unrealize();

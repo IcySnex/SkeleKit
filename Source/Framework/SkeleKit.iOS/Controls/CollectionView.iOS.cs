@@ -901,7 +901,6 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		bool footer = kind == LayoutFooterKind;
 		boundary.SetContentInsets(() => LayoutBoundaryInsets(footer));
-		boundary.SetScrollEdgeContainer(!footer && PinsHeader ? collectionView : null);
 
 		return boundary;
 	}
@@ -1202,6 +1201,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		{
 			NSCollectionLayoutBoundarySupplementaryItem header = Boundary(LayoutHeaderKind, footer: false);
 			header.PinToVisibleBounds = PinsHeader;
+			header.ZIndex = PinsHeader ? 2 : 0;
 			boundaries.Add(header);
 		}
 
@@ -1558,8 +1558,14 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 		element.OnWillDisplay(indexPath.Section, indexPath.Row);
 
 	public override void Scrolled(
-		UIScrollView scrollView) =>
-		element.OnScrolled(scrollView.ContentOffset.Y + scrollView.AdjustedContentInset.Top);
+		UIScrollView scrollView)
+	{
+		double offset = scrollView.ContentOffset.Y + scrollView.AdjustedContentInset.Top;
+		element.OnScrolled(offset);
+
+		if (scrollView is CollectionHost host)
+			host.NotifyScrollOffsetChanged(offset);
+	}
 
 	public override void DraggingEnded(
 		UIScrollView scrollView,
@@ -1650,9 +1656,11 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 	}
 }
 
-internal sealed class CollectionHost : UICollectionView
+internal sealed class CollectionHost : UICollectionView, INavigationAccessoryScrollSource
 {
 	readonly ICollectionHost? element;
+
+	public event Action<double>? ScrollOffsetChanged;
 
 	public CollectionHost(
 		ICollectionHost element,
@@ -1668,6 +1676,11 @@ internal sealed class CollectionHost : UICollectionView
 	public CollectionHost(
 		NativeHandle handle) : base(handle)
 	{ }
+
+
+	internal void NotifyScrollOffsetChanged(
+		double offset) =>
+		ScrollOffsetChanged?.Invoke(offset);
 
 
 	// ReSharper disable once UnusedMember.Local
@@ -1976,7 +1989,6 @@ internal sealed class SkeleHeader(
 	Action? toggle;
 	bool expanded;
 	Func<Thickness>? contentInsets;
-	UIScrollEdgeElementContainerInteraction? scrollEdgeContainer;
 
 
 	public View? Hosted { get; private set; }
@@ -1995,37 +2007,6 @@ internal sealed class SkeleHeader(
 	{
 		contentInsets = insets;
 		SetNeedsLayout();
-	}
-
-	public void SetScrollEdgeContainer(
-		UIScrollView? scrollView)
-	{
-		if (!OperatingSystem.IsIOSVersionAtLeast(26))
-			return;
-
-		if (scrollView is null)
-		{
-			if (scrollEdgeContainer is not null)
-			{
-				RemoveInteraction(scrollEdgeContainer);
-				scrollEdgeContainer.Dispose();
-				scrollEdgeContainer = null;
-			}
-
-			return;
-		}
-
-		if (scrollEdgeContainer is null)
-		{
-			scrollEdgeContainer = new()
-			{
-				Edge = UIRectEdge.Top
-			};
-			AddInteraction(scrollEdgeContainer);
-		}
-
-		scrollEdgeContainer.ScrollView = scrollView;
-		scrollView.TopEdgeEffect.Style = UIScrollEdgeEffectStyle.SoftStyle;
 	}
 
 	public void SetExpandable(
@@ -2129,18 +2110,5 @@ internal sealed class SkeleHeader(
 	{
 		SetExpanded(!expanded, animated: true);
 		toggle?.Invoke();
-	}
-
-	protected override void Dispose(
-		bool disposing)
-	{
-		if (disposing && scrollEdgeContainer is not null)
-		{
-			RemoveInteraction(scrollEdgeContainer);
-			scrollEdgeContainer.Dispose();
-			scrollEdgeContainer = null;
-		}
-
-		base.Dispose(disposing);
 	}
 }
