@@ -18,5 +18,10 @@ public enum TextAlignment
 	/// <summary>
 	/// Aligned to the trailing (right) edge.
 	/// </summary>
-	Trailing
+	Trailing,
+
+	/// <summary>
+	/// Spaced out to fill the width.
+	/// </summary>
+	Justified
 }

@@ -183,6 +183,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 		alignment.Items.Add("Leading");
 		alignment.Items.Add("Center");
 		alignment.Items.Add("Trailing");
+		alignment.Items.Add("Justified");
 
 		Picker<ShowcaseOption<Truncation>> truncation = new()
 		{

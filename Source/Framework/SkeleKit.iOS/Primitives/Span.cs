@@ -68,6 +68,14 @@ public class Span
 	public Color? TextColor { get; set; }
 
 	/// <summary>
+	/// The alignment of the run's paragraph, or null to follow the containing control.
+	/// </summary>
+	/// <remarks>
+	/// Paragraph alignment applies to the complete paragraph. Use this override on a span that covers the whole paragraph, including its terminating newline when one follows.
+	/// </remarks>
+	public TextAlignment? TextAlignment { get; set; }
+
+	/// <summary>
 	/// Underlines the run.
 	/// </summary>
 	public bool Underline { get; set; }

@@ -231,12 +231,13 @@ public class Label : Control
 		Ui.AttributedText = new(text, attributes);
 	}
 
-	NSMutableParagraphStyle BuildParagraph() =>
+	NSMutableParagraphStyle BuildParagraph(
+		TextAlignment? alignment = null) =>
 		new()
 		{
 			LineSpacing = (nfloat)lineSpacing,
 			LineBreakMode = Ui.LineBreakMode,
-			Alignment = Ui.TextAlignment
+			Alignment = NativeAlignment(alignment ?? textAlignment)
 		};
 
 	void ApplyAutoShrink()
@@ -289,16 +290,21 @@ public class Label : Control
 
 	void ApplyTextAlignment()
 	{
-		Ui.TextAlignment = textAlignment switch
-		{
-			SkeleKit.TextAlignment.Center => UITextAlignment.Center,
-			SkeleKit.TextAlignment.Trailing => UITextAlignment.Right,
-			_ => UITextAlignment.Left
-		};
+		Ui.TextAlignment = NativeAlignment(textAlignment);
 
 		if (UsesAttributes || spans is { Count: > 0 })
 			ApplyText();
 	}
+
+	static UITextAlignment NativeAlignment(
+		TextAlignment alignment) =>
+		alignment switch
+		{
+			SkeleKit.TextAlignment.Center => UITextAlignment.Center,
+			SkeleKit.TextAlignment.Trailing => UITextAlignment.Right,
+			SkeleKit.TextAlignment.Justified => UITextAlignment.Justified,
+			_ => UITextAlignment.Left
+		};
 
 	void ApplySpans()
 	{
@@ -314,7 +320,9 @@ public class Label : Control
 		{
 			UIStringAttributes attributes = new()
 			{
-				ParagraphStyle = paragraph,
+				ParagraphStyle = span.TextAlignment is TextAlignment alignment && alignment != textAlignment
+					? BuildParagraph(alignment)
+					: paragraph,
 				Font = FontFor(span),
 				ForegroundColor = span.TextColor?.ToUIColor() ?? baseColor
 			};

@@ -20,7 +20,8 @@ internal sealed partial class TextViewViewModel : ShowcaseViewModel
 	[
 		TextAlignment.Leading,
 		TextAlignment.Center,
-		TextAlignment.Trailing
+		TextAlignment.Trailing,
+		TextAlignment.Justified
 	];
 
 

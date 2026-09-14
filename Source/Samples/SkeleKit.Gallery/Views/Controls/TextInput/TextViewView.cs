@@ -251,6 +251,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 		alignment.Items.Add("Leading");
 		alignment.Items.Add("Center");
 		alignment.Items.Add("Trailing");
+		alignment.Items.Add("Justified");
 
 		Slider lineSpacing = new()
 		{

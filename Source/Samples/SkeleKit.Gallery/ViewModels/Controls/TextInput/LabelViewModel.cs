@@ -18,7 +18,8 @@ internal sealed partial class LabelViewModel : ShowcaseViewModel
 	[
 		TextAlignment.Leading,
 		TextAlignment.Center,
-		TextAlignment.Trailing
+		TextAlignment.Trailing,
+		TextAlignment.Justified
 	];
 
 

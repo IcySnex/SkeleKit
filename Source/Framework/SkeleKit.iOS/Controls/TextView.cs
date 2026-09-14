@@ -244,11 +244,7 @@ public class TextView : Control
 
 		linkRanges.Clear();
 
-		NSMutableParagraphStyle paragraph = new()
-		{
-			LineSpacing = (nfloat)lineSpacing,
-			Alignment = Alignment()
-		};
+		NSMutableParagraphStyle paragraph = BuildParagraph(textAlignment);
 
 		UIColor baseColor = textColor?.ToUIColor() ?? UIColor.Label;
 		UIColor link = linkColor?.ToUIColor() ?? EffectiveTint?.ToUIColor() ?? UIColor.Link;
@@ -268,7 +264,9 @@ public class TextView : Control
 
 			UIStringAttributes attributes = new()
 			{
-				ParagraphStyle = paragraph,
+				ParagraphStyle = span.TextAlignment is TextAlignment alignment && alignment != textAlignment
+					? BuildParagraph(alignment)
+					: paragraph,
 				Font = FontFor(span),
 				ForegroundColor = span.TextColor?.ToUIColor() ?? baseColor
 			};
@@ -304,11 +302,21 @@ public class TextView : Control
 		ApplyText();
 	}
 
-	UITextAlignment Alignment() =>
-		textAlignment switch
+	NSMutableParagraphStyle BuildParagraph(
+		TextAlignment alignment) =>
+		new()
+		{
+			LineSpacing = (nfloat)lineSpacing,
+			Alignment = NativeAlignment(alignment)
+		};
+
+	static UITextAlignment NativeAlignment(
+		TextAlignment alignment) =>
+		alignment switch
 		{
 			Center => UITextAlignment.Center,
 			Trailing => UITextAlignment.Right,
+			Justified => UITextAlignment.Justified,
 			_ => UITextAlignment.Left
 		};
 

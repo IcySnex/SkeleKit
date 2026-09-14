@@ -53,4 +53,22 @@ public class FontSpecTests
 
 		Assert.Equal(TextStyle.Body, span.TextStyle ?? containingStyle);
 	}
+
+	[Fact]
+	public void SpanTextAlignment_OverridesTheContainingAlignment()
+	{
+		Span span = new("Title\n") { TextAlignment = TextAlignment.Leading };
+		TextAlignment containingAlignment = TextAlignment.Justified;
+
+		Assert.Equal(TextAlignment.Leading, span.TextAlignment ?? containingAlignment);
+	}
+
+	[Fact]
+	public void SpanWithoutTextAlignment_InheritsTheContainingAlignment()
+	{
+		Span span = new("Body");
+		TextAlignment containingAlignment = TextAlignment.Justified;
+
+		Assert.Equal(TextAlignment.Justified, span.TextAlignment ?? containingAlignment);
+	}
 }
