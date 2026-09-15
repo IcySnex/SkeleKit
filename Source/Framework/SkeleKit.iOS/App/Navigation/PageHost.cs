@@ -174,6 +174,7 @@ internal sealed class PageHost : UIViewController
 	UINavigationBarAppearance? savedCompactScrollEdgeAppearance;
 	bool preservesNavigationBarAppearance;
 	UIView? navigationAccessoryHost;
+	UIView? navigationAccessoryContent;
 	UIVisualEffectView? navigationAccessoryMaterial;
 	View? hostedNavigationAccessory;
 	INavigationAccessoryScrollSource? navigationAccessoryScrollSource;
@@ -401,7 +402,13 @@ internal sealed class PageHost : UIViewController
 			}
 		}
 
-		navigationAccessoryHost.AddSubview(accessory.Realize());
+		navigationAccessoryContent = new()
+		{
+			AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
+			UserInteractionEnabled = false
+		};
+		navigationAccessoryContent.AddSubview(accessory.Realize());
+		navigationAccessoryHost.AddSubview(navigationAccessoryContent);
 		navigationBar.AddSubview(navigationAccessoryHost);
 		SetNavigationAccessoryActive(
 			ReferenceEquals(navigation.TopViewController, this)
@@ -428,6 +435,10 @@ internal sealed class PageHost : UIViewController
 
 		hostedNavigationAccessory?.Unrealize();
 		hostedNavigationAccessory = null;
+
+		navigationAccessoryContent?.RemoveFromSuperview();
+		navigationAccessoryContent?.Dispose();
+		navigationAccessoryContent = null;
 
 		navigationAccessoryMaterial?.RemoveFromSuperview();
 		navigationAccessoryMaterial?.Dispose();
@@ -521,6 +532,13 @@ internal sealed class PageHost : UIViewController
 		if (navigationAccessoryHost is not UIView host)
 			return;
 
+		host.Alpha = 1;
+		host.Transform = CGAffineTransform.MakeIdentity();
+		if (navigationAccessoryContent is UIView content)
+		{
+			content.Alpha = 1;
+			content.Transform = CGAffineTransform.MakeIdentity();
+		}
 		host.Hidden = !active;
 		if (navigationAccessoryMaterial is UIVisualEffectView material)
 			material.Hidden = !active;
@@ -532,6 +550,71 @@ internal sealed class PageHost : UIViewController
 		navigationBar.BringSubviewToFront(host);
 		View?.SetNeedsLayout();
 		navigationBar.SetNeedsLayout();
+	}
+
+	void TransitionNavigationAccessory(
+		bool active,
+		bool animated)
+	{
+		if (navigationAccessoryHost is not UIView host
+			|| navigationAccessoryContent is not UIView content)
+			return;
+
+		IUIViewControllerTransitionCoordinator? transition = animated
+			? this.GetTransitionCoordinator()
+			: null;
+		if (transition is null)
+		{
+			SetNavigationAccessoryActive(active);
+			return;
+		}
+
+		if (active)
+		{
+			SetNavigationAccessoryActive(true);
+			content.Alpha = 0;
+		}
+		else if (host.Hidden)
+		{
+			return;
+		}
+
+		nfloat slide = 0;
+		if (transition.PresentationStyle is UIModalPresentationStyle.None
+			&& NavigationController is SkeleApplication.SkeleStack { Delegate: null } navigation)
+		{
+			bool pushes = active
+				? IsMovingToParentViewController
+				: !IsMovingFromParentViewController;
+			nfloat forward = transition.ContainerView.Bounds.Width;
+			if (navigation.NavigationBar.EffectiveUserInterfaceLayoutDirection
+				is UIUserInterfaceLayoutDirection.RightToLeft)
+				forward = -forward;
+			slide = (active ? 1 : -1) * (pushes ? forward : -forward);
+
+			if (active)
+				content.Transform = CGAffineTransform.MakeTranslation(slide, 0);
+		}
+
+		bool scheduled = transition.AnimateAlongsideTransition(
+			_ =>
+			{
+				content.Alpha = active ? 1 : 0;
+				content.Transform = active
+					? CGAffineTransform.MakeIdentity()
+					: CGAffineTransform.MakeTranslation(slide, 0);
+			},
+			context =>
+			{
+				if (!ReferenceEquals(navigationAccessoryHost, host)
+					|| !ReferenceEquals(navigationAccessoryContent, content))
+					return;
+
+				SetNavigationAccessoryActive(context.IsCancelled ? !active : active);
+			});
+
+		if (!scheduled)
+			SetNavigationAccessoryActive(active);
 	}
 
 	void LayoutNavigationAccessory()
@@ -557,6 +640,11 @@ internal sealed class PageHost : UIViewController
 		}
 
 		host.Frame = new(0, navigationBar.Bounds.Height, (nfloat)width, navigationAccessoryHeight);
+		if (navigationAccessoryContent is UIView content)
+		{
+			content.Bounds = new(0, 0, (nfloat)width, navigationAccessoryHeight);
+			content.Center = new((nfloat)width / 2, navigationAccessoryHeight / 2);
+		}
 		if (navigationAccessoryMaterial is UIVisualEffectView material)
 		{
 			CGRect barFrame = navigationBar.ConvertRectToView(navigationBar.Bounds, controllerView);
@@ -1221,7 +1309,7 @@ internal sealed class PageHost : UIViewController
 		}
 
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
-		SetNavigationAccessoryActive(!Page.HidesNavigationBar);
+		TransitionNavigationAccessory(!Page.HidesNavigationBar, animated);
 		ApplyBarAppearance(Page);
 
 		// a bottom toolbar and the floating tab bar share the same edge: the toolbar only shows when
@@ -1272,7 +1360,7 @@ internal sealed class PageHost : UIViewController
 	{
 		base.ViewWillDisappear(animated);
 
-		SetNavigationAccessoryActive(false);
+		TransitionNavigationAccessory(false, animated);
 		PreserveNavigationBarAppearance();
 		Page?.NotifyDisappearing();
 	}
