@@ -1,7 +1,7 @@
 namespace SkeleKit;
 
 /// <summary>
-/// How a tab takes part in iPad user customization.
+/// How a tab takes part in adaptive tab and sidebar customization.
 /// </summary>
 public enum TabPlacement
 {

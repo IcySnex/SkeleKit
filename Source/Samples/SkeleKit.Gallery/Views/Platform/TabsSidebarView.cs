@@ -5,10 +5,10 @@ using SkeleKit.Gallery.Views.Showcase;
 namespace SkeleKit.Gallery.Views.Platform;
 
 [Page]
-internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
+internal sealed class TabsSidebarView : ShowcaseView<TabsSidebarViewModel>
 {
-	public TabsIpadView(
-		TabsIpadViewModel viewModel) : base(viewModel, "Tabs & iPad", Colors.Green)
+	public TabsSidebarView(
+		TabsSidebarViewModel viewModel) : base(viewModel, "Tabs & Sidebar", Colors.Green)
 	{
 		AddAccessoryShowcase(viewModel);
 		AddBadgeShowcase(viewModel);
@@ -18,13 +18,13 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 			"Declare the app's primary destinations and the system search bubble.",
 			Code(vm => vm.TabsCode));
 		AddCodeShowcase(
-			"iPad sidebar",
-			"Set placements, iPad-only destinations, grouped sections and a footer in one configuration.",
-			Code(vm => vm.PadCode));
+			"Adaptive sidebar",
+			"Set placements, sidebar-only destinations, grouped sections and a footer in one configuration.",
+			Code(vm => vm.SidebarCode));
 	}
 
 	void AddMinimizationShowcase(
-		TabsIpadViewModel viewModel)
+		TabsSidebarViewModel viewModel)
 	{
 		Picker<ShowcaseOption<TabBarMinimize>> behavior = new()
 		{
@@ -46,7 +46,7 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 
 
 	void AddAccessoryShowcase(
-		TabsIpadViewModel viewModel)
+		TabsSidebarViewModel viewModel)
 	{
 		Button visible = new()
 		{
@@ -68,7 +68,7 @@ internal sealed class TabsIpadView : ShowcaseView<TabsIpadViewModel>
 	}
 
 	void AddBadgeShowcase(
-		TabsIpadViewModel viewModel)
+		TabsSidebarViewModel viewModel)
 	{
 		Stepper count = new()
 		{

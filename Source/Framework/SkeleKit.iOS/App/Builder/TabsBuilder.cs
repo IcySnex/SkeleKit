@@ -31,7 +31,7 @@ public sealed class TabsBuilder
 	internal string? BubbleTitle { get; private set; }
 	internal TabBarMinimize Minimize { get; private set; } = TabBarMinimize.Never;
 	internal Func<View>? AccessoryFactory { get; private set; }
-	internal PadTabsBuilder? Pad { get; private set; }
+	internal SidebarBuilder? SidebarConfiguration { get; private set; }
 	internal bool UseLargeTitles { get; private set; }
 
 
@@ -182,18 +182,18 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Configures everything iPad: the sidebar, tab placements and iPad-only destinations.
+	/// Enables the adaptive sidebar and configures its placements and destinations.
 	/// </summary>
 	/// <remarks>
-	/// Ignored on iPhone.
+	/// Compact environments keep the tab bar. When a sidebar is available, UIKit switches to it without rebuilding the tabs.
 	/// </remarks>
-	/// <param name="configure">Configures the iPad layout.</param>
+	/// <param name="configure">Optionally configures the sidebar layout.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder OnPad(
-		Action<PadTabsBuilder> configure)
+	public TabsBuilder Sidebar(
+		Action<SidebarBuilder>? configure = null)
 	{
-		Pad = new();
-		configure(Pad);
+		SidebarConfiguration = new();
+		configure?.Invoke(SidebarConfiguration);
 
 		return this;
 	}
@@ -223,7 +223,7 @@ public sealed class TabsBuilder
 		ViewRegistry registry)
 	{
 		foreach (Type view in Views(Nodes)
-			.Concat(Pad is null ? [] : Views(Pad.Nodes))
+			.Concat(SidebarConfiguration is null ? [] : Views(SidebarConfiguration.Nodes))
 			.Append(SearchView)
 			.Append(BubbleView)
 			.OfType<Type>()

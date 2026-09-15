@@ -6,7 +6,7 @@ using SkeleKit.Gallery.ViewModels.Showcase;
 
 namespace SkeleKit.Gallery.ViewModels.Platform;
 
-internal sealed partial class TabsIpadViewModel : ShowcaseViewModel
+internal sealed partial class TabsSidebarViewModel : ShowcaseViewModel
 {
 	static readonly List<ShowcaseOption<TabBarMinimize>> MinimizeOptions =
 	[
@@ -115,12 +115,11 @@ internal sealed partial class TabsIpadViewModel : ShowcaseViewModel
 			""")
 	];
 
-	public IReadOnlyList<Span> PadCode { get; } =
+	public IReadOnlyList<Span> SidebarCode { get; } =
 	[
 		new(
 			"""
-			.OnPad(pad => pad
-				.Sidebar()
+			.Sidebar(sidebar => sidebar
 				.PlaceTab<HomeView>(TabPlacement.Locked)
 				.Tab<InsightsView>(
 					"Insights",
@@ -129,7 +128,7 @@ internal sealed partial class TabsIpadViewModel : ShowcaseViewModel
 				.Group("Collections", "square.grid.2x2", group => group
 					.Tab<AlbumsView>("Albums", "rectangle.stack")
 					.Tab<ArtistsView>("Artists", "music.mic"))
-				.SidebarFooter<AccountFooter>());
+				.Footer<AccountFooter>());
 			""")
 	];
 

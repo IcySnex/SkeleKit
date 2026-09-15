@@ -147,7 +147,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				"Application",
 				Topic("Navigation", "ViewModel-first stack, modal, tab and system handoffs.", "arrow.left.arrow.right", Colors.Green, GalleryArea.Platform, typeof(NavigationViewModel)),
 				Topic("Page Chrome", "Titles, search, toolbars, badges and status bars.", "platter.filled.top.iphone", Colors.Green, GalleryArea.Platform, typeof(PageChromeViewModel)),
-				Topic("Tabs & iPad", "Bottom tabs, search bubbles and sidebar arrangements.", "sidebar.left", Colors.Green, GalleryArea.Platform, typeof(TabsIpadViewModel)),
+				Topic("Tabs & Sidebar", "Bottom tabs, search bubbles and adaptive sidebar arrangements.", "sidebar.left", Colors.Green, GalleryArea.Platform, typeof(TabsSidebarViewModel)),
 				Topic("Lifecycle & DI", "Application services and foreground transitions.", "app.badge.checkmark", Colors.Green, GalleryArea.Platform, typeof(LifecycleDiViewModel))),
 
 			Section(

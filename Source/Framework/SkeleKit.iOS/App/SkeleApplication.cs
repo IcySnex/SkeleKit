@@ -580,8 +580,7 @@ public class SkeleApplication
 			case ShellKind.Tabs:
 				UITabBarController controller = new();
 
-				bool pad = UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad;
-				PadTabsBuilder? iPad = pad ? tabsBuilder?.Pad : null;
+				SidebarBuilder? sidebar = tabsBuilder?.SidebarConfiguration;
 
 				void Place(UITab tab, TabPlacement placement)
 				{
@@ -648,7 +647,7 @@ public class SkeleApplication
 						leaf.View.Name,
 						provider);
 
-					Place(tab, iPad?.Placements.GetValueOrDefault(leaf.View, leaf.Placement) ?? leaf.Placement);
+					Place(tab, sidebar?.Placements.GetValueOrDefault(leaf.View, leaf.Placement) ?? leaf.Placement);
 
 					root.Tab = tab;
 					root.Page?.ApplyTabBadge();
@@ -658,8 +657,8 @@ public class SkeleApplication
 
 				List<UITab> tabs = [.. (tabsBuilder?.Nodes ?? []).Select(node => BuildTab(node, false))];
 
-				if (iPad is not null)
-					tabs.AddRange(iPad.Nodes.Select(node => BuildTab(node, false)));
+				if (sidebar is not null)
+					tabs.AddRange(sidebar.Nodes.Select(node => BuildTab(node, false)));
 
 				if (tabsBuilder is { SearchView: not null } and ({ BubbleFactory: not null } or { BubbleView: not null }))
 					throw new InvalidOperationException("The bubble is single: declare Search or Bubble, not both.");
@@ -778,8 +777,12 @@ public class SkeleApplication
 				tabsDelegate = new(this);
 				controller.Delegate = tabsDelegate;
 
-				if (iPad?.UseSidebar is true)
+				if (sidebar is not null)
+				{
 					controller.Mode = UITabBarControllerMode.TabSidebar;
+					if (OperatingSystem.IsIOSVersionAtLeast(27))
+						controller.Sidebar.PreferredPlacement = UITabBarControllerSidebarPlacement.Sidebar;
+				}
 
 				ApplyTabBarMinimize(controller);
 
@@ -794,7 +797,7 @@ public class SkeleApplication
 						controller.BottomAccessory = Accessory;
 				}
 
-				if (iPad?.FooterFactory is Func<View> footer && OperatingSystem.IsIOSVersionAtLeast(26))
+				if (sidebar?.FooterFactory is Func<View> footer && OperatingSystem.IsIOSVersionAtLeast(26))
 				{
 					footerContent = footer();
 					footerHost = AccessoryHost.ForKeyboard(footerContent);

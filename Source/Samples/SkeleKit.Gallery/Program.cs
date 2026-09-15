@@ -31,7 +31,7 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<NavigationViewModel>();
 		services.AddTransient<PlatformViewModel>();
 		services.AddTransient<SearchViewModel>();
-		services.AddSingleton<TabsIpadViewModel>();
+		services.AddSingleton<TabsSidebarViewModel>();
 		services.AddSingleton<LifecycleDiViewModel>();
 
 		services.AddTransient<AboutViewModel>();
@@ -93,6 +93,6 @@ SkeleApplication.CreateBuilder()
 		.Tab<ControlsView>("Controls", "switch.2")
 		.Tab<PlatformView>("Platform", "iphone")
 		.Search<SearchView>()
-		.OnPad(pad => pad.Sidebar()))
+		.Sidebar())
 	.Build()
 	.Run(args);

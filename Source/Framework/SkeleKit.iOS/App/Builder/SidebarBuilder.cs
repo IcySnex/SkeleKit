@@ -1,34 +1,22 @@
 namespace SkeleKit;
 
 /// <summary>
-/// Everything iPad: the sidebar, placements and iPad-only destinations.
+/// Configures adaptive sidebar placements and destinations.
 /// </summary>
-public sealed class PadTabsBuilder
+public sealed class SidebarBuilder
 {
-	internal bool UseSidebar { get; private set; }
 	internal Dictionary<Type, TabPlacement> Placements { get; } = [];
 	internal List<TabsBuilder.Node> Nodes { get; } = [];
 	internal Func<View>? FooterFactory { get; private set; }
 
 
 	/// <summary>
-	/// Shows the tabs as a sidebar.
-	/// </summary>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public PadTabsBuilder Sidebar()
-	{
-		UseSidebar = true;
-
-		return this;
-	}
-
-	/// <summary>
-	/// Overrides how a declared tab takes part in user customization.
+	/// Overrides how a declared tab takes part in sidebar customization.
 	/// </summary>
 	/// <typeparam name="TView">The view type of the tab to place.</typeparam>
 	/// <param name="placement">The placement to apply.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public PadTabsBuilder PlaceTab<TView>(
+	public SidebarBuilder PlaceTab<TView>(
 		TabPlacement placement) where TView : ContentView
 	{
 		Placements[typeof(TView)] = placement;
@@ -37,14 +25,14 @@ public sealed class PadTabsBuilder
 	}
 
 	/// <summary>
-	/// Adds an iPad-only tab. It does not exist on iPhone; reach the page there by navigation.
+	/// Adds a destination that is shown only when the sidebar is available by default.
 	/// </summary>
 	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
-	/// <param name="title">The text displayed on the tab bar item.</param>
-	/// <param name="icon">The local icon shown on the tab.</param>
-	/// <param name="placement">How the tab takes part in user customization.</param>
+	/// <param name="title">The text displayed for the destination.</param>
+	/// <param name="icon">The local icon shown for the destination.</param>
+	/// <param name="placement">How the destination takes part in sidebar customization.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public PadTabsBuilder Tab<TView>(
+	public SidebarBuilder Tab<TView>(
 		string title,
 		ImageSource icon,
 		TabPlacement placement = TabPlacement.SidebarOnly) where TView : ContentView
@@ -61,7 +49,7 @@ public sealed class PadTabsBuilder
 	/// <param name="icon">The local icon shown for the group.</param>
 	/// <param name="children">Declares the tabs inside the group.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public PadTabsBuilder Group(
+	public SidebarBuilder Group(
 		string title,
 		ImageSource icon,
 		Action<GroupBuilder> children)
@@ -79,7 +67,7 @@ public sealed class PadTabsBuilder
 	/// </summary>
 	/// <typeparam name="TView">The view type to host.</typeparam>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public PadTabsBuilder SidebarFooter<TView>()
+	public SidebarBuilder Footer<TView>()
 		where TView : View, new()
 	{
 		FooterFactory = () => new TView();

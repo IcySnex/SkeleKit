@@ -10,7 +10,7 @@ internal sealed partial class PlatformViewModel : CatalogViewModel
 	public PlatformViewModel(
 		IGalleryCatalog catalog,
 		INavigator navigator,
-		TabsIpadViewModel tabs) : base(navigator, catalog.Platform)
+		TabsSidebarViewModel tabs) : base(navigator, catalog.Platform)
 	{
 		tabs.BadgeChanged += badge => TabBadge = badge;
 	}
