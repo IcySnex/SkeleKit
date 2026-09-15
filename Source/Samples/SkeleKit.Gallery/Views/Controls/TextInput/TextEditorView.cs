@@ -81,6 +81,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 		editor.ContentKind = viewModel.SelectedContentKind.Value;
 		editor.Capitalization = viewModel.SelectedCapitalization.Value;
 		editor.Autocorrection = viewModel.Autocorrection;
+		editor.GrammarChecking = viewModel.GrammarChecking;
 		editor.KeyboardLook = viewModel.SelectedKeyboardLook.Value;
 
 		Picker<ShowcaseOption<ContentKind>> contentKind = new()
@@ -116,6 +117,16 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 			}
 		};
 
+		SegmentedControl grammarChecking = new()
+		{
+			SelectedIndex = Bind(vm => vm.GrammarCheckingIndex)
+				.TwoWay((vm, val) => vm.GrammarCheckingIndex = val),
+			SelectionChanged = _ => editor.GrammarChecking = viewModel.GrammarChecking
+		};
+		grammarChecking.Items.Add("System");
+		grammarChecking.Items.Add("On");
+		grammarChecking.Items.Add("Off");
+
 		SegmentedControl look = new()
 		{
 			SelectedIndex = Bind(vm => vm.SelectedKeyboardLookIndex)
@@ -131,7 +142,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 
 		AddShowcase(
 			"Keyboard behavior",
-			"Change native text traits while editing and inspect capitalization, correction, autofill intent and keyboard appearance.",
+			"Change native text traits while editing and inspect capitalization, correction, grammar and autofill intent.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
 					new StackPanel
@@ -150,6 +161,7 @@ internal sealed class TextEditorView : ShowcaseView<TextEditorViewModel>
 				SettingRow("Autofill kind", contentKind),
 				LabeledControl("Capitalization", capitalization),
 				SettingRow("Autocorrection", autocorrection),
+				LabeledControl("Grammar checking", grammarChecking),
 				LabeledControl("Keyboard appearance", look)),
 			Code(vm => vm.KeyboardCode));
 	}

@@ -109,6 +109,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 			ContentKind = viewModel.SelectedContentKind.Value,
 			Capitalization = viewModel.SelectedCapitalization.Value,
 			Autocorrection = viewModel.Autocorrection,
+			GrammarChecking = viewModel.GrammarChecking,
 			KeyboardLook = viewModel.SelectedKeyboardLook.Value
 		};
 
@@ -163,6 +164,16 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 			}
 		};
 
+		SegmentedControl grammarChecking = new()
+		{
+			SelectedIndex = Bind(vm => vm.GrammarCheckingIndex)
+				.TwoWay((vm, val) => vm.GrammarCheckingIndex = val),
+			SelectionChanged = _ => field.GrammarChecking = viewModel.GrammarChecking
+		};
+		grammarChecking.Items.Add("System");
+		grammarChecking.Items.Add("On");
+		grammarChecking.Items.Add("Off");
+
 		SegmentedControl look = new()
 		{
 			SelectedIndex = Bind(vm => vm.SelectedKeyboardLookIndex)
@@ -178,7 +189,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 
 		AddShowcase(
 			"Keyboard behavior",
-			"Change native input traits while the field is focused and inspect the keyboard, return key and autofill hints.",
+			"Change native input traits while the field is focused and inspect correction, grammar, return key and autofill hints.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(
 					new StackPanel
@@ -199,6 +210,7 @@ internal sealed class TextFieldView : ShowcaseView<TextFieldViewModel>
 				SettingRow("Autofill kind", contentKind),
 				LabeledControl("Capitalization", capitalization),
 				SettingRow("Autocorrection", autocorrection),
+				LabeledControl("Grammar checking", grammarChecking),
 				LabeledControl("Keyboard appearance", look)),
 			Code(vm => vm.KeyboardCode));
 	}

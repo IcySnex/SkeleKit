@@ -173,6 +173,19 @@ public class TextField : Control
 	bool autocorrection = true;
 
 	/// <summary>
+	/// Whether iOS checks grammar while typing, or null to follow the system default.
+	/// </summary>
+	/// <remarks>
+	/// iOS 27 and later.
+	/// </remarks>
+	public bool? GrammarChecking
+	{
+		get => grammarChecking;
+		set => Set(ref grammarChecking, value, ApplyTraits, affectsMeasure: false);
+	}
+	bool? grammarChecking;
+
+	/// <summary>
 	/// When the field shows its built-in clear button.
 	/// </summary>
 	/// <remarks>
@@ -348,6 +361,15 @@ public class TextField : Control
 		};
 		Ui.AutocorrectionType = autocorrection ? UITextAutocorrectionType.Yes : UITextAutocorrectionType.No;
 		Ui.SpellCheckingType = autocorrection ? UITextSpellCheckingType.Yes : UITextSpellCheckingType.No;
+		if (OperatingSystem.IsIOSVersionAtLeast(27))
+		{
+			Ui.GrammarCheckingType = grammarChecking switch
+			{
+				true => UITextGrammarCheckingType.Yes,
+				false => UITextGrammarCheckingType.No,
+				_ => UITextGrammarCheckingType.Default
+			};
+		}
 		Ui.EnablesReturnKeyAutomatically = requiresText;
 		Ui.KeyboardAppearance = Keyboards.Appearance(keyboardLook);
 		ReloadKeyboard();

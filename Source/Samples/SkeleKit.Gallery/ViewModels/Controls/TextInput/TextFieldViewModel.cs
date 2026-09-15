@@ -150,6 +150,19 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 	bool autocorrection;
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(GrammarChecking))]
+	[NotifyPropertyChangedFor(nameof(KeyboardCode))]
+	int grammarCheckingIndex;
+
+	public bool? GrammarChecking =>
+		GrammarCheckingIndex switch
+		{
+			1 => true,
+			2 => false,
+			_ => null
+		};
+
+	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(SelectedKeyboardLook))]
 	[NotifyPropertyChangedFor(nameof(KeyboardCode))]
 	int selectedKeyboardLookIndex;
@@ -168,6 +181,7 @@ internal sealed partial class TextFieldViewModel : ShowcaseViewModel
 				ContentKind = ContentKind.{{SelectedContentKind.Value}},
 				Capitalization = Capitalization.{{SelectedCapitalization.Value}},
 				Autocorrection = {{Boolean(Autocorrection)}},
+				GrammarChecking = {{GrammarChecking?.ToString().ToLowerInvariant() ?? "null"}},
 				KeyboardLook = KeyboardLook.{{SelectedKeyboardLook.Value}}
 			};
 			""");
