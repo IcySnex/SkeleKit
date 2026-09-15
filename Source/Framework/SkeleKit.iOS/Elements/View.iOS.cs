@@ -808,7 +808,7 @@ public abstract partial class View
 	/// <summary>
 	/// Runs any pending layout right now. Call it inside an <see cref="Animator"/>'s changes to animate a layout property.
 	/// </summary>
-	/// <remarks>Layout properties such as Width or Margin reach the native frame on the next layout pass, after an animation block closes. Calling this method inside the animation keeps them from snapping; <see cref="Animate(Animation, Action, Action{bool})"/> does this automatically.</remarks>
+	/// <remarks>Layout properties such as Width or Margin reach the native frame on the next layout pass, after an animation block closes. Calling this method inside the animation keeps them from snapping; <see cref="Animate(Animation, Action, Action{bool}, bool)"/> does this automatically unless layout is disabled.</remarks>
 	public static void LayoutNow() =>
 		UIApplication.SharedApplication
 			.ConnectedScenes
@@ -839,10 +839,12 @@ public abstract partial class View
 	/// </summary>
 	/// <param name="seconds">The animation duration, in seconds.</param>
 	/// <param name="changes">The property changes to animate.</param>
+	/// <param name="layout">Whether to run pending layout inside the animation. Disable this for visual-only changes such as colors or opacity.</param>
 	public static void Animate(
 		double seconds,
-		Action changes) =>
-		Animate(Animation.Ease(seconds), changes);
+		Action changes,
+		bool layout = true) =>
+		Animate(Animation.Ease(seconds), changes, layout: layout);
 
 	/// <summary>
 	/// Animates the property changes made inside <paramref name="changes"/>, following <paramref name="animation"/>.
@@ -851,17 +853,21 @@ public abstract partial class View
 	/// <param name="animation">The timing and easing to use.</param>
 	/// <param name="changes">The property changes to animate.</param>
 	/// <param name="completed">Called when the animation completes, with whether it finished normally.</param>
+	/// <param name="layout">Whether to run pending layout inside the animation. Disable this for visual-only changes such as colors or opacity.</param>
 	public static void Animate(
 		Animation animation,
 		Action changes,
-		Action<bool>? completed = null)
+		Action<bool>? completed = null,
+		bool layout = true)
 	{
 		UICompletionHandler done = finished => completed?.Invoke(finished);
 
 		Action animated = () =>
 		{
 			changes();
-			LayoutNow();
+
+			if (layout)
+				LayoutNow();
 		};
 
 		if (animation.SpringDamping is double damping)
