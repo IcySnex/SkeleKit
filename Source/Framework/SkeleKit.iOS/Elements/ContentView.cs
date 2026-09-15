@@ -106,12 +106,12 @@ public abstract partial class ContentView : ContentHost
 	View? navigationAccessory;
 
 	/// <summary>
-	/// The scroll-edge treatment below <see cref="NavigationAccessory"/>.
+	/// The treatment where scrolling content meets the page's top chrome.
 	/// </summary>
 	/// <remarks>
-	/// iOS 26 and later. Earlier versions retain SkeleKit's continuous navigation material.
+	/// iOS 26 and later. The default lets UIKit choose the appropriate treatment.
 	/// </remarks>
-	public NavigationAccessoryEdgeStyle NavigationAccessoryEdgeStyle
+	public ScrollEdgeStyle TopScrollEdgeStyle
 	{
 		get;
 		set
@@ -120,9 +120,9 @@ public abstract partial class ContentView : ContentHost
 				return;
 
 			field = value;
-			ApplyNavigationAccessoryEdgeStyleCore();
+			ApplyTopScrollEdgeStyleCore();
 		}
-	} = NavigationAccessoryEdgeStyle.Soft;
+	} = ScrollEdgeStyle.Automatic;
 
 	/// <summary>
 	/// How the navigation title is displayed. By default, it follows the navigation stack.
@@ -412,7 +412,7 @@ public abstract partial class ContentView : ContentHost
 
 	partial void ApplyNavigationAccessoryCore();
 
-	partial void ApplyNavigationAccessoryEdgeStyleCore();
+	partial void ApplyTopScrollEdgeStyleCore();
 
 	partial void ApplyNavigationBarMinimizationCore();
 

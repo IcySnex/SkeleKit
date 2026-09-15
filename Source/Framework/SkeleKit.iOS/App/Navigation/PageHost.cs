@@ -178,9 +178,9 @@ internal sealed class PageHost : UIViewController
 	View? hostedNavigationAccessory;
 	INavigationAccessoryScrollSource? navigationAccessoryScrollSource;
 	UIScrollEdgeElementContainerInteraction? navigationAccessoryScrollEdge;
-	UIScrollView? navigationAccessoryEdgeScrollView;
-	UIScrollEdgeEffectStyle? navigationAccessoryPreviousTopEdgeStyle;
-	UIScrollEdgeEffectStyle? navigationAccessoryAppliedTopEdgeStyle;
+	UIScrollView? topScrollEdgeScrollView;
+	UIScrollEdgeEffectStyle? previousTopScrollEdgeStyle;
+	UIScrollEdgeEffectStyle? appliedTopScrollEdgeStyle;
 	nfloat navigationAccessoryHeight;
 	nfloat navigationAccessoryBaseInset;
 	double navigationAccessoryScrollOffset;
@@ -312,6 +312,7 @@ internal sealed class PageHost : UIViewController
 			return;
 
 		RemoveNavigationAccessory();
+		RestoreTopScrollEdgeStyle();
 		ApplyChrome(page);
 
 		UIView native = page.Realize();
@@ -326,6 +327,7 @@ internal sealed class PageHost : UIViewController
 		if (scroll is not null)
 			SetContentScrollView(scroll, NSDirectionalRectEdge.Top | NSDirectionalRectEdge.Bottom);
 
+		ApplyTopScrollEdgeStyle(page, scroll);
 		InstallNavigationAccessory(page, scroll);
 	}
 
@@ -335,7 +337,9 @@ internal sealed class PageHost : UIViewController
 			return;
 
 		RemoveNavigationAccessory();
-		InstallNavigationAccessory(page, FindScrolling(page)?.Native as UIScrollView);
+		UIScrollView? scroll = FindScrolling(page)?.Native as UIScrollView;
+		ApplyTopScrollEdgeStyle(page, scroll);
+		InstallNavigationAccessory(page, scroll);
 		ApplyNavigationBarMinimization(page);
 		ApplyBarAppearance(page);
 		SetNavigationAccessoryActive(
@@ -374,17 +378,7 @@ internal sealed class PageHost : UIViewController
 		if (OperatingSystem.IsIOSVersionAtLeast(26))
 		{
 			if (scrollView is not null)
-			{
-				navigationAccessoryEdgeScrollView = scrollView;
-				navigationAccessoryPreviousTopEdgeStyle = scrollView.TopEdgeEffect.Style;
-				navigationAccessoryScrollEdge = new()
-				{
-					Edge = UIRectEdge.Top,
-					ScrollView = scrollView
-				};
-				navigationAccessoryHost.AddInteraction(navigationAccessoryScrollEdge);
-				ApplyNavigationAccessoryEdgeStyle(page);
-			}
+				ApplyNavigationAccessoryScrollEdgeInteraction(scrollView);
 		}
 		else
 		{
@@ -428,16 +422,6 @@ internal sealed class PageHost : UIViewController
 			navigationAccessoryScrollEdge.Dispose();
 			navigationAccessoryScrollEdge = null;
 		}
-		if (OperatingSystem.IsIOSVersionAtLeast(26)
-			&& navigationAccessoryEdgeScrollView is UIScrollView edgeScroll
-			&& navigationAccessoryPreviousTopEdgeStyle is UIScrollEdgeEffectStyle previousStyle
-			&& navigationAccessoryAppliedTopEdgeStyle is UIScrollEdgeEffectStyle appliedStyle
-			&& edgeScroll.TopEdgeEffect.Style.Equals(appliedStyle))
-			edgeScroll.TopEdgeEffect.Style = previousStyle;
-		navigationAccessoryEdgeScrollView = null;
-		navigationAccessoryPreviousTopEdgeStyle = null;
-		navigationAccessoryAppliedTopEdgeStyle = null;
-
 		if (navigationAccessoryScrollSource is not null)
 			navigationAccessoryScrollSource.ScrollOffsetChanged -= UpdateNavigationAccessoryMaterial;
 		navigationAccessoryScrollSource = null;
@@ -460,20 +444,75 @@ internal sealed class PageHost : UIViewController
 		AdditionalSafeAreaInsets = additional;
 	}
 
-	internal void ApplyNavigationAccessoryEdgeStyle(
+	internal void ApplyTopScrollEdgeStyle(
 		ContentView page)
 	{
-		if (!OperatingSystem.IsIOSVersionAtLeast(26)
-			|| navigationAccessoryEdgeScrollView is not UIScrollView scrollView)
+		if (!IsViewLoaded)
 			return;
 
-		navigationAccessoryAppliedTopEdgeStyle = page.NavigationAccessoryEdgeStyle switch
+		ApplyTopScrollEdgeStyle(page, FindScrolling(page)?.Native as UIScrollView);
+	}
+
+	void ApplyTopScrollEdgeStyle(
+		ContentView page,
+		UIScrollView? scrollView)
+	{
+		if (!OperatingSystem.IsIOSVersionAtLeast(26))
+			return;
+
+		if (!ReferenceEquals(topScrollEdgeScrollView, scrollView))
 		{
-			NavigationAccessoryEdgeStyle.Automatic => UIScrollEdgeEffectStyle.AutomaticStyle,
-			NavigationAccessoryEdgeStyle.Hard => UIScrollEdgeEffectStyle.HardStyle,
-			_ => UIScrollEdgeEffectStyle.SoftStyle
+			RestoreTopScrollEdgeStyle();
+			topScrollEdgeScrollView = scrollView;
+			previousTopScrollEdgeStyle = scrollView?.TopEdgeEffect.Style;
+		}
+
+		if (scrollView is null)
+			return;
+
+		UIScrollEdgeEffectStyle style = page.TopScrollEdgeStyle switch
+		{
+			ScrollEdgeStyle.Soft => UIScrollEdgeEffectStyle.SoftStyle,
+			ScrollEdgeStyle.Hard => UIScrollEdgeEffectStyle.HardStyle,
+			_ => UIScrollEdgeEffectStyle.AutomaticStyle
 		};
-		scrollView.TopEdgeEffect.Style = navigationAccessoryAppliedTopEdgeStyle;
+
+		appliedTopScrollEdgeStyle = style;
+		scrollView.TopEdgeEffect.Style = style;
+
+		ApplyNavigationAccessoryScrollEdgeInteraction(scrollView);
+	}
+
+	void RestoreTopScrollEdgeStyle()
+	{
+		if (OperatingSystem.IsIOSVersionAtLeast(26)
+			&& topScrollEdgeScrollView is UIScrollView scrollView
+			&& previousTopScrollEdgeStyle is UIScrollEdgeEffectStyle previous
+			&& appliedTopScrollEdgeStyle is UIScrollEdgeEffectStyle applied
+			&& scrollView.TopEdgeEffect.Style.Equals(applied))
+			scrollView.TopEdgeEffect.Style = previous;
+
+		topScrollEdgeScrollView = null;
+		previousTopScrollEdgeStyle = null;
+		appliedTopScrollEdgeStyle = null;
+	}
+
+	void ApplyNavigationAccessoryScrollEdgeInteraction(
+		UIScrollView scrollView)
+	{
+		if (!OperatingSystem.IsIOSVersionAtLeast(26)
+			|| navigationAccessoryHost is not UIView host)
+			return;
+
+		if (navigationAccessoryScrollEdge is not null)
+			return;
+
+		navigationAccessoryScrollEdge = new()
+		{
+			Edge = UIRectEdge.Top,
+			ScrollView = scrollView
+		};
+		host.AddInteraction(navigationAccessoryScrollEdge);
 	}
 
 	void SetNavigationAccessoryActive(
@@ -1106,6 +1145,7 @@ internal sealed class PageHost : UIViewController
 		if (disposing)
 		{
 			RemoveNavigationAccessory();
+			RestoreTopScrollEdgeStyle();
 			RemoveLive(this);
 			menuActions.Clear();
 			themeChange?.Dispose();

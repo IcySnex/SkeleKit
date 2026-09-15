@@ -86,6 +86,14 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 			ItemTitle = static option => option.Title
 		};
 
+		Picker<PageChromeScrollEdgeOption> topScrollEdge = new()
+		{
+			ItemsSource = viewModel.TopScrollEdgeStyles,
+			SelectedItem = Bind(vm => vm.SelectedTopScrollEdgeStyle)
+				.TwoWay((vm, val) => vm.SelectedTopScrollEdgeStyle = val!),
+			ItemTitle = static option => option.Title
+		};
+
 		Switch prompt = Toggle(vm => vm.ShowsPrompt, (vm, val) => vm.ShowsPrompt = val);
 		Switch navigationBar = Toggle(vm => vm.HidesNavigationBar, (vm, val) => vm.HidesNavigationBar = val);
 		Switch tabBar = Toggle(vm => vm.HidesTabBar, (vm, val) => vm.HidesTabBar = val);
@@ -113,6 +121,7 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 				SettingRow("Minimize safe area", navigationSafeArea),
 				SettingRow("Restore behavior", navigationRestore),
 				SettingRow("Navigation accessory", navigationAccessory),
+				SettingRow("Top scroll edge", topScrollEdge),
 				SettingRow("Hide navigation bar", navigationBar),
 				SettingRow("Hide tab bar", tabBar),
 				SettingRow("Toolbar actions", toolbar),
@@ -186,6 +195,7 @@ internal sealed class PageChromeDemo : ContentView
 		NavigationBarMinimizeBehavior = configuration.NavigationMinimizeBehavior;
 		NavigationBarMinimizeSafeAreaAdjustment = configuration.NavigationMinimizeSafeArea;
 		NavigationBarMinimizeRestorationBehavior = configuration.NavigationMinimizeRestoreBehavior;
+		TopScrollEdgeStyle = configuration.TopScrollEdgeStyle;
 		Prompt = configuration.ShowsPrompt ? "ContentView" : null;
 		SafeAreaEdges = configuration.SafeAreaEdges;
 		HidesNavigationBar = configuration.HidesNavigationBar;
@@ -270,6 +280,7 @@ internal sealed class PageChromeDemo : ContentView
 						("Minimize safe area", configuration.NavigationMinimizeSafeArea.ToString()),
 						("Restore", configuration.NavigationMinimizeRestoreBehavior.ToString()),
 						("Accessory", configuration.HasNavigationAccessory ? "Visible" : "Hidden"),
+						("Top scroll edge", configuration.TopScrollEdgeStyle.ToString()),
 						("Prompt", configuration.ShowsPrompt ? "Visible" : "Hidden"),
 						("Background", configuration.Background.Title),
 						("Safe area", configuration.SafeAreaEdges.ToString()),

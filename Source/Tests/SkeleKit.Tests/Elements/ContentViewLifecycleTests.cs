@@ -44,11 +44,19 @@ public class ContentViewLifecycleTests
 	}
 
 	[Fact]
-	public void NavigationAccessoryEdgeStyle_DefaultsToSoft()
+	public void TopScrollEdgeStyle_DefaultsToAutomatic()
 	{
 		EmptyView view = new();
 
-		Assert.Equal(NavigationAccessoryEdgeStyle.Soft, view.NavigationAccessoryEdgeStyle);
+		Assert.Equal(ScrollEdgeStyle.Automatic, view.TopScrollEdgeStyle);
+
+		view.NavigationAccessory = new Border();
+
+		Assert.Equal(ScrollEdgeStyle.Automatic, view.TopScrollEdgeStyle);
+
+		view.TopScrollEdgeStyle = ScrollEdgeStyle.Hard;
+
+		Assert.Equal(ScrollEdgeStyle.Hard, view.TopScrollEdgeStyle);
 	}
 
 	[Fact]

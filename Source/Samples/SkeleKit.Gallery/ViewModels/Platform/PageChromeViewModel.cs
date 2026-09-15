@@ -66,6 +66,13 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 		new("At scroll edge", NavigationBarMinimizeRestore.AtScrollEdge, "NavigationBarMinimizeRestore.AtScrollEdge")
 	];
 
+	static readonly List<PageChromeScrollEdgeOption> TopScrollEdgeOptions =
+	[
+		new("Automatic", ScrollEdgeStyle.Automatic, "ScrollEdgeStyle.Automatic"),
+		new("Soft", ScrollEdgeStyle.Soft, "ScrollEdgeStyle.Soft"),
+		new("Hard", ScrollEdgeStyle.Hard, "ScrollEdgeStyle.Hard")
+	];
+
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
 	PageChromeTitleOption selectedTitleStyle = TitleOptions[0];
@@ -97,6 +104,10 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
 	PageChromeNavigationRestoreOption selectedNavigationMinimizeRestoreBehavior = NavigationMinimizeRestoreOptions[0];
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(PageCode))]
+	PageChromeScrollEdgeOption selectedTopScrollEdgeStyle = TopScrollEdgeOptions[0];
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
@@ -151,6 +162,9 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	public List<PageChromeNavigationRestoreOption> NavigationMinimizeRestoreBehaviors =>
 		NavigationMinimizeRestoreOptions;
 
+	public List<PageChromeScrollEdgeOption> TopScrollEdgeStyles =>
+		TopScrollEdgeOptions;
+
 	public bool AllowsNavigationMinimization =>
 		!HasNavigationAccessory;
 
@@ -161,6 +175,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 			SelectedNavigationMinimizeSafeArea.Value,
 			SelectedNavigationMinimizeRestoreBehavior.Value,
 			HasNavigationAccessory,
+			SelectedTopScrollEdgeStyle.Value,
 			ShowsPrompt,
 			SelectedSafeArea.Value,
 			HidesNavigationBar,
@@ -186,6 +201,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 				NavigationBarMinimizeBehavior = {{SelectedNavigationMinimizeBehavior.Code}},
 				NavigationBarMinimizeSafeAreaAdjustment = {{SelectedNavigationMinimizeSafeArea.Code}},
 				NavigationBarMinimizeRestorationBehavior = {{SelectedNavigationMinimizeRestoreBehavior.Code}},
+				TopScrollEdgeStyle = {{SelectedTopScrollEdgeStyle.Code}},
 				Prompt = {{(ShowsPrompt ? "\"ContentView\"" : "null")}},
 				SafeAreaEdges = {{SelectedSafeArea.Code}},
 				HidesNavigationBar = {{Bool(HidesNavigationBar)}},
@@ -283,12 +299,18 @@ internal sealed record PageChromeNavigationRestoreOption(
 	NavigationBarMinimizeRestore Value,
 	string Code);
 
+internal sealed record PageChromeScrollEdgeOption(
+	string Title,
+	ScrollEdgeStyle Value,
+	string Code);
+
 internal sealed record PageChromeConfiguration(
 	TitleStyle TitleStyle,
 	NavigationBarMinimize NavigationMinimizeBehavior,
 	NavigationBarMinimizeSafeArea NavigationMinimizeSafeArea,
 	NavigationBarMinimizeRestore NavigationMinimizeRestoreBehavior,
 	bool HasNavigationAccessory,
+	ScrollEdgeStyle TopScrollEdgeStyle,
 	bool ShowsPrompt,
 	SafeAreaEdges SafeAreaEdges,
 	bool HidesNavigationBar,

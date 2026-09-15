@@ -59,10 +59,15 @@ public abstract partial class ContentView
 	partial void ApplyNavigationAccessoryCore() =>
 		Host?.NavigationAccessoryChanged();
 
-	partial void ApplyNavigationAccessoryEdgeStyleCore()
+	partial void ApplyTopScrollEdgeStyleCore()
 	{
 		if (Host is PageHost host)
-			host.ApplyNavigationAccessoryEdgeStyle(this);
+		{
+			if (NavigationAccessory is null)
+				host.ApplyTopScrollEdgeStyle(this);
+			else
+				host.NavigationAccessoryChanged();
+		}
 	}
 
 	partial void ApplyNavigationBarMinimizationCore()
