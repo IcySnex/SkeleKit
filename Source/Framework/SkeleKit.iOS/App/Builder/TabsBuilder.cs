@@ -24,6 +24,7 @@ public sealed class TabsBuilder
 
 	internal List<Node> Nodes { get; } = [];
 	internal Type? SearchView { get; private set; }
+	internal bool SearchBubble { get; private set; } = true;
 	internal ImageSource? BubbleIcon { get; private set; }
 	internal Func<IServiceProvider, Action>? BubbleFactory { get; private set; }
 	internal Type? BubbleView { get; private set; }
@@ -65,10 +66,13 @@ public sealed class TabsBuilder
 	/// Adds the system search destination. It is a regular tab on iOS 18 and uses the separated search presentation on iOS 26.
 	/// </summary>
 	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
+	/// <param name="bubble">Whether to put the search tab in the system bubble.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder Search<TView>() where TView : ContentView
+	public TabsBuilder Search<TView>(
+		bool bubble = true) where TView : ContentView
 	{
 		SearchView = typeof(TView);
+		SearchBubble = bubble;
 
 		return this;
 	}

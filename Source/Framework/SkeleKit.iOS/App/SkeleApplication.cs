@@ -535,7 +535,10 @@ public class SkeleApplication
 	internal void AttachBubbleInterceptor(
 		UITabBarController controller)
 	{
-		if (ActionTab is null || BubbleAction is null)
+		if (!OperatingSystem.IsIOSVersionAtLeast(26)
+			|| OperatingSystem.IsIOSVersionAtLeast(27)
+			|| ActionTab is null
+			|| BubbleAction is null)
 			return;
 
 		if (bubbleTap is not null)
@@ -661,12 +664,28 @@ public class SkeleApplication
 				if (tabsBuilder is { SearchView: not null } and ({ BubbleFactory: not null } or { BubbleView: not null }))
 					throw new InvalidOperationException("The bubble is single: declare Search or Bubble, not both.");
 
+				UITab? prominentTab = null;
+
 				if (tabsBuilder?.SearchView is Type searchView)
 				{
 					UINavigationController stack = Stack(searchView, tabsBuilder.UseLargeTitles);
 					PageHost root = (PageHost)stack.ViewControllers![0];
 
-					UISearchTab search = new(_ => stack);
+					UITab search;
+					if (tabsBuilder.SearchBubble)
+					{
+						search = new UISearchTab(_ => stack);
+						if (OperatingSystem.IsIOSVersionAtLeast(27))
+							prominentTab = search;
+					}
+					else
+					{
+						search = new UITab(
+							root.Page?.Title.Value ?? "Search",
+							UIImage.GetSystemImage("magnifyingglass"),
+							searchView.Name,
+							_ => stack);
+					}
 					root.Tab = search;
 
 					root.LoadViewIfNeeded();
@@ -679,7 +698,16 @@ public class SkeleApplication
 					UIImage? bubbleImage = tabsBuilder.BubbleIcon is ImageSource icon ? icon.ResolveLocal() : null;
 					UITab bubble;
 
-					if (OperatingSystem.IsIOSVersionAtLeast(26))
+					if (OperatingSystem.IsIOSVersionAtLeast(27))
+					{
+						bubble = new UITab(
+							tabsBuilder.BubbleTitle!,
+							bubbleImage,
+							bubbleView.Name,
+							_ => stack);
+						prominentTab = bubble;
+					}
+					else if (OperatingSystem.IsIOSVersionAtLeast(26))
 					{
 						bubble = new UISearchTab(_ => stack)
 						{
@@ -708,7 +736,16 @@ public class SkeleApplication
 					UIImage? bubbleImage = tabsBuilder.BubbleIcon is ImageSource icon ? icon.ResolveLocal() : null;
 					UITab bubble;
 
-					if (OperatingSystem.IsIOSVersionAtLeast(26))
+					if (OperatingSystem.IsIOSVersionAtLeast(27))
+					{
+						bubble = new UITab(
+							tabsBuilder.BubbleTitle!,
+							bubbleImage,
+							$"action:{tabsBuilder.BubbleTitle}",
+							static _ => new());
+						prominentTab = bubble;
+					}
+					else if (OperatingSystem.IsIOSVersionAtLeast(26))
 					{
 						bubble = new UISearchTab(static _ => new())
 						{
@@ -729,11 +766,14 @@ public class SkeleApplication
 					ActionTab = bubble;
 					tabs.Add(bubble);
 
-					if (OperatingSystem.IsIOSVersionAtLeast(26))
+					if (OperatingSystem.IsIOSVersionAtLeast(26)
+						&& !OperatingSystem.IsIOSVersionAtLeast(27))
 						CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => AttachBubbleInterceptor(controller));
 				}
 
 				controller.SetTabs([.. tabs], false);
+				if (OperatingSystem.IsIOSVersionAtLeast(27) && prominentTab is not null)
+					controller.ProminentTabIdentifier = prominentTab.Identifier;
 
 				tabsDelegate = new(this);
 				controller.Delegate = tabsDelegate;
