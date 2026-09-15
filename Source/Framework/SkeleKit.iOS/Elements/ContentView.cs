@@ -86,6 +86,8 @@ public abstract partial class ContentView : ContentHost
 	/// </summary>
 	/// <remarks>
 	/// Scrolling content passes beneath this view and UIKit includes its measured height in the top content inset.
+	/// On iOS 27, setting an accessory disables navigation-bar minimization because UIKit does not expose a
+	/// custom accessory slot that participates in that transition.
 	/// </remarks>
 	public View? NavigationAccessory
 	{
@@ -104,9 +106,92 @@ public abstract partial class ContentView : ContentHost
 	View? navigationAccessory;
 
 	/// <summary>
+	/// The scroll-edge treatment below <see cref="NavigationAccessory"/>.
+	/// </summary>
+	/// <remarks>
+	/// iOS 26 and later. Earlier versions retain SkeleKit's continuous navigation material.
+	/// </remarks>
+	public NavigationAccessoryEdgeStyle NavigationAccessoryEdgeStyle
+	{
+		get;
+		set
+		{
+			if (field == value)
+				return;
+
+			field = value;
+			ApplyNavigationAccessoryEdgeStyleCore();
+		}
+	} = NavigationAccessoryEdgeStyle.Soft;
+
+	/// <summary>
 	/// How the navigation title is displayed. By default, it follows the navigation stack.
 	/// </summary>
 	public TitleStyle TitleStyle { get; set; } = TitleStyle.Automatic;
+
+	/// <summary>
+	/// When the navigation bar minimizes as this page scrolls.
+	/// </summary>
+	/// <remarks>
+	/// iOS 27 and later. The default keeps the bar expanded. Ignored while <see cref="NavigationAccessory"/>
+	/// is set.
+	/// </remarks>
+	public NavigationBarMinimize NavigationBarMinimizeBehavior
+	{
+		get;
+		set
+		{
+			if (field == value)
+				return;
+
+			field = value;
+			ApplyNavigationBarMinimizationCore();
+		}
+	} = NavigationBarMinimize.Never;
+
+	internal NavigationBarMinimize EffectiveNavigationBarMinimizeBehavior =>
+		NavigationAccessory is null
+			? NavigationBarMinimizeBehavior
+			: NavigationBarMinimize.Never;
+
+	/// <summary>
+	/// Whether the safe area changes while the navigation bar minimizes.
+	/// </summary>
+	/// <remarks>
+	/// iOS 27 and later.
+	/// </remarks>
+	public NavigationBarMinimizeSafeArea NavigationBarMinimizeSafeAreaAdjustment
+	{
+		get;
+		set
+		{
+			if (field == value)
+				return;
+
+			field = value;
+			ApplyNavigationBarMinimizationCore();
+		}
+	} = NavigationBarMinimizeSafeArea.Automatic;
+
+	/// <summary>
+	/// When a minimized navigation bar returns to full size.
+	/// </summary>
+	/// <remarks>
+	/// iOS 27 and later. <see cref="NavigationBarMinimizeRestore.AtScrollEdge"/> is honored with
+	/// <see cref="NavigationBarMinimize.OnScrollDown"/>.
+	/// </remarks>
+	public NavigationBarMinimizeRestore NavigationBarMinimizeRestorationBehavior
+	{
+		get;
+		set
+		{
+			if (field == value)
+				return;
+
+			field = value;
+			ApplyNavigationBarMinimizationCore();
+		}
+	} = NavigationBarMinimizeRestore.Automatic;
 
 	/// <summary>
 	/// Hides the navigation bar for this page.
@@ -326,6 +411,10 @@ public abstract partial class ContentView : ContentHost
 	partial void ApplyLeaveGuardCore();
 
 	partial void ApplyNavigationAccessoryCore();
+
+	partial void ApplyNavigationAccessoryEdgeStyleCore();
+
+	partial void ApplyNavigationBarMinimizationCore();
 
 
 	/// <summary>

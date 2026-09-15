@@ -59,6 +59,18 @@ public abstract partial class ContentView
 	partial void ApplyNavigationAccessoryCore() =>
 		Host?.NavigationAccessoryChanged();
 
+	partial void ApplyNavigationAccessoryEdgeStyleCore()
+	{
+		if (Host is PageHost host)
+			host.ApplyNavigationAccessoryEdgeStyle(this);
+	}
+
+	partial void ApplyNavigationBarMinimizationCore()
+	{
+		if (Host is PageHost host)
+			host.ApplyNavigationBarMinimization(this);
+	}
+
 
 	private protected override void OnRealized()
 	{

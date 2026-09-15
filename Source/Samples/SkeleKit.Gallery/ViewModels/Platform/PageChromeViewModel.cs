@@ -45,6 +45,27 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 		new("Orange", Colors.Orange, "Colors.Orange")
 	];
 
+	static readonly List<PageChromeNavigationMinimizeOption> NavigationMinimizeOptions =
+	[
+		new("Never", NavigationBarMinimize.Never, "NavigationBarMinimize.Never"),
+		new("Automatic", NavigationBarMinimize.Automatic, "NavigationBarMinimize.Automatic"),
+		new("On scroll down", NavigationBarMinimize.OnScrollDown, "NavigationBarMinimize.OnScrollDown"),
+		new("On scroll up", NavigationBarMinimize.OnScrollUp, "NavigationBarMinimize.OnScrollUp")
+	];
+
+	static readonly List<PageChromeNavigationSafeAreaOption> NavigationMinimizeSafeAreaOptions =
+	[
+		new("Automatic", NavigationBarMinimizeSafeArea.Automatic, "NavigationBarMinimizeSafeArea.Automatic"),
+		new("Reflow content", NavigationBarMinimizeSafeArea.Enabled, "NavigationBarMinimizeSafeArea.Enabled"),
+		new("Keep expanded inset", NavigationBarMinimizeSafeArea.Disabled, "NavigationBarMinimizeSafeArea.Disabled")
+	];
+
+	static readonly List<PageChromeNavigationRestoreOption> NavigationMinimizeRestoreOptions =
+	[
+		new("Reverse scroll", NavigationBarMinimizeRestore.Automatic, "NavigationBarMinimizeRestore.Automatic"),
+		new("At scroll edge", NavigationBarMinimizeRestore.AtScrollEdge, "NavigationBarMinimizeRestore.AtScrollEdge")
+	];
+
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
 	PageChromeTitleOption selectedTitleStyle = TitleOptions[0];
@@ -67,6 +88,18 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
+	PageChromeNavigationMinimizeOption selectedNavigationMinimizeBehavior = NavigationMinimizeOptions[0];
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(PageCode))]
+	PageChromeNavigationSafeAreaOption selectedNavigationMinimizeSafeArea = NavigationMinimizeSafeAreaOptions[0];
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(PageCode))]
+	PageChromeNavigationRestoreOption selectedNavigationMinimizeRestoreBehavior = NavigationMinimizeRestoreOptions[0];
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(PageCode))]
 	bool showsPrompt;
 
 	[ObservableProperty]
@@ -84,6 +117,11 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
 	bool hasBottomToolbar;
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(PageCode))]
+	[NotifyPropertyChangedFor(nameof(AllowsNavigationMinimization))]
+	bool hasNavigationAccessory = true;
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(SearchCode))]
@@ -104,9 +142,25 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	public List<PageChromeColorOption> AccentColors =>
 		ColorOptions;
 
+	public List<PageChromeNavigationMinimizeOption> NavigationMinimizeBehaviors =>
+		NavigationMinimizeOptions;
+
+	public List<PageChromeNavigationSafeAreaOption> NavigationMinimizeSafeAreas =>
+		NavigationMinimizeSafeAreaOptions;
+
+	public List<PageChromeNavigationRestoreOption> NavigationMinimizeRestoreBehaviors =>
+		NavigationMinimizeRestoreOptions;
+
+	public bool AllowsNavigationMinimization =>
+		!HasNavigationAccessory;
+
 	internal PageChromeConfiguration Configuration =>
 		new(
 			SelectedTitleStyle.Value,
+			SelectedNavigationMinimizeBehavior.Value,
+			SelectedNavigationMinimizeSafeArea.Value,
+			SelectedNavigationMinimizeRestoreBehavior.Value,
+			HasNavigationAccessory,
 			ShowsPrompt,
 			SelectedSafeArea.Value,
 			HidesNavigationBar,
@@ -129,6 +183,9 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 			{
 				Title = "Page chrome",
 				TitleStyle = {{SelectedTitleStyle.Code}},
+				NavigationBarMinimizeBehavior = {{SelectedNavigationMinimizeBehavior.Code}},
+				NavigationBarMinimizeSafeAreaAdjustment = {{SelectedNavigationMinimizeSafeArea.Code}},
+				NavigationBarMinimizeRestorationBehavior = {{SelectedNavigationMinimizeRestoreBehavior.Code}},
 				Prompt = {{(ShowsPrompt ? "\"ContentView\"" : "null")}},
 				SafeAreaEdges = {{SelectedSafeArea.Code}},
 				HidesNavigationBar = {{Bool(HidesNavigationBar)}},
@@ -139,6 +196,8 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 				LargeTitleColor = {{SelectedAccentColors.Code}},
 				HidesTabBar = {{Bool(HidesTabBar)}}
 			};
+
+			{{NavigationAccessoryCode}}
 
 			{{ToolbarCode}}
 			""")
@@ -174,6 +233,11 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 			page.BottomToolbarItems.Add(new ToolbarItem { Text = "Done", Icon = ImageSource.Symbol("checkmark"), IsPrimary = true, Tint = Colors.Green });
 		""";
 
+	string NavigationAccessoryCode =>
+		HasNavigationAccessory
+			? "page.NavigationAccessory = new WeekdayHeader();"
+			: string.Empty;
+
 	static string Bool(
 		bool value) =>
 		value ? "true" : "false";
@@ -204,8 +268,27 @@ internal sealed record PageChromeColorOption(
 	Color? Value,
 	string Code);
 
+internal sealed record PageChromeNavigationMinimizeOption(
+	string Title,
+	NavigationBarMinimize Value,
+	string Code);
+
+internal sealed record PageChromeNavigationSafeAreaOption(
+	string Title,
+	NavigationBarMinimizeSafeArea Value,
+	string Code);
+
+internal sealed record PageChromeNavigationRestoreOption(
+	string Title,
+	NavigationBarMinimizeRestore Value,
+	string Code);
+
 internal sealed record PageChromeConfiguration(
 	TitleStyle TitleStyle,
+	NavigationBarMinimize NavigationMinimizeBehavior,
+	NavigationBarMinimizeSafeArea NavigationMinimizeSafeArea,
+	NavigationBarMinimizeRestore NavigationMinimizeRestoreBehavior,
+	bool HasNavigationAccessory,
 	bool ShowsPrompt,
 	SafeAreaEdges SafeAreaEdges,
 	bool HidesNavigationBar,

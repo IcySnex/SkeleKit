@@ -59,11 +59,39 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 			ItemTitle = static option => option.Title
 		};
 
+		Picker<PageChromeNavigationMinimizeOption> navigationMinimize = new()
+		{
+			IsEnabled = Bind(vm => vm.AllowsNavigationMinimization),
+			ItemsSource = viewModel.NavigationMinimizeBehaviors,
+			SelectedItem = Bind(vm => vm.SelectedNavigationMinimizeBehavior)
+				.TwoWay((vm, val) => vm.SelectedNavigationMinimizeBehavior = val!),
+			ItemTitle = static option => option.Title
+		};
+
+		Picker<PageChromeNavigationSafeAreaOption> navigationSafeArea = new()
+		{
+			IsEnabled = Bind(vm => vm.AllowsNavigationMinimization),
+			ItemsSource = viewModel.NavigationMinimizeSafeAreas,
+			SelectedItem = Bind(vm => vm.SelectedNavigationMinimizeSafeArea)
+				.TwoWay((vm, val) => vm.SelectedNavigationMinimizeSafeArea = val!),
+			ItemTitle = static option => option.Title
+		};
+
+		Picker<PageChromeNavigationRestoreOption> navigationRestore = new()
+		{
+			IsEnabled = Bind(vm => vm.AllowsNavigationMinimization),
+			ItemsSource = viewModel.NavigationMinimizeRestoreBehaviors,
+			SelectedItem = Bind(vm => vm.SelectedNavigationMinimizeRestoreBehavior)
+				.TwoWay((vm, val) => vm.SelectedNavigationMinimizeRestoreBehavior = val!),
+			ItemTitle = static option => option.Title
+		};
+
 		Switch prompt = Toggle(vm => vm.ShowsPrompt, (vm, val) => vm.ShowsPrompt = val);
 		Switch navigationBar = Toggle(vm => vm.HidesNavigationBar, (vm, val) => vm.HidesNavigationBar = val);
 		Switch tabBar = Toggle(vm => vm.HidesTabBar, (vm, val) => vm.HidesTabBar = val);
 		Switch toolbar = Toggle(vm => vm.HasToolbar, (vm, val) => vm.HasToolbar = val);
 		Switch bottomToolbar = Toggle(vm => vm.HasBottomToolbar, (vm, val) => vm.HasBottomToolbar = val);
+		Switch navigationAccessory = Toggle(vm => vm.HasNavigationAccessory, (vm, val) => vm.HasNavigationAccessory = val);
 
 		Button open = ActionButton(
 			"Open configured page",
@@ -72,7 +100,7 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 
 		AddShowcase(
 			"Navigation shell",
-			"Page-owned navigation, status and toolbar chrome.",
+			"Page-owned chrome. Turn off the navigation accessory to test iOS 27 minimization.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(open, 140),
 				SettingRow("Title", title),
@@ -81,6 +109,10 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 				SettingRow("Status bar", statusBar),
 				SettingRow("Accent colors", accent),
 				SettingRow("Safe area", safeArea),
+				SettingRow("Navigation minimize", navigationMinimize),
+				SettingRow("Minimize safe area", navigationSafeArea),
+				SettingRow("Restore behavior", navigationRestore),
+				SettingRow("Navigation accessory", navigationAccessory),
 				SettingRow("Hide navigation bar", navigationBar),
 				SettingRow("Hide tab bar", tabBar),
 				SettingRow("Toolbar actions", toolbar),
@@ -151,6 +183,9 @@ internal sealed class PageChromeDemo : ContentView
 	{
 		Title = "Page chrome";
 		TitleStyle = configuration.TitleStyle;
+		NavigationBarMinimizeBehavior = configuration.NavigationMinimizeBehavior;
+		NavigationBarMinimizeSafeAreaAdjustment = configuration.NavigationMinimizeSafeArea;
+		NavigationBarMinimizeRestorationBehavior = configuration.NavigationMinimizeRestoreBehavior;
 		Prompt = configuration.ShowsPrompt ? "ContentView" : null;
 		SafeAreaEdges = configuration.SafeAreaEdges;
 		HidesNavigationBar = configuration.HidesNavigationBar;
@@ -160,6 +195,21 @@ internal sealed class PageChromeDemo : ContentView
 		TitleColor = configuration.AccentColor;
 		LargeTitleColor = configuration.AccentColor;
 		HidesTabBar = configuration.HidesTabBar;
+
+		if (configuration.HasNavigationAccessory)
+		{
+			NavigationAccessory = new Border
+			{
+				Padding = new(16, 8),
+				Child = new Label
+				{
+					Text = "Navigation accessory",
+					TextStyle = TextStyle.Footnote,
+					FontWeight = FontWeight.Semibold,
+					TextAlignment = TextAlignment.Center
+				}
+			};
+		}
 
 		if (configuration.HasToolbar)
 		{
@@ -216,6 +266,10 @@ internal sealed class PageChromeDemo : ContentView
 
 					ConfigurationCard(
 						("Title", configuration.TitleStyle.ToString()),
+						("Minimize", configuration.NavigationMinimizeBehavior.ToString()),
+						("Minimize safe area", configuration.NavigationMinimizeSafeArea.ToString()),
+						("Restore", configuration.NavigationMinimizeRestoreBehavior.ToString()),
+						("Accessory", configuration.HasNavigationAccessory ? "Visible" : "Hidden"),
 						("Prompt", configuration.ShowsPrompt ? "Visible" : "Hidden"),
 						("Background", configuration.Background.Title),
 						("Safe area", configuration.SafeAreaEdges.ToString()),

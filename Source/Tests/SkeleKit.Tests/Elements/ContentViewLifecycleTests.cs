@@ -34,6 +34,43 @@ public class ContentViewLifecycleTests
 	}
 
 	[Fact]
+	public void NavigationBarMinimization_HasStableDefaults()
+	{
+		EmptyView view = new();
+
+		Assert.Equal(NavigationBarMinimize.Never, view.NavigationBarMinimizeBehavior);
+		Assert.Equal(NavigationBarMinimizeSafeArea.Automatic, view.NavigationBarMinimizeSafeAreaAdjustment);
+		Assert.Equal(NavigationBarMinimizeRestore.Automatic, view.NavigationBarMinimizeRestorationBehavior);
+	}
+
+	[Fact]
+	public void NavigationAccessoryEdgeStyle_DefaultsToSoft()
+	{
+		EmptyView view = new();
+
+		Assert.Equal(NavigationAccessoryEdgeStyle.Soft, view.NavigationAccessoryEdgeStyle);
+	}
+
+	[Fact]
+	public void NavigationAccessory_DisablesMinimizationUntilRemoved()
+	{
+		EmptyView view = new()
+		{
+			NavigationBarMinimizeBehavior = NavigationBarMinimize.OnScrollDown
+		};
+
+		Assert.Equal(NavigationBarMinimize.OnScrollDown, view.EffectiveNavigationBarMinimizeBehavior);
+
+		view.NavigationAccessory = new Border();
+
+		Assert.Equal(NavigationBarMinimize.Never, view.EffectiveNavigationBarMinimizeBehavior);
+
+		view.NavigationAccessory = null;
+
+		Assert.Equal(NavigationBarMinimize.OnScrollDown, view.EffectiveNavigationBarMinimizeBehavior);
+	}
+
+	[Fact]
 	public void Background_DefaultsToSystemBackground()
 	{
 		EmptyView view = new();

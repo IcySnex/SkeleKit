@@ -180,6 +180,7 @@ internal sealed class PageHost : UIViewController
 	UIScrollEdgeElementContainerInteraction? navigationAccessoryScrollEdge;
 	UIScrollView? navigationAccessoryEdgeScrollView;
 	UIScrollEdgeEffectStyle? navigationAccessoryPreviousTopEdgeStyle;
+	UIScrollEdgeEffectStyle? navigationAccessoryAppliedTopEdgeStyle;
 	nfloat navigationAccessoryHeight;
 	nfloat navigationAccessoryBaseInset;
 	double navigationAccessoryScrollOffset;
@@ -335,6 +336,7 @@ internal sealed class PageHost : UIViewController
 
 		RemoveNavigationAccessory();
 		InstallNavigationAccessory(page, FindScrolling(page)?.Native as UIScrollView);
+		ApplyNavigationBarMinimization(page);
 		ApplyBarAppearance(page);
 		SetNavigationAccessoryActive(
 			ReferenceEquals(NavigationController?.TopViewController, this)
@@ -381,7 +383,7 @@ internal sealed class PageHost : UIViewController
 					ScrollView = scrollView
 				};
 				navigationAccessoryHost.AddInteraction(navigationAccessoryScrollEdge);
-				scrollView.TopEdgeEffect.Style = UIScrollEdgeEffectStyle.SoftStyle;
+				ApplyNavigationAccessoryEdgeStyle(page);
 			}
 		}
 		else
@@ -429,10 +431,12 @@ internal sealed class PageHost : UIViewController
 		if (OperatingSystem.IsIOSVersionAtLeast(26)
 			&& navigationAccessoryEdgeScrollView is UIScrollView edgeScroll
 			&& navigationAccessoryPreviousTopEdgeStyle is UIScrollEdgeEffectStyle previousStyle
-			&& edgeScroll.TopEdgeEffect.Style.Equals(UIScrollEdgeEffectStyle.SoftStyle))
+			&& navigationAccessoryAppliedTopEdgeStyle is UIScrollEdgeEffectStyle appliedStyle
+			&& edgeScroll.TopEdgeEffect.Style.Equals(appliedStyle))
 			edgeScroll.TopEdgeEffect.Style = previousStyle;
 		navigationAccessoryEdgeScrollView = null;
 		navigationAccessoryPreviousTopEdgeStyle = null;
+		navigationAccessoryAppliedTopEdgeStyle = null;
 
 		if (navigationAccessoryScrollSource is not null)
 			navigationAccessoryScrollSource.ScrollOffsetChanged -= UpdateNavigationAccessoryMaterial;
@@ -454,6 +458,22 @@ internal sealed class PageHost : UIViewController
 		UIEdgeInsets additional = AdditionalSafeAreaInsets;
 		additional.Top = navigationAccessoryBaseInset;
 		AdditionalSafeAreaInsets = additional;
+	}
+
+	internal void ApplyNavigationAccessoryEdgeStyle(
+		ContentView page)
+	{
+		if (!OperatingSystem.IsIOSVersionAtLeast(26)
+			|| navigationAccessoryEdgeScrollView is not UIScrollView scrollView)
+			return;
+
+		navigationAccessoryAppliedTopEdgeStyle = page.NavigationAccessoryEdgeStyle switch
+		{
+			NavigationAccessoryEdgeStyle.Automatic => UIScrollEdgeEffectStyle.AutomaticStyle,
+			NavigationAccessoryEdgeStyle.Hard => UIScrollEdgeEffectStyle.HardStyle,
+			_ => UIScrollEdgeEffectStyle.SoftStyle
+		};
+		scrollView.TopEdgeEffect.Style = navigationAccessoryAppliedTopEdgeStyle;
 	}
 
 	void SetNavigationAccessoryActive(
@@ -649,11 +669,43 @@ internal sealed class PageHost : UIViewController
 		};
 
 		ApplyTitleStyle(page);
+		ApplyNavigationBarMinimization(page);
 
 		ApplyBarAppearance(page);
 
 		ApplyToolbar(page);
 		ApplySearch(page);
+	}
+
+	internal void ApplyNavigationBarMinimization(
+		ContentView page)
+	{
+		if (!OperatingSystem.IsIOSVersionAtLeast(27))
+			return;
+
+		NavigationItem.NavigationBarMinimization = new()
+		{
+			MinimizationBehavior = page.EffectiveNavigationBarMinimizeBehavior switch
+			{
+				NavigationBarMinimize.Automatic => UIBarMinimizationBehavior.Automatic,
+				NavigationBarMinimize.OnScrollDown => UIBarMinimizationBehavior.OnScrollDown,
+				NavigationBarMinimize.OnScrollUp => UIBarMinimizationBehavior.OnScrollUp,
+				_ => UIBarMinimizationBehavior.Never
+			},
+			SafeAreaAdjustment = page.NavigationBarMinimizeSafeAreaAdjustment switch
+			{
+				NavigationBarMinimizeSafeArea.Enabled => UIBarMinimizationSafeAreaAdjustment.Enabled,
+				NavigationBarMinimizeSafeArea.Disabled => UIBarMinimizationSafeAreaAdjustment.Disabled,
+				_ => UIBarMinimizationSafeAreaAdjustment.Automatic
+			},
+			RestorationBehavior = page.NavigationBarMinimizeRestorationBehavior switch
+			{
+				NavigationBarMinimizeRestore.AtScrollEdge => UIBarMinimizationRestorationBehavior.AtScrollEdge,
+				_ => UIBarMinimizationRestorationBehavior.Automatic
+			}
+		};
+
+		NavigationController?.NavigationBar.SetNeedsLayout();
 	}
 
 	void ApplyTitleStyle(
