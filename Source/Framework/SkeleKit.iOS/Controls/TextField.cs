@@ -318,7 +318,7 @@ public class TextField : Control
 	void ApplyToolbar()
 	{
 		accessoryHost = keyboardAccessory is View custom
-			? AccessoryHost.ForKeyboard(custom)
+			? AccessoryHost.ForKeyboard(custom, Ui)
 			: null;
 		accessoryBar = keyboardAccessory is null && keyboardToolbar is not KeyboardToolbar.None
 			? Keyboards.Toolbar(this, keyboardToolbar)

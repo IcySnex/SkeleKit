@@ -98,6 +98,21 @@ public class ViewLayoutTests
 	}
 
 	[Fact]
+	public void Arrange_ConstrainedStretch_CentersWithinSlot()
+	{
+		FixedView view = new(100, 40)
+		{
+			MaxWidth = 200,
+			MaxHeight = 120
+		};
+		view.Measure(new Size(300, 200));
+
+		view.Arrange(new Rect(0, 0, 300, 200));
+
+		Assert.Equal(new Rect(50, 40, 200, 120), view.ArrangedBounds);
+	}
+
+	[Fact]
 	public void Arrange_CenterCenter_CentersDesiredSize()
 	{
 		FixedView view = new(100, 40)

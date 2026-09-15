@@ -21,8 +21,13 @@ public class Divider : View
 		Native.BackgroundColor = color?.ToUIColor() ?? UIColor.Separator;
 
 
-	private protected override UIView CreateNative() =>
-		new();
+	private protected override UIView CreateNative()
+	{
+		UIView view = new();
+		view.RegisterForTraitChanges([typeof(UITraitDisplayScale)], (_, _) => InvalidateMeasure());
+
+		return view;
+	}
 
 	private protected override void ApplyProperties() =>
 		ApplyColor();
@@ -31,5 +36,5 @@ public class Divider : View
 	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize) =>
-		new(0, 1.0 / UIScreen.MainScreen.Scale);
+		new(0, 1.0 / Math.Max(1, Native.TraitCollection.DisplayScale));
 }

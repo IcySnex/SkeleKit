@@ -936,7 +936,7 @@ public abstract partial class View
 		double childWidth) =>
 		HorizontalAlignment switch
 		{
-			HorizontalAlignment.Center => (slotWidth - childWidth) / 2,
+			HorizontalAlignment.Center or HorizontalAlignment.Stretch => (slotWidth - childWidth) / 2,
 			HorizontalAlignment.End => slotWidth - childWidth,
 			_ => 0
 		};
@@ -946,7 +946,7 @@ public abstract partial class View
 		double childHeight) =>
 		VerticalAlignment switch
 		{
-			VerticalAlignment.Center => (slotHeight - childHeight) / 2,
+			VerticalAlignment.Center or VerticalAlignment.Stretch => (slotHeight - childHeight) / 2,
 			VerticalAlignment.End => slotHeight - childHeight,
 			_ => 0
 		};
