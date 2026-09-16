@@ -38,6 +38,14 @@ public abstract partial class View
 	/// ViewModels take <see cref="IHaptics"/> by constructor instead.
 	/// </remarks>
 	protected IHaptics Haptics => SkeleApplication.Current?.Haptics ?? throw new InvalidOperationException("There is no running application.");
+
+	/// <summary>
+	/// The application's mail composer.
+	/// </summary>
+	/// <remarks>
+	/// ViewModels take <see cref="IMailer"/> by constructor instead.
+	/// </remarks>
+	protected IMailer Mailer => SkeleApplication.Current?.Mailer ?? throw new InvalidOperationException("There is no running application.");
 #pragma warning restore CA1822
 
 

@@ -249,6 +249,7 @@ public class SkeleApplication
 		builder.Services.AddSingleton<ISharer, Sharer>();
 		builder.Services.AddSingleton<ISystemPicker, SystemPicker>();
 		builder.Services.AddSingleton<IHaptics, Haptics>();
+		builder.Services.AddSingleton<IMailer, Mailer>();
 
 		Services = builder.Services.BuildServiceProvider();
 
@@ -256,6 +257,7 @@ public class SkeleApplication
 		Sharer = Services.GetRequiredService<ISharer>();
 		SystemPicker = Services.GetRequiredService<ISystemPicker>();
 		Haptics = Services.GetRequiredService<IHaptics>();
+		Mailer = Services.GetRequiredService<IMailer>();
 	}
 
 
@@ -292,6 +294,7 @@ public class SkeleApplication
 	internal ISharer Sharer { get; }
 	internal ISystemPicker SystemPicker { get; }
 	internal IHaptics Haptics { get; }
+	internal IMailer Mailer { get; }
 
 	/// <summary>
 	/// The app-wide theme inherited by windows, chrome and pages.
