@@ -59,6 +59,14 @@ internal sealed partial class NavigationViewModel(
 			[Detent.Fraction(0.75)])
 	];
 
+	static readonly List<NavigationSheetPlacementOption> SheetPlacementOptions =
+	[
+		new("Automatic", SheetPlacement.Automatic, "SheetPlacement.Automatic"),
+		new("Leading", SheetPlacement.Leading, "SheetPlacement.Leading"),
+		new("Center", SheetPlacement.Center, "SheetPlacement.Center"),
+		new("Trailing", SheetPlacement.Trailing, "SheetPlacement.Trailing")
+	];
+
 	static readonly List<NavigationSafariDismissButtonOption> SafariDismissButtonOptions =
 	[
 		new(
@@ -84,12 +92,20 @@ internal sealed partial class NavigationViewModel(
 	NavigationDetentOption selectedDetents = DetentOptions[0];
 
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(ModalCode))]
+	NavigationSheetPlacementOption selectedSheetPlacement = SheetPlacementOptions[0];
+
+	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(UrlCode))]
 	NavigationModalOption selectedUrlModalStyle = ModalStyleOptions[0];
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(UrlCode))]
 	NavigationDetentOption selectedUrlDetents = DetentOptions[0];
+
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(UrlCode))]
+	NavigationSheetPlacementOption selectedUrlSheetPlacement = SheetPlacementOptions[0];
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(UrlCode))]
@@ -117,18 +133,24 @@ internal sealed partial class NavigationViewModel(
 	public List<NavigationDetentOption> Detents =>
 		DetentOptions;
 
+	public List<NavigationSheetPlacementOption> SheetPlacements =>
+		SheetPlacementOptions;
+
 	public List<NavigationModalOption> UrlModalStyles =>
 		ModalStyleOptions;
 
 	public List<NavigationDetentOption> UrlDetents =>
 		DetentOptions;
 
+	public List<NavigationSheetPlacementOption> UrlSheetPlacements =>
+		SheetPlacementOptions;
+
 	public List<NavigationSafariDismissButtonOption> SafariDismissButtons =>
 		SafariDismissButtonOptions;
 
 	public string ModalStyleCode =>
 		SelectedModalStyle.Kind is NavigationModalKind.Sheet
-			? $"ModalStyle.Sheet({SelectedDetents.Code})"
+			? SheetCode(SelectedSheetPlacement, SelectedDetents)
 			: SelectedModalStyle.Code!;
 
 	public IReadOnlyList<Span> StackCode { get; } =
@@ -166,7 +188,7 @@ internal sealed partial class NavigationViewModel(
 	public string UrlModalStyleCode =>
 		SelectedUrlModalStyle.Kind switch
 		{
-			NavigationModalKind.Sheet => $"ModalStyle.Sheet({SelectedUrlDetents.Code})",
+			NavigationModalKind.Sheet => SheetCode(SelectedUrlSheetPlacement, SelectedUrlDetents),
 			NavigationModalKind.Popover => "ModalStyle.Popover(anchor)",
 			_ => SelectedUrlModalStyle.Code!
 		};
@@ -221,6 +243,7 @@ internal sealed partial class NavigationViewModel(
 		BuildModalStyle(
 			SelectedModalStyle,
 			SelectedDetents,
+			SelectedSheetPlacement,
 			anchor);
 
 	ModalStyle CreateUrlModalStyle(
@@ -228,16 +251,18 @@ internal sealed partial class NavigationViewModel(
 		BuildModalStyle(
 			SelectedUrlModalStyle,
 			SelectedUrlDetents,
+			SelectedUrlSheetPlacement,
 			anchor);
 
 	static ModalStyle BuildModalStyle(
 		NavigationModalOption option,
 		NavigationDetentOption detents,
+		NavigationSheetPlacementOption placement,
 		View anchor) =>
 		option.Kind switch
 		{
 			NavigationModalKind.Automatic => ModalStyle.Automatic,
-			NavigationModalKind.Sheet => ModalStyle.Sheet(detents.Detents),
+			NavigationModalKind.Sheet => ModalStyle.Sheet(placement.Placement, detents.Detents),
 			NavigationModalKind.FullScreen => ModalStyle.FullScreen,
 			NavigationModalKind.FormSheet => ModalStyle.FormSheet,
 			NavigationModalKind.CurrentContext => ModalStyle.CurrentContext,
@@ -246,6 +271,13 @@ internal sealed partial class NavigationViewModel(
 			NavigationModalKind.Popover => ModalStyle.Popover(anchor),
 			_ => ModalStyle.Automatic
 		};
+
+	static string SheetCode(
+		NavigationSheetPlacementOption placement,
+		NavigationDetentOption detents) =>
+		placement.Placement is SheetPlacement.Automatic
+			? $"ModalStyle.Sheet({detents.Code})"
+			: $"ModalStyle.Sheet({placement.Code}, {detents.Code})";
 
 	static string BooleanCode(
 		bool value) =>
@@ -261,6 +293,11 @@ internal sealed record NavigationDetentOption(
 	string Title,
 	string Code,
 	Detent[] Detents);
+
+internal sealed record NavigationSheetPlacementOption(
+	string Title,
+	SheetPlacement Placement,
+	string Code);
 
 internal sealed record NavigationSafariDismissButtonOption(
 	string Title,

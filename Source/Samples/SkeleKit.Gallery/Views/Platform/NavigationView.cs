@@ -51,14 +51,28 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 			ItemTitle = static option => option.Title
 		};
 
+		Picker<NavigationSheetPlacementOption> placement = new()
+		{
+			ItemsSource = viewModel.SheetPlacements,
+			SelectedItem = Bind(vm => vm.SelectedSheetPlacement)
+				.TwoWay((vm, val) => vm.SelectedSheetPlacement = val!),
+			ItemTitle = static option => option.Title
+		};
+
 		Button present = ActionButton(
 			"Present modal",
 			"rectangle.portrait.bottomhalf.filled");
 		present.Command = Command.From(() => _ = viewModel.PresentModalAsync(present));
 
 		View detentSetting = SettingRow("Sheet detents", detents);
+		View placementSetting = SettingRow("Sheet placement", placement);
+		detentSetting.IsVisible = viewModel.SelectedModalStyle.Kind is NavigationModalKind.Sheet;
+		placementSetting.IsVisible = detentSetting.IsVisible;
 		style.SelectionChanged = option =>
+		{
 			detentSetting.IsVisible = option.Kind is NavigationModalKind.Sheet;
+			placementSetting.IsVisible = detentSetting.IsVisible;
+		};
 
 		AddShowcase(
 			"Modal presentations",
@@ -66,7 +80,8 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(present, 140),
 				SettingRow("Presentation", style),
-				detentSetting),
+				detentSetting,
+				placementSetting),
 			Code(vm => vm.ModalCode));
 	}
 
@@ -110,6 +125,14 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 			ItemTitle = static option => option.Title
 		};
 
+		Picker<NavigationSheetPlacementOption> placement = new()
+		{
+			ItemsSource = viewModel.UrlSheetPlacements,
+			SelectedItem = Bind(vm => vm.SelectedUrlSheetPlacement)
+				.TwoWay((vm, val) => vm.SelectedUrlSheetPlacement = val!),
+			ItemTitle = static option => option.Title
+		};
+
 		Picker<NavigationSafariDismissButtonOption> dismiss = new()
 		{
 			ItemsSource = viewModel.SafariDismissButtons,
@@ -136,8 +159,14 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 		open.Command = Command.From(() => _ = viewModel.OpenUrlAsync(open));
 
 		View detentSetting = SettingRow("Sheet detents", detents);
+		View placementSetting = SettingRow("Sheet placement", placement);
+		detentSetting.IsVisible = viewModel.SelectedUrlModalStyle.Kind is NavigationModalKind.Sheet;
+		placementSetting.IsVisible = detentSetting.IsVisible;
 		style.SelectionChanged = option =>
+		{
 			detentSetting.IsVisible = option.Kind is NavigationModalKind.Sheet;
+			placementSetting.IsVisible = detentSetting.IsVisible;
+		};
 
 		AddShowcase(
 			"In-app browser",
@@ -146,6 +175,7 @@ internal sealed class NavigationView : ShowcaseView<NavigationViewModel>
 				ShowcaseBox.Canvas(open, 140),
 				SettingRow("Presentation", style),
 				detentSetting,
+				placementSetting,
 				SettingRow("Reader mode", reader),
 				SettingRow("Collapsing bars", bars),
 				SettingRow("Dismiss button", dismiss)),

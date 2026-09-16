@@ -56,19 +56,38 @@ public readonly struct ModalStyle
 	/// <returns>The sheet presentation style.</returns>
 	public static ModalStyle Sheet(
 		params Detent[] detents) =>
-		new(ModalPresentation.PageSheet, detents.Length > 0 ? detents : [Detent.Large]);
+		Sheet(SkeleKit.SheetPlacement.Automatic, detents);
+
+	/// <summary>
+	/// An interactive, swipe-to-dismiss sheet with a preferred position.
+	/// </summary>
+	/// <remarks>
+	/// Placement is supported on iOS 27 and later. Pass heights from smallest to largest.
+	/// </remarks>
+	/// <param name="placement">Where the sheet is positioned within its presenting view.</param>
+	/// <param name="detents">The heights the sheet may rest at, from smallest to largest. Defaults to full height.</param>
+	/// <returns>The sheet presentation style.</returns>
+	public static ModalStyle Sheet(
+		SheetPlacement placement,
+		params Detent[] detents) =>
+		new(
+			ModalPresentation.PageSheet,
+			detents.Length > 0 ? detents : [Detent.Large],
+			sheetPlacement: placement);
 
 
 	ModalStyle(
 		ModalPresentation presentation,
 		IReadOnlyList<Detent> detents,
 		View? anchor = null,
-		PopoverArrow arrows = PopoverArrow.Any)
+		PopoverArrow arrows = PopoverArrow.Any,
+		SheetPlacement sheetPlacement = SkeleKit.SheetPlacement.Automatic)
 	{
 		Presentation = presentation;
 		Detents = detents;
 		Anchor = anchor;
 		Arrows = arrows;
+		SheetPlacement = sheetPlacement;
 	}
 
 
@@ -84,6 +103,14 @@ public readonly struct ModalStyle
 	/// It opens at the first and can be dragged between them; ignored for other presentations.
 	/// </remarks>
 	public IReadOnlyList<Detent> Detents { get; }
+
+	/// <summary>
+	/// Where a sheet is positioned within its presenting view.
+	/// </summary>
+	/// <remarks>
+	/// iOS 27 and later. Ignored by non-sheet presentations and earlier versions.
+	/// </remarks>
+	public SheetPlacement SheetPlacement { get; }
 
 	/// <summary>
 	/// The view a popover points at, or null.

@@ -134,6 +134,17 @@ internal sealed class Navigator(
 				sheet.SelectedDetentIdentifier = identifier;
 
 			sheet.PrefersGrabberVisible = detents.Count > 1;
+
+			if (OperatingSystem.IsIOSVersionAtLeast(27))
+			{
+				sheet.PreferredPlacement = style.SheetPlacement switch
+				{
+					SheetPlacement.Leading => UISheetPresentationControllerPlacement.Leading,
+					SheetPlacement.Center => UISheetPresentationControllerPlacement.Center,
+					SheetPlacement.Trailing => UISheetPresentationControllerPlacement.Trailing,
+					_ => UISheetPresentationControllerPlacement.Automatic
+				};
+			}
 		}
 
 		if (style.Presentation is ModalPresentation.Popover
