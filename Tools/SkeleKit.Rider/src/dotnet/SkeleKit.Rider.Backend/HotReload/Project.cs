@@ -16,6 +16,74 @@ internal sealed class Project
 		long LastWriteTicks,
 		ISourceGenerator[] Generators);
 
+	sealed class AnalyzerResolver : IDisposable
+	{
+		readonly Dictionary<string, Assembly> byName = new(StringComparer.OrdinalIgnoreCase);
+		readonly Dictionary<string, Assembly> byPath = new(StringComparer.OrdinalIgnoreCase);
+		readonly Dictionary<string, string> paths = new(StringComparer.OrdinalIgnoreCase);
+		readonly Action<string> log;
+
+		public AnalyzerResolver(
+			IEnumerable<string> analyzerPaths,
+			Action<string> log)
+		{
+			this.log = log;
+
+			foreach (string path in analyzerPaths)
+			{
+				try
+				{
+					if (AssemblyName.GetAssemblyName(path) is { Name: string name })
+						paths.TryAdd(name, path);
+				}
+				catch
+				{
+					// not a managed assembly
+				}
+			}
+
+			AppDomain.CurrentDomain.AssemblyResolve += OnResolve;
+		}
+
+		public void Dispose() =>
+			AppDomain.CurrentDomain.AssemblyResolve -= OnResolve;
+
+		public Assembly? Load(
+			string path)
+		{
+			if (byPath.TryGetValue(path, out Assembly? existing))
+				return existing;
+
+			try
+			{
+				// LoadFrom returns the first assembly loaded with this identity even after the analyzer
+				// has been rebuilt in place. Loading its image gives a changed generator a fresh assembly.
+				Assembly assembly = Assembly.Load(File.ReadAllBytes(path));
+				byPath[path] = assembly;
+				byName[assembly.GetName().Name ?? path] = assembly;
+
+				return assembly;
+			}
+			catch (Exception exception)
+			{
+				log($"  cannot load {Path.GetFileName(path)}: {exception.Message}");
+				return null;
+			}
+		}
+
+		Assembly? OnResolve(
+			object? sender,
+			ResolveEventArgs request)
+		{
+			string? name = new AssemblyName(request.Name).Name;
+			if (name is null || !paths.TryGetValue(name, out string? path))
+				return null;
+
+			// Analyzer assemblies reference each other by exact version, which the host does not carry.
+			return Load(path);
+		}
+	}
+
 
 	static readonly string[] Unified =
 	[
@@ -80,9 +148,11 @@ internal sealed class Project
 	{
 		UnifyCompilerAssemblies();
 
+		string[] paths = [.. analyzerPaths.Where(File.Exists).Distinct(StringComparer.OrdinalIgnoreCase)];
+		using AnalyzerResolver resolver = new(paths, log);
 		List<ISourceGenerator> generators = [];
 
-		foreach (string path in analyzerPaths.Where(File.Exists).Distinct(StringComparer.OrdinalIgnoreCase))
+		foreach (string path in paths)
 		{
 			FileInfo file = new(path);
 			long length = file.Length;
@@ -90,11 +160,11 @@ internal sealed class Project
 
 			GeneratorEntry entry = GeneratorCache.AddOrUpdate(
 				path,
-				key => new(length, written, Load(key, log)),
+				key => new(length, written, Load(resolver, key, log)),
 				(key, existing) =>
 					existing.Length == length && existing.LastWriteTicks == written
 						? existing
-						: new(length, written, Load(key, log)));
+						: new(length, written, Load(resolver, key, log)));
 
 			generators.AddRange(entry.Generators);
 		}
@@ -105,25 +175,16 @@ internal sealed class Project
 	}
 
 	static ISourceGenerator[] Load(
+		AnalyzerResolver resolver,
 		string path,
 		Action<string> log)
 	{
-		Assembly assembly;
-		try
-		{
-			// LoadFrom returns the first assembly loaded with this identity even after the analyzer
-			// has been rebuilt in place. Loading its image gives a changed generator a fresh assembly.
-			assembly = Assembly.Load(File.ReadAllBytes(path));
-		}
-		catch (Exception exception)
-		{
-			log($"  cannot load {Path.GetFileName(path)}: {exception.Message}");
+		if (resolver.Load(path) is not Assembly assembly)
 			return [];
-		}
 
 		List<ISourceGenerator> generators = [];
 
-		foreach (Type type in SafeTypes(assembly))
+		foreach (Type type in SafeTypes(assembly, log))
 		{
 			if (type.IsAbstract || type.GetCustomAttribute<GeneratorAttribute>() is null)
 				continue;
@@ -154,7 +215,8 @@ internal sealed class Project
 	}
 
 	static IEnumerable<Type> SafeTypes(
-		Assembly assembly)
+		Assembly assembly,
+		Action<string> log)
 	{
 		try
 		{
@@ -162,6 +224,9 @@ internal sealed class Project
 		}
 		catch (ReflectionTypeLoadException exception)
 		{
+			foreach (Exception? loaderException in exception.LoaderExceptions.Distinct().Take(3))
+				log($"  cannot load types from {assembly.GetName().Name}: {loaderException?.Message}");
+
 			return exception.Types.Where(type => type is not null);
 		}
 	}
