@@ -112,6 +112,25 @@ internal sealed class PageHost : UIViewController
 			}
 		});
 
+	internal static void TopScrollEdgeStyleChanged() =>
+		ForEachLive(host =>
+		{
+			if (!host.IsViewLoaded || host.Page is not ContentView page)
+				return;
+
+			if (page.NavigationAccessory is null)
+				host.ApplyTopScrollEdgeStyle(page);
+			else
+				host.NavigationAccessoryChanged();
+		});
+
+	internal static void TitleStyleChanged() =>
+		ForEachLive(host =>
+		{
+			if (ReferenceEquals(host.NavigationController?.TopViewController, host))
+				host.ApplyTitleStyleChange();
+		});
+
 	static void ForEachLive(
 		Action<PageHost> action)
 	{
@@ -481,7 +500,11 @@ internal sealed class PageHost : UIViewController
 		if (scrollView is null)
 			return;
 
-		UIScrollEdgeEffectStyle style = page.TopScrollEdgeStyle switch
+		ScrollEdgeStyle effective = page.TopScrollEdgeStyle
+			?? SkeleApplication.Current?.Theme.TopScrollEdgeStyle
+			?? ScrollEdgeStyle.Automatic;
+
+		UIScrollEdgeEffectStyle style = effective switch
 		{
 			ScrollEdgeStyle.Soft => UIScrollEdgeEffectStyle.SoftStyle,
 			ScrollEdgeStyle.Hard => UIScrollEdgeEffectStyle.HardStyle,
@@ -732,7 +755,7 @@ internal sealed class PageHost : UIViewController
 	static UIColor? EffectiveBarTint(
 		ContentView? page,
 		ToolbarItem? item = null) =>
-		(item?.Tint ?? page?.BarTint ?? SkeleApplication.Current?.Tint)?.ToUIColor();
+		(item?.Tint ?? page?.BarTint ?? SkeleApplication.Current?.Theme.Tint)?.ToUIColor();
 
 	UIMenu BuildMenu(
 		ToolbarItem item)
@@ -856,26 +879,42 @@ internal sealed class PageHost : UIViewController
 	void ApplyTitleStyle(
 		ContentView page)
 	{
-		bool automaticLarge = UsesAutomaticLargeTitle();
+		TitleStyle effective = page.NavigationTitleStyle
+			?? SkeleApplication.Current?.Theme.NavigationTitleStyle
+			?? TitleStyle.Inline;
 
-		NavigationItem.LargeTitleDisplayMode = page.TitleStyle switch
-		{
-			TitleStyle.Large => UINavigationItemLargeTitleDisplayMode.Always,
-			TitleStyle.Inline => UINavigationItemLargeTitleDisplayMode.Never,
-			_ => automaticLarge
-				? UINavigationItemLargeTitleDisplayMode.Always
-				: UINavigationItemLargeTitleDisplayMode.Never
-		};
+		bool large = effective is TitleStyle.Large;
 
-		if (page.TitleStyle is TitleStyle.Large && NavigationController is UINavigationController navigation)
-			navigation.NavigationBar.PrefersLargeTitles = true;
+		NavigationItem.LargeTitleDisplayMode = large
+			? UINavigationItemLargeTitleDisplayMode.Always
+			: UINavigationItemLargeTitleDisplayMode.Never;
+
+		// the stack-wide preference gates large titles; keep it in sync with the visible page
+		if (NavigationController is UINavigationController navigation
+			&& navigation.NavigationBar.PrefersLargeTitles != large)
+			navigation.NavigationBar.PrefersLargeTitles = large;
 	}
 
-	bool UsesAutomaticLargeTitle() =>
-		NavigationController is SkeleApplication.SkeleStack
+	internal void ApplyTitleStyleChange()
+	{
+		if (!IsViewLoaded || Page is not ContentView page)
+			return;
+
+		ApplyTitleStyle(page);
+
+		NavigationController?.View?.SetNeedsLayout();
+		NavigationController?.NavigationBar.SetNeedsLayout();
+		NavigationController?.View?.LayoutIfNeeded();
+		NavigationController?.NavigationBar.LayoutIfNeeded();
+
+		if (page.NavigationAccessory is not null)
+			LayoutNavigationAccessory();
+		else
 		{
-			UsesLargeTitlesByDefault: true
-		};
+			View?.SetNeedsLayout();
+			View?.LayoutIfNeeded();
+		}
+	}
 
 	void ApplyBarAppearance(
 		ContentView page)
@@ -937,8 +976,6 @@ internal sealed class PageHost : UIViewController
 		if (!IsViewLoaded)
 			return;
 
-		// Navigation appearances retain resolved colors on iOS 26. Reassign the
-		// visible page's appearance and tint when its interface style changes.
 		ApplyBarAppearance(page);
 
 		if (!ReferenceEquals(NavigationController?.TopViewController, this))
@@ -956,11 +993,9 @@ internal sealed class PageHost : UIViewController
 		NSNotification notification,
 		bool hiding)
 	{
-		// a scrolling root avoids the keyboard itself, and doubling up would inset twice
 		if (Page is null || !Page.IsRealized || Page.Native.Subviews.FirstOrDefault() is UIScrollView || View?.Window is null)
 			return;
 
-		// resolved once here, not on every layout pass during the animation
 		keyboardFocus = hiding ? null : FirstResponder(Page.Native);
 
 		nfloat cover = 0;
@@ -969,7 +1004,6 @@ internal sealed class PageHost : UIViewController
 			CGRect keyboard = UIKeyboard.FrameEndFromNotification(notification);
 			CGRect pageInWindow = View.ConvertRectToView(View.Bounds, null);
 
-			// the safe-area bottom is already deducted by Inset, so do not count it twice
 			cover = (nfloat)Math.Max(0, pageInWindow.GetMaxY() - keyboard.GetMinY() - View.SafeAreaInsets.Bottom);
 		}
 
@@ -1010,7 +1044,6 @@ internal sealed class PageHost : UIViewController
 	void ApplyToolbar(
 		ContentView page)
 	{
-		// a rebuild replaces every native item, so the old menus' actions can go too
 		menuActions.Clear();
 		nativeToolbarItems.Clear();
 		ObserveToolbar(page);
@@ -1328,6 +1361,7 @@ internal sealed class PageHost : UIViewController
 
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
 		TransitionNavigationAccessory(!Page.HidesNavigationBar, animated);
+		ApplyTitleStyle(Page);
 		ApplyBarAppearance(Page);
 
 		// a bottom toolbar and the floating tab bar share the same edge: the toolbar only shows when

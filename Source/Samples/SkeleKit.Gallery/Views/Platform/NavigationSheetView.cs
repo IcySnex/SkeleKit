@@ -9,7 +9,7 @@ internal sealed class NavigationSheetView : ContentView<NavigationSheetViewModel
 		NavigationSheetViewModel viewModel) : base(viewModel)
 	{
 		Title = "Navigation sheet";
-		TitleStyle = TitleStyle.Inline;
+		NavigationTitleStyle = TitleStyle.Inline;
 		Background = Colors.GroupedBackground;
 
 		ToolbarItems.Add(new()

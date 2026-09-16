@@ -7,7 +7,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 {
 	static readonly List<PageChromeTitleOption> TitleOptions =
 	[
-		new("Automatic", TitleStyle.Automatic, "TitleStyle.Automatic"),
+		new("Inherit", null, "null"),
 		new("Large", TitleStyle.Large, "TitleStyle.Large"),
 		new("Inline", TitleStyle.Inline, "TitleStyle.Inline")
 	];
@@ -197,7 +197,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 			ContentView page = new()
 			{
 				Title = "Page chrome",
-				TitleStyle = {{SelectedTitleStyle.Code}},
+				NavigationTitleStyle = {{SelectedTitleStyle.Code}},
 				NavigationBarMinimizeBehavior = {{SelectedNavigationMinimizeBehavior.Code}},
 				NavigationBarMinimizeSafeAreaAdjustment = {{SelectedNavigationMinimizeSafeArea.Code}},
 				NavigationBarMinimizeRestorationBehavior = {{SelectedNavigationMinimizeRestoreBehavior.Code}},
@@ -266,7 +266,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 
 internal sealed record PageChromeTitleOption(
 	string Title,
-	TitleStyle Value,
+	TitleStyle? Value,
 	string Code);
 
 internal sealed record PageChromeBackgroundOption(
@@ -310,7 +310,7 @@ internal sealed record PageChromeScrollEdgeOption(
 	string Code);
 
 internal sealed record PageChromeConfiguration(
-	TitleStyle TitleStyle,
+	TitleStyle? NavigationTitleStyle,
 	NavigationBarMinimize NavigationMinimizeBehavior,
 	NavigationBarMinimizeSafeArea NavigationMinimizeSafeArea,
 	NavigationBarMinimizeRestore NavigationMinimizeRestoreBehavior,

@@ -29,22 +29,9 @@ public sealed class TabsBuilder
 	internal Func<IServiceProvider, Action>? BubbleFactory { get; private set; }
 	internal Type? BubbleView { get; private set; }
 	internal string? BubbleTitle { get; private set; }
-	internal TabBarMinimize Minimize { get; private set; } = TabBarMinimize.Never;
 	internal Func<View>? AccessoryFactory { get; private set; }
 	internal SidebarBuilder? SidebarConfiguration { get; private set; }
-	internal bool UseLargeTitles { get; private set; }
 
-
-	/// <summary>
-	/// Uses large, expanding navigation titles for tab pages whose title style is automatic.
-	/// </summary>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder LargeTitles()
-	{
-		UseLargeTitles = true;
-
-		return this;
-	}
 
 	/// <summary>
 	/// Adds a tab page to the navigation structure.
@@ -145,22 +132,6 @@ public sealed class TabsBuilder
 					resolved.Execute(commandParameter);
 			};
 		};
-
-		return this;
-	}
-
-	/// <summary>
-	/// Lets the tab bar minimize as the content scrolls.
-	/// </summary>
-	/// <remarks>
-	/// iOS 26 and later.
-	/// </remarks>
-	/// <param name="minimize">When the bar minimizes.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public TabsBuilder Minimizes(
-		TabBarMinimize minimize = TabBarMinimize.OnScrollDown)
-	{
-		Minimize = minimize;
 
 		return this;
 	}

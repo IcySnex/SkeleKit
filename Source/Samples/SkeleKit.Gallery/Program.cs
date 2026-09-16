@@ -83,11 +83,12 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<MapViewModel>();
 		services.AddTransient<NativeViewModel>();
 	})
-	.UseTheme(theme => theme.Style(GalleryStyles.ImplicitCard))
-	.UseTint(Colors.Indigo)
+	.UseStyles(styles => styles.Add(GalleryStyles.ImplicitCard))
+	.UseTheme(theme => theme
+		.Tint(Colors.Indigo)
+		.NavigationTitleStyle(TitleStyle.Large))
 	.UseLifecycle<LifecycleDiViewModel>()
 	.Tabs(tabs => tabs
-		.LargeTitles()
 		.Accessory<GalleryTabAccessory>()
 		.Tab<FrameworkView>("Framework", "square.stack.3d.up")
 		.Tab<ControlsView>("Controls", "switch.2")

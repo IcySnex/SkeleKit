@@ -3,22 +3,22 @@ namespace SkeleKit;
 /// <summary>
 /// The app's implicit styles.
 /// </summary>
-public sealed class Theme
+public sealed class Styles
 {
-	internal static Theme? Current { get; private set; }
+	internal static Styles? Current { get; private set; }
 
 
 	internal static void Use(
-		Action<Theme> configure)
+		Action<Styles> configure)
 	{
 		if (Current is not null)
-			throw new InvalidOperationException("The app already has a theme.");
+			throw new InvalidOperationException("The app already has styles.");
 
-		Theme theme = new();
-		configure(theme);
-		theme.frozen = true;
+		Styles styles = new();
+		configure(styles);
+		styles.frozen = true;
 
-		Current = theme;
+		Current = styles;
 	}
 
 	internal static void Reset() =>
@@ -27,10 +27,10 @@ public sealed class Theme
 	internal static void ApplyTo(
 		View view)
 	{
-		if (Current is not Theme theme)
+		if (Current is not Styles styles)
 			return;
 
-		foreach (IStyle style in theme.Chain(view.GetType()))
+		foreach (IStyle style in styles.Chain(view.GetType()))
 			style.Apply(view);
 	}
 
@@ -73,12 +73,12 @@ public sealed class Theme
 	/// </summary>
 	/// <param name="style">The implicit style to register.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	/// <exception cref="InvalidOperationException">Thrown if the theme has already been frozen and is in use.</exception>
-	public Theme Style(
+	/// <exception cref="InvalidOperationException">Thrown if the styles have already been frozen and are in use.</exception>
+	public Styles Add(
 		IStyle style)
 	{
 		if (frozen)
-			throw new InvalidOperationException("A theme cannot be changed once it is in use.");
+			throw new InvalidOperationException("Styles cannot be changed once they are in use.");
 
 		if (!registered.TryGetValue(style.TargetType, out List<IStyle>? styles))
 			registered[style.TargetType] = styles = [];

@@ -99,7 +99,6 @@ internal sealed partial class TabsSidebarViewModel : ShowcaseViewModel
 		new(
 			"""
 			.Tabs(tabs => tabs
-				.LargeTitles()
 				.Tab<HomeView>("Home", "house")
 				.Tab<LibraryView>("Library", "books.vertical")
 				.Search<SearchView>());
@@ -110,7 +109,7 @@ internal sealed partial class TabsSidebarViewModel : ShowcaseViewModel
 	[
 		new(
 			$$"""
-			SkeleApplication.Current!.TabBarMinimizeBehavior =
+			SkeleApplication.Current!.Theme.TabBarMinimize =
 				TabBarMinimize.{{SelectedMinimizeBehavior.Value}};
 			""")
 	];
@@ -151,7 +150,7 @@ internal sealed partial class TabsSidebarViewModel : ShowcaseViewModel
 		ShowcaseOption<TabBarMinimize> value)
 	{
 		if (isActive && SkeleApplication.Current is SkeleApplication app)
-			app.TabBarMinimizeBehavior = value.Value;
+			app.Theme.TabBarMinimize = value.Value;
 	}
 
 	[RelayCommand]
@@ -170,7 +169,7 @@ internal sealed partial class TabsSidebarViewModel : ShowcaseViewModel
 	{
 		if (SkeleApplication.Current is SkeleApplication app)
 		{
-			previousMinimizeBehavior = app.TabBarMinimizeBehavior;
+			previousMinimizeBehavior = app.Theme.TabBarMinimize;
 			SelectedMinimizeBehavior = MinimizeOptions.First(
 				option => option.Value == previousMinimizeBehavior);
 		}
@@ -187,6 +186,6 @@ internal sealed partial class TabsSidebarViewModel : ShowcaseViewModel
 		BadgeChanged?.Invoke(null);
 
 		if (SkeleApplication.Current is SkeleApplication app)
-			app.TabBarMinimizeBehavior = previousMinimizeBehavior;
+			app.Theme.TabBarMinimize = previousMinimizeBehavior;
 	}
 }

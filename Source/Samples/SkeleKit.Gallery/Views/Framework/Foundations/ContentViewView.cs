@@ -136,7 +136,7 @@ internal sealed class ContentViewLifecycleDemo : ContentView
 	public ContentViewLifecycleDemo()
 	{
 		Title = "Lifecycle";
-		TitleStyle = TitleStyle.Inline;
+		NavigationTitleStyle = TitleStyle.Inline;
 		Background = Colors.GroupedBackground;
 		HidesTabBar = true;
 

@@ -106,12 +106,12 @@ public abstract partial class ContentView : ContentHost
 	View? navigationAccessory;
 
 	/// <summary>
-	/// The treatment where scrolling content meets the page's top chrome.
+	/// The treatment where scrolling content meets the page's top chrome, or null to inherit the app theme.
 	/// </summary>
 	/// <remarks>
-	/// iOS 26 and later. The default lets UIKit choose the appropriate treatment.
+	/// iOS 26 and later. The inherited default lets UIKit choose the appropriate treatment.
 	/// </remarks>
-	public ScrollEdgeStyle TopScrollEdgeStyle
+	public ScrollEdgeStyle? TopScrollEdgeStyle
 	{
 		get;
 		set
@@ -122,12 +122,12 @@ public abstract partial class ContentView : ContentHost
 			field = value;
 			ApplyTopScrollEdgeStyleCore();
 		}
-	} = ScrollEdgeStyle.Automatic;
+	}
 
 	/// <summary>
-	/// How the navigation title is displayed. By default, it follows the navigation stack.
+	/// How the navigation title is displayed, or null to inherit the app theme.
 	/// </summary>
-	public TitleStyle TitleStyle { get; set; } = TitleStyle.Automatic;
+	public TitleStyle? NavigationTitleStyle { get; set; }
 
 	/// <summary>
 	/// When the navigation bar minimizes as this page scrolls.

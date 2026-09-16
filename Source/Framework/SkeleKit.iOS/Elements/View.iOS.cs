@@ -44,7 +44,7 @@ public abstract partial class View
 	// ReSharper disable once RedundantAssignment
 	static partial void GetApplicationTint(
 		ref Color? tint) =>
-		tint = SkeleApplication.Current?.Tint;
+		tint = SkeleApplication.Current?.Theme.Tint;
 
 
 	static void Run(

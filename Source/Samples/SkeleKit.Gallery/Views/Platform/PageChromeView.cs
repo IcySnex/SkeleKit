@@ -191,7 +191,7 @@ internal sealed class PageChromeDemo : ContentView
 		PageChromeConfiguration configuration)
 	{
 		Title = "Page chrome";
-		TitleStyle = configuration.TitleStyle;
+		NavigationTitleStyle = configuration.NavigationTitleStyle;
 		NavigationBarMinimizeBehavior = configuration.NavigationMinimizeBehavior;
 		NavigationBarMinimizeSafeAreaAdjustment = configuration.NavigationMinimizeSafeArea;
 		NavigationBarMinimizeRestorationBehavior = configuration.NavigationMinimizeRestoreBehavior;
@@ -278,7 +278,7 @@ internal sealed class PageChromeDemo : ContentView
 					status,
 
 					ConfigurationCard(
-						("Title", configuration.TitleStyle.ToString()),
+						("Title", configuration.NavigationTitleStyle?.ToString() ?? "Inherit"),
 						("Minimize", configuration.NavigationMinimizeBehavior.ToString()),
 						("Minimize safe area", configuration.NavigationMinimizeSafeArea.ToString()),
 						("Restore", configuration.NavigationMinimizeRestoreBehavior.ToString()),
@@ -375,7 +375,7 @@ internal sealed class PageChromeSearchDemo : ContentView
 		PageChromeSearchConfiguration configuration)
 	{
 		Title = "Search";
-		TitleStyle = TitleStyle.Large;
+		NavigationTitleStyle = TitleStyle.Large;
 		Background = Colors.GroupedBackground;
 		SearchPlaceholder = "Search gallery";
 		HidesSearchBarWhenScrolling = configuration.HidesSearchBarWhenScrolling;

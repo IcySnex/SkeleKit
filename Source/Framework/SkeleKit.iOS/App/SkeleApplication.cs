@@ -61,22 +61,17 @@ public class SkeleApplication
 
 	internal sealed class SkeleStack : UINavigationController
 	{
-		internal bool UsesLargeTitlesByDefault { get; }
-
-
 		public SkeleStack(
 			UIViewController root,
-			bool prefersLargeTitlesByDefault = false) : base(root)
+			bool prefersLargeTitles = false) : base(root)
 		{
-			UsesLargeTitlesByDefault = prefersLargeTitlesByDefault;
-			NavigationBar.PrefersLargeTitles = prefersLargeTitlesByDefault;
+			NavigationBar.PrefersLargeTitles = prefersLargeTitles;
 		}
 
 		public SkeleStack(
-			bool prefersLargeTitlesByDefault)
+			bool prefersLargeTitles)
 		{
-			UsesLargeTitlesByDefault = prefersLargeTitlesByDefault;
-			NavigationBar.PrefersLargeTitles = prefersLargeTitlesByDefault;
+			NavigationBar.PrefersLargeTitles = prefersLargeTitles;
 		}
 
 		public SkeleStack(
@@ -234,13 +229,9 @@ public class SkeleApplication
 
 	readonly ViewRegistry registry;
 	readonly ShellKind shell;
-	readonly bool preferLargeTitles;
 	readonly TabsBuilder? tabsBuilder;
 	readonly Type? rootView;
 	IReadOnlyList<IApplicationLifecycle> lifecycleServices = [];
-	Color? tint;
-	Appearance appearance;
-	TabBarMinimize tabBarMinimizeBehavior;
 	bool nativeApplicationStarted;
 	int lifecycleStopped;
 
@@ -249,12 +240,10 @@ public class SkeleApplication
 	{
 		registry = builder.Registry;
 		shell = builder.Shell;
-		preferLargeTitles = builder.PreferLargeTitles;
 		tabsBuilder = builder.TabsBuilder;
 		rootView = builder.RootView;
-		tint = builder.Tint;
-		appearance = builder.Appearance;
-		tabBarMinimizeBehavior = tabsBuilder?.Minimize ?? TabBarMinimize.Never;
+		Theme = builder.Theme.Theme;
+		Theme.Changed += ApplyThemeChange;
 
 		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, ActiveStack));
 		builder.Services.AddSingleton<ISharer, Sharer>();
@@ -286,7 +275,7 @@ public class SkeleApplication
 	internal bool IsSwitchingTabs { get; private set; }
 
 	internal UIUserInterfaceStyle UserInterfaceStyle =>
-		appearance switch
+		Theme.Appearance switch
 		{
 			Appearance.Light => UIUserInterfaceStyle.Light,
 			Appearance.Dark => UIUserInterfaceStyle.Dark,
@@ -305,80 +294,59 @@ public class SkeleApplication
 	internal IHaptics Haptics { get; }
 
 	/// <summary>
-	/// The app-wide tint inherited by windows, chrome and views, or null for the system default.
+	/// The app-wide theme inherited by windows, chrome and pages.
 	/// </summary>
-	public Color? Tint
+	public Theme Theme { get; }
+
+
+	void ApplyThemeChange(
+		ThemeField field)
 	{
-		get => tint;
-		set
+		if (Current != this || !nativeApplicationStarted)
+			return;
+
+		switch (field)
 		{
-			if (tint == value)
-				return;
-
-			if (Current == this
-				&& nativeApplicationStarted
-				&& PageHost.InteractiveTintTransition is IUIViewControllerTransitionCoordinator transition)
-			{
-				transition.NotifyWhenInteractionChanges(context =>
-				{
-#pragma warning disable CA2011
-					if (!context.IsCancelled)
-						Tint = value;
-#pragma warning restore CA2011
-				});
-
-				return;
-			}
-
-			tint = value;
-
-			if (Current == this && nativeApplicationStarted)
+			case ThemeField.Tint:
 				ApplyTint();
-		}
-	}
+				break;
 
-	/// <summary>
-	/// The app-wide light or dark appearance.
-	/// </summary>
-	public Appearance Appearance
-	{
-		get => appearance;
-		set
-		{
-			if (appearance == value)
-				return;
-
-			appearance = value;
-
-			if (Current == this && nativeApplicationStarted)
+			case ThemeField.Appearance:
 				ApplyAppearance();
-		}
-	}
+				break;
 
-	/// <summary>
-	/// When the app's tab bar minimizes as the selected content scrolls.
-	/// </summary>
-	/// <remarks>
-	/// Applies to tab shells on iOS 26 and later. The value configured by
-	/// <see cref="TabsBuilder.Minimizes(TabBarMinimize)"/> is the initial value.
-	/// </remarks>
-	public TabBarMinimize TabBarMinimizeBehavior
-	{
-		get => tabBarMinimizeBehavior;
-		set
-		{
-			if (tabBarMinimizeBehavior == value)
-				return;
+			case ThemeField.TopScrollEdgeStyle:
+				PageHost.TopScrollEdgeStyleChanged();
+				break;
 
-			tabBarMinimizeBehavior = value;
+			case ThemeField.NavigationTitleStyle:
+				PageHost.TitleStyleChanged();
+				break;
 
-			if (Current == this && nativeApplicationStarted)
+			case ThemeField.TabBarMinimize:
 				ApplyTabBarMinimize();
+				break;
 		}
 	}
-
 
 	void ApplyTint()
+	{
+		// let an in-flight interactive transition settle before recoloring
+		if (PageHost.InteractiveTintTransition is IUIViewControllerTransitionCoordinator transition)
+		{
+			transition.NotifyWhenInteractionChanges(context =>
+			{
+				if (!context.IsCancelled)
+					ApplyTintNow();
+			});
+
+			return;
+		}
+
+		ApplyTintNow();
+	}
+
+	void ApplyTintNow()
 	{
 		UIWindowScene[] scenes =
 		[
@@ -394,7 +362,7 @@ public class SkeleApplication
 		void Apply()
 		{
 			foreach (UIWindow window in windows)
-				window.TintColor = tint?.ToUIColor();
+				window.TintColor = Theme.Tint?.ToUIColor();
 
 			PageHost.TintChanged();
 			accessoryContent?.AppTintChanged();
@@ -436,7 +404,7 @@ public class SkeleApplication
 		if (controller is null)
 			return;
 
-		controller.TabBarMinimizeBehavior = tabBarMinimizeBehavior switch
+		controller.TabBarMinimizeBehavior = Theme.TabBarMinimize switch
 		{
 			TabBarMinimize.OnScrollDown => UITabBarMinimizeBehavior.OnScrollDown,
 			TabBarMinimize.OnScrollUp => UITabBarMinimizeBehavior.OnScrollUp,
@@ -566,8 +534,8 @@ public class SkeleApplication
 		PageHost Page(Type? view) =>
 			new(registry.CreatePage(view!, Services));
 
-		UINavigationController Stack(Type? view, bool prefersLargeTitles = false)
-			=> new SkeleStack(Page(view), prefersLargeTitles);
+		UINavigationController Stack(Type? view)
+			=> new SkeleStack(Page(view), Theme.NavigationTitleStyle is TitleStyle.Large);
 
 		switch (shell)
 		{
@@ -575,7 +543,7 @@ public class SkeleApplication
 				return Page(rootView);
 
 			case ShellKind.Stack:
-				return Stack(rootView, preferLargeTitles);
+				return Stack(rootView);
 
 			case ShellKind.Tabs:
 				UITabBarController controller = new();
@@ -613,7 +581,7 @@ public class SkeleApplication
 						// only the outermost group manages the stack; nested ones inherit it
 						if (!grouped)
 						{
-							UINavigationController shared = new SkeleStack(tabsBuilder!.UseLargeTitles);
+							UINavigationController shared = new SkeleStack(Theme.NavigationTitleStyle is TitleStyle.Large);
 
 							native.ManagingNavigationController = shared;
 						}
@@ -636,7 +604,7 @@ public class SkeleApplication
 					}
 					else
 					{
-						UINavigationController stack = Stack(leaf.View, tabsBuilder!.UseLargeTitles);
+						UINavigationController stack = Stack(leaf.View);
 						root = (PageHost)stack.ViewControllers![0];
 						provider = _ => stack;
 					}
@@ -667,7 +635,7 @@ public class SkeleApplication
 
 				if (tabsBuilder?.SearchView is Type searchView)
 				{
-					UINavigationController stack = Stack(searchView, tabsBuilder.UseLargeTitles);
+					UINavigationController stack = Stack(searchView);
 					PageHost root = (PageHost)stack.ViewControllers![0];
 
 					UITab search;
@@ -693,7 +661,7 @@ public class SkeleApplication
 				}
 				else if (tabsBuilder?.BubbleView is Type bubbleView)
 				{
-					UINavigationController stack = Stack(bubbleView, tabsBuilder.UseLargeTitles);
+					UINavigationController stack = Stack(bubbleView);
 					UIImage? bubbleImage = tabsBuilder.BubbleIcon is ImageSource icon ? icon.ResolveLocal() : null;
 					UITab bubble;
 

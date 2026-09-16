@@ -9,7 +9,7 @@ internal sealed class NavigationDetailView : ContentView<NavigationDetailViewMod
 		NavigationDetailViewModel viewModel) : base(viewModel)
 	{
 		Title = Bind(vm => vm.Title);
-		TitleStyle = TitleStyle.Inline;
+		NavigationTitleStyle = TitleStyle.Inline;
 		BackButtonStyle = BackButtonStyle.Generic;
 		Background = Colors.GroupedBackground;
 

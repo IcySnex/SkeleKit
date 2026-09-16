@@ -8,11 +8,11 @@ namespace SkeleKit;
 public abstract partial class View
 {
 	/// <summary>
-	/// Applies the app's implicit theme styles for this view's type.
+	/// Applies the app's implicit styles for this view's type.
 	/// </summary>
 	protected View()
 	{
-		Theme.ApplyTo(this);
+		Styles.ApplyTo(this);
 	}
 
 

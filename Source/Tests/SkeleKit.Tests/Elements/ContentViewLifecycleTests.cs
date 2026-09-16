@@ -26,11 +26,11 @@ public class ContentViewLifecycleTests
 	}
 
 	[Fact]
-	public void TitleStyle_DefaultsToAutomatic()
+	public void NavigationTitleStyle_DefaultsToInherited()
 	{
 		EmptyView view = new();
 
-		Assert.Equal(TitleStyle.Automatic, view.TitleStyle);
+		Assert.Null(view.NavigationTitleStyle);
 	}
 
 	[Fact]
@@ -44,15 +44,15 @@ public class ContentViewLifecycleTests
 	}
 
 	[Fact]
-	public void TopScrollEdgeStyle_DefaultsToAutomatic()
+	public void TopScrollEdgeStyle_DefaultsToInherited()
 	{
 		EmptyView view = new();
 
-		Assert.Equal(ScrollEdgeStyle.Automatic, view.TopScrollEdgeStyle);
+		Assert.Null(view.TopScrollEdgeStyle);
 
 		view.NavigationAccessory = new Border();
 
-		Assert.Equal(ScrollEdgeStyle.Automatic, view.TopScrollEdgeStyle);
+		Assert.Null(view.TopScrollEdgeStyle);
 
 		view.TopScrollEdgeStyle = ScrollEdgeStyle.Hard;
 

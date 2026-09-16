@@ -20,6 +20,6 @@ internal abstract class TintView<TViewModel> : ContentView<TViewModel>
 		base.OnAppearing();
 
 		if (SkeleApplication.Current is SkeleApplication app)
-			app.Tint = tint;
+			app.Theme.Tint = tint;
 	}
 }

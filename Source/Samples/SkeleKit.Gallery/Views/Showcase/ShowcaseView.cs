@@ -255,7 +255,7 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 		if (SkeleApplication.Current is not SkeleApplication app)
 			return;
 
-		app.Appearance = app.Appearance switch
+		app.Theme.Appearance = app.Theme.Appearance switch
 		{
 			Appearance.System => Appearance.Dark,
 			Appearance.Dark => Appearance.Light,
@@ -265,7 +265,7 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 	}
 
 	void UpdateAppearanceItem() =>
-		appearanceItem.Icon = SkeleApplication.Current?.Appearance switch
+		appearanceItem.Icon = SkeleApplication.Current?.Theme.Appearance switch
 		{
 			Appearance.Dark => "moon.fill",
 			Appearance.Light => "sun.max.fill",

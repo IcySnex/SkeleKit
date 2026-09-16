@@ -24,11 +24,9 @@ public sealed class SkeleApplicationBuilder
 	internal readonly ViewRegistry Registry = new();
 
 	internal SkeleApplication.ShellKind Shell = SkeleApplication.ShellKind.None;
-	internal bool PreferLargeTitles;
 	internal TabsBuilder? TabsBuilder;
 	internal Type? RootView;
-	internal Color? Tint;
-	internal Appearance Appearance;
+	internal readonly ThemeBuilder Theme = new();
 
 	/// <summary>
 	/// Registers core dependencies and application services into the container.
@@ -79,26 +77,14 @@ public sealed class SkeleApplicationBuilder
 	}
 
 	/// <summary>
-	/// Sets the initial app-wide tint inherited by windows, chrome and views.
+	/// Configures the app-wide theme inherited by windows, chrome and pages.
 	/// </summary>
-	/// <param name="tint">The tint color.</param>
+	/// <param name="configure">Sets the theme's initial values.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public SkeleApplicationBuilder UseTint(
-		Color tint)
+	public SkeleApplicationBuilder UseTheme(
+		Action<ThemeBuilder> configure)
 	{
-		Tint = tint;
-		return this;
-	}
-
-	/// <summary>
-	/// Sets the initial app-wide light or dark appearance.
-	/// </summary>
-	/// <param name="appearance">The initial appearance.</param>
-	/// <returns>The builder instance for chaining calls.</returns>
-	public SkeleApplicationBuilder UseAppearance(
-		Appearance appearance)
-	{
-		Appearance = appearance;
+		configure(Theme);
 		return this;
 	}
 
@@ -123,10 +109,10 @@ public sealed class SkeleApplicationBuilder
 	/// </summary>
 	/// <param name="configure">Registers the implicit styles.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public SkeleApplicationBuilder UseTheme(
-		Action<Theme> configure)
+	public SkeleApplicationBuilder UseStyles(
+		Action<Styles> configure)
 	{
-		Theme.Use(configure);
+		Styles.Use(configure);
 		return this;
 	}
 
@@ -162,13 +148,9 @@ public sealed class SkeleApplicationBuilder
 	/// Configures the app to use a stack-based navigation hierarchy.
 	/// </summary>
 	/// <typeparam name="TView">The type of the root view.</typeparam>
-	/// <param name="preferLargeTitles">Whether to enable large, collapsing titles.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
-	public SkeleApplicationBuilder Stack<TView>(
-		bool preferLargeTitles = false) where TView : ContentView
+	public SkeleApplicationBuilder Stack<TView>() where TView : ContentView
 	{
-		PreferLargeTitles = preferLargeTitles;
-
 		RootView = typeof(TView);
 		Shell = SkeleApplication.ShellKind.Stack;
 

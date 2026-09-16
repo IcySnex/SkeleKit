@@ -35,7 +35,7 @@ internal sealed partial class StylesThemesViewModel : ShowcaseViewModel
 		sealed class ThemedCard : Border;
 
 		SkeleApplication.CreateBuilder()
-			.UseTheme(theme => theme.Style(GalleryStyles.ImplicitCard));
+			.UseStyles(styles => styles.Add(GalleryStyles.ImplicitCard));
 		""";
 
 	static readonly string[] Titles =
