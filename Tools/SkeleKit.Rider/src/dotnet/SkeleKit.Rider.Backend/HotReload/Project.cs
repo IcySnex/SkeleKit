@@ -196,6 +196,12 @@ internal sealed class Project
 			deterministic: true,
 			platform: Platform.AnyCpu);
 
+		if (csc.GeneralDiagnosticOption is ReportDiagnostic general)
+			options = options.WithGeneralDiagnosticOption(general);
+
+		if (csc.SpecificDiagnosticOptions.Count > 0)
+			options = options.WithSpecificDiagnosticOptions(csc.SpecificDiagnosticOptions);
+
 		CSharpCompilation compilation = CSharpCompilation.Create(csc.AssemblyName, trees, references, options);
 
 		if (runGenerators)

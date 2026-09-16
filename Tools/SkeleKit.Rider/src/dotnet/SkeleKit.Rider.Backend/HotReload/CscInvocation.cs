@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -93,6 +94,12 @@ internal sealed class CscInvocation
 		string path) =>
 		Path.IsPathRooted(path) ? path : Path.GetFullPath(Path.Combine(projectDir, path));
 
+	static IEnumerable<string> Ids(
+		string value) =>
+		value.Split([','], StringSplitOptions.RemoveEmptyEntries)
+			.Select(id => id.Trim())
+			.Where(id => id.Length > 0);
+
 
 	public static CscInvocation Parse(
 		IEnumerable<string> commandLine,
@@ -113,6 +120,8 @@ internal sealed class CscInvocation
 		string? mainTypeName = null;
 		OutputKind outputKind = OutputKind.ConsoleApplication;
 		NullableContextOptions nullable = NullableContextOptions.Disable;
+		Dictionary<string, ReportDiagnostic> specificDiagnostics = new(StringComparer.OrdinalIgnoreCase);
+		ReportDiagnostic? generalDiagnostic = null;
 
 		foreach (string line in commandLine)
 		{
@@ -144,6 +153,26 @@ internal sealed class CscInvocation
 				outputKind = Kind(target);
 			else if (Value(arg, "/nullable:") is string nullableMode)
 				nullable = Nullability(nullableMode);
+			else if (Value(arg, "/nowarn:") is string noWarn)
+			{
+				foreach (string id in Ids(noWarn))
+					specificDiagnostics[id] = ReportDiagnostic.Suppress;
+			}
+			else if (Value(arg, "/warnaserror-:") is string warningsNotErrors)
+			{
+				foreach (string id in Ids(warningsNotErrors))
+					specificDiagnostics[id] = ReportDiagnostic.Warn;
+			}
+			else if (Value(arg, "/warnaserror+:") is string warningsAsErrors)
+			{
+				foreach (string id in Ids(warningsAsErrors))
+					specificDiagnostics[id] = ReportDiagnostic.Error;
+			}
+			else if (Value(arg, "/warnaserror:") is string plainWarningsAsErrors)
+			{
+				foreach (string id in Ids(plainWarningsAsErrors))
+					specificDiagnostics[id] = ReportDiagnostic.Error;
+			}
 			else
 			{
 				switch (arg)
@@ -159,6 +188,15 @@ internal sealed class CscInvocation
 						break;
 					case "/optimize" or "/optimize+" or "/o" or "/o+":
 						optimize = true;
+						break;
+					case "/nowarn":
+						generalDiagnostic = ReportDiagnostic.Suppress;
+						break;
+					case "/warnaserror" or "/warnaserror+":
+						generalDiagnostic = ReportDiagnostic.Error;
+						break;
+					case "/warnaserror-":
+						generalDiagnostic = ReportDiagnostic.Warn;
 						break;
 					default:
 						{
@@ -187,7 +225,9 @@ internal sealed class CscInvocation
 			Optimize = optimize,
 			OutputKind = outputKind,
 			Nullable = nullable,
-			MainTypeName = mainTypeName
+			MainTypeName = mainTypeName,
+			SpecificDiagnosticOptions = specificDiagnostics.ToImmutableDictionary(StringComparer.OrdinalIgnoreCase),
+			GeneralDiagnosticOption = generalDiagnostic
 		};
 	}
 
@@ -209,6 +249,8 @@ internal sealed class CscInvocation
 	public required OutputKind OutputKind { get; init; }
 	public required NullableContextOptions Nullable { get; init; }
 	public required string? MainTypeName { get; init; }
+	public required ImmutableDictionary<string, ReportDiagnostic> SpecificDiagnosticOptions { get; init; }
+	public ReportDiagnostic? GeneralDiagnosticOption { get; init; }
 
 
 	public void AlignReferencesWithDeployment(

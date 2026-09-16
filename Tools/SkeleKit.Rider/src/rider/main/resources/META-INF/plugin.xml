@@ -1,7 +1,7 @@
 <idea-plugin require-restart="true">
     <id>com.skelekit.hotreload</id>
     <name>SkeleKit Hot Reload</name>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <vendor url="https://github.com/IcySnex/SkeleKit">IcySnex</vendor>
 
     <depends>com.intellij.modules.platform</depends>
@@ -15,7 +15,7 @@
 
     <change-notes><![CDATA[
     <ul>
-      <li>Resolve extension methods to it's static methods.</li>
+      <li>Honor suppressed compiler diagnostics (NoWarn) when rebuilding.</li>
     </ul>
   ]]></change-notes>
 
