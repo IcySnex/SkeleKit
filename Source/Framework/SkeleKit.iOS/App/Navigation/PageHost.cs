@@ -650,8 +650,13 @@ internal sealed class PageHost : UIViewController
 			return;
 
 		UINavigationBar navigationBar = navigation.NavigationBar;
-		double width = navigationBar.Bounds.Width;
-		accessory.Measure(new(width, double.PositiveInfinity));
+
+		UIEdgeInsets safe = controllerView.SafeAreaInsets;
+		nfloat left = safe.Left > 0 ? safe.Left : 0;
+		nfloat right = safe.Right > 0 ? safe.Right : 0;
+		nfloat width = (nfloat)Math.Max(0, navigationBar.Bounds.Width - left - right);
+
+		accessory.Measure(new((double)width, double.PositiveInfinity));
 		nfloat height = (nfloat)Math.Max(0, accessory.DesiredSize.Height);
 
 		if (Math.Abs((double)(height - navigationAccessoryHeight)) > 0.5)
@@ -662,25 +667,25 @@ internal sealed class PageHost : UIViewController
 			AdditionalSafeAreaInsets = additional;
 		}
 
-		host.Frame = new(0, navigationBar.Bounds.Height, (nfloat)width, navigationAccessoryHeight);
+		host.Frame = new(left, navigationBar.Bounds.Height, width, navigationAccessoryHeight);
 		if (navigationAccessoryContent is UIView content)
 		{
-			content.Bounds = new(0, 0, (nfloat)width, navigationAccessoryHeight);
-			content.Center = new((nfloat)width / 2, navigationAccessoryHeight / 2);
+			content.Bounds = new(0, 0, width, navigationAccessoryHeight);
+			content.Center = new(width / 2, navigationAccessoryHeight / 2);
 		}
 		if (navigationAccessoryMaterial is UIVisualEffectView material)
 		{
 			CGRect barFrame = navigationBar.ConvertRectToView(navigationBar.Bounds, controllerView);
 			nfloat materialTop = -barFrame.Y;
 			material.Frame = new(
-				0,
+				left,
 				materialTop,
-				(nfloat)width,
+				width,
 				-materialTop + navigationBar.Bounds.Height + navigationAccessoryHeight);
 			UpdateNavigationAccessoryMaterial(navigationAccessoryScrollOffset);
 		}
 
-		accessory.Arrange(new(0, 0, width, navigationAccessoryHeight));
+		accessory.Arrange(new(0, 0, (double)width, (double)navigationAccessoryHeight));
 		navigationBar.BringSubviewToFront(host);
 	}
 
