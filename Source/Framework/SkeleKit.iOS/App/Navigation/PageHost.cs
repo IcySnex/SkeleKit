@@ -752,6 +752,7 @@ internal sealed class PageHost : UIViewController
 					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(entry.CommandParameter))
 						entryCommand.Execute(entry.CommandParameter);
 				});
+			entries[index].Subtitle = entry.Subtitle;
 
 			if (entry.IsDestructive)
 				entries[index].Attributes = UIMenuElementAttributes.Destructive;

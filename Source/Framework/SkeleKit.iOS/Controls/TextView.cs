@@ -464,6 +464,7 @@ public class TextView : Control
 					if (entry.Command is ICommand command && command.CanExecute(entry.CommandParameter))
 						command.Execute(entry.CommandParameter);
 				});
+			heldMenu[index].Subtitle = entry.Subtitle;
 
 			if (entry.IsDestructive)
 				heldMenu[index].Attributes = UIMenuElementAttributes.Destructive;

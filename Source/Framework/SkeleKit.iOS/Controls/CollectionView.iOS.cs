@@ -489,6 +489,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 							if (entry.Command is ICommand command && command.CanExecute(parameter))
 								command.Execute(parameter);
 						});
+					entries[index].Subtitle = entry.Subtitle;
 
 					if (entry.IsDestructive)
 						entries[index].Attributes = UIMenuElementAttributes.Destructive;

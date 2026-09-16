@@ -13,6 +13,11 @@ public sealed class MenuAction
 	public string Text { get; set; } = "";
 
 	/// <summary>
+	/// The supporting text shown below the title, or null for none.
+	/// </summary>
+	public string? Subtitle { get; set; }
+
+	/// <summary>
 	/// The local icon shown beside the title, or null for none.
 	/// </summary>
 	public ImageSource? Icon { get; set; }

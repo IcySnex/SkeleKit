@@ -762,6 +762,7 @@ public abstract partial class View
 						entry.Icon?.ResolveLocal(),
 						null,
 						_ => Run(entry.Command, entry.CommandParameter));
+					contextMenuActions[index].Subtitle = entry.Subtitle;
 
 					if (entry.IsDestructive)
 						contextMenuActions[index].Attributes = UIMenuElementAttributes.Destructive;

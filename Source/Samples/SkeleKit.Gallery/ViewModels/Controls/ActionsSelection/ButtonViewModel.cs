@@ -159,6 +159,7 @@ internal sealed partial class ButtonViewModel : ShowcaseViewModel
 			actions.Menu.Add(new()
 			{
 				Text = "Share",
+				Subtitle = "Send a copy to another app",
 				Icon = ImageSource.Symbol("square.and.arrow.up"),
 				Command = viewModel.SelectMenuCommand,
 				CommandParameter = "Share"

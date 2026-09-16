@@ -221,6 +221,7 @@ public class Button : Control
 					if (entry.Command is ICommand entryCommand && entryCommand.CanExecute(entry.CommandParameter))
 						entryCommand.Execute(entry.CommandParameter);
 				});
+			actions[index].Subtitle = entry.Subtitle;
 
 			if (entry.IsDestructive)
 				actions[index].Attributes = UIMenuElementAttributes.Destructive;

@@ -220,6 +220,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		actions.Menu.Add(new()
 		{
 			Text = "Share",
+			Subtitle = "Send a copy to another app",
 			Icon = ImageSource.Symbol("square.and.arrow.up"),
 			Command = viewModel.SelectMenuCommand,
 			CommandParameter = "Share"
@@ -227,6 +228,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		actions.Menu.Add(new()
 		{
 			Text = "Favorite",
+			Subtitle = "Keep this action close at hand",
 			Icon = ImageSource.Symbol("star"),
 			Command = viewModel.SelectMenuCommand,
 			CommandParameter = "Favorite"
@@ -234,6 +236,7 @@ internal sealed class ButtonView : ShowcaseView<ButtonViewModel>
 		actions.Menu.Add(new()
 		{
 			Text = "Delete",
+			Subtitle = "This action cannot be undone",
 			Icon = ImageSource.Symbol("trash"),
 			IsDestructive = true,
 			Command = viewModel.SelectMenuCommand,
