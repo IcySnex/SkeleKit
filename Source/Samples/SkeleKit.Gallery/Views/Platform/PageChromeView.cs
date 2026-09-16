@@ -108,7 +108,7 @@ internal sealed class PageChromeView : ShowcaseView<PageChromeViewModel>
 
 		AddShowcase(
 			"Navigation shell",
-			"Page-owned chrome. Turn off the navigation accessory to test iOS 27 minimization.",
+			"Page-owned chrome. Resize an opened page to test toolbar priority, or turn off its accessory to test minimization.",
 			PreviewWithSettings(
 				ShowcaseBox.Canvas(open, 140),
 				SettingRow("Title", title),
@@ -223,25 +223,28 @@ internal sealed class PageChromeDemo : ContentView
 
 		if (configuration.HasToolbar)
 		{
-			ToolbarItems.Add(new ToolbarItem
-			{
-				Icon = ImageSource.Symbol("plus"),
-				IsPrimary = true,
-				Command = Command.From(() => status.Text = "Top action tapped")
-			});
-
-			ToolbarItems.Add(new ToolbarItem
-			{
-				Icon = ImageSource.Symbol("ellipsis.circle"),
-				Menu =
+			void AddAction(
+				string text,
+				ToolbarVisibilityPriority priority,
+				bool primary = false) =>
+				ToolbarItems.Add(new ToolbarItem
 				{
-					new MenuAction
-					{
-						Text = "Reset status",
-						Command = Command.From(() => status.Text = "No action pressed yet")
-					}
-				}
-			});
+					Text = text,
+					IsPrimary = primary,
+					VisibilityPriority = priority,
+					Command = Command.From(() => status.Text = $"{text} tapped")
+				});
+
+			AddAction("Save", ToolbarVisibilityPriority.High, true);
+
+			AddAction("Share", ToolbarVisibilityPriority.Standard);
+			AddAction("Undo", ToolbarVisibilityPriority.Standard);
+			AddAction("Redo", ToolbarVisibilityPriority.Standard);
+
+			AddAction("Duplicate", ToolbarVisibilityPriority.Low);
+			AddAction("Tag", ToolbarVisibilityPriority.Low);
+			AddAction("Archive", ToolbarVisibilityPriority.Low);
+			AddAction("Delete", ToolbarVisibilityPriority.Low);
 		}
 
 		if (configuration.HasBottomToolbar)

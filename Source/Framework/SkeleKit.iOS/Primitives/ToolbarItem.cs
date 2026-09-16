@@ -78,6 +78,22 @@ public sealed class ToolbarItem
 	public bool IsPrimary { get; set; }
 
 	/// <summary>
+	/// How long the item remains visible when the bar has limited space.
+	/// </summary>
+	/// <remarks>
+	/// iOS 27 and later. Earlier versions use the system's normal ordering.
+	/// </remarks>
+	public ToolbarVisibilityPriority VisibilityPriority
+	{
+		get;
+		set
+		{
+			field = value;
+			Changed?.Invoke();
+		}
+	} = ToolbarVisibilityPriority.Standard;
+
+	/// <summary>
 	/// The item's tint, or null to follow the page or app tint.
 	/// </summary>
 	public Color? Tint

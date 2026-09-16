@@ -722,6 +722,7 @@ internal sealed class PageHost : UIViewController
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
+		ApplyVisibilityPriority(native, item);
 		nativeToolbarItems[native] = item;
 		native.TintColor = EffectiveBarTint(Page, item);
 
@@ -761,6 +762,21 @@ internal sealed class PageHost : UIViewController
 		return UIMenu.Create(entries);
 	}
 
+	static void ApplyVisibilityPriority(
+		UIBarButtonItem native,
+		ToolbarItem item)
+	{
+		if (!OperatingSystem.IsIOSVersionAtLeast(27))
+			return;
+
+		native.VisibilityPriority = item.VisibilityPriority switch
+		{
+			ToolbarVisibilityPriority.Low => UIBarButtonItemVisibilityPriority.Low,
+			ToolbarVisibilityPriority.High => UIBarButtonItemVisibilityPriority.High,
+			_ => UIBarButtonItemVisibilityPriority.Standard
+		};
+	}
+
 	UIBarButtonItem MenuBar(
 		ToolbarItem item)
 	{
@@ -773,6 +789,7 @@ internal sealed class PageHost : UIViewController
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
+		ApplyVisibilityPriority(native, item);
 		nativeToolbarItems[native] = item;
 		native.TintColor = EffectiveBarTint(Page, item);
 

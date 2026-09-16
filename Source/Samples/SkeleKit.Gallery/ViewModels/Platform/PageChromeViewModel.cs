@@ -243,7 +243,12 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	string ToolbarCode =>
 		$$"""
 		if ({{Bool(HasToolbar)}})
-			page.ToolbarItems.Add(new ToolbarItem { Icon = ImageSource.Symbol("plus"), IsPrimary = true });
+			page.ToolbarItems.Add(new ToolbarItem
+			{
+				Icon = ImageSource.Symbol("plus"),
+				IsPrimary = true,
+				VisibilityPriority = ToolbarVisibilityPriority.High
+			});
 
 		if ({{Bool(HasBottomToolbar)}})
 			page.BottomToolbarItems.Add(new ToolbarItem { Text = "Done", Icon = ImageSource.Symbol("checkmark"), IsPrimary = true, Tint = Colors.Green });
