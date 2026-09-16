@@ -16,7 +16,8 @@
         <PackageTags>dotnet-new;templates;skelekit;ios;uikit;dotnet-ios;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes><![CDATA[- Update the project template to SkeleKit 0.1.15.]]></PackageReleaseNotes>
+        <PackageReleaseNotes><![CDATA[- Target the iOS 27 SDK (net10.0-ios27.0, Xcode 27).
+- Update the project template to SkeleKit 0.2.0.]]></PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 

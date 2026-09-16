@@ -90,7 +90,7 @@ public sealed class MainView : ContentView<MainViewModel>
 }
 ```
 
-SkeleKit currently requires the .NET 10 iOS workload and targets iOS 18 or later. The [Getting Started guide](https://icysnex.github.io/SkeleKit/getting-started/installation/using-template) covers setup, project structure, hot reload, and the first app; the [guides](https://icysnex.github.io/SkeleKit/guides/foundations/views-and-view-trees) cover the rest of the framework.
+SkeleKit currently requires the .NET 10 iOS workload with the iOS 27 SDK and Xcode 27. Projects consume it by targeting `net10.0-ios27.0` while deploying to iOS 18 or later. The [Getting Started guide](https://icysnex.github.io/SkeleKit/getting-started/installation/using-template) covers setup, project structure, hot reload, and the first app; the [guides](https://icysnex.github.io/SkeleKit/guides/foundations/views-and-view-trees) cover the rest of the framework.
 
 ---
 

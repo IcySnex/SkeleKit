@@ -17,7 +17,7 @@ To add SkeleKit to an existing .NET for iOS project:
 dotnet add package SkeleKit.iOS
 ```
 
-SkeleKit requires the .NET 10 iOS workload and targets iOS 18 or later.
+SkeleKit requires the .NET 10 iOS workload with the iOS 27 SDK and Xcode 27. Projects consume it by targeting `net10.0-ios27.0` while deploying to iOS 18 or later.
 
 - [Documentation](https://icysnex.github.io/SkeleKit/)
 - [Getting started](https://icysnex.github.io/SkeleKit/getting-started/installation/using-template)

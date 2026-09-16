@@ -24,13 +24,14 @@ permissions:
 
 env:
   CREFDOCS_VERSION: "0.1.1"
+  IOS_WORKLOAD_SET_VERSION: "10.0.401"
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_NOLOGO: "1"
 
 jobs:
   validate:
     name: Build, test, and pack
-    runs-on: macos-26
+    runs-on: xcode-27
 
     steps:
       - name: Check out source
@@ -44,13 +45,13 @@ jobs:
           global-json-file: global.json
 
       - name: Install iOS workload
-        run: dotnet workload install ios
+        run: dotnet workload install ios --version "$IOS_WORKLOAD_SET_VERSION"
 
       - name: Read and validate package version
         id: version
         shell: bash
         run: |
-          package_version="$(dotnet msbuild Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj -getProperty:PackageVersion -p:TargetFramework=net10.0-ios -nologo -verbosity:quiet)"
+          package_version="$(dotnet msbuild Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj -getProperty:PackageVersion -p:TargetFramework=net10.0-ios27.0 -nologo -verbosity:quiet)"
           template_version="$(sed -nE 's/.*<PackageReference Include="SkeleKit\.iOS" Version="([^"]+)".*/\1/p' Source/Samples/SkeleKit.Template/SkeleKit.Template.csproj)"
 
           if [[ -z "$package_version" || "$package_version" == "null" ]]; then
@@ -98,7 +99,7 @@ jobs:
           mkdir -p artifacts/reference
           "${RUNNER_TEMP}/crefdocs/crefdocs" capture \
             --project Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj \
-            --framework net10.0-ios \
+            --framework net10.0-ios27.0 \
             --package SkeleKit.iOS \
             --version "${{ steps.version.outputs.package_version }}" \
             --source-root Source/Framework/SkeleKit.iOS \
@@ -110,7 +111,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: |
-          skelekit_notes="$(dotnet msbuild Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj -getProperty:PackageReleaseNotes -p:TargetFramework=net10.0-ios -nologo -verbosity:quiet)"
+          skelekit_notes="$(dotnet msbuild Source/Framework/SkeleKit.iOS/SkeleKit.iOS.csproj -getProperty:PackageReleaseNotes -p:TargetFramework=net10.0-ios27.0 -nologo -verbosity:quiet)"
           template_notes="$(dotnet msbuild Source/Packaging/SkeleKit.Templates.csproj -getProperty:PackageReleaseNotes -nologo -verbosity:quiet)"
 
           if [[ -z "$skelekit_notes" || "$skelekit_notes" == "null" ]]; then

@@ -20,17 +20,26 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes><![CDATA[- Support ItemTemplate selectors for CollectionView.
-- Allow binding to a specific object instead of view's context.
-- Refine container API: Panel exposes Children, Border exposes Child, and ContentView, ScrollView, and ItemView expose Content.
-- Allow style, size, padding and indicator customization for Picker.
-- Remove SelectsFromMenu and IconSize from Button.
-- Let ItemView own its normal and highlighted backgrounds.
-- Auto size ItemView height using MinHeight.
-- Make ImageSource sealed record instead of struct.
-- Fix alpha not working for system colors.
-- Fix navigation always using tab stack instead of inside modals.
-- Fix Pressed action subscription suppressing TapCommand.]]></PackageReleaseNotes>
+        <PackageReleaseNotes><![CDATA[- Target the iOS 27 SDK (net10.0-ios27.0, Xcode 27).
+- Add navigation bar accessory.
+- Add ability to disable specific ItemViews of CollectionView.
+- Allow pining header of CollectionView.
+- Add justified text alignment to Label and TextView.
+- add min font size to Label and TextView.
+- Add text style customization for Spans.
+- Allow deconstruction of two-way bindings.
+- Rework app lifecycle and add one-time Start/Stop events
+- Allow implicit conversion for array list bindings.
+- Allow disabling layout pass when using View.Animate.
+- Make tint only source of truths for accent colors on views.
+- Add subtitle to menus in Button, Hold, Picker etc.
+- Allow minimizing navigation bar on iOS 27.
+- Introduce automatic/soft/hard scroll edge on iOS 27.
+- Add visibility priority for toolbar items on iOS 27.
+- Fix search and action bubble on iOS 27.
+- Allow custom sheet placement for modals on iOS 27.
+- Add grammar checking to TextField and TextEditor on iOS 27.
+- Move iPad only sidebar to new centralized unified one for iOS 27.]]></PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 
@@ -52,7 +61,7 @@
         <ProjectReference Include="../SkeleKit.Generators/SkeleKit.Generators.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     </ItemGroup>
 
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'net10.0-ios' ">
+    <PropertyGroup Condition=" $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' ">
         <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
     </PropertyGroup>
 
