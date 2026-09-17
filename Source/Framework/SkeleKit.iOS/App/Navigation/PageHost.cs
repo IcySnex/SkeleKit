@@ -1075,10 +1075,26 @@ internal sealed class PageHost : UIViewController
 			ApplyToolbar(page);
 	}
 
-	internal void RefreshToolbar()
+	internal void RefreshSidebarRecovery(
+		bool animated)
 	{
-		if (IsViewLoaded && Page is ContentView page)
-			ApplyToolbar(page);
+		if (!IsViewLoaded)
+			return;
+
+		List<UIBarButtonItem> leading = [.. NavigationItem.LeftBarButtonItems ?? []];
+		int existing = leading.FindIndex(item =>
+			item.AccessibilityIdentifier is "SkeleKit.TabSidebarRecovery");
+		UIBarButtonItem? recovery = SkeleApplication.Current?.SidebarRecoveryItem(this);
+
+		if (recovery is null && existing >= 0)
+			leading.RemoveAt(existing);
+		else if (recovery is not null && existing < 0)
+			leading.Insert(0, recovery);
+		else
+			return;
+
+		NavigationItem.SetLeftBarButtonItems([.. leading], animated);
+		NavigationItem.LeftItemsSupplementBackButton = true;
 	}
 
 	void ApplyToolbar(

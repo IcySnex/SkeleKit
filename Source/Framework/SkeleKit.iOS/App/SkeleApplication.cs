@@ -83,8 +83,11 @@ public class SkeleApplication
 		public override void SidebarVisibilityWillChange(
 			UITabBarController tabBarController,
 			UITabBarControllerSidebar sidebar,
-			IUITabBarControllerSidebarAnimating animator) =>
+			IUITabBarControllerSidebarAnimating animator)
+		{
+			animator.AddAnimations(() => app?.RefreshSidebarRecovery(true));
 			animator.AddCompletion(() => app?.RefreshSidebarRecovery());
+		}
 	}
 
 	internal sealed class SkeleStack : UINavigationController
@@ -526,12 +529,12 @@ public class SkeleApplication
 			|| !tabs.Sidebar.IsAvailable
 			|| !tabs.Sidebar.Hidden
 			|| tabs.SelectedViewController is not SkeleSplit split
-			|| !ReferenceEquals(split.NavigationStack?.TopViewController, host))
+			|| !ReferenceEquals(split.LeadingVisibleStack?.TopViewController, host))
 			return null;
 
 		UIAction show = UIAction.Create(
-			"Show Sidebar",
-			UIImage.GetSystemImage("sidebar.leading"),
+			"Show App Sidebar",
+			UIImage.GetSystemImage("squares.leading.rectangle"),
 			null,
 			_ => tabs.Sidebar.Hidden = false);
 
@@ -542,10 +545,22 @@ public class SkeleApplication
 		};
 	}
 
-	void RefreshSidebarRecovery()
+	internal void RefreshSidebarRecovery(
+		bool animated = false)
 	{
-		if (CurrentShellStack()?.TopViewController is PageHost host)
-			host.RefreshToolbar();
+		if (CurrentTabs()?.SelectedViewController is SkeleSplit split)
+		{
+			foreach (UINavigationController stack in split.NavigationStacks())
+			{
+				if (stack.TopViewController is PageHost host)
+					host.RefreshSidebarRecovery(animated);
+			}
+
+			return;
+		}
+
+		if (CurrentShellStack()?.TopViewController is PageHost current)
+			current.RefreshSidebarRecovery(animated);
 	}
 
 	async Task InvokeLifecycleAsync(
