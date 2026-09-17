@@ -81,7 +81,7 @@ public interface INavigator
 	/// </summary>
 	/// <remarks>
 	/// The column overloads target the active split view. When it is collapsed, they route to the
-	/// visible compact stack; when no split view is active, they throw.
+	/// visible stack; when no split view is active, they throw.
 	/// </remarks>
 	/// <typeparam name="TViewModel">The type of the ViewModel to resolve.</typeparam>
 	/// <param name="column">The column whose navigation stack receives the page.</param>

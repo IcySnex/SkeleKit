@@ -91,6 +91,23 @@ public class SplitViewBuilderTests
 	}
 
 	[Fact]
+	public void DoubleColumnRejectsSupplementaryPage()
+	{
+		ViewRegistry registry = Registry();
+		SplitViewBuilder split = new();
+		split
+			.Primary<PrimaryView>()
+			.Supplementary<SupplementaryView>()
+			.Secondary<SecondaryView>();
+
+		InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+			() => split.Validate(registry));
+
+		Assert.Contains("supplementary", exception.Message, StringComparison.OrdinalIgnoreCase);
+		Assert.Contains("triple", exception.Message, StringComparison.OrdinalIgnoreCase);
+	}
+
+	[Fact]
 	public void PrimaryColumnIsRequired()
 	{
 		ViewRegistry registry = Registry();
@@ -147,6 +164,23 @@ public class SplitViewBuilderTests
 
 		Assert.Equal(typeof(CompactView), split.Columns[SplitViewColumn.Inspector]);
 		Assert.Equal(SplitViewColumn.Inspector, split.NavigationTarget);
+	}
+
+	[Fact]
+	public void CompactColumnCannotBeNavigationColumn()
+	{
+		ViewRegistry registry = Registry();
+		SplitViewBuilder split = new();
+		split
+			.Primary<PrimaryView>()
+			.Secondary<SecondaryView>()
+			.Compact<CompactView>()
+			.NavigationColumn(SplitViewColumn.Compact);
+
+		InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+			() => split.Validate(registry));
+
+		Assert.Contains("compact", exception.Message, StringComparison.OrdinalIgnoreCase);
 	}
 
 	[Fact]

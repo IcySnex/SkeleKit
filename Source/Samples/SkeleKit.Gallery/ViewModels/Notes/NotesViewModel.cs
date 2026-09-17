@@ -5,7 +5,8 @@ using SkeleKit.Gallery.Models;
 namespace SkeleKit.Gallery.ViewModels.Notes;
 
 internal sealed partial class NotesViewModel(
-	INavigator navigator) : ObservableObject
+	INavigator navigator,
+	ISplitView splitView) : ObservableObject
 {
 	static readonly List<Notebook> NotebookData =
 	[
@@ -44,11 +45,11 @@ internal sealed partial class NotesViewModel(
 				new(
 					"Column navigation",
 					"Push into any column",
-					"The column overloads of INavigator push and pop the stack of a single column. When the split view collapses, they route to the visible compact stack."),
+					"The column overloads of INavigator push and pop the stack of a single column. When the split view collapses, they route to the single visible stack."),
 				new(
 					"Collapse behavior",
 					"One stack on iPhone",
-					"UIKit collapses the columns into a single navigation surface on compact size classes. The compact column replaces the navigation column while collapsed.")
+					"UIKit collapses the columns into a single navigation surface on compact size classes. An optional compact column can provide a dedicated collapsed experience.")
 			])
 	];
 
@@ -75,8 +76,13 @@ internal sealed partial class NotesViewModel(
 
 	[RelayCommand]
 	void SelectNotebook(
-		Notebook notebook) =>
+		Notebook notebook)
+	{
 		SelectedNotebook = notebook;
+
+		if (splitView.IsCollapsed)
+			splitView.Show(SplitViewColumn.Secondary);
+	}
 
 	[RelayCommand]
 	Task OpenNoteAsync(

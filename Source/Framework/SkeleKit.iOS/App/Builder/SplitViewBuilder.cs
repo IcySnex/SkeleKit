@@ -101,9 +101,14 @@ public sealed partial class SplitViewBuilder
 		if (SplitStyle is SplitViewStyle.TripleColumn
 			&& !Columns.ContainsKey(SplitViewColumn.Supplementary))
 			throw new InvalidOperationException("A triple-column split view requires a supplementary column.");
+		if (SplitStyle is SplitViewStyle.DoubleColumn
+			&& Columns.ContainsKey(SplitViewColumn.Supplementary))
+			throw new InvalidOperationException("A supplementary column requires a triple-column split view.");
 		if (NavigationTarget is SplitViewColumn.Inspector
 			&& !Columns.ContainsKey(SplitViewColumn.Inspector))
 			throw new InvalidOperationException("The split view navigation column must contain a page.");
+		if (NavigationTarget is SplitViewColumn.Compact)
+			throw new InvalidOperationException("The compact column can't be the navigation column; it only shows while the split view is collapsed.");
 		if (NavigationTarget is not SplitViewColumn.Inspector
 			&& !Columns.ContainsKey(NavigationTarget))
 			throw new InvalidOperationException("The split view navigation column must contain a page.");

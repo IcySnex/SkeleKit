@@ -15,6 +15,26 @@ internal sealed class SplitViewService(
 			throw new PlatformNotSupportedException("The split view inspector column requires iOS 26 or later.");
 	}
 
+	static void EnsureShowable(
+		SplitViewColumn column)
+	{
+		EnsureAvailable(column);
+
+		// UIKit manages the compact column itself.
+		if (column is SplitViewColumn.Compact)
+			throw new InvalidOperationException("The compact column can't be shown; the split view manages it while collapsed.");
+	}
+
+	static void EnsureHideable(
+		SplitViewColumn column)
+	{
+		EnsureShowable(column);
+
+		// UISplitViewController.HideColumn doesn't support the secondary column.
+		if (column is SplitViewColumn.Secondary)
+			throw new InvalidOperationException("The secondary column can't be hidden by UISplitViewController.");
+	}
+
 
 	public bool IsCollapsed =>
 		Active().Collapsed;
@@ -33,21 +53,21 @@ internal sealed class SplitViewService(
 	public void Show(
 		SplitViewColumn column)
 	{
-		EnsureAvailable(column);
+		EnsureShowable(column);
 		Active().ShowColumn(SkeleSplit.Native(column));
 	}
 
 	public void Hide(
 		SplitViewColumn column)
 	{
-		EnsureAvailable(column);
+		EnsureHideable(column);
 		Active().HideColumn(SkeleSplit.Native(column));
 	}
 
 	public void Toggle(
 		SplitViewColumn column)
 	{
-		EnsureAvailable(column);
+		EnsureHideable(column);
 
 		if (!OperatingSystem.IsIOSVersionAtLeast(26))
 			throw new PlatformNotSupportedException("Toggling a split view column requires iOS 26 or later. Use Show or Hide instead.");

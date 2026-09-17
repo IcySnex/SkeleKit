@@ -21,9 +21,16 @@ internal sealed class SkeleSplit : UISplitViewController
 	{
 		get
 		{
-			if (Collapsed
-				&& GetViewController(UISplitViewControllerColumn.Compact) is UINavigationController compact)
-				return compact;
+			if (Collapsed)
+			{
+				// while collapsed UIKit shows a single column: the compact stack when declared,
+				// otherwise the top column, which viewControllers exposes as its only entry
+				if (GetViewController(UISplitViewControllerColumn.Compact) is UINavigationController compact)
+					return compact;
+
+				if (ViewControllers?.LastOrDefault() is UINavigationController visible)
+					return visible;
+			}
 
 			return GetViewController(NavigationColumn) as UINavigationController;
 		}

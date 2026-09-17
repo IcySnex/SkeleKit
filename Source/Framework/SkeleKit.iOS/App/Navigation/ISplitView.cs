@@ -23,12 +23,18 @@ public interface ISplitView
 	/// <summary>
 	/// Shows the given column using UIKit's adaptive presentation.
 	/// </summary>
+	/// <remarks>
+	/// The compact column is managed by UIKit and can't be shown directly.
+	/// </remarks>
 	void Show(
 		SplitViewColumn column);
 
 	/// <summary>
 	/// Hides the given column using UIKit's adaptive presentation.
 	/// </summary>
+	/// <remarks>
+	/// UIKit doesn't support hiding the secondary or compact column.
+	/// </remarks>
 	void Hide(
 		SplitViewColumn column);
 
@@ -37,7 +43,8 @@ public interface ISplitView
 	/// </summary>
 	/// <remarks>
 	/// Requires iOS 26 or later because it depends on <see cref="IsShowing"/>. On earlier versions
-	/// use <see cref="Show"/> and <see cref="Hide"/>.
+	/// use <see cref="Show"/> and <see cref="Hide"/>. The secondary and compact columns can't be
+	/// toggled because UIKit doesn't support hiding them.
 	/// </remarks>
 	void Toggle(
 		SplitViewColumn column);

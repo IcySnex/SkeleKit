@@ -116,15 +116,22 @@ public class SkeleApplication
 	static UINavigationController? CurrentShellStack() =>
 		StackFor(Root());
 
-	static UINavigationController? ActiveStack()
+	/// <summary>
+	/// Walks the presented controller chain of the key window once and reports the deepest
+	/// navigation stack plus the active split view it passes through.
+	/// </summary>
+	static (UINavigationController? Stack, SkeleSplit? Split) WalkShell()
 	{
 		UIViewController? controller = Root();
-		UINavigationController? active = null;
+		UINavigationController? stack = null;
+		SkeleSplit? split = null;
 
 		while (controller is not null)
 		{
-			if (controller is UINavigationController stack)
-				active = stack;
+			if (controller is UINavigationController navigation)
+				stack = navigation;
+			if (controller is SkeleSplit candidate)
+				split = candidate;
 
 			// A presentation is visually above its presenter's container hierarchy.
 			// Follow it first, then continue through the selected/visible child so the
@@ -133,9 +140,9 @@ public class SkeleApplication
 				?? controller switch
 				{
 					UITabBarController tabs => tabs.SelectedViewController,
-					UINavigationController navigation => navigation.TopViewController,
-					SkeleSplit split => split.NavigationStack,
-					UISplitViewController split => split.ViewControllers.LastOrDefault(),
+					UINavigationController container => container.TopViewController,
+					SkeleSplit active => active.NavigationStack,
+					UISplitViewController plain => plain.ViewControllers.LastOrDefault(),
 					_ => null
 				};
 
@@ -145,40 +152,18 @@ public class SkeleApplication
 			controller = next;
 		}
 
-		return active;
+		return (stack, split);
 	}
 
-	static SkeleSplit? ActiveSplit()
-	{
-		UIViewController? controller = Root();
-		SkeleSplit? active = null;
+	static UINavigationController? ActiveStack() =>
+		WalkShell().Stack;
 
-		while (controller is not null)
-		{
-			if (controller is SkeleSplit candidate)
-				active = candidate;
-
-			UIViewController? next = controller.PresentedViewController
-				?? controller switch
-				{
-					UITabBarController tabs => tabs.SelectedViewController,
-					UINavigationController navigation => navigation.TopViewController,
-					SkeleSplit split => split.NavigationStack,
-					_ => null
-				};
-
-			if (next is null || ReferenceEquals(next, controller))
-				break;
-
-			controller = next;
-		}
-
-		return active;
-	}
+	static SkeleSplit? ActiveSplit() =>
+		WalkShell().Split;
 
 	/// <summary>
 	/// Resolves the navigation stack of a split view column. When the split view is collapsed,
-	/// every column routes to the compact stack the user can actually see.
+	/// every column routes to the single stack the user can actually see.
 	/// </summary>
 	static UINavigationController? ColumnStack(
 		SplitViewColumn column)

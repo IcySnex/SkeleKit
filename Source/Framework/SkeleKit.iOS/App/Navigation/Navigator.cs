@@ -305,9 +305,14 @@ internal sealed class Navigator(
 
 	void Prune()
 	{
-		UIViewController[] stack = activeStack()?.ViewControllers ?? [];
+		// a split view keeps several column stacks alive at once, so a host is only stale
+		// when neither the active stack nor its own column still contains it
+		UIViewController?[]? active = activeStack()?.ViewControllers;
 
-		hosts.RemoveAll(host => !stack.Contains(host) && host.PresentingViewController is null);
+		hosts.RemoveAll(host =>
+			active?.Contains(host) != true
+			&& host.NavigationController?.ViewControllers?.Contains(host) != true
+			&& host.PresentingViewController is null);
 	}
 
 

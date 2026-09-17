@@ -192,6 +192,7 @@ internal sealed class PageHost : UIViewController
 	UINavigationBarAppearance? savedScrollEdgeAppearance;
 	UINavigationBarAppearance? savedCompactScrollEdgeAppearance;
 	bool preservesNavigationBarAppearance;
+	bool hasCustomNavigationBarMinimization;
 	UIView? navigationAccessoryHost;
 	UIView? navigationAccessoryContent;
 	UIVisualEffectView? navigationAccessoryMaterial;
@@ -856,6 +857,29 @@ internal sealed class PageHost : UIViewController
 		if (!OperatingSystem.IsIOSVersionAtLeast(27))
 			return;
 
+		// Only opt-in pages may carry a minimization configuration. Assigning one flips the bar
+		// into UIKit's minimization machinery even when it says Never, and on iOS 27 that stalls
+		// the tab sidebar morph: the title moves while the content's safe area follows a second
+		// late. Pages at their defaults must keep the system state they were born with.
+		if (page.NavigationAccessory is not null
+			|| (page.NavigationBarMinimizeBehavior is NavigationBarMinimize.Never
+				&& page.NavigationBarMinimizeSafeAreaAdjustment is NavigationBarMinimizeSafeArea.Automatic
+				&& page.NavigationBarMinimizeRestorationBehavior is NavigationBarMinimizeRestore.Automatic))
+		{
+			if (!hasCustomNavigationBarMinimization)
+				return;
+
+			NavigationItem.NavigationBarMinimization = new()
+			{
+				MinimizationBehavior = UIBarMinimizationBehavior.Never,
+				SafeAreaAdjustment = UIBarMinimizationSafeAreaAdjustment.Automatic,
+				RestorationBehavior = UIBarMinimizationRestorationBehavior.Automatic
+			};
+			hasCustomNavigationBarMinimization = false;
+			NavigationController?.NavigationBar.SetNeedsLayout();
+			return;
+		}
+
 		NavigationItem.NavigationBarMinimization = new()
 		{
 			MinimizationBehavior = page.EffectiveNavigationBarMinimizeBehavior switch
@@ -877,6 +901,7 @@ internal sealed class PageHost : UIViewController
 				_ => UIBarMinimizationRestorationBehavior.Automatic
 			}
 		};
+		hasCustomNavigationBarMinimization = true;
 
 		NavigationController?.NavigationBar.SetNeedsLayout();
 	}
@@ -894,10 +919,14 @@ internal sealed class PageHost : UIViewController
 			? UINavigationItemLargeTitleDisplayMode.Always
 			: UINavigationItemLargeTitleDisplayMode.Never;
 
-		// the stack-wide preference gates large titles; keep it in sync with the visible page
-		if (NavigationController is UINavigationController navigation
-			&& navigation.NavigationBar.PrefersLargeTitles != large)
-			navigation.NavigationBar.PrefersLargeTitles = large;
+		// the stack-wide preference gates large titles: lift it when a page needs them, but never
+		// lower it again. Inline pages opt out per-item through the display mode above, and
+		// flipping the gate while a container resizes (sidebar toggle, split collapse) makes the
+		// large title jump and only settle once the transition finishes.
+		if (large
+			&& NavigationController is UINavigationController navigation
+			&& !navigation.NavigationBar.PrefersLargeTitles)
+			navigation.NavigationBar.PrefersLargeTitles = true;
 	}
 
 	internal void ApplyTitleStyleChange()
