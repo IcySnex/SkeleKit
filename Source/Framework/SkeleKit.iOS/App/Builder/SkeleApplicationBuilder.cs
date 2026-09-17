@@ -25,6 +25,7 @@ public sealed class SkeleApplicationBuilder
 
 	internal SkeleApplication.ShellKind Shell = SkeleApplication.ShellKind.None;
 	internal TabsBuilder? TabsBuilder;
+	internal SplitViewBuilder? SplitViewBuilder;
 	internal Type? RootView;
 	internal readonly ThemeBuilder Theme = new();
 
@@ -158,6 +159,21 @@ public sealed class SkeleApplicationBuilder
 	}
 
 	/// <summary>
+	/// Configures a native split view as the application shell.
+	/// </summary>
+	/// <param name="configure">Declares the split view's columns and native configuration.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SkeleApplicationBuilder SplitView(
+		Action<SplitViewBuilder> configure)
+	{
+		SplitViewBuilder = new();
+		configure(SplitViewBuilder);
+		Shell = SkeleApplication.ShellKind.Split;
+
+		return this;
+	}
+
+	/// <summary>
 	/// Configures the app to use bottom navigation tabs with each tab having its own navigation stack.
 	/// </summary>
 	/// <param name="configure">Declares the tabs.</param>
@@ -183,11 +199,12 @@ public sealed class SkeleApplicationBuilder
 	public SkeleApplication BuildCore()
 	{
 		if (Shell == SkeleApplication.ShellKind.None)
-			throw new InvalidOperationException("Call Tabs(), Stack<TView>() or SinglePage<TView>() before Build().");
+			throw new InvalidOperationException("Call Tabs(), SplitView(), Stack<TView>() or SinglePage<TView>() before Build().");
 
 		if (RootView is Type root)
 			Registry.EnsureRegistered(root);
 
+		SplitViewBuilder?.Validate(Registry);
 		TabsBuilder?.Validate(Registry);
 
 		return new(this);

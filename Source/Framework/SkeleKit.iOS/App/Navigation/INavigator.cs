@@ -77,6 +77,88 @@ public interface INavigator
 
 
 	/// <summary>
+	/// Pushes a new page into a split view column, resolving its ViewModel from the service container.
+	/// </summary>
+	/// <remarks>
+	/// The column overloads target the active split view. When it is collapsed, they route to the
+	/// visible compact stack; when no split view is active, they throw.
+	/// </remarks>
+	/// <typeparam name="TViewModel">The type of the ViewModel to resolve.</typeparam>
+	/// <param name="column">The column whose navigation stack receives the page.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PushAsync<TViewModel>(
+		SplitViewColumn column) where TViewModel : class;
+
+	/// <summary>
+	/// Pushes a new page into a split view column, resolving its ViewModel by type from the service container.
+	/// </summary>
+	/// <param name="column">The column whose navigation stack receives the page.</param>
+	/// <param name="viewModel">The type of the ViewModel to resolve.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PushAsync(
+		SplitViewColumn column,
+		Type viewModel);
+
+	/// <summary>
+	/// Pushes a new page into a split view column using an existing ViewModel instance.
+	/// </summary>
+	/// <param name="column">The column whose navigation stack receives the page.</param>
+	/// <param name="viewModel">The ViewModel instance to bind to the page.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PushAsync(
+		SplitViewColumn column,
+		object viewModel);
+
+	/// <summary>
+	/// Pushes a registered view into a split view column, resolving any associated ViewModel from the service container.
+	/// </summary>
+	/// <typeparam name="TView">The registered view type.</typeparam>
+	/// <param name="column">The column whose navigation stack receives the page.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PushViewAsync<TView>(
+		SplitViewColumn column) where TView : ContentView;
+
+	/// <summary>
+	/// Pushes a registered view by type into a split view column, resolving any associated ViewModel from the service container.
+	/// </summary>
+	/// <param name="column">The column whose navigation stack receives the page.</param>
+	/// <param name="view">The registered view type.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PushViewAsync(
+		SplitViewColumn column,
+		Type view);
+
+	/// <summary>
+	/// Pushes an existing page instance into a split view column.
+	/// </summary>
+	/// <remarks>
+	/// Create a new instance per navigation.
+	/// </remarks>
+	/// <param name="column">The column whose navigation stack receives the page.</param>
+	/// <param name="page">The page to push.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PushViewAsync(
+		SplitViewColumn column,
+		ContentView page);
+
+	/// <summary>
+	/// Pops the top page off a split view column's navigation stack.
+	/// </summary>
+	/// <param name="column">The column whose navigation stack is popped.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PopAsync(
+		SplitViewColumn column);
+
+	/// <summary>
+	/// Pops all pages off a split view column's navigation stack except for the root page.
+	/// </summary>
+	/// <param name="column">The column whose navigation stack is reset.</param>
+	/// <returns>A task representing the async operation.</returns>
+	Task PopToRootAsync(
+		SplitViewColumn column);
+
+
+	/// <summary>
 	/// Presents a modal page, resolving its ViewModel from the service container.
 	/// </summary>
 	/// <typeparam name="TViewModel">The type of the ViewModel to resolve.</typeparam>

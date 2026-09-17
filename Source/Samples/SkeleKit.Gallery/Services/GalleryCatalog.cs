@@ -148,6 +148,7 @@ internal sealed class GalleryCatalog : IGalleryCatalog
 				Topic("Navigation", "ViewModel-first stack, modal, tab and system handoffs.", "arrow.left.arrow.right", Colors.Green, GalleryArea.Platform, typeof(NavigationViewModel)),
 				Topic("Page Chrome", "Titles, search, toolbars, badges and status bars.", "platter.filled.top.iphone", Colors.Green, GalleryArea.Platform, typeof(PageChromeViewModel)),
 				Topic("Tabs & Sidebar", "Bottom tabs, search bubbles and adaptive sidebar arrangements.", "sidebar.left", Colors.Green, GalleryArea.Platform, typeof(TabsSidebarViewModel)),
+				Topic("Split View", "Native two- and three-column layouts with per-column navigation.", "rectangle.split.2x1", Colors.Green, GalleryArea.Platform, typeof(SplitViewsViewModel)),
 				Topic("Lifecycle & DI", "Application services and foreground transitions.", "app.badge.checkmark", Colors.Green, GalleryArea.Platform, typeof(LifecycleDiViewModel))),
 
 			Section(

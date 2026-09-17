@@ -16,6 +16,12 @@ public sealed class TabsBuilder
 		ImageSource Icon,
 		TabPlacement Placement) : Node;
 
+	internal sealed record SplitLeaf(
+		SplitViewBuilder Split,
+		string Title,
+		ImageSource Icon,
+		TabPlacement Placement) : Node;
+
 	internal sealed record GroupNode(
 		string Title,
 		ImageSource Icon,
@@ -45,6 +51,27 @@ public sealed class TabsBuilder
 		ImageSource icon) where TView : ContentView
 	{
 		Nodes.Add(new Leaf(typeof(TView), title, icon, TabPlacement.Automatic));
+
+		return this;
+	}
+
+	/// <summary>
+	/// Adds a native split view as a tab destination.
+	/// </summary>
+	/// <param name="title">The text displayed on the tab bar item.</param>
+	/// <param name="icon">The local icon shown on the tab.</param>
+	/// <param name="configure">Declares the split view's columns and native configuration.</param>
+	/// <param name="placement">How the destination takes part in tab and sidebar customization.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public TabsBuilder Split(
+		string title,
+		ImageSource icon,
+		Action<SplitViewBuilder> configure,
+		TabPlacement placement = TabPlacement.Automatic)
+	{
+		SplitViewBuilder split = new();
+		configure(split);
+		Nodes.Add(new SplitLeaf(split, title, icon, placement));
 
 		return this;
 	}
@@ -180,6 +207,10 @@ public sealed class TabsBuilder
 				case Leaf leaf:
 					yield return leaf.View;
 					break;
+				case SplitLeaf split:
+					foreach (Type view in split.Split.Views)
+						yield return view;
+					break;
 				case GroupNode group:
 					{
 						foreach (Type view in Views(group.Children))
@@ -190,11 +221,34 @@ public sealed class TabsBuilder
 		}
 	}
 
+	static IEnumerable<SplitViewBuilder> Splits(
+		IEnumerable<Node> nodes)
+	{
+		foreach (Node node in nodes)
+		{
+			switch (node)
+			{
+				case SplitLeaf split:
+					yield return split.Split;
+					break;
+				case GroupNode group:
+					foreach (SplitViewBuilder child in Splits(group.Children))
+						yield return child;
+					break;
+			}
+		}
+	}
+
 	internal void Validate(
 		ViewRegistry registry)
 	{
+		IEnumerable<Node> sidebarNodes = SidebarConfiguration?.Nodes ?? [];
+
+		foreach (SplitViewBuilder split in Splits(Nodes.Concat(sidebarNodes)))
+			split.Validate(registry);
+
 		foreach (Type view in Views(Nodes)
-			.Concat(SidebarConfiguration is null ? [] : Views(SidebarConfiguration.Nodes))
+			.Concat(Views(sidebarNodes))
 			.Append(SearchView)
 			.Append(BubbleView)
 			.OfType<Type>()

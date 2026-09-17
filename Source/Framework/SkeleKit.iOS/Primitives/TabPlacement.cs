@@ -28,5 +28,11 @@ public enum TabPlacement
 	/// <summary>
 	/// Hidden until the user adds it through Edit.
 	/// </summary>
-	Optional
+	Optional,
+
+	/// <summary>
+	/// Not shown in the tab bar or sidebar, but still selectable programmatically
+	/// through <see cref="INavigator.SelectTabAsync"/>.
+	/// </summary>
+	Hidden
 }

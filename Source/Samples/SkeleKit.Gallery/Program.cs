@@ -12,8 +12,10 @@ using SkeleKit.Gallery.ViewModels.Framework.Collections;
 using SkeleKit.Gallery.ViewModels.Framework.Foundations;
 using SkeleKit.Gallery.ViewModels.Framework.Layout;
 using SkeleKit.Gallery.ViewModels.Framework.StylingMotion;
+using SkeleKit.Gallery.ViewModels.Notes;
 using SkeleKit.Gallery.ViewModels.Platform;
 using SkeleKit.Gallery.Views;
+using SkeleKit.Gallery.Views.Notes;
 
 SkeleApplication.CreateBuilder()
 	.ConfigureLogging(logging =>
@@ -33,6 +35,8 @@ SkeleApplication.CreateBuilder()
 		services.AddTransient<SearchViewModel>();
 		services.AddSingleton<TabsSidebarViewModel>();
 		services.AddSingleton<LifecycleDiViewModel>();
+		services.AddSingleton<NotesViewModel>();
+		services.AddTransient<SplitViewsViewModel>();
 
 		services.AddTransient<AboutViewModel>();
 		services.AddTransient<AccessibilityViewModel>();
@@ -93,6 +97,9 @@ SkeleApplication.CreateBuilder()
 		.Tab<FrameworkView>("Framework", "square.stack.3d.up")
 		.Tab<ControlsView>("Controls", "switch.2")
 		.Tab<PlatformView>("Platform", "iphone")
+		.Split("Notes", "rectangle.split.2x1", split => split
+			.Primary<NotebooksView>()
+			.Secondary<NotesListView>(), TabPlacement.Hidden)
 		.Search<SearchView>()
 		.Sidebar())
 	.Build()

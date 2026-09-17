@@ -124,7 +124,8 @@ internal sealed partial class NavigationViewModel(
 	[
 		"Framework",
 		"Controls",
-		"Platform"
+		"Platform",
+		"Notes"
 	];
 
 	public List<NavigationModalOption> ModalStyles =>

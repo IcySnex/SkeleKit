@@ -43,6 +43,27 @@ public sealed class SidebarBuilder
 	}
 
 	/// <summary>
+	/// Adds a split-view destination that is shown only while the sidebar is available by default.
+	/// </summary>
+	/// <param name="title">The text displayed for the destination.</param>
+	/// <param name="icon">The local icon shown for the destination.</param>
+	/// <param name="configure">Declares the split view's columns and native configuration.</param>
+	/// <param name="placement">How the destination takes part in sidebar customization.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SidebarBuilder Split(
+		string title,
+		ImageSource icon,
+		Action<SplitViewBuilder> configure,
+		TabPlacement placement = TabPlacement.SidebarOnly)
+	{
+		SplitViewBuilder split = new();
+		configure(split);
+		Nodes.Add(new TabsBuilder.SplitLeaf(split, title, icon, placement));
+
+		return this;
+	}
+
+	/// <summary>
 	/// Adds a sidebar section: a group of tabs, always sidebar-only.
 	/// </summary>
 	/// <param name="title">The group's title.</param>

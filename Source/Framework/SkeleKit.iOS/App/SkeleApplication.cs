@@ -17,6 +17,7 @@ public class SkeleApplication
 		None,
 		SinglePage,
 		Stack,
+		Split,
 		Tabs
 	}
 
@@ -99,13 +100,21 @@ public class SkeleApplication
 			.FirstOrDefault(window => window.IsKeyWindow)?
 			.RootViewController;
 
-	static UINavigationController? CurrentShellStack() =>
-		Root() switch
+	static UINavigationController? StackFor(
+		UIViewController? controller) =>
+		controller switch
 		{
-			UITabBarController tabs => tabs.SelectedViewController as UINavigationController,
 			UINavigationController stack => stack,
+			UITabBarController tabs => StackFor(tabs.SelectedViewController),
+			SkeleSplit split => split.NavigationStack,
+			UISplitViewController split => split.ViewControllers
+				.Select(StackFor)
+				.LastOrDefault(stack => stack is not null),
 			_ => null
 		};
+
+	static UINavigationController? CurrentShellStack() =>
+		StackFor(Root());
 
 	static UINavigationController? ActiveStack()
 	{
@@ -125,6 +134,7 @@ public class SkeleApplication
 				{
 					UITabBarController tabs => tabs.SelectedViewController,
 					UINavigationController navigation => navigation.TopViewController,
+					SkeleSplit split => split.NavigationStack,
 					UISplitViewController split => split.ViewControllers.LastOrDefault(),
 					_ => null
 				};
@@ -136,6 +146,50 @@ public class SkeleApplication
 		}
 
 		return active;
+	}
+
+	static SkeleSplit? ActiveSplit()
+	{
+		UIViewController? controller = Root();
+		SkeleSplit? active = null;
+
+		while (controller is not null)
+		{
+			if (controller is SkeleSplit candidate)
+				active = candidate;
+
+			UIViewController? next = controller.PresentedViewController
+				?? controller switch
+				{
+					UITabBarController tabs => tabs.SelectedViewController,
+					UINavigationController navigation => navigation.TopViewController,
+					SkeleSplit split => split.NavigationStack,
+					_ => null
+				};
+
+			if (next is null || ReferenceEquals(next, controller))
+				break;
+
+			controller = next;
+		}
+
+		return active;
+	}
+
+	/// <summary>
+	/// Resolves the navigation stack of a split view column. When the split view is collapsed,
+	/// every column routes to the compact stack the user can actually see.
+	/// </summary>
+	static UINavigationController? ColumnStack(
+		SplitViewColumn column)
+	{
+		if (ActiveSplit() is not SkeleSplit split)
+			return null;
+
+		if (split.Collapsed)
+			return split.NavigationStack;
+
+		return split.GetViewController(SkeleSplit.Native(column)) as UINavigationController;
 	}
 
 	static UITabBarController? CurrentTabs() =>
@@ -185,6 +239,9 @@ public class SkeleApplication
 		if (top is UITabBarController tabs)
 			top = tabs.SelectedViewController;
 
+		if (top is SkeleSplit split)
+			top = split.NavigationStack;
+
 		if (top is UINavigationController stack)
 			top = stack.TopViewController;
 
@@ -194,7 +251,7 @@ public class SkeleApplication
 	internal static void HandleReselect(
 		UITabBarController controller)
 	{
-		if (controller.SelectedViewController is not UINavigationController stack)
+		if (StackFor(controller.SelectedViewController) is not UINavigationController stack)
 			return;
 
 		PageHost? root = stack.ViewControllers?.FirstOrDefault() as PageHost;
@@ -230,6 +287,7 @@ public class SkeleApplication
 	readonly ViewRegistry registry;
 	readonly ShellKind shell;
 	readonly TabsBuilder? tabsBuilder;
+	readonly SplitViewBuilder? splitViewBuilder;
 	readonly Type? rootView;
 	IReadOnlyList<IApplicationLifecycle> lifecycleServices = [];
 	bool nativeApplicationStarted;
@@ -241,11 +299,13 @@ public class SkeleApplication
 		registry = builder.Registry;
 		shell = builder.Shell;
 		tabsBuilder = builder.TabsBuilder;
+		splitViewBuilder = builder.SplitViewBuilder;
 		rootView = builder.RootView;
 		Theme = builder.Theme.Theme;
 		Theme.Changed += ApplyThemeChange;
 
-		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, ActiveStack));
+		builder.Services.AddSingleton<INavigator>(provider => new Navigator(registry, provider, ActiveStack, ColumnStack));
+		builder.Services.AddSingleton<ISplitView>(_ => new SplitViewService(ActiveSplit));
 		builder.Services.AddSingleton<ISharer, Sharer>();
 		builder.Services.AddSingleton<ISystemPicker, SystemPicker>();
 		builder.Services.AddSingleton<IHaptics, Haptics>();
@@ -532,6 +592,16 @@ public class SkeleApplication
 		bubble.AddGestureRecognizer(recognizer);
 	}
 
+	static void Hide(
+		UITab tab)
+	{
+		// The sidebar hides through the projected placement, the tab bar through the
+		// key-value hidden property that the .NET binding does not project yet.
+		tab.PreferredPlacement = UITabPlacement.SidebarOnly;
+		tab.AllowsHiding = false;
+		tab.SetValueForKey(NSNumber.FromBoolean(true), new NSString("hidden"));
+	}
+
 	internal UIViewController BuildShell()
 	{
 		PageHost Page(Type? view) =>
@@ -539,6 +609,29 @@ public class SkeleApplication
 
 		UINavigationController Stack(Type? view)
 			=> new SkeleStack(Page(view), Theme.NavigationTitleStyle is TitleStyle.Large);
+
+		(SkeleSplit Controller, Dictionary<SplitViewColumn, PageHost> Hosts) Split(
+			SplitViewBuilder builder)
+		{
+			SkeleSplit split = new(builder.SplitStyle, builder.NavigationTarget);
+			Dictionary<SplitViewColumn, PageHost> hosts = [];
+
+			foreach ((SplitViewColumn column, Type view) in builder.Columns)
+			{
+				if (column is SplitViewColumn.Inspector
+					&& !OperatingSystem.IsIOSVersionAtLeast(26))
+					continue;
+
+				PageHost host = Page(view);
+				SkeleStack stack = new(host, Theme.NavigationTitleStyle is TitleStyle.Large);
+				split.SetViewController(stack, SkeleSplit.Native(column));
+				hosts[column] = host;
+			}
+
+			builder.NativeConfiguration?.Invoke(split);
+
+			return (split, hosts);
+		}
 
 		switch (shell)
 		{
@@ -548,6 +641,9 @@ public class SkeleApplication
 			case ShellKind.Stack:
 				return Stack(rootView);
 
+			case ShellKind.Split:
+				return Split(splitViewBuilder!).Controller;
+
 			case ShellKind.Tabs:
 				UITabBarController controller = new();
 
@@ -555,6 +651,12 @@ public class SkeleApplication
 
 				void Place(UITab tab, TabPlacement placement)
 				{
+					if (placement is TabPlacement.Hidden)
+					{
+						Hide(tab);
+						return;
+					}
+
 					if (placement is not TabPlacement.Automatic)
 					{
 						tab.PreferredPlacement = placement switch
@@ -593,6 +695,31 @@ public class SkeleApplication
 						Place(native, TabPlacement.SidebarOnly);
 
 						return native;
+					}
+
+					if (node is TabsBuilder.SplitLeaf splitLeaf)
+					{
+						if (grouped)
+							throw new InvalidOperationException("A split view can't be nested inside a tab group.");
+
+						(SkeleSplit split, Dictionary<SplitViewColumn, PageHost> hosts) = Split(splitLeaf.Split);
+						UITab splitTab = new(
+							splitLeaf.Title,
+							splitLeaf.Icon.ResolveLocal(),
+							$"split:{splitLeaf.Title}",
+							_ => split);
+
+						Place(splitTab, splitLeaf.Placement);
+
+						// the navigation column is the tab's primary interaction surface,
+						// so only its root page drives the tab badge
+						if (hosts.TryGetValue(splitLeaf.Split.NavigationTarget, out PageHost? badgeRoot))
+						{
+							badgeRoot.Tab = splitTab;
+							badgeRoot.Page?.ApplyTabBadge();
+						}
+
+						return splitTab;
 					}
 
 					TabsBuilder.Leaf leaf = (TabsBuilder.Leaf)node;

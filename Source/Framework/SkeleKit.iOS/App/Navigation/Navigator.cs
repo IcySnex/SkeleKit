@@ -9,7 +9,8 @@ namespace SkeleKit;
 internal sealed class Navigator(
 	ViewRegistry registry,
 	IServiceProvider services,
-	Func<UINavigationController?> activeStack) : INavigator
+	Func<UINavigationController?> activeStack,
+	Func<SplitViewColumn, UINavigationController?> columnStack) : INavigator
 {
 	readonly ILogger<Navigator> logger = services.GetRequiredService<ILogger<Navigator>>();
 
@@ -389,6 +390,78 @@ internal sealed class Navigator(
 		else
 			logger.LogWarning("Failed to pop to root because no navigation stack is active.");
 
+		Prune();
+
+		return Task.CompletedTask;
+	}
+
+
+	UINavigationController ColumnStack(
+		SplitViewColumn column) =>
+		columnStack(column) switch
+		{
+			UINavigationController stack => stack,
+			_ => throw new InvalidOperationException($"There is no active split view with a navigable '{column}' column.")
+		};
+
+	public Task PushAsync<TViewModel>(
+		SplitViewColumn column) where TViewModel : class =>
+		PushAsync(column, registry.CreateViewModel(typeof(TViewModel), services));
+
+	public Task PushAsync(
+		SplitViewColumn column,
+		Type viewModel) =>
+		PushAsync(column, registry.CreateViewModel(viewModel, services));
+
+	public Task PushAsync(
+		SplitViewColumn column,
+		object viewModel)
+	{
+		UINavigationController stack = ColumnStack(column);
+		PageHost host = Track(registry.CreatePage(viewModel, services));
+		stack.PushViewController(host, true);
+
+		return Task.CompletedTask;
+	}
+
+	public Task PushViewAsync<TView>(
+		SplitViewColumn column) where TView : ContentView =>
+		PushViewAsync(column, typeof(TView));
+
+	public Task PushViewAsync(
+		SplitViewColumn column,
+		Type view)
+	{
+		UINavigationController stack = ColumnStack(column);
+		PageHost host = Track(registry.CreatePage(view, services));
+		stack.PushViewController(host, true);
+
+		return Task.CompletedTask;
+	}
+
+	public Task PushViewAsync(
+		SplitViewColumn column,
+		ContentView page)
+	{
+		UINavigationController stack = ColumnStack(column);
+		stack.PushViewController(Host(page), true);
+
+		return Task.CompletedTask;
+	}
+
+	public Task PopAsync(
+		SplitViewColumn column)
+	{
+		ColumnStack(column).PopViewController(true);
+		Prune();
+
+		return Task.CompletedTask;
+	}
+
+	public Task PopToRootAsync(
+		SplitViewColumn column)
+	{
+		ColumnStack(column).PopToRootViewController(true);
 		Prune();
 
 		return Task.CompletedTask;
