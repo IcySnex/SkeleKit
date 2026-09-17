@@ -43,6 +43,69 @@ public class SplitViewBuilderTests
 	}
 
 	[Fact]
+	public void DefaultsKeepNativeAdaptiveLayout()
+	{
+		SplitViewBuilder split = new();
+
+		Assert.Equal(SplitViewEdge.Leading, split.PrimaryColumnEdge);
+		Assert.Equal(SplitViewBehavior.Automatic, split.BehaviorPreference);
+		Assert.Equal(SplitViewDisplay.Automatic, split.DisplayPreference);
+		Assert.Empty(split.ColumnWeights);
+	}
+
+	[Fact]
+	public void ColumnsStoreRelativeWeights()
+	{
+		SplitViewBuilder split = new();
+		split
+			.Primary<PrimaryView>(weight: 1)
+			.Secondary<SecondaryView>(weight: 2)
+			.PrimaryEdge(SplitViewEdge.Trailing)
+			.Behavior(SplitViewBehavior.SideBySide)
+			.Display(SplitViewDisplay.TwoColumns);
+
+		Assert.Equal(1, split.ColumnWeights[SplitViewColumn.Primary]);
+		Assert.Equal(2, split.ColumnWeights[SplitViewColumn.Secondary]);
+		Assert.Equal(SplitViewEdge.Trailing, split.PrimaryColumnEdge);
+		Assert.Equal(SplitViewBehavior.SideBySide, split.BehaviorPreference);
+		Assert.Equal(SplitViewDisplay.TwoColumns, split.DisplayPreference);
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(double.NaN)]
+	[InlineData(double.PositiveInfinity)]
+	public void ColumnWeightsMustBePositiveAndFinite(
+		double weight)
+	{
+		SplitViewBuilder split = new();
+
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => split.Primary<PrimaryView>(weight));
+	}
+
+	[Fact]
+	public void CompactColumnRejectsWeight()
+	{
+		SplitViewBuilder split = new();
+
+		Assert.Throws<ArgumentException>(
+			() => split.Column<CompactView>(SplitViewColumn.Compact, weight: 1));
+	}
+
+	[Fact]
+	public void ReplacingColumnWithoutWeightRestoresAutomaticWeight()
+	{
+		SplitViewBuilder split = new();
+		split
+			.Primary<PrimaryView>(weight: 2)
+			.Primary<SupplementaryView>();
+
+		Assert.False(split.ColumnWeights.ContainsKey(SplitViewColumn.Primary));
+	}
+
+	[Fact]
 	public void TripleColumnRequiresSupplementaryPage()
 	{
 		ViewRegistry registry = Registry();

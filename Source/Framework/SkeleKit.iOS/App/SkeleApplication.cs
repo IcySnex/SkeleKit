@@ -697,7 +697,7 @@ public class SkeleApplication
 		(SkeleSplit Controller, Dictionary<SplitViewColumn, PageHost> Hosts) Split(
 			SplitViewBuilder builder)
 		{
-			SkeleSplit split = new(builder.SplitStyle, builder.NavigationTarget);
+			SkeleSplit split = new(builder);
 			Dictionary<SplitViewColumn, PageHost> hosts = [];
 
 			foreach ((SplitViewColumn column, Type view) in builder.Columns)
@@ -711,8 +711,6 @@ public class SkeleApplication
 				split.SetViewController(stack, SkeleSplit.Native(column));
 				hosts[column] = host;
 			}
-
-			builder.NativeConfiguration?.Invoke(split);
 
 			return (split, hosts);
 		}

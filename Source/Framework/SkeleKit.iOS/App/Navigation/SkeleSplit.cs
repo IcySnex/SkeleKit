@@ -7,10 +7,17 @@ internal sealed class SkeleSplit : UISplitViewController
 
 
 	public SkeleSplit(
-		SplitViewStyle style,
-		SplitViewColumn navigationColumn) : base(Native(style))
+		SplitViewBuilder builder) : base(Native(builder.SplitStyle))
 	{
-		this.navigationColumn = navigationColumn;
+		navigationColumn = builder.NavigationTarget;
+		PrimaryEdge = Native(builder.PrimaryColumnEdge);
+		PreferredSplitBehavior = Native(builder.BehaviorPreference);
+		PreferredDisplayMode = Native(
+			builder.DisplayPreference,
+			builder.BehaviorPreference,
+			builder.SplitStyle);
+
+		ApplyWeights(builder);
 	}
 
 	public SkeleSplit(
@@ -69,6 +76,78 @@ internal sealed class SkeleSplit : UISplitViewController
 		style is SplitViewStyle.TripleColumn
 			? UISplitViewControllerStyle.TripleColumn
 			: UISplitViewControllerStyle.DoubleColumn;
+
+	static UISplitViewControllerPrimaryEdge Native(
+		SplitViewEdge edge) =>
+		edge is SplitViewEdge.Trailing
+			? UISplitViewControllerPrimaryEdge.Trailing
+			: UISplitViewControllerPrimaryEdge.Leading;
+
+	static UISplitViewControllerSplitBehavior Native(
+		SplitViewBehavior behavior) =>
+		behavior switch
+		{
+			SplitViewBehavior.SideBySide => UISplitViewControllerSplitBehavior.Tile,
+			SplitViewBehavior.Overlay => UISplitViewControllerSplitBehavior.Overlay,
+			SplitViewBehavior.Displace => UISplitViewControllerSplitBehavior.Displace,
+			_ => UISplitViewControllerSplitBehavior.Automatic
+		};
+
+	static UISplitViewControllerDisplayMode Native(
+		SplitViewDisplay display,
+		SplitViewBehavior behavior,
+		SplitViewStyle style) =>
+		display switch
+		{
+			SplitViewDisplay.SecondaryOnly => UISplitViewControllerDisplayMode.SecondaryOnly,
+			SplitViewDisplay.TwoColumns when behavior is SplitViewBehavior.Overlay =>
+				UISplitViewControllerDisplayMode.OneOverSecondary,
+			SplitViewDisplay.TwoColumns => UISplitViewControllerDisplayMode.OneBesideSecondary,
+			SplitViewDisplay.AllColumns when style is SplitViewStyle.DoubleColumn
+				&& behavior is SplitViewBehavior.Overlay => UISplitViewControllerDisplayMode.OneOverSecondary,
+			SplitViewDisplay.AllColumns when style is SplitViewStyle.DoubleColumn =>
+				UISplitViewControllerDisplayMode.OneBesideSecondary,
+			SplitViewDisplay.AllColumns when behavior is SplitViewBehavior.Overlay =>
+				UISplitViewControllerDisplayMode.TwoOverSecondary,
+			SplitViewDisplay.AllColumns when behavior is SplitViewBehavior.Displace =>
+				UISplitViewControllerDisplayMode.TwoDisplaceSecondary,
+			SplitViewDisplay.AllColumns => UISplitViewControllerDisplayMode.TwoBesideSecondary,
+			_ => UISplitViewControllerDisplayMode.Automatic
+		};
+
+	void ApplyWeights(
+		SplitViewBuilder builder)
+	{
+		SplitViewColumn[] columns = builder.Columns.Keys
+			.Where(column => column is not SplitViewColumn.Compact)
+			.Where(column => column is not SplitViewColumn.Inspector || OperatingSystem.IsIOSVersionAtLeast(26))
+			.ToArray();
+
+		if (!columns.Any(builder.ColumnWeights.ContainsKey))
+			return;
+
+		double total = columns.Sum(column => builder.ColumnWeights.GetValueOrDefault(column, 1));
+		foreach (SplitViewColumn column in columns)
+		{
+			nfloat fraction = (nfloat)(builder.ColumnWeights.GetValueOrDefault(column, 1) / total);
+
+			switch (column)
+			{
+				case SplitViewColumn.Primary:
+					PreferredPrimaryColumnWidthFraction = fraction;
+					break;
+				case SplitViewColumn.Supplementary:
+					PreferredSupplementaryColumnWidthFraction = fraction;
+					break;
+				case SplitViewColumn.Secondary when OperatingSystem.IsIOSVersionAtLeast(26):
+					PreferredSecondaryColumnWidthFraction = fraction;
+					break;
+				case SplitViewColumn.Inspector when OperatingSystem.IsIOSVersionAtLeast(26):
+					PreferredInspectorColumnWidthFraction = fraction;
+					break;
+			}
+		}
+	}
 
 	public override void ViewDidLayoutSubviews()
 	{
