@@ -29,9 +29,9 @@ internal sealed partial class NotesViewModel(
 			"paintbrush",
 			[
 				new(
-					"Sidebar widths",
-					"Fractions and fixed widths",
-					"Set preferred, minimum and maximum widths per column through ConfigureNative. SkeleKit keeps its own defaults so every app starts adaptive."),
+					"Column proportions",
+					"Adaptive relative weights",
+					"Give expanded columns relative weights when the content needs a preferred proportion. Leave them unset to keep the system's adaptive widths."),
 				new(
 					"Inspector",
 					"iOS 26 and later",

@@ -33,8 +33,10 @@ internal sealed partial class SplitViewsViewModel(
 					"Notes",
 					"rectangle.split.2x1",
 					split => split
-						.Primary<NotebooksView>()
-						.Secondary<NotesListView>(),
+						.Primary<NotebooksView>(weight: 1)
+						.Secondary<NotesListView>(weight: 2)
+						.Behavior(SplitViewBehavior.SideBySide)
+						.Display(SplitViewDisplay.TwoColumns),
 					TabPlacement.Hidden));
 
 			// reach the hidden destination programmatically
