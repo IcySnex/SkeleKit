@@ -85,7 +85,11 @@ public class SkeleApplication
 			UITabBarControllerSidebar sidebar,
 			IUITabBarControllerSidebarAnimating animator)
 		{
-			animator.AddAnimations(() => app?.RefreshSidebarRecovery());
+			if (sidebar.Hidden)
+				animator.AddAnimations(() => app?.RefreshSidebarRecovery());
+			else
+				app?.RefreshSidebarRecovery();
+
 			animator.AddCompletion(() => app?.RefreshSidebarRecovery());
 		}
 	}
@@ -536,7 +540,7 @@ public class SkeleApplication
 	{
 		UIAction show = UIAction.Create(
 			"Show App Sidebar",
-			UIImage.GetSystemImage("squares.leading.rectangle"),
+			UIImage.GetSystemImage("sidebar.leading"),
 			null,
 			static _ =>
 			{
