@@ -118,8 +118,8 @@ internal sealed partial class TabsSidebarViewModel : ShowcaseViewModel
 	[
 		new(
 			"""
-			.Sidebar(sidebar => sidebar
-				.PlaceTab<HomeView>(TabPlacement.Locked)
+			.Tabs(tabs => tabs
+				.Tab<HomeView>("Home", "house", TabPlacement.Fixed)
 				.Tab<InsightsView>(
 					"Insights",
 					"chart.bar",
@@ -127,7 +127,8 @@ internal sealed partial class TabsSidebarViewModel : ShowcaseViewModel
 				.Group("Collections", "square.grid.2x2", group => group
 					.Tab<AlbumsView>("Albums", "rectangle.stack")
 					.Tab<ArtistsView>("Artists", "music.mic"))
-				.Footer<AccountFooter>());
+				.Sidebar(sidebar => sidebar
+					.Footer<AccountFooter>()));
 			""")
 	];
 

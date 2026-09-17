@@ -16,7 +16,7 @@ internal sealed class SplitViewsView : ShowcaseView<SplitViewsViewModel>
 			Code(vm => vm.ShellCode));
 		AddCodeShowcase(
 			"Tab destination",
-			"Any tab or sidebar destination can be a split view while the other tabs keep their single-stack behavior.",
+			"Any tab destination can be a split view, including a sidebar-only tab, while the other tabs keep their single-stack behavior.",
 			Code(vm => vm.TabCode));
 		AddCodeShowcase(
 			"Column navigation",
