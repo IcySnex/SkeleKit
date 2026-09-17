@@ -85,7 +85,7 @@ public class SkeleApplication
 			UITabBarControllerSidebar sidebar,
 			IUITabBarControllerSidebarAnimating animator)
 		{
-			animator.AddAnimations(() => app?.RefreshSidebarRecovery(true));
+			animator.AddAnimations(() => app?.RefreshSidebarRecovery());
 			animator.AddCompletion(() => app?.RefreshSidebarRecovery());
 		}
 	}
@@ -520,43 +520,52 @@ public class SkeleApplication
 		IsSwitchingTabs = false;
 	}
 
-	internal UIBarButtonItem? SidebarRecoveryItem(
+	internal bool ShowsSidebarRecovery(
 		PageHost host)
 	{
-		if (!OperatingSystem.IsIOSVersionAtLeast(27)
-			|| CurrentTabs() is not UITabBarController tabs
-			|| tabs.TraitCollection.UserInterfaceIdiom is not UIUserInterfaceIdiom.Phone
-			|| !tabs.Sidebar.IsAvailable
-			|| !tabs.Sidebar.Hidden
-			|| tabs.SelectedViewController is not SkeleSplit split
-			|| !ReferenceEquals(split.NavigationStack?.TopViewController, host))
-			return null;
+		return OperatingSystem.IsIOSVersionAtLeast(27)
+			&& CurrentTabs() is UITabBarController tabs
+			&& tabs.TraitCollection.UserInterfaceIdiom is UIUserInterfaceIdiom.Phone
+			&& tabs.Sidebar.IsAvailable
+			&& tabs.Sidebar.Hidden
+			&& tabs.SelectedViewController is SkeleSplit split
+			&& ReferenceEquals(split.NavigationStack?.TopViewController, host);
+	}
 
+	internal static UIBarButtonItem SidebarRecoveryItem()
+	{
 		UIAction show = UIAction.Create(
 			"Show App Sidebar",
 			UIImage.GetSystemImage("squares.leading.rectangle"),
 			null,
-			_ => tabs.Sidebar.Hidden = false);
+			static _ =>
+			{
+				if (CurrentTabs() is UITabBarController tabs)
+					tabs.Sidebar.Hidden = false;
+			});
 
-		return new(show)
+		UIBarButtonItem item = new(show)
 		{
-			AccessibilityIdentifier = "SkeleKit.TabSidebarRecovery",
-			VisibilityPriority = UIBarButtonItemVisibilityPriority.High
+			AccessibilityIdentifier = "SkeleKit.TabSidebarRecovery"
 		};
+
+		if (OperatingSystem.IsIOSVersionAtLeast(27))
+			item.VisibilityPriority = UIBarButtonItemVisibilityPriority.High;
+
+		return item;
 	}
 
-	internal void RefreshSidebarRecovery(
-		bool animated = false)
+	internal void RefreshSidebarRecovery()
 	{
 		if (CurrentTabs()?.SelectedViewController is SkeleSplit split)
 		{
 			if (split.NavigationStack?.TopViewController is PageHost host)
-				host.RefreshSidebarRecovery(animated);
+				host.RefreshSidebarRecovery();
 			return;
 		}
 
 		if (CurrentShellStack()?.TopViewController is PageHost current)
-			current.RefreshSidebarRecovery(animated);
+			current.RefreshSidebarRecovery();
 	}
 
 	internal void SplitNavigationStackChanged(
@@ -568,11 +577,11 @@ public class SkeleApplication
 			return;
 
 		if (previous?.TopViewController is PageHost previousHost)
-			previousHost.RefreshSidebarRecovery(true);
+			previousHost.RefreshSidebarRecovery();
 
 		if (!ReferenceEquals(previous, current)
 			&& current?.TopViewController is PageHost currentHost)
-			currentHost.RefreshSidebarRecovery(true);
+			currentHost.RefreshSidebarRecovery();
 	}
 
 	async Task InvokeLifecycleAsync(

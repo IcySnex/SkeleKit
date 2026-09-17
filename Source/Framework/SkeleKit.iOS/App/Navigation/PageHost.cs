@@ -184,6 +184,7 @@ internal sealed class PageHost : UIViewController
 	IUITraitChangeRegistration? themeChange;
 	UISearchController? search;
 	UIAction? backAction;
+	UIBarButtonItemGroup? sidebarRecoveryGroup;
 	SheetGuard? dismissGuard;
 	bool hasContentDetent;
 	bool contentDetentPending;
@@ -1075,26 +1076,17 @@ internal sealed class PageHost : UIViewController
 			ApplyToolbar(page);
 	}
 
-	internal void RefreshSidebarRecovery(
-		bool animated)
+	UIBarButtonItemGroup SidebarRecoveryGroup() =>
+		sidebarRecoveryGroup ??= new(
+			[SkeleApplication.SidebarRecoveryItem()],
+			null);
+
+	internal void RefreshSidebarRecovery()
 	{
-		if (!IsViewLoaded)
+		if (!IsViewLoaded || sidebarRecoveryGroup is not UIBarButtonItemGroup recovery)
 			return;
 
-		List<UIBarButtonItem> leading = [.. NavigationItem.LeftBarButtonItems ?? []];
-		int existing = leading.FindIndex(item =>
-			item.AccessibilityIdentifier is "SkeleKit.TabSidebarRecovery");
-		UIBarButtonItem? recovery = SkeleApplication.Current?.SidebarRecoveryItem(this);
-
-		if (recovery is null && existing >= 0)
-			leading.RemoveAt(existing);
-		else if (recovery is not null && existing < 0)
-			leading.Insert(0, recovery);
-		else
-			return;
-
-		NavigationItem.SetLeftBarButtonItems([.. leading], animated);
-		NavigationItem.LeftItemsSupplementBackButton = true;
+		recovery.Hidden = SkeleApplication.Current?.ShowsSidebarRecovery(this) is not true;
 	}
 
 	void ApplyToolbar(
@@ -1107,9 +1099,6 @@ internal sealed class PageHost : UIViewController
 		List<UIBarButtonItem> leading = [];
 		List<UIBarButtonItem> trailing = [];
 
-		if (SkeleApplication.Current?.SidebarRecoveryItem(this) is UIBarButtonItem recovery)
-			leading.Add(recovery);
-
 		foreach (ToolbarItem item in page.ToolbarItems)
 		{
 			if (!item.IsVisible)
@@ -1120,7 +1109,19 @@ internal sealed class PageHost : UIViewController
 			(item.Side is ToolbarSide.Leading ? leading : trailing).Add(native);
 		}
 
-		NavigationItem.LeftBarButtonItems = [.. leading];
+		if (OperatingSystem.IsIOSVersionAtLeast(27))
+		{
+			UIBarButtonItemGroup recovery = SidebarRecoveryGroup();
+			recovery.Hidden = SkeleApplication.Current?.ShowsSidebarRecovery(this) is not true;
+
+			List<UIBarButtonItemGroup> groups = [recovery];
+			if (leading.Count > 0)
+				groups.Add(new([.. leading], null));
+
+			NavigationItem.LeadingItemGroups = [.. groups];
+		}
+		else
+			NavigationItem.LeftBarButtonItems = [.. leading];
 
 		// leading items sit next to Back, they do not replace it
 		NavigationItem.LeftItemsSupplementBackButton = true;
