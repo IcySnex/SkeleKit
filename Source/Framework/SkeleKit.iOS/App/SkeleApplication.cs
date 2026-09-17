@@ -60,6 +60,33 @@ public class SkeleApplication
 		}
 	}
 
+	internal sealed class SidebarDelegate : UITabBarControllerSidebarDelegate
+	{
+		readonly SkeleApplication? app;
+
+		public SidebarDelegate(
+			SkeleApplication app)
+		{
+			this.app = app;
+		}
+
+		public SidebarDelegate(
+			ObjCRuntime.NativeHandle handle) : base(handle)
+		{ }
+
+
+		public override void SidebarAvailabilityDidChange(
+			UITabBarController tabBarController,
+			UITabBarControllerSidebar sidebar) =>
+			app?.RefreshSidebarRecovery();
+
+		public override void SidebarVisibilityWillChange(
+			UITabBarController tabBarController,
+			UITabBarControllerSidebar sidebar,
+			IUITabBarControllerSidebarAnimating animator) =>
+			animator.AddCompletion(() => app?.RefreshSidebarRecovery());
+	}
+
 	internal sealed class SkeleStack : UINavigationController
 	{
 		public SkeleStack(
@@ -313,6 +340,7 @@ public class SkeleApplication
 	internal UITab? ActionTab { get; private set; }
 	internal Action? BubbleAction { get; private set; }
 	TabsDelegate? tabsDelegate;
+	SidebarDelegate? sidebarDelegate;
 	UILongPressGestureRecognizer? bubbleTap;
 
 	View? footerContent;
@@ -487,6 +515,37 @@ public class SkeleApplication
 			return;
 
 		IsSwitchingTabs = false;
+	}
+
+	internal UIBarButtonItem? SidebarRecoveryItem(
+		PageHost host)
+	{
+		if (!OperatingSystem.IsIOSVersionAtLeast(27)
+			|| CurrentTabs() is not UITabBarController tabs
+			|| tabs.TraitCollection.UserInterfaceIdiom is not UIUserInterfaceIdiom.Phone
+			|| !tabs.Sidebar.IsAvailable
+			|| !tabs.Sidebar.Hidden
+			|| tabs.SelectedViewController is not SkeleSplit split
+			|| !ReferenceEquals(split.NavigationStack?.TopViewController, host))
+			return null;
+
+		UIAction show = UIAction.Create(
+			"Show Sidebar",
+			UIImage.GetSystemImage("sidebar.leading"),
+			null,
+			_ => tabs.Sidebar.Hidden = false);
+
+		return new(show)
+		{
+			AccessibilityIdentifier = "SkeleKit.TabSidebarRecovery",
+			VisibilityPriority = UIBarButtonItemVisibilityPriority.High
+		};
+	}
+
+	void RefreshSidebarRecovery()
+	{
+		if (CurrentShellStack()?.TopViewController is PageHost host)
+			host.RefreshToolbar();
 	}
 
 	async Task InvokeLifecycleAsync(
@@ -871,7 +930,11 @@ public class SkeleApplication
 				{
 					controller.Mode = UITabBarControllerMode.TabSidebar;
 					if (OperatingSystem.IsIOSVersionAtLeast(27))
+					{
 						controller.Sidebar.PreferredPlacement = UITabBarControllerSidebarPlacement.Sidebar;
+						sidebarDelegate = new(this);
+						controller.Sidebar.Delegate = sidebarDelegate;
+					}
 				}
 
 				ApplyTabBarMinimize(controller);

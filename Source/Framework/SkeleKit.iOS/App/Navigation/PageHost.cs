@@ -1075,6 +1075,12 @@ internal sealed class PageHost : UIViewController
 			ApplyToolbar(page);
 	}
 
+	internal void RefreshToolbar()
+	{
+		if (IsViewLoaded && Page is ContentView page)
+			ApplyToolbar(page);
+	}
+
 	void ApplyToolbar(
 		ContentView page)
 	{
@@ -1084,6 +1090,9 @@ internal sealed class PageHost : UIViewController
 
 		List<UIBarButtonItem> leading = [];
 		List<UIBarButtonItem> trailing = [];
+
+		if (SkeleApplication.Current?.SidebarRecoveryItem(this) is UIBarButtonItem recovery)
+			leading.Add(recovery);
 
 		foreach (ToolbarItem item in page.ToolbarItems)
 		{
