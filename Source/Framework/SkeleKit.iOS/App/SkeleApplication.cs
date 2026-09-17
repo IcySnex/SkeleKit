@@ -529,7 +529,7 @@ public class SkeleApplication
 			|| !tabs.Sidebar.IsAvailable
 			|| !tabs.Sidebar.Hidden
 			|| tabs.SelectedViewController is not SkeleSplit split
-			|| !ReferenceEquals(split.LeadingVisibleStack?.TopViewController, host))
+			|| !ReferenceEquals(split.NavigationStack?.TopViewController, host))
 			return null;
 
 		UIAction show = UIAction.Create(
@@ -550,17 +550,29 @@ public class SkeleApplication
 	{
 		if (CurrentTabs()?.SelectedViewController is SkeleSplit split)
 		{
-			foreach (UINavigationController stack in split.NavigationStacks())
-			{
-				if (stack.TopViewController is PageHost host)
-					host.RefreshSidebarRecovery(animated);
-			}
-
+			if (split.NavigationStack?.TopViewController is PageHost host)
+				host.RefreshSidebarRecovery(animated);
 			return;
 		}
 
 		if (CurrentShellStack()?.TopViewController is PageHost current)
 			current.RefreshSidebarRecovery(animated);
+	}
+
+	internal void SplitNavigationStackChanged(
+		SkeleSplit split,
+		UINavigationController? previous,
+		UINavigationController? current)
+	{
+		if (!ReferenceEquals(CurrentTabs()?.SelectedViewController, split))
+			return;
+
+		if (previous?.TopViewController is PageHost previousHost)
+			previousHost.RefreshSidebarRecovery(true);
+
+		if (!ReferenceEquals(previous, current)
+			&& current?.TopViewController is PageHost currentHost)
+			currentHost.RefreshSidebarRecovery(true);
 	}
 
 	async Task InvokeLifecycleAsync(

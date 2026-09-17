@@ -3,7 +3,7 @@ namespace SkeleKit;
 internal sealed class SkeleSplit : UISplitViewController
 {
 	readonly SplitViewColumn navigationColumn;
-	UINavigationController? leadingVisibleStack;
+	UINavigationController? visibleNavigationStack;
 
 
 	public SkeleSplit(
@@ -34,70 +34,6 @@ internal sealed class SkeleSplit : UISplitViewController
 			}
 
 			return GetViewController(NavigationColumn) as UINavigationController;
-		}
-	}
-
-	internal UINavigationController? LeadingVisibleStack
-	{
-		get
-		{
-			if (Collapsed)
-				return NavigationStack;
-
-			List<(UINavigationController Stack, CGRect Frame)> visible = [];
-
-			foreach ((UISplitViewControllerColumn column, UINavigationController stack) in ColumnStacks())
-			{
-				if (!IsShowingColumn(column)
-					|| !stack.IsViewLoaded
-					|| stack.View is not UIView view
-					|| view.Hidden
-					|| view.Bounds.Width <= 0)
-					continue;
-
-				visible.Add((stack, view.ConvertRectToView(view.Bounds, View)));
-			}
-
-			if (visible.Count == 0)
-				return NavigationStack;
-
-			bool rightToLeft = View.EffectiveUserInterfaceLayoutDirection
-				is UIUserInterfaceLayoutDirection.RightToLeft;
-
-			return rightToLeft
-				? visible.MaxBy(entry => entry.Frame.GetMaxX()).Stack
-				: visible.MinBy(entry => entry.Frame.GetMinX()).Stack;
-		}
-	}
-
-	internal IEnumerable<UINavigationController> NavigationStacks() =>
-		ColumnStacks()
-			.Select(entry => entry.Stack)
-			.Distinct();
-
-	IEnumerable<(UISplitViewControllerColumn Column, UINavigationController Stack)> ColumnStacks()
-	{
-		UISplitViewControllerColumn[] columns = OperatingSystem.IsIOSVersionAtLeast(26)
-			?
-			[
-				UISplitViewControllerColumn.Primary,
-				UISplitViewControllerColumn.Supplementary,
-				UISplitViewControllerColumn.Secondary,
-				UISplitViewControllerColumn.Inspector,
-				UISplitViewControllerColumn.Compact
-			]
-			:
-			[
-				UISplitViewControllerColumn.Primary,
-				UISplitViewControllerColumn.Supplementary,
-				UISplitViewControllerColumn.Secondary,
-				UISplitViewControllerColumn.Compact
-			];
-
-		foreach (UISplitViewControllerColumn column in columns)
-		{
-			if (GetViewController(column) is UINavigationController stack)
-				yield return (column, stack);
 		}
 	}
 
@@ -141,11 +77,12 @@ internal sealed class SkeleSplit : UISplitViewController
 		if (!OperatingSystem.IsIOSVersionAtLeast(27))
 			return;
 
-		UINavigationController? current = LeadingVisibleStack;
-		if (ReferenceEquals(current, leadingVisibleStack))
+		UINavigationController? current = NavigationStack;
+		if (ReferenceEquals(current, visibleNavigationStack))
 			return;
 
-		leadingVisibleStack = current;
-		SkeleApplication.Current?.RefreshSidebarRecovery(true);
+		UINavigationController? previous = visibleNavigationStack;
+		visibleNavigationStack = current;
+		SkeleApplication.Current?.SplitNavigationStackChanged(this, previous, current);
 	}
 }
