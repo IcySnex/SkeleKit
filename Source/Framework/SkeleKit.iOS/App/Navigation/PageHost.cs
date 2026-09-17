@@ -1405,17 +1405,14 @@ internal sealed class PageHost : UIViewController
 
 		NavigationController?.SetToolbarHidden(!hasToolbar, animated);
 
-		// hiding the tab bar does not hide its accessory: keep the two in sync
 		if (TabBarController is UITabBarController tabs
 			&& OperatingSystem.IsIOSVersionAtLeast(26)
 			&& SkeleApplication.Current is { Accessory: { } accessory } app)
 			tabs.SetBottomAccessory(app.AccessoryWanted && !HidesBottomBarWhenPushed ? accessory : null, animated);
 
-		// bar-wide, so every page restores it before becoming visible
 		ApplyNavigationTint(Page);
 		ApplyToolbar(Page);
 
-		// here and not ViewDidLoad: whether back has anywhere to go needs the containment settled
 		ApplyBackGuard();
 		ApplySheetGuard();
 	}
@@ -1425,7 +1422,6 @@ internal sealed class PageHost : UIViewController
 	{
 		base.ViewDidAppear(animated);
 
-		// after the transition: flipping the gestures mid-pop would kill an in-flight swipe
 		ApplyPopGestures();
 
 		SkeleApplication.Current?.CompleteTabSelection(this);
@@ -1456,7 +1452,6 @@ internal sealed class PageHost : UIViewController
 		base.ViewSafeAreaInsetsDidChange();
 
 		View?.SetNeedsLayout();
-		View?.LayoutIfNeeded();
 	}
 
 	public override void ViewLayoutMarginsDidChange()
