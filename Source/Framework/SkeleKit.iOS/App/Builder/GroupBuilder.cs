@@ -32,16 +32,18 @@ public sealed class GroupBuilder
 	/// <param name="title">The group's title.</param>
 	/// <param name="icon">The local icon shown for the group.</param>
 	/// <param name="children">Declares the tabs inside the group.</param>
+	/// <param name="placement">How the group participates in the tab bar and sidebar.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public GroupBuilder Group(
 		string title,
 		ImageSource icon,
-		Action<GroupBuilder> children)
+		Action<GroupBuilder> children,
+		TabPlacement placement = TabPlacement.SidebarOnly)
 	{
 		GroupBuilder group = new();
 		children(group);
 
-		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes));
+		Nodes.Add(new TabsBuilder.GroupNode(title, icon, group.Nodes, placement));
 
 		return this;
 	}

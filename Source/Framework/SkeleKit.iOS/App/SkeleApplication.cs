@@ -644,19 +644,17 @@ public class SkeleApplication
 						return;
 					}
 
-					if (placement is not TabPlacement.Automatic)
+					tab.PreferredPlacement = placement switch
 					{
-						tab.PreferredPlacement = placement switch
-						{
-							TabPlacement.Pinned => UITabPlacement.Pinned,
-							TabPlacement.SidebarOnly => UITabPlacement.SidebarOnly,
-							TabPlacement.Optional => UITabPlacement.Optional,
-							_ => UITabPlacement.Fixed
-						};
-					}
-
-					if (placement is TabPlacement.Locked)
-						tab.AllowsHiding = false;
+						TabPlacement.Automatic => UITabPlacement.Automatic,
+						TabPlacement.Default => UITabPlacement.Default,
+						TabPlacement.Optional => UITabPlacement.Optional,
+						TabPlacement.Movable => UITabPlacement.Movable,
+						TabPlacement.Pinned => UITabPlacement.Pinned,
+						TabPlacement.Fixed => UITabPlacement.Fixed,
+						TabPlacement.SidebarOnly => UITabPlacement.SidebarOnly,
+						_ => throw new ArgumentOutOfRangeException(nameof(placement), placement, null)
+					};
 
 					if (placement is TabPlacement.SidebarOnly)
 						compactExcludedTabs.Add(tab.Identifier);
@@ -682,7 +680,7 @@ public class SkeleApplication
 						}
 
 						// a group is a sidebar section, never a bar item
-						Place(native, TabPlacement.SidebarOnly);
+						Place(native, group.Placement);
 
 						return native;
 					}
@@ -735,7 +733,7 @@ public class SkeleApplication
 						leaf.View.Name,
 						provider);
 
-					Place(tab, sidebar?.Placements.GetValueOrDefault(leaf.View, leaf.Placement) ?? leaf.Placement);
+					Place(tab, leaf.Placement);
 
 					root.Tab = tab;
 					root.Page?.ApplyTabBadge();
@@ -744,9 +742,6 @@ public class SkeleApplication
 				}
 
 				List<UITab> tabs = [.. (tabsBuilder?.Nodes ?? []).Select(node => BuildTab(node, false))];
-
-				if (sidebar is not null)
-					tabs.AddRange(sidebar.Nodes.Select(node => BuildTab(node, false)));
 
 				if (tabsBuilder is { SearchView: not null } and ({ BubbleFactory: not null } or { BubbleView: not null }))
 					throw new InvalidOperationException("The bubble is single: declare Search or Bubble, not both.");

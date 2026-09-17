@@ -8,24 +8,26 @@ namespace SkeleKit;
 /// </summary>
 public sealed class TabsBuilder
 {
-	internal abstract record Node;
+	internal abstract record Node(
+		TabPlacement Placement);
 
 	internal sealed record Leaf(
 		Type View,
 		string Title,
 		ImageSource Icon,
-		TabPlacement Placement) : Node;
+		TabPlacement Placement) : Node(Placement);
 
 	internal sealed record SplitLeaf(
 		SplitViewBuilder Split,
 		string Title,
 		ImageSource Icon,
-		TabPlacement Placement) : Node;
+		TabPlacement Placement) : Node(Placement);
 
 	internal sealed record GroupNode(
 		string Title,
 		ImageSource Icon,
-		List<Node> Children) : Node;
+		List<Node> Children,
+		TabPlacement Placement) : Node(Placement);
 
 
 	internal List<Node> Nodes { get; } = [];
@@ -45,12 +47,36 @@ public sealed class TabsBuilder
 	/// <typeparam name="TView">The type of the content view to host in the tab.</typeparam>
 	/// <param name="title">The text displayed on the tab bar item.</param>
 	/// <param name="icon">The local icon shown on the tab.</param>
+	/// <param name="placement">How the destination participates in the tab bar and sidebar.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public TabsBuilder Tab<TView>(
 		string title,
-		ImageSource icon) where TView : ContentView
+		ImageSource icon,
+		TabPlacement placement = TabPlacement.Automatic) where TView : ContentView
 	{
-		Nodes.Add(new Leaf(typeof(TView), title, icon, TabPlacement.Automatic));
+		Nodes.Add(new Leaf(typeof(TView), title, icon, placement));
+
+		return this;
+	}
+
+	/// <summary>
+	/// Adds a group of related destinations to the tab hierarchy.
+	/// </summary>
+	/// <param name="title">The group's title.</param>
+	/// <param name="icon">The local icon shown for the group.</param>
+	/// <param name="children">Declares the destinations inside the group.</param>
+	/// <param name="placement">How the group participates in the tab bar and sidebar.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public TabsBuilder Group(
+		string title,
+		ImageSource icon,
+		Action<GroupBuilder> children,
+		TabPlacement placement = TabPlacement.SidebarOnly)
+	{
+		GroupBuilder group = new();
+		children(group);
+
+		Nodes.Add(new GroupNode(title, icon, group.Nodes, placement));
 
 		return this;
 	}
@@ -180,7 +206,7 @@ public sealed class TabsBuilder
 	}
 
 	/// <summary>
-	/// Enables the adaptive sidebar and configures its placements and destinations.
+	/// Enables the adaptive sidebar and configures its presentation.
 	/// </summary>
 	/// <remarks>
 	/// Compact environments keep the tab bar. When a sidebar is available, UIKit switches to it without rebuilding the tabs.
@@ -242,13 +268,18 @@ public sealed class TabsBuilder
 	internal void Validate(
 		ViewRegistry registry)
 	{
-		IEnumerable<Node> sidebarNodes = SidebarConfiguration?.Nodes ?? [];
+		if (SidebarConfiguration is null)
+		{
+			if (Nodes.Any(node => node is GroupNode))
+				throw new InvalidOperationException("Tab groups require Sidebar() to enable the adaptive sidebar.");
+			if (Nodes.Any(node => node.Placement is TabPlacement.SidebarOnly))
+				throw new InvalidOperationException("A sidebar-only destination requires Sidebar() to enable the adaptive sidebar.");
+		}
 
-		foreach (SplitViewBuilder split in Splits(Nodes.Concat(sidebarNodes)))
+		foreach (SplitViewBuilder split in Splits(Nodes))
 			split.Validate(registry);
 
 		foreach (Type view in Views(Nodes)
-			.Concat(Views(sidebarNodes))
 			.Append(SearchView)
 			.Append(BubbleView)
 			.OfType<Type>()

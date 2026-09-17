@@ -83,7 +83,11 @@
         <Compile Remove="App/**" />
 
         <Compile Include="App/Appearance.cs" />
+		<Compile Include="App/Builder/GroupBuilder.cs" />
         <Compile Include="App/Builder/PagesBuilder.cs" />
+		<Compile Include="App/Builder/SidebarBuilder.cs" />
+		<Compile Include="App/Builder/SplitViewBuilder.cs" />
+		<Compile Include="App/Builder/TabsBuilder.cs" />
         <Compile Include="App/Builder/ThemeBuilder.cs" />
         <Compile Include="App/Navigation/Detent.cs" />
         <Compile Include="App/Navigation/PageAttribute.cs" />

@@ -6,14 +6,24 @@ namespace SkeleKit;
 public enum TabPlacement
 {
 	/// <summary>
-	/// The system default: fully customizable.
+	/// Lets the system choose a placement for the destination's context.
 	/// </summary>
 	Automatic,
 
 	/// <summary>
-	/// Exempt from customization: cannot be hidden or moved.
+	/// Shown in the tab bar by default and available for people to move or remove.
 	/// </summary>
-	Locked,
+	Default,
+
+	/// <summary>
+	/// Hidden from the tab bar by default, but available for people to add and move.
+	/// </summary>
+	Optional,
+
+	/// <summary>
+	/// Shown in the tab bar and movable, but not removable.
+	/// </summary>
+	Movable,
 
 	/// <summary>
 	/// Anchored at the trailing end of the bar.
@@ -21,14 +31,14 @@ public enum TabPlacement
 	Pinned,
 
 	/// <summary>
+	/// Shown at the leading edge of the tab bar and cannot be moved or removed.
+	/// </summary>
+	Fixed,
+
+	/// <summary>
 	/// Shown only in the sidebar, never in the tab bar.
 	/// </summary>
 	SidebarOnly,
-
-	/// <summary>
-	/// Hidden until the user adds it through Edit.
-	/// </summary>
-	Optional,
 
 	/// <summary>
 	/// Not shown in the tab bar or sidebar, but still selectable programmatically
