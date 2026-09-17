@@ -631,6 +631,7 @@ public class SkeleApplication
 
 			case ShellKind.Tabs:
 				UITabBarController controller = new();
+				HashSet<string> compactExcludedTabs = [];
 
 				SidebarBuilder? sidebar = tabsBuilder?.SidebarConfiguration;
 
@@ -639,6 +640,7 @@ public class SkeleApplication
 					if (placement is TabPlacement.Hidden)
 					{
 						Hide(tab);
+						compactExcludedTabs.Add(tab.Identifier);
 						return;
 					}
 
@@ -655,6 +657,9 @@ public class SkeleApplication
 
 					if (placement is TabPlacement.Locked)
 						tab.AllowsHiding = false;
+
+					if (placement is TabPlacement.SidebarOnly)
+						compactExcludedTabs.Add(tab.Identifier);
 				}
 
 				UITab BuildTab(TabsBuilder.Node node, bool grouped)
@@ -854,6 +859,13 @@ public class SkeleApplication
 				}
 
 				controller.SetTabs([.. tabs], false);
+				if (compactExcludedTabs.Count > 0)
+					controller.CompactTabIdentifiers =
+					[
+						.. tabs
+							.Where(tab => !compactExcludedTabs.Contains(tab.Identifier))
+							.Select(tab => tab.Identifier)
+					];
 				if (OperatingSystem.IsIOSVersionAtLeast(27) && prominentTab is not null)
 					controller.ProminentTabIdentifier = prominentTab.Identifier;
 
