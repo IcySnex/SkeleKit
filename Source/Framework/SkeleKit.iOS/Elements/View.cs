@@ -200,10 +200,16 @@ public abstract partial class View
 	internal virtual bool Scrolls =>
 		false;
 
-	private protected void ApplyVisualState() =>
+	private protected void ApplyVisualState()
+	{
 		ApplyVisualStateCore();
+		OnVisualStateApplied();
+	}
 
 	partial void ApplyVisualStateCore();
+
+	private protected virtual void OnVisualStateApplied()
+	{ }
 
 	internal virtual void ReapplyVisuals() =>
 		ApplyVisualState();

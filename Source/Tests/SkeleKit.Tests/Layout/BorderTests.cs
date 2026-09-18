@@ -40,6 +40,22 @@ public class BorderTests
 	}
 
 	[Fact]
+	public void DashStyle_DoesNotChangeLayout()
+	{
+		Border border = new()
+		{
+			StrokeThickness = 2,
+			StrokeDashPattern = [1, 5],
+			StrokeLineCap = StrokeLineCap.Round,
+			Child = new StubLeaf(100, 40)
+		};
+
+		border.Measure(Size.Infinity);
+
+		Assert.Equal(new Size(104, 44), border.DesiredSize);
+	}
+
+	[Fact]
 	public void ChildSetter_ReplacesPreviousChild()
 	{
 		StubLeaf original = new(1, 1);

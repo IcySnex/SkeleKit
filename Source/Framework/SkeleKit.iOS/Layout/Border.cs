@@ -39,10 +39,33 @@ public partial class Border : Decorator
 		get;
 		set => Set(ref field, value, ApplyStroke);
 	}
+
+	/// <summary>
+	/// Alternating painted and unpainted stroke lengths in points, or null (default) for a solid stroke.
+	/// </summary>
+	/// <example><c>[1, 5]</c> with a round line cap draws a dotted stroke.</example>
+	public double[]? StrokeDashPattern
+	{
+		get;
+		set => Set(ref field, value, ApplyStroke, affectsMeasure: false);
+	}
+
+	/// <summary>
+	/// The shape at the ends of each painted dash. Flat by default.
+	/// </summary>
+	/// <remarks>
+	/// This has no visible effect on a solid, closed stroke.
+	/// </remarks>
+	public StrokeLineCap StrokeLineCap
+	{
+		get;
+		set => Set(ref field, value, ApplyStroke, affectsMeasure: false);
+	}
 	void ApplyStroke() =>
 		ApplyStrokeCore();
 
 	partial void ApplyStrokeCore();
+	partial void ArrangeStrokeCore(Size finalSize);
 
 
 	/// <inheritdoc/>
@@ -64,6 +87,7 @@ public partial class Border : Decorator
 		Size finalSize)
 	{
 		Child?.Arrange(new Rect(Point.Zero, finalSize).Deflate(Inset));
+		ArrangeStrokeCore(finalSize);
 		return finalSize;
 	}
 }
