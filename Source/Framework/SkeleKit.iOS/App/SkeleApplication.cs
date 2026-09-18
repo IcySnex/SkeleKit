@@ -96,6 +96,11 @@ public class SkeleApplication
 
 	internal sealed class SkeleStack : UINavigationController
 	{
+		nfloat inheritedTopInsetCorrection;
+		nfloat originalAdditionalTopInset;
+		bool tracksInheritedTopInset;
+
+
 		public SkeleStack(
 			UIViewController root,
 			bool prefersLargeTitles = false) : base(root)
@@ -116,6 +121,63 @@ public class SkeleApplication
 
 		public override UIViewController ChildViewControllerForStatusBarStyle() =>
 			TopViewController;
+
+		public override void ViewDidLayoutSubviews()
+		{
+			base.ViewDidLayoutSubviews();
+
+			CorrectInheritedTopInset();
+		}
+
+		void CorrectInheritedTopInset()
+		{
+			// iOS 26 offsets the floating primary column below the tab bar and also passes
+			// that bar's top safe area into its navigation stack. iOS 18 doesn't use this
+			// layout, while iOS 27's edge-to-edge sidebar needs its native animated inset.
+			if (!OperatingSystem.IsIOSVersionAtLeast(26)
+				|| OperatingSystem.IsIOSVersionAtLeast(27)
+				|| ParentViewController is not UISplitViewController split
+				|| split.TabBarController is null
+				|| split.Collapsed
+				|| !ReferenceEquals(split.GetViewController(UISplitViewControllerColumn.Primary), this))
+			{
+				RestoreInheritedTopInset();
+				return;
+			}
+
+			if (!tracksInheritedTopInset)
+			{
+				originalAdditionalTopInset = AdditionalSafeAreaInsets.Top;
+				tracksInheritedTopInset = true;
+			}
+
+			CGRect frame = View!.ConvertRectToView(View.Bounds, split.View);
+			nfloat inheritedTopInset = View.SafeAreaInsets.Top + inheritedTopInsetCorrection;
+			nfloat expectedTopInset = (nfloat)Math.Max(
+				0,
+				(double)(split.View!.SafeAreaInsets.Top - Math.Max(0, frame.GetMinY())));
+			nfloat correction = (nfloat)Math.Max(0, (double)(inheritedTopInset - expectedTopInset));
+
+			if (Math.Abs((double)(correction - inheritedTopInsetCorrection)) < 0.5)
+				return;
+
+			inheritedTopInsetCorrection = correction;
+			UIEdgeInsets additional = AdditionalSafeAreaInsets;
+			additional.Top = originalAdditionalTopInset - correction;
+			AdditionalSafeAreaInsets = additional;
+		}
+
+		void RestoreInheritedTopInset()
+		{
+			if (!tracksInheritedTopInset)
+				return;
+
+			UIEdgeInsets additional = AdditionalSafeAreaInsets;
+			additional.Top = originalAdditionalTopInset;
+			AdditionalSafeAreaInsets = additional;
+			inheritedTopInsetCorrection = 0;
+			tracksInheritedTopInset = false;
+		}
 	}
 
 
