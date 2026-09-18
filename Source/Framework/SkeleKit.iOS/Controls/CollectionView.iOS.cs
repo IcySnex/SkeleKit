@@ -1390,7 +1390,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	bool sizedWithItem;
 
 	double RowHeight(
-		double width)
+		double width,
+		double? aspectRatio = null)
 	{
 		TItem? item = ItemAt(0, 0);
 		ItemTemplateRegistration<TItem>? itemTemplate = item is not null
@@ -1400,7 +1401,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		// A selector cannot choose a template before the first item exists. The first
 		// real snapshot invalidates the layout and replaces this temporary estimate.
 		if (itemTemplate is null)
-			return 44;
+			return aspectRatio is double ratio ? width / ratio : 44;
 
 		if (!sizingViews.TryGetValue(itemTemplate, out ICollectionItemView? sizingView))
 		{
@@ -1414,8 +1415,27 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			sizedWithItem = true;
 		}
 
+		if (aspectRatio is double resolvedRatio)
+			return AspectRowHeight(sizingView.View, width, resolvedRatio);
+
 		sizingView.View.Measure(new(width, double.PositiveInfinity));
 		return sizingView.View.DesiredSize.Height;
+	}
+
+	static double AspectRowHeight(
+		View view,
+		double width,
+		double aspectRatio)
+	{
+		Thickness margin = view.Margin;
+		double availableWidth = Math.Max(0, width - margin.Horizontal);
+		double requested = double.IsNaN(view.Height)
+			? availableWidth / aspectRatio
+			: view.Height;
+		double minimum = double.IsNaN(view.MinHeight) ? 0 : view.MinHeight;
+		double height = Math.Max(Math.Min(requested, view.MaxHeight), minimum);
+
+		return height + margin.Vertical;
 	}
 
 	NSCollectionLayoutSection GridSection(
@@ -1426,7 +1446,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	{
 		nfloat spacing = (nfloat)layout.Spacing;
 		double column = Math.Max(1, (width - spacing * (layout.Columns + 1)) / layout.Columns);
-		nfloat height = (nfloat)Math.Max(1, RowHeight(column));
+		nfloat height = (nfloat)Math.Max(1, RowHeight(column, layout.ItemAspectRatio));
 
 		NSCollectionLayoutItem item = NSCollectionLayoutItem.Create(
 			NSCollectionLayoutSize.Create(

@@ -77,18 +77,25 @@ public readonly struct CollectionLayout
 	/// <returns>The list layout.</returns>
 	public static CollectionLayout List(
 		bool grouped = false) =>
-		new(CollectionLayoutKind.List, 1, 0, 0, grouped, CarouselSnap.None);
+		new(CollectionLayoutKind.List, 1, 0, 0, null, grouped, CarouselSnap.None);
 
 	/// <summary>
 	/// A grid of equal columns.
 	/// </summary>
 	/// <param name="columns">The number of columns per row.</param>
 	/// <param name="spacing">The gap between items, in points.</param>
+	/// <param name="itemAspectRatio">The item width divided by its height, or null to measure the item template.</param>
 	/// <returns>The grid layout.</returns>
 	public static CollectionLayout Grid(
 		int columns,
-		double spacing = 8) =>
-		new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, false, CarouselSnap.None);
+		double spacing = 8,
+		double? itemAspectRatio = null)
+	{
+		if (itemAspectRatio is double ratio && (!double.IsFinite(ratio) || ratio <= 0))
+			throw new ArgumentOutOfRangeException(nameof(itemAspectRatio), "An item aspect ratio must be finite and greater than zero.");
+
+		return new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, itemAspectRatio, false, CarouselSnap.None);
+	}
 
 	/// <summary>
 	/// A horizontally scrolling row of fixed-width items, optionally snapping as it settles.
@@ -101,7 +108,7 @@ public readonly struct CollectionLayout
 		double itemWidth,
 		double spacing = 8,
 		CarouselSnap snap = CarouselSnap.None) =>
-		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, false, snap);
+		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, null, false, snap);
 
 
 	CollectionLayout(
@@ -109,6 +116,7 @@ public readonly struct CollectionLayout
 		int columns,
 		double spacing,
 		double itemWidth,
+		double? itemAspectRatio,
 		bool grouped,
 		CarouselSnap snap)
 	{
@@ -116,6 +124,7 @@ public readonly struct CollectionLayout
 		Columns = columns;
 		Spacing = spacing;
 		ItemWidth = itemWidth;
+		ItemAspectRatio = itemAspectRatio;
 		Grouped = grouped;
 		Snap = snap;
 	}
@@ -140,6 +149,14 @@ public readonly struct CollectionLayout
 	/// Item width for a carousel, in points.
 	/// </summary>
 	public double ItemWidth { get; }
+
+	/// <summary>
+	/// Item width divided by item height for a grid, or null to measure the item template.
+	/// </summary>
+	/// <remarks>
+	/// The sizing item's explicit height and minimum or maximum height constrain the derived row height.
+	/// </remarks>
+	public double? ItemAspectRatio { get; }
 
 	/// <summary>
 	/// Whether a list uses the native inset-grouped style.

@@ -29,7 +29,25 @@ public class CollectionLayoutTests
 		Assert.Equal(CollectionLayoutKind.Grid, layout.Kind);
 		Assert.Equal(3, layout.Columns);
 		Assert.Equal(12, layout.Spacing);
+		Assert.Null(layout.ItemAspectRatio);
 	}
+
+	[Fact]
+	public void Grid_KeepsItemAspectRatio()
+	{
+		CollectionLayout layout = CollectionLayout.Grid(columns: 3, itemAspectRatio: 16.0 / 9.0);
+
+		Assert.Equal(16.0 / 9.0, layout.ItemAspectRatio);
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(double.NaN)]
+	[InlineData(double.PositiveInfinity)]
+	public void Grid_RejectsInvalidItemAspectRatio(
+		double itemAspectRatio) =>
+		Assert.Throws<ArgumentOutOfRangeException>(() => CollectionLayout.Grid(3, itemAspectRatio: itemAspectRatio));
 
 	[Theory]
 	[InlineData(0)]
