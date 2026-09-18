@@ -85,9 +85,16 @@ public class SkeleApplication
 			UITabBarControllerSidebar sidebar,
 			IUITabBarControllerSidebarAnimating animator)
 		{
-			if (sidebar.Hidden)
-				animator.AddAnimations(() => app?.RefreshSidebarRecovery());
-			else
+			animator.AddAnimations(() =>
+			{
+				if (OperatingSystem.IsIOSVersionAtLeast(27))
+					app?.AnimateSplitContentWithSidebar(tabBarController);
+
+				if (sidebar.Hidden)
+					app?.RefreshSidebarRecovery();
+			});
+
+			if (!sidebar.Hidden)
 				app?.RefreshSidebarRecovery();
 
 			animator.AddCompletion(() => app?.RefreshSidebarRecovery());
@@ -632,6 +639,18 @@ public class SkeleApplication
 
 		if (CurrentShellStack()?.TopViewController is PageHost current)
 			current.RefreshSidebarRecovery();
+	}
+
+	void AnimateSplitContentWithSidebar(
+		UITabBarController tabs)
+	{
+		if (tabs.SelectedViewController is not UISplitViewController split)
+			return;
+
+		foreach (PageHost host in split.ViewControllers
+			.Select(controller => (controller as UINavigationController)?.TopViewController)
+			.OfType<PageHost>())
+			host.AnimateAlongsideSidebar();
 	}
 
 	internal void SplitNavigationStackChanged(

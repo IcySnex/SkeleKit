@@ -1480,6 +1480,36 @@ internal sealed class PageHost : UIViewController
 		View?.SetNeedsLayout();
 	}
 
+	internal void AnimateAlongsideSidebar()
+	{
+		if (!IsViewLoaded
+			|| View is not UIView view
+			|| Page is not { IsRealized: true } page)
+			return;
+
+		void Layout()
+		{
+			view.SetNeedsLayout();
+			view.LayoutIfNeeded();
+			page.Native.LayoutIfNeeded();
+		}
+
+		double duration = UIView.InheritedAnimationDuration;
+		if (duration <= 0)
+		{
+			Layout();
+			return;
+		}
+
+		UIView.AnimateNotify(
+			duration,
+			0,
+			UIViewAnimationOptions.AllowUserInteraction
+				| UIViewAnimationOptions.BeginFromCurrentState,
+			Layout,
+			static _ => { });
+	}
+
 	public override void ViewLayoutMarginsDidChange()
 	{
 		base.ViewLayoutMarginsDidChange();
