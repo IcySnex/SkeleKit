@@ -70,7 +70,7 @@ public partial class Border
 			inset,
 			Math.Max(0, width - inset * 2),
 			Math.Max(0, height - inset * 2));
-		nfloat radius = (nfloat)Math.Max(0, CornerRadius - inset);
+		nfloat radius = (nfloat)Math.Max(0, ResolveCornerRadius(size) - inset);
 
 		using UIBezierPath path = UIBezierPath.FromRoundedRect(bounds, radius);
 

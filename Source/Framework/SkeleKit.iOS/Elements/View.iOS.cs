@@ -280,10 +280,41 @@ public abstract partial class View
 		CATransaction.DisableActions = true;
 
 		gradientLayer.Frame = native.Bounds;
-		gradientLayer.CornerRadius = (nfloat)CornerRadius;
-		gradientLayer.CornerCurve = NativeCornerCurve(CornerCurve);
 
 		CATransaction.Commit();
+	}
+
+	void SyncCornerGeometry()
+	{
+		if (native is null)
+			return;
+
+		nfloat radius = (nfloat)ResolveCornerRadius(new(native.Bounds.Width, native.Bounds.Height));
+		bool glass = EffectiveBackground is Material { Kind: MaterialKind.Glass } && OperatingSystem.IsIOSVersionAtLeast(26);
+
+		native.Layer.CornerRadius = glass ? 0 : radius;
+		native.Layer.CornerCurve = NativeCornerCurve(CornerCurve);
+
+		if (gradientLayer is not null)
+		{
+			gradientLayer.CornerRadius = radius;
+			gradientLayer.CornerCurve = NativeCornerCurve(CornerCurve);
+		}
+
+		if (materialView is null)
+			return;
+
+		if (glass)
+		{
+			materialView.Layer.CornerRadius = 0;
+			materialView.CornerConfiguration = UICornerConfiguration.CreateUniformCorners(UICornerRadius.CreateFixed(radius));
+			materialView.ClipsToBounds = false;
+			return;
+		}
+
+		materialView.Layer.CornerRadius = radius;
+		materialView.Layer.CornerCurve = NativeCornerCurve(CornerCurve);
+		materialView.ClipsToBounds = radius > 0;
 	}
 
 	static CACornerCurve NativeCornerCurve(
@@ -471,17 +502,6 @@ public abstract partial class View
 		else
 			materialView.Effect = effect;
 
-		if (material.Kind is MaterialKind.Glass && OperatingSystem.IsIOSVersionAtLeast(26))
-		{
-			// the glass renderer draws its rim against this shape; a layer clip would flatten it
-			materialView.CornerConfiguration = UICornerConfiguration.CreateUniformCorners(UICornerRadius.CreateFixed((nfloat)CornerRadius));
-			materialView.ClipsToBounds = false;
-			return;
-		}
-
-		materialView.Layer.CornerRadius = (nfloat)CornerRadius;
-		materialView.Layer.CornerCurve = NativeCornerCurve(CornerCurve);
-		materialView.ClipsToBounds = CornerRadius > 0;
 	}
 
 	partial void ApplyFrame(
@@ -510,6 +530,7 @@ public abstract partial class View
 		if (resized)
 		{
 			SyncGradientFrame();
+			SyncCornerGeometry();
 			native.SetNeedsLayout();
 
 			// the pivot offset scales with the bounds, so a resize re-bakes it into the transform
@@ -682,8 +703,7 @@ public abstract partial class View
 		native.ClipsToBounds = ClipsToBounds || CornerRadius > 0 && Shadow is null && !glass || ClipsByDefault;
 
 		ApplyShadow();
-		native.Layer.CornerRadius = glass ? 0 : (nfloat)CornerRadius;
-		native.Layer.CornerCurve = NativeCornerCurve(CornerCurve);
+		SyncCornerGeometry();
 
 		ApplyTransform();
 	}

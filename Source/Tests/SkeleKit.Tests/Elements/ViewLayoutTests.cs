@@ -25,6 +25,22 @@ file sealed class FixedView : View
 
 public class ViewLayoutTests
 {
+	[Theory]
+	[InlineData(20, 100, 100, 20)]
+	[InlineData(80, 100, 100, 50)]
+	[InlineData(80, 120, 40, 20)]
+	public void CornerRadius_IsCappedAtHalfTheShorterArrangedSide(
+		double requested,
+		double width,
+		double height,
+		double expected)
+	{
+		FixedView view = new(width, height) { CornerRadius = requested };
+
+		Assert.Equal(expected, view.ResolveCornerRadius(new(width, height)));
+		Assert.Equal(requested, view.CornerRadius);
+	}
+
 	[Fact]
 	public void MinHeight_DefaultsToUnspecifiedWithoutAffectingMeasurement()
 	{

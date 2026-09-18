@@ -640,12 +640,24 @@ public abstract partial class View
 	/// <summary>
 	/// Corner radius in points applied to the layer.
 	/// </summary>
+	/// <remarks>
+	/// The rendered radius is capped at half the view's shorter arranged side so corners never overlap.
+	/// </remarks>
 	public double CornerRadius
 	{
 		get => cornerRadius;
 		set => Set(ref cornerRadius, value, ApplyVisualState, affectsMeasure: false);
 	}
 	double cornerRadius;
+
+	internal double ResolveCornerRadius(
+		Size size)
+	{
+		double maximum = Math.Max(0, Math.Min(size.Width, size.Height) / 2);
+		double requested = double.IsNaN(CornerRadius) ? 0 : Math.Max(0, CornerRadius);
+
+		return Math.Min(requested, maximum);
+	}
 
 	/// <summary>
 	/// The shape used to draw <see cref="CornerRadius"/>. Circular by default.
