@@ -712,6 +712,8 @@ public class SkeleApplication
 				hosts[column] = host;
 			}
 
+			split.ApplyWeights(builder);
+
 			return (split, hosts);
 		}
 

@@ -16,8 +16,6 @@ internal sealed class SkeleSplit : UISplitViewController
 			builder.DisplayPreference,
 			builder.BehaviorPreference,
 			builder.SplitStyle);
-
-		ApplyWeights(builder);
 	}
 
 	public SkeleSplit(
@@ -115,7 +113,7 @@ internal sealed class SkeleSplit : UISplitViewController
 			_ => UISplitViewControllerDisplayMode.Automatic
 		};
 
-	void ApplyWeights(
+	internal void ApplyWeights(
 		SplitViewBuilder builder)
 	{
 		SplitViewColumn[] columns = builder.Columns.Keys
@@ -135,15 +133,15 @@ internal sealed class SkeleSplit : UISplitViewController
 			{
 				case SplitViewColumn.Primary:
 					PreferredPrimaryColumnWidthFraction = fraction;
+					MaximumPrimaryColumnWidth = (nfloat)double.PositiveInfinity;
 					break;
 				case SplitViewColumn.Supplementary:
 					PreferredSupplementaryColumnWidthFraction = fraction;
-					break;
-				case SplitViewColumn.Secondary when OperatingSystem.IsIOSVersionAtLeast(26):
-					PreferredSecondaryColumnWidthFraction = fraction;
+					MaximumSupplementaryColumnWidth = (nfloat)double.PositiveInfinity;
 					break;
 				case SplitViewColumn.Inspector when OperatingSystem.IsIOSVersionAtLeast(26):
 					PreferredInspectorColumnWidthFraction = fraction;
+					MaximumInspectorColumnWidth = (nfloat)double.PositiveInfinity;
 					break;
 			}
 		}
