@@ -43,6 +43,8 @@ internal sealed partial class CollectionInteractionsViewModel : ShowcaseViewMode
 		.. Names.Select(name => new ContactEntry(Initials(name), name))
 	];
 
+	public ObservableCollection<ContactEntry> SelectedContacts { get; } = [];
+
 	[ObservableProperty]
 	bool isEditing;
 
@@ -61,6 +63,8 @@ internal sealed partial class CollectionInteractionsViewModel : ShowcaseViewMode
 				IsRefreshing = Bind(vm => vm.IsRefreshing)
 					.TwoWay((vm, val) => vm.IsRefreshing = val),
 				ReorderCommand = viewModel.ReorderCommand,
+				SelectedItems = viewModel.SelectedContacts,
+				SelectsOnlyWhileEditing = true,
 				IsEditing = Bind(vm => vm.IsEditing)
 					.TwoWay((vm, val) => vm.IsEditing = val),
 				SwipeActions =

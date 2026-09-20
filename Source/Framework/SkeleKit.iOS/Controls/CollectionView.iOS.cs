@@ -315,23 +315,38 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		Ui.AllowsMultipleSelectionDuringEditing = MultiSelects;
 		Ui.Editing = isEditing;
 
-		if (isEditing)
-			ApplySelectionCore();
-		else
-			ClearSelection();
+		ApplySelectionCore();
 	}
 
 	partial void ApplySelectionCore()
 	{
-		if (!IsRealized || data is null || SuppressSelectionSync || !isEditing)
+		if (!IsRealized || data is null || SuppressSelectionSync)
+			return;
+
+		bool active = isEditing || !SelectsOnlyWhileEditing;
+		bool multiActive = active && MultiSelects;
+
+		if (Ui.AllowsMultipleSelection != multiActive)
+			Ui.AllowsMultipleSelection = multiActive;
+
+		// selection that does not apply in this mode leaves the tapped row's transient highlight alone
+		if (!active || !SelectionConfigured)
 			return;
 
 		HashSet<NSIndexPath> wanted = [];
 
-		foreach (TItem item in selectedItems ?? [])
+		if (singleSelects)
 		{
-			if (keys.TryGetValue(item, out ItemKey? key) && data.GetIndexPath(key) is NSIndexPath path)
+			if (selectedItem is TItem item && keys.TryGetValue(item, out ItemKey? key) && data.GetIndexPath(key) is NSIndexPath path)
 				wanted.Add(path);
+		}
+		else
+		{
+			foreach (TItem item in selectedItems!)
+			{
+				if (keys.TryGetValue(item, out ItemKey? key) && data.GetIndexPath(key) is NSIndexPath path)
+					wanted.Add(path);
+			}
 		}
 
 		foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
@@ -342,29 +357,6 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		foreach (NSIndexPath path in wanted)
 			Ui.SelectItem(path, false, UICollectionViewScrollPosition.None);
-	}
-
-	void ClearSelection()
-	{
-		if (!IsRealized)
-			return;
-
-		foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
-			Ui.DeselectItem(path, false);
-
-		if (selectedItems is IList<TItem> { Count: > 0 } list)
-		{
-			SuppressSelectionSync = true;
-
-			try
-			{
-				list.Clear();
-			}
-			finally
-			{
-				SuppressSelectionSync = false;
-			}
-		}
 	}
 
 	/// <summary>
@@ -608,8 +600,13 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		foreach (UICollectionViewCell cell in Ui.VisibleCells)
 		{
-			if (cell is SkeleCell { Hosted: { LocalTint: null } hosted })
+			if (cell is not SkeleCell skele)
+				continue;
+
+			if (skele.Hosted is { LocalTint: null } hosted)
 				hosted.TintChanged();
+
+			skele.ApplySelectionTint();
 		}
 
 		if (Header is { LocalTint: null } header)
@@ -647,13 +644,13 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		Ui.SetNeedsLayout();
 	}
 
-	// the row tapped on the way out un-highlights on the way back; edit-mode checkmarks stay
+	// a transient tap highlight is released on the way back; selection that applies outside editing persists
 	internal override void PageWillAppear()
 	{
 		Header?.PageWillAppear();
 		Footer?.PageWillAppear();
 
-		if (!IsRealized || isEditing)
+		if (!IsRealized || isEditing || SelectsOutsideEditing)
 			return;
 
 		foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
@@ -831,8 +828,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 			cell.Attach(
 				created,
-				MultiSelects,
-				ReorderCommand is not null);
+				SelectionConfigured,
+				ReorderCommand is not null,
+				ShowsSelectionCheckmark && SelectsOutsideEditing);
 		}
 
 		if (cell.Hosted is ICollectionItemView view)
@@ -1156,10 +1154,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		int section,
 		int index)
 	{
-		if (ItemAt(section, index) is not TItem item || ItemActivation is not ICommand command)
+		if (ItemAt(section, index) is not TItem item)
 			return;
 
-		if (command.CanExecute(item))
+		SelectFromTap(item);
+
+		if (ItemActivation is ICommand command && command.CanExecute(item))
 			command.Execute(item);
 	}
 
@@ -1555,7 +1555,7 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 		NSIndexPath indexPath) =>
 		CanInteract(collectionView, indexPath);
 
-	// PageWillAppear releases it, so it stays lit under a pushed page
+	// a transient highlight is released right away; selection that applies outside editing takes over
 	public override void ItemSelected(
 		UICollectionView collectionView,
 		NSIndexPath indexPath)
@@ -1566,7 +1566,7 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 			return;
 		}
 
-		if (!element.RetainsSelection)
+		if (!element.RetainsHighlight && !element.SelectsOutsideEditing)
 			collectionView.DeselectItem(indexPath, true);
 
 		element.Select(indexPath.Section, indexPath.Row);
@@ -1577,7 +1577,12 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 		NSIndexPath indexPath)
 	{
 		if (element.EditingNow)
+		{
 			element.EditSelect(indexPath.Section, indexPath.Row, false);
+			return;
+		}
+
+		element.DeselectFromTap(indexPath.Section, indexPath.Row);
 	}
 
 	public override void WillDisplayCell(
@@ -1922,23 +1927,30 @@ internal sealed class SkeleCell(
 	public View? Hosted { get; private set; }
 
 	ICollectionItemView? source;
-	bool multiselects;
+	bool selects;
 	bool reorders;
+	bool selectionCheckmark;
 	bool editing;
+	bool selected;
+
+	UICellAccessoryCheckmark? selectionMark;
 
 	Brush? highlight;
 	double automaticMinimumHeight;
 
 	public void Attach(
 		ICollectionItemView item,
-		bool multiselects,
-		bool reorders)
+		bool selects,
+		bool reorders,
+		bool selectionCheckmark)
 	{
 		source = item;
 		Hosted = item.View;
 		highlight = item.HighlightBackground;
-		this.multiselects = multiselects;
+		this.selects = selects;
 		this.reorders = reorders;
+		this.selectionCheckmark = selectionCheckmark;
+		selected = Selected;
 
 		// one write; repaints during a peek desync the portal
 		BackgroundConfiguration = UIBackgroundConfiguration.ClearConfiguration;
@@ -1958,9 +1970,23 @@ internal sealed class SkeleCell(
 			return;
 
 		List<UICellAccessory> accessories = [];
+		selectionMark = null;
 
-		if (multiselects)
+		if (selects)
 			accessories.Add(new UICellAccessoryMultiselect());
+
+		// the collection's own selection indicator, innermost of the trailing group
+		if (selectionCheckmark)
+		{
+			selectionMark = new UICellAccessoryCheckmark
+			{
+				DisplayedState = UICellAccessoryDisplayedState.WhenNotEditing,
+				IsHidden = !selected,
+				TintColor = Hosted?.EffectiveTint?.ToUIColor()
+			};
+
+			accessories.Add(selectionMark);
+		}
 
 		foreach (ItemAccessory accessory in source.Accessories)
 		{
@@ -1976,6 +2002,12 @@ internal sealed class SkeleCell(
 
 		Accessories = [.. accessories];
 		SetNeedsLayout();
+	}
+
+	internal void ApplySelectionTint()
+	{
+		if (selectionMark is not null)
+			selectionMark.TintColor = Hosted?.EffectiveTint?.ToUIColor();
 	}
 
 	bool ShowsNow(
@@ -2040,10 +2072,11 @@ internal sealed class SkeleCell(
 	public override void UpdateConfiguration(
 		UICellConfigurationState state)
 	{
-		// edit mode entering or leaving reshapes the reserved accessory space
-		if (editing != state.Editing)
+		// edit mode and selection both reshape the accessory set
+		if (editing != state.Editing || (selectionCheckmark && selected != state.Selected))
 		{
 			editing = state.Editing;
+			selected = state.Selected;
 			ApplyAccessories();
 		}
 

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SkeleKit.Gallery.ViewModels.Showcase;
 
@@ -14,6 +15,9 @@ internal sealed partial class ListsViewModel : ShowcaseViewModel
 
 	public ObservableCollection<ListEntry> Items { get; } = [];
 
+	[ObservableProperty]
+	public partial ListEntry? Selected { get; set; }
+
 	public IReadOnlyList<Span> ListCode { get; } =
 		Code(
 			"""
@@ -23,6 +27,9 @@ internal sealed partial class ListsViewModel : ShowcaseViewModel
 				ItemTemplate = static () => new ListCell(),
 				Layout = CollectionLayout.List(),
 				ItemCommand = viewModel.SelectCommand,
+				SelectedItem = Bind(vm => vm.Selected)
+					.TwoWay((vm, value) => vm.Selected = value),
+				ShowsSelectionCheckmark = true,
 				ShowsSeparators = true,
 				EmptyView = new Label
 				{
@@ -75,7 +82,13 @@ internal sealed partial class ListsViewModel : ShowcaseViewModel
 	void Remove()
 	{
 		if (Items.Count > 0)
+		{
+			ListEntry removed = Items[0];
 			Items.RemoveAt(0);
+
+			if (ReferenceEquals(Selected, removed))
+				Selected = null;
+		}
 
 		RemoveCommand.NotifyCanExecuteChanged();
 	}

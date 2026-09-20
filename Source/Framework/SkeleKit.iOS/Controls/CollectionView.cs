@@ -50,7 +50,11 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 	internal bool EditingNow => isEditing;
 
-	internal bool MultiSelects => selectedItems is not null;
+	internal bool MultiSelects => multiSelects;
+
+	internal bool SelectionConfigured => singleSelects || multiSelects;
+
+	internal bool SelectsOutsideEditing => SelectionConfigured && !SelectsOnlyWhileEditing;
 
 	internal bool IsEmpty
 	{
@@ -180,12 +184,28 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	public Thickness? SeparatorInsets { get; set; }
 
 	/// <summary>
-	/// Whether a tapped row remains selected until the page next appears.
+	/// Whether a tapped row keeps its highlight until the page next appears.
 	/// </summary>
 	/// <remarks>
-	/// The row appearance is defined by <see cref="ItemView{TItem}.HighlightBackground"/>.
+	/// Applies to lists without a selection binding. The row appearance is defined by
+	/// <see cref="ItemView{TItem}.HighlightBackground"/>.
 	/// </remarks>
-	public bool RetainsSelection { get; set; } = true;
+	public bool RetainsHighlight { get; set; } = true;
+
+	/// <summary>
+	/// Whether taps change the selection only while editing. Defaults to false.
+	/// </summary>
+	/// <remarks>
+	/// When true, normal taps only activate: <see cref="ItemCommand"/> runs and the transient highlight
+	/// behaves as if no selection were bound. Edit mode selects with the shape of <see cref="SelectedItem"/>
+	/// or <see cref="SelectedItems"/>.
+	/// </remarks>
+	public bool SelectsOnlyWhileEditing { get; set; }
+
+	/// <summary>
+	/// Whether selected rows show a trailing checkmark drawn by the collection.
+	/// </summary>
+	public bool ShowsSelectionCheckmark { get; set; }
 
 	/// <summary>
 	/// Maps a section to its letter in the fast-scroll index, or null for no index.
@@ -372,10 +392,29 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	Binding<bool>? isEditingBinding;
 
 	/// <summary>
-	/// The items checked while editing.
+	/// The selected item in single-selection mode, or null for no selection.
 	/// </summary>
 	/// <remarks>
-	/// Give it an <c>ObservableCollection</c>: taps keep it in sync, and mutating it moves the checkmarks.
+	/// Binding it enables single selection: taps replace the selection, and a two-way binding pushes the
+	/// tapped item to the source. Use <see cref="SelectsOnlyWhileEditing"/> to keep normal taps as
+	/// activation. Bind either this or <see cref="SelectedItems"/>, never both.
+	/// </remarks>
+	public Bindable<TItem?> SelectedItem
+	{
+		get => new(selectedItem);
+		set => selectedItemBinding = Register(selectedItemBinding, value, SetSelectedItem);
+	}
+	TItem? selectedItem;
+	Binding<TItem?>? selectedItemBinding;
+
+	/// <summary>
+	/// The selected items in multiple-selection mode, or null for no selection.
+	/// </summary>
+	/// <remarks>
+	/// Binding it enables multiple selection: taps toggle rows, and mutating the bound collection moves the
+	/// selection. Give it an <c>ObservableCollection</c> so taps can write back. Use
+	/// <see cref="SelectsOnlyWhileEditing"/> to keep normal taps as activation. Bind either this or
+	/// <see cref="SelectedItem"/>, never both.
 	/// </remarks>
 	public BindableList<TItem> SelectedItems
 	{
@@ -384,6 +423,9 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	}
 	IReadOnlyList<TItem>? selectedItems;
 	Binding<IReadOnlyList<TItem>?>? selectedItemsBinding;
+
+	bool singleSelects;
+	bool multiSelects;
 
 	/// <summary>
 	/// Invoked as the collection scrolls, with the vertical offset in points.
@@ -444,9 +486,29 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		ReloadItems();
 	}
 
+	void SetSelectedItem(
+		TItem? value)
+	{
+		if (multiSelects)
+			throw new InvalidOperationException("Bind either SelectedItem or SelectedItems, not both.");
+
+		singleSelects = true;
+
+		if (ReferenceEquals(selectedItem, value))
+			return;
+
+		selectedItem = value;
+		ApplySelection();
+	}
+
 	void SetSelectedItems(
 		IReadOnlyList<TItem>? value)
 	{
+		if (singleSelects)
+			throw new InvalidOperationException("Bind either SelectedItem or SelectedItems, not both.");
+
+		multiSelects = true;
+
 		if (ReferenceEquals(selectedItems, value))
 			return;
 
@@ -718,25 +780,69 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 			? Prefetch?.Invoke(item)
 			: null;
 
+	// a normal tap activates; selection follows only when taps select outside editing
+	internal void SelectFromTap(
+		TItem item)
+	{
+		if (!SelectsOutsideEditing)
+			return;
+
+		if (multiSelects)
+		{
+			if (selectedItems is not IList<TItem> list || list.Contains(item))
+				return;
+
+			list.Add(item);
+			ApplySelection();
+			return;
+		}
+
+		if (ReferenceEquals(selectedItem, item))
+			return;
+
+		selectedItem = item;
+		selectedItemBinding?.PushToSource(item);
+	}
+
+	// multiple selection removes on deselect; a single-mode deselect is the old row being replaced
+	internal void DeselectFromTap(
+		int section,
+		int index)
+	{
+		if (!SelectsOutsideEditing || !multiSelects || selectedItems is not IList<TItem> list || ItemAt(section, index) is not TItem item)
+			return;
+
+		if (list.Remove(item))
+			ApplySelection();
+	}
+
 	internal void EditSelect(
 		int section,
 		int index,
 		bool selected)
 	{
-		if (ItemAt(section, index) is not TItem item || selectedItems is not IList<TItem> list)
+		if (ItemAt(section, index) is not TItem item)
 			return;
 
 		SuppressSelectionSync = true;
 
 		try
 		{
-			if (selected)
+			if (multiSelects && selectedItems is IList<TItem> list)
 			{
-				if (!list.Contains(item))
-					list.Add(item);
+				if (selected)
+				{
+					if (!list.Contains(item))
+						list.Add(item);
+				}
+				else
+					list.Remove(item);
 			}
-			else
-				list.Remove(item);
+			else if (singleSelects && selected)
+			{
+				selectedItem = item;
+				selectedItemBinding?.PushToSource(item);
+			}
 		}
 		finally
 		{

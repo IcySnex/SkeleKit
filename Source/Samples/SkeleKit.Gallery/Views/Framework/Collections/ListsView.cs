@@ -35,6 +35,9 @@ internal sealed class ListsView : ShowcaseView<ListsViewModel>
 			ItemTemplate = static () => new ListCell(),
 			Layout = CollectionLayout.List(),
 			ItemCommand = viewModel.SelectCommand,
+			SelectedItem = Bind(vm => vm.Selected)
+				.TwoWay((vm, value) => vm.Selected = value),
+			ShowsSelectionCheckmark = true,
 			ShowsSeparators = true,
 
 			EmptyView = new Label

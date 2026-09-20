@@ -22,7 +22,7 @@ internal sealed class ItemTemplatesView : ShowcaseView<ItemTemplatesViewModel>
 				.Add<TemplateActionEntry>(static () => new TemplateActionCell()),
 			ItemCommand = viewModel.ActivateCommand,
 			Layout = CollectionLayout.List(grouped: true),
-			RetainsSelection = false,
+			RetainsHighlight = false,
 			SeparatorInsets = new(52, 0, 12, 0),
 
 			Header = new StackPanel

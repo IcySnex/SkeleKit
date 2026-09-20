@@ -38,7 +38,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 			ItemTemplate = static () => new TopicCell(showsArea: true),
 			Layout = CollectionLayout.List(grouped: true),
 			ItemCommand = viewModel.OpenTopicCommand,
-			RetainsSelection = true,
+			RetainsHighlight = true,
 
 			EmptyView = new StackPanel
 			{

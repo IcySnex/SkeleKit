@@ -30,12 +30,14 @@ internal sealed class CollectionInteractionsView : ShowcaseView<CollectionIntera
 			ItemsSource = viewModel.Items,
 			ItemTemplate = static () => new ContactCell(),
 			Layout = CollectionLayout.List(),
-			RetainsSelection = false,
+			RetainsHighlight = false,
 			SeparatorInsets = new Thickness(66, 0, 0, 0),
 			RefreshCommand = viewModel.RefreshCommand,
 			IsRefreshing = Bind(vm => vm.IsRefreshing)
 				.TwoWay((vm, val) => vm.IsRefreshing = val),
 			ReorderCommand = viewModel.ReorderCommand,
+			SelectedItems = viewModel.SelectedContacts,
+			SelectsOnlyWhileEditing = true,
 			IsEditing = Bind(vm => vm.IsEditing)
 				.TwoWay((vm, val) => vm.IsEditing = val),
 
