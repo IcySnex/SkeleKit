@@ -22,32 +22,35 @@ public class Stepper : Control
 	/// <summary>
 	/// The minimum selectable value.
 	/// </summary>
-	public double Minimum
+	public Bindable<double> Minimum
 	{
 		get => minimum;
-		set => Set(ref minimum, value, ApplyRange, affectsMeasure: false);
+		set => minimumBinding = Register(minimumBinding, value, value => Set(ref minimum, value, ApplyRange, affectsMeasure: false));
 	}
 	double minimum;
+	Binding<double>? minimumBinding;
 
 	/// <summary>
 	/// The maximum selectable value.
 	/// </summary>
-	public double Maximum
+	public Bindable<double> Maximum
 	{
 		get => maximum;
-		set => Set(ref maximum, value, ApplyRange, affectsMeasure: false);
+		set => maximumBinding = Register(maximumBinding, value, value => Set(ref maximum, value, ApplyRange, affectsMeasure: false));
 	}
 	double maximum = 100;
+	Binding<double>? maximumBinding;
 
 	/// <summary>
 	/// The amount added or subtracted per tap.
 	/// </summary>
-	public double Step
+	public Bindable<double> Step
 	{
 		get => step;
-		set => Set(ref step, value, ApplyRange, affectsMeasure: false);
+		set => stepBinding = Register(stepBinding, value, value => Set(ref step, value, ApplyRange, affectsMeasure: false));
 	}
 	double step = 1;
+	Binding<double>? stepBinding;
 
 	/// <summary>
 	/// Invoked with the new value whenever the user taps the stepper.

@@ -1,3 +1,5 @@
+using System.Collections.Specialized;
+
 namespace SkeleKit;
 
 /// <summary>
@@ -6,12 +8,19 @@ namespace SkeleKit;
 public class SegmentedControl : Control
 {
 	UISegmentedControl Ui => (UISegmentedControl)Native;
+	bool itemsHooked;
 
 
 	/// <summary>
 	/// The segment titles, in order.
 	/// </summary>
-	public IList<string> Items { get; } = [];
+	public BindableList<string> Items
+	{
+		get => new(items);
+		set => itemsBinding = Register(itemsBinding, value.Expression, value.Value, SetItems);
+	}
+	IReadOnlyList<string> items = new List<string>();
+	Binding<IReadOnlyList<string>?>? itemsBinding;
 
 	/// <summary>
 	/// The selected segment's index.
@@ -30,17 +39,67 @@ public class SegmentedControl : Control
 	public Action<int>? SelectionChanged { get; set; }
 
 
+	void SetItems(
+		IReadOnlyList<string>? value)
+	{
+		if (itemsHooked && items is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnItemsChanged;
+
+		items = value ?? [];
+
+		if (itemsHooked && items is INotifyCollectionChanged live)
+			live.CollectionChanged += OnItemsChanged;
+
+		if (IsRealized)
+		{
+			ApplyItems();
+			ApplySelection();
+		}
+
+		InvalidateMeasure();
+	}
+
+	void HookItems()
+	{
+		if (itemsHooked)
+			return;
+
+		itemsHooked = true;
+		if (items is INotifyCollectionChanged live)
+			live.CollectionChanged += OnItemsChanged;
+	}
+
+	void UnhookItems()
+	{
+		if (!itemsHooked)
+			return;
+
+		if (items is INotifyCollectionChanged live)
+			live.CollectionChanged -= OnItemsChanged;
+
+		itemsHooked = false;
+	}
+
+	void OnItemsChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs args)
+	{
+		ApplyItems();
+		ApplySelection();
+		InvalidateMeasure();
+	}
+
 	void ApplyItems()
 	{
 		Ui.RemoveAllSegments();
 
-		for (int index = 0; index < Items.Count; index++)
-			Ui.InsertSegment(Items[index], index, false);
+		for (int index = 0; index < items.Count; index++)
+			Ui.InsertSegment(items[index], index, false);
 	}
 
 	void ApplySelection()
 	{
-		if (selectedIndex >= 0 && selectedIndex < Items.Count)
+		if (selectedIndex >= 0 && selectedIndex < items.Count)
 			Ui.SelectedSegment = selectedIndex;
 	}
 
@@ -64,7 +123,11 @@ public class SegmentedControl : Control
 
 	private protected override void ApplyProperties()
 	{
+		HookItems();
 		ApplyItems();
 		ApplySelection();
 	}
+
+	private protected override void OnUnrealized() =>
+		UnhookItems();
 }

@@ -83,7 +83,7 @@ public class ContentViewLifecycleTests
 	{
 		EmptyView view = new();
 
-		SolidBrush background = Assert.IsType<SolidBrush>(view.Background);
+		SolidBrush background = Assert.IsType<SolidBrush>(view.Background?.Value);
 		Assert.Equal(Colors.Background, background.Color);
 	}
 

@@ -762,7 +762,7 @@ internal sealed class PageHost : UIViewController
 	static UIColor? EffectiveBarTint(
 		ContentView? page,
 		ToolbarItem? item = null) =>
-		(item?.Tint ?? page?.BarTint ?? SkeleApplication.Current?.Theme.Tint)?.ToUIColor();
+		(item?.Tint ?? page?.BarTintValue ?? SkeleApplication.Current?.Theme.Tint)?.ToUIColor();
 
 	UIMenu BuildMenu(
 		ToolbarItem item)
@@ -835,7 +835,7 @@ internal sealed class PageHost : UIViewController
 
 		NavigationItem.Title = page.Title.Value;
 		NavigationItem.Prompt = page.Prompt.Value;
-		NavigationItem.BackButtonTitle = page.BackButtonTitle;
+		NavigationItem.BackButtonTitle = page.BackButtonTitleValue;
 		NavigationItem.BackButtonDisplayMode = page.BackButtonStyle switch
 		{
 			BackButtonStyle.Generic => UINavigationItemBackButtonDisplayMode.Generic,
@@ -976,14 +976,14 @@ internal sealed class PageHost : UIViewController
 
 		UIStringAttributes titleAttributes = new()
 		{
-			ForegroundColor = page.TitleColor?.ToUIColor() ?? UIColor.Label
+			ForegroundColor = page.TitleColorValue?.ToUIColor() ?? UIColor.Label
 		};
 		standard.TitleTextAttributes = titleAttributes;
 		edge.TitleTextAttributes = titleAttributes;
 
 		UIStringAttributes largeTitleAttributes = new()
 		{
-			ForegroundColor = page.LargeTitleColor?.ToUIColor() ?? UIColor.Label
+			ForegroundColor = page.LargeTitleColorValue?.ToUIColor() ?? UIColor.Label
 		};
 		standard.LargeTitleTextAttributes = largeTitleAttributes;
 		edge.LargeTitleTextAttributes = largeTitleAttributes;
@@ -999,6 +999,23 @@ internal sealed class PageHost : UIViewController
 	{
 		if (NavigationController?.NavigationBar is UINavigationBar bar)
 			bar.TintColor = EffectiveBarTint(page);
+	}
+
+	internal void ApplyBindableChrome(
+		ContentView page)
+	{
+		if (!IsViewLoaded)
+			return;
+
+		NavigationItem.BackButtonTitle = page.BackButtonTitleValue;
+		ApplyBarAppearance(page);
+		ApplyToolbarTint(page);
+
+		if (ReferenceEquals(NavigationController?.TopViewController, this))
+		{
+			ApplyNavigationTint(page);
+			SetNeedsStatusBarAppearanceUpdate();
+		}
 	}
 
 	void ApplyThemeChange()
@@ -1169,7 +1186,7 @@ internal sealed class PageHost : UIViewController
 	void ApplySearch(
 		ContentView page)
 	{
-		if (page.SearchPlaceholder is not string placeholder)
+		if (page.SearchPlaceholderValue is not string placeholder)
 			return;
 
 		search = new((UIViewController?)null)
@@ -1187,6 +1204,7 @@ internal sealed class PageHost : UIViewController
 			page.NotifySearch(e.SearchText);
 		};
 		search.SearchBar.SearchButtonClicked += (_, _) => page.NotifySearchSubmitted();
+		search.SearchBar.SelectedScopeButtonIndexChanged += (_, e) => page.NotifySearchScope((int)e.SelectedScope);
 		search.SearchBar.CancelButtonClicked += (_, _) =>
 		{
 			if (page.HidesSearchScopesWhenEmpty)
@@ -1195,12 +1213,11 @@ internal sealed class PageHost : UIViewController
 			page.NotifySearchCanceled();
 		};
 
-		if (page.SearchScopes.Count > 0)
+		if (page.SearchScopeValues.Count > 0)
 		{
-			search.SearchBar.ScopeButtonTitles = [.. page.SearchScopes];
+			search.SearchBar.ScopeButtonTitles = [.. page.SearchScopeValues];
 			search.SearchBar.SelectedScopeButtonIndex = page.SearchScopeIndex.Value;
 			search.SearchBar.ScopeBarBackgroundImage = TransparentScopeBackground;
-			search.SearchBar.SelectedScopeButtonIndexChanged += (_, e) => page.NotifySearchScope((int)e.SelectedScope);
 
 			if (page.HidesSearchScopesWhenEmpty)
 			{
@@ -1222,6 +1239,34 @@ internal sealed class PageHost : UIViewController
 		NavigationItem.HidesSearchBarWhenScrolling = page.HidesSearchBarWhenScrolling;
 
 		DefinesPresentationContext = true;
+	}
+
+	internal void ApplySearchConfiguration(
+		ContentView page)
+	{
+		if (!IsViewLoaded)
+			return;
+
+		if (page.SearchPlaceholderValue is not string placeholder)
+		{
+			NavigationItem.SearchController = null;
+			search = null;
+			return;
+		}
+
+		if (search is null)
+		{
+			ApplySearch(page);
+			return;
+		}
+
+		search.SearchBar.Placeholder = placeholder;
+		search.SearchBar.ScopeButtonTitles = page.SearchScopeValues.Count > 0
+			? [.. page.SearchScopeValues]
+			: null;
+		search.SearchBar.SelectedScopeButtonIndex = page.SearchScopeIndex.Value;
+		search.SearchBar.ShowsScopeBar = page.SearchScopeValues.Count > 0
+			&& (!page.HidesSearchScopesWhenEmpty || !string.IsNullOrEmpty(page.SearchText.Value));
 	}
 
 	internal void ApplySearchText(
@@ -1368,7 +1413,7 @@ internal sealed class PageHost : UIViewController
 
 
 	public override UIStatusBarStyle PreferredStatusBarStyle() =>
-		Page?.StatusBar switch
+		Page?.StatusBarValue switch
 		{
 			StatusBarStyle.Light => UIStatusBarStyle.LightContent,
 			StatusBarStyle.Dark => UIStatusBarStyle.DarkContent,

@@ -225,7 +225,7 @@ internal sealed class LabelView : ShowcaseView<LabelViewModel>
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			VerticalAlignment = VerticalAlignment.Center,
 			Text = "Fallback text",
-			Spans = viewModel.AttributedSpans,
+			Spans = [.. viewModel.AttributedSpans],
 			TextStyle = TextStyle.Body,
 			LineSpacing = viewModel.LineSpacing,
 			LetterSpacing = viewModel.LetterSpacing,

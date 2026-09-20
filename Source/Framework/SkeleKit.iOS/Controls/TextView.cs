@@ -98,12 +98,13 @@ public class TextView : Control
 	/// <remarks>
 	/// NaN falls back to the text style, or 17 points without one.
 	/// </remarks>
-	public double FontSize
+	public Bindable<double> FontSize
 	{
 		get => fontSize;
-		set => Set(ref fontSize, value, ApplyText);
+		set => fontSizeBinding = Register(fontSizeBinding, value, value => Set(ref fontSize, value, ApplyText));
 	}
 	double fontSize = double.NaN;
+	Binding<double>? fontSizeBinding;
 
 	/// <summary>
 	/// The smallest point size Dynamic Type may produce, or NaN for no lower bound.
@@ -131,12 +132,13 @@ public class TextView : Control
 	/// <summary>
 	/// The base font weight the runs build on.
 	/// </summary>
-	public FontWeight FontWeight
+	public Bindable<FontWeight> FontWeight
 	{
 		get => weight;
-		set => Set(ref weight, value, ApplyText);
+		set => fontWeightBinding = Register(fontWeightBinding, value, value => Set(ref weight, value, ApplyText));
 	}
-	FontWeight weight = FontWeight.Regular;
+	FontWeight weight = SkeleKit.FontWeight.Regular;
+	Binding<FontWeight>? fontWeightBinding;
 
 	/// <summary>
 	/// The base font design: system, rounded, serif or monospaced.
@@ -162,32 +164,35 @@ public class TextView : Control
 	/// <summary>
 	/// Color the links paint in, or null for the app tint.
 	/// </summary>
-	public Color? LinkColor
+	public Bindable<Color?> LinkColor
 	{
 		get => linkColor;
-		set => Set(ref linkColor, value, ApplyText, affectsMeasure: false);
+		set => linkColorBinding = Register(linkColorBinding, value, value => Set(ref linkColor, value, ApplyText, affectsMeasure: false));
 	}
 	Color? linkColor;
+	Binding<Color?>? linkColorBinding;
 
 	/// <summary>
 	/// Maximum number of lines, or 0 for unlimited (wraps freely).
 	/// </summary>
-	public int MaxLines
+	public Bindable<int> MaxLines
 	{
 		get => maxLines;
-		set => Set(ref maxLines, value, ApplyMaxLines);
+		set => maxLinesBinding = Register(maxLinesBinding, value, value => Set(ref maxLines, value, ApplyMaxLines));
 	}
 	int maxLines;
+	Binding<int>? maxLinesBinding;
 
 	/// <summary>
 	/// Horizontal alignment of the text.
 	/// </summary>
-	public TextAlignment TextAlignment
+	public Bindable<TextAlignment> TextAlignment
 	{
 		get => textAlignment;
-		set => Set(ref textAlignment, value, ApplyText);
+		set => textAlignmentBinding = Register(textAlignmentBinding, value, value => Set(ref textAlignment, value, ApplyText));
 	}
 	TextAlignment textAlignment = Leading;
+	Binding<TextAlignment>? textAlignmentBinding;
 
 	/// <summary>
 	/// Extra points between lines.
@@ -346,7 +351,7 @@ public class TextView : Control
 	UIFont FontFor(
 		Span span)
 	{
-		FontWeight w = span.Bold ? FontWeight.Bold : span.FontWeight ?? weight;
+		FontWeight w = span.Bold ? SkeleKit.FontWeight.Bold : span.FontWeight ?? weight;
 		FontDesign d = span.FontDesign ?? design;
 		double size = double.IsNaN(span.FontSize) ? fontSize : span.FontSize;
 		TextStyle? style = span.TextStyle ?? textStyle;

@@ -158,7 +158,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 							Text = "Section heading",
 							TextStyle = TextStyle.Headline,
 							FontWeight = FontWeight.Semibold,
-							AccessibilityTraits = AccessibilityTraits.Header
+							AccessibilityTraits = AccessibilityTrait.Header
 						},
 
 						new StackPanel
@@ -174,7 +174,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 									Height = 40,
 									Source = ImageSource.Symbol("photo", size: 28),
 									AccessibilityLabel = "Sample image",
-									AccessibilityTraits = AccessibilityTraits.Image,
+									AccessibilityTraits = AccessibilityTrait.Image,
 									IsAccessibilityElement = true
 								},
 
@@ -193,7 +193,7 @@ internal sealed class AccessibilityView : ShowcaseView<AccessibilityViewModel>
 							HorizontalAlignment = HorizontalAlignment.Start,
 							Text = "Selected option",
 							Kind = ButtonStyle.Tinted,
-							AccessibilityTraits = AccessibilityTraits.Selected
+							AccessibilityTraits = AccessibilityTrait.Selected
 						}
 					}
 				},

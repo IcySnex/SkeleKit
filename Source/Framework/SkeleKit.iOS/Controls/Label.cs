@@ -1,3 +1,5 @@
+using System.Collections.Specialized;
+
 namespace SkeleKit;
 
 /// <summary>
@@ -7,6 +9,7 @@ public class Label : Control
 {
 	UILabel Ui => (UILabel)Native;
 	bool UsesAttributes => lineSpacing is not 0 || letterSpacing is not 0 || underline || strikethrough;
+	bool spansHooked;
 
 
 	/// <summary>
@@ -26,12 +29,13 @@ public class Label : Control
 	/// <remarks>
 	/// Each run styles itself over the label's own font and color.
 	/// </remarks>
-	public IReadOnlyList<Span>? Spans
+	public BindableList<Span> Spans
 	{
-		get => spans;
-		set => Set(ref spans, value, ApplyText);
+		get => new(spans);
+		set => spansBinding = Register(spansBinding, value.Expression, value.Value, SetSpans);
 	}
-	IReadOnlyList<Span>? spans;
+	IReadOnlyList<Span>? spans = new List<Span>();
+	Binding<IReadOnlyList<Span>?>? spansBinding;
 
 	/// <summary>
 	/// The step of the native type hierarchy the text follows, or null to size it by <see cref="FontSize"/>.
@@ -154,22 +158,24 @@ public class Label : Control
 	/// <summary>
 	/// Underlines the text.
 	/// </summary>
-	public bool Underline
+	public Bindable<bool> Underline
 	{
 		get => underline;
-		set => Set(ref underline, value, ApplyText, affectsMeasure: false);
+		set => underlineBinding = Register(underlineBinding, value, value => Set(ref underline, value, ApplyText, affectsMeasure: false));
 	}
 	bool underline;
+	Binding<bool>? underlineBinding;
 
 	/// <summary>
 	/// Strikes the text through.
 	/// </summary>
-	public bool Strikethrough
+	public Bindable<bool> Strikethrough
 	{
 		get => strikethrough;
-		set => Set(ref strikethrough, value, ApplyText, affectsMeasure: false);
+		set => strikethroughBinding = Register(strikethroughBinding, value, value => Set(ref strikethrough, value, ApplyText, affectsMeasure: false));
 	}
 	bool strikethrough;
+	Binding<bool>? strikethroughBinding;
 
 	/// <summary>
 	/// How far the text may shrink to fit its width, 0.5 meaning half size, or 0 to truncate instead.
@@ -212,6 +218,57 @@ public class Label : Control
 			value,
 			ApplyText,
 			affectsMeasure: double.IsNaN(Width) || double.IsNaN(Height));
+
+	void SetSpans(
+		IReadOnlyList<Span>? value)
+	{
+		if (ReferenceEquals(spans, value))
+			return;
+
+		if (spansHooked && spans is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnSpansChanged;
+
+		spans = value;
+
+		if (spansHooked && spans is INotifyCollectionChanged live)
+			live.CollectionChanged += OnSpansChanged;
+
+		if (IsRealized)
+			ApplyText();
+
+		InvalidateMeasure();
+	}
+
+	void HookSpans()
+	{
+		if (spansHooked)
+			return;
+
+		spansHooked = true;
+		if (spans is INotifyCollectionChanged live)
+			live.CollectionChanged += OnSpansChanged;
+	}
+
+	void UnhookSpans()
+	{
+		if (!spansHooked)
+			return;
+
+		if (spans is INotifyCollectionChanged live)
+			live.CollectionChanged -= OnSpansChanged;
+
+		spansHooked = false;
+	}
+
+	void OnSpansChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs args)
+	{
+		if (IsRealized)
+			ApplyText();
+
+		InvalidateMeasure();
+	}
 
 	void ApplyText()
 	{
@@ -408,6 +465,7 @@ public class Label : Control
 
 	private protected override void ApplyProperties()
 	{
+		HookSpans();
 		ApplyFont();
 		ApplyTextColor();
 		ApplyMaxLines();
@@ -416,4 +474,7 @@ public class Label : Control
 		ApplyAutoShrink();
 		ApplyText();
 	}
+
+	private protected override void OnUnrealized() =>
+		UnhookSpans();
 }

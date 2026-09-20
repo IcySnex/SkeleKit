@@ -7,7 +7,7 @@ namespace SkeleKit;
 /// Combines with the control's own traits.
 /// </remarks>
 [Flags]
-public enum AccessibilityTraits
+public enum AccessibilityTrait
 {
 	/// <summary>
 	/// No extra traits.

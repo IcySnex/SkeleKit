@@ -50,8 +50,14 @@ public abstract partial class ContentView
 		}
 
 		host.TabBarItem.BadgeValue = TabBadge.Value;
-		host.TabBarItem.BadgeColor = TabBadgeColor?.ToUIColor();
+		host.TabBarItem.BadgeColor = tabBadgeColor?.ToUIColor();
 	}
+
+	partial void ApplyPageChromeCore() =>
+		Host?.ApplyBindableChrome(this);
+
+	partial void ApplySearchConfigurationCore() =>
+		Host?.ApplySearchConfiguration(this);
 
 	partial void ApplyLeaveGuardCore() =>
 		Host?.ApplyLeaveGuard();
@@ -79,6 +85,8 @@ public abstract partial class ContentView
 
 	private protected override void OnRealized()
 	{
+		HookSearchScopes();
+
 		if (Content is View content)
 			UpdateAutomaticScrollBleed(content);
 
@@ -89,6 +97,7 @@ public abstract partial class ContentView
 
 	private protected override void OnUnrealized()
 	{
+		UnhookSearchScopes();
 		NotifyUnloaded();
 
 		base.OnUnrealized();

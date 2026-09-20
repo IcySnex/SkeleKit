@@ -14,6 +14,13 @@ class Notifier : INotifyPropertyChanged
 
 class MovieViewModel : Notifier
 {
+	Color requiredAccent = Colors.Blue;
+	public Color RequiredAccent
+	{
+		get => requiredAccent;
+		set { requiredAccent = value; Raise(); }
+	}
+
 	string[] options = [];
 	public string[] Options
 	{

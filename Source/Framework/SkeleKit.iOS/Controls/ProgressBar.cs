@@ -33,12 +33,13 @@ public class ProgressBar : Control
 	/// <summary>
 	/// The unfilled track color, or null for the system default.
 	/// </summary>
-	public Color? TrackColor
+	public Bindable<Color?> TrackColor
 	{
 		get => trackColor;
-		set => Set(ref trackColor, value, ApplyColors, affectsMeasure: false);
+		set => trackColorBinding = Register(trackColorBinding, value, value => Set(ref trackColor, value, ApplyColors, affectsMeasure: false));
 	}
 	Color? trackColor;
+	Binding<Color?>? trackColorBinding;
 
 
 	void ApplyProgress() =>
@@ -46,11 +47,8 @@ public class ProgressBar : Control
 
 	void ApplyColors()
 	{
-		if (fillColor is Color fill)
-			Ui.ProgressTintColor = fill.ToUIColor();
-
-		if (trackColor is Color track)
-			Ui.TrackTintColor = track.ToUIColor();
+		Ui.ProgressTintColor = fillColor?.ToUIColor();
+		Ui.TrackTintColor = trackColor?.ToUIColor();
 	}
 
 

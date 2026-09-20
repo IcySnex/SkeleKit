@@ -54,21 +54,21 @@ internal sealed partial class AccessibilityViewModel : ShowcaseViewModel
 			new Label
 			{
 				Text = "Section heading",
-				AccessibilityTraits = AccessibilityTraits.Header
+				AccessibilityTraits = AccessibilityTrait.Header
 			};
 
 			new Image
 			{
 				Source = ImageSource.Symbol("photo"),
 				AccessibilityLabel = "Sample image",
-				AccessibilityTraits = AccessibilityTraits.Image,
+				AccessibilityTraits = AccessibilityTrait.Image,
 				IsAccessibilityElement = true
 			};
 
 			new Button
 			{
 				Text = "Selected option",
-				AccessibilityTraits = AccessibilityTraits.Selected
+				AccessibilityTraits = AccessibilityTrait.Selected
 			};
 			""")
 	];

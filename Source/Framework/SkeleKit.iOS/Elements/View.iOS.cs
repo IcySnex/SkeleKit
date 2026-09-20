@@ -64,31 +64,31 @@ public abstract partial class View
 	}
 
 	static UIAccessibilityTrait Traits(
-		AccessibilityTraits traits)
+		AccessibilityTrait traits)
 	{
 		UIAccessibilityTrait native = UIAccessibilityTrait.None;
 
-		if (traits.HasFlag(AccessibilityTraits.Button))
+		if (traits.HasFlag(AccessibilityTrait.Button))
 			native |= UIAccessibilityTrait.Button;
-		if (traits.HasFlag(AccessibilityTraits.Link))
+		if (traits.HasFlag(AccessibilityTrait.Link))
 			native |= UIAccessibilityTrait.Link;
-		if (traits.HasFlag(AccessibilityTraits.Header))
+		if (traits.HasFlag(AccessibilityTrait.Header))
 			native |= UIAccessibilityTrait.Header;
-		if (traits.HasFlag(AccessibilityTraits.Image))
+		if (traits.HasFlag(AccessibilityTrait.Image))
 			native |= UIAccessibilityTrait.Image;
-		if (traits.HasFlag(AccessibilityTraits.Selected))
+		if (traits.HasFlag(AccessibilityTrait.Selected))
 			native |= UIAccessibilityTrait.Selected;
-		if (traits.HasFlag(AccessibilityTraits.StaticText))
+		if (traits.HasFlag(AccessibilityTrait.StaticText))
 			native |= UIAccessibilityTrait.StaticText;
-		if (traits.HasFlag(AccessibilityTraits.Adjustable))
+		if (traits.HasFlag(AccessibilityTrait.Adjustable))
 			native |= UIAccessibilityTrait.Adjustable;
-		if (traits.HasFlag(AccessibilityTraits.UpdatesFrequently))
+		if (traits.HasFlag(AccessibilityTrait.UpdatesFrequently))
 			native |= UIAccessibilityTrait.UpdatesFrequently;
-		if (traits.HasFlag(AccessibilityTraits.NotEnabled))
+		if (traits.HasFlag(AccessibilityTrait.NotEnabled))
 			native |= UIAccessibilityTrait.NotEnabled;
-		if (traits.HasFlag(AccessibilityTraits.PlaysSound))
+		if (traits.HasFlag(AccessibilityTrait.PlaysSound))
 			native |= UIAccessibilityTrait.PlaysSound;
-		if (traits.HasFlag(AccessibilityTraits.StartsMediaSession))
+		if (traits.HasFlag(AccessibilityTrait.StartsMediaSession))
 			native |= UIAccessibilityTrait.StartsMediaSession;
 
 		return native;
@@ -177,7 +177,7 @@ public abstract partial class View
 
 	internal UIView? BackgroundView => materialView;
 
-	Brush? EffectiveBackground => backgroundOverride ?? Background;
+	Brush? EffectiveBackground => backgroundOverride ?? background;
 
 	internal UIView ChildHost => materialView is UIVisualEffectView material && EffectiveBackground is Material { Kind: MaterialKind.Glass }
 		? material.ContentView
@@ -688,7 +688,7 @@ public abstract partial class View
 			return;
 
 		native.Hidden = !isVisible;
-		native.Alpha = (nfloat)Opacity;
+		native.Alpha = (nfloat)opacity;
 
 		// local only: nil lets UIKit inherit down the native tree
 		native.TintColor = LocalTint?.ToUIColor();

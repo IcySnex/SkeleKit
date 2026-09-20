@@ -22,22 +22,24 @@ public class Switch : Control
 	/// <summary>
 	/// The fill color while on, or null for the inherited tint.
 	/// </summary>
-	public Color? OnColor
+	public Bindable<Color?> OnColor
 	{
 		get => onColor;
-		set => Set(ref onColor, value, ApplyColors, affectsMeasure: false);
+		set => onColorBinding = Register(onColorBinding, value, value => Set(ref onColor, value, ApplyColors, affectsMeasure: false));
 	}
 	Color? onColor;
+	Binding<Color?>? onColorBinding;
 
 	/// <summary>
 	/// The thumb color, or null for the system default.
 	/// </summary>
-	public Color? ThumbColor
+	public Bindable<Color?> ThumbColor
 	{
 		get => thumbColor;
-		set => Set(ref thumbColor, value, ApplyColors, affectsMeasure: false);
+		set => thumbColorBinding = Register(thumbColorBinding, value, value => Set(ref thumbColor, value, ApplyColors, affectsMeasure: false));
 	}
 	Color? thumbColor;
+	Binding<Color?>? thumbColorBinding;
 
 	/// <summary>
 	/// Invoked with the new value whenever the user toggles the switch.

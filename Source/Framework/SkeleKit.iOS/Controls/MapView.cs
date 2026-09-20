@@ -363,22 +363,24 @@ public class MapView : Control
 	/// <summary>
 	/// The base imagery the map draws.
 	/// </summary>
-	public MapKind Kind
+	public Bindable<MapKind> Kind
 	{
 		get => kind;
-		set => Set(ref kind, value, ApplyKind, affectsMeasure: false);
+		set => kindBinding = Register(kindBinding, value, value => Set(ref kind, value, ApplyKind, affectsMeasure: false));
 	}
 	MapKind kind;
+	Binding<MapKind>? kindBinding;
 
 	/// <summary>
 	/// Whether the blue dot marking the user's location is shown.
 	/// </summary>
-	public bool ShowsUserLocation
+	public Bindable<bool> ShowsUserLocation
 	{
 		get => showsUserLocation;
-		set => Set(ref showsUserLocation, value, ApplyChrome, affectsMeasure: false);
+		set => showsUserLocationBinding = Register(showsUserLocationBinding, value, value => Set(ref showsUserLocation, value, ApplyChrome, affectsMeasure: false));
 	}
 	bool showsUserLocation;
+	Binding<bool>? showsUserLocationBinding;
 
 	/// <summary>
 	/// Whether the user can pan the map.
@@ -443,12 +445,13 @@ public class MapView : Control
 	/// <summary>
 	/// Whether live traffic is drawn.
 	/// </summary>
-	public bool ShowsTraffic
+	public Bindable<bool> ShowsTraffic
 	{
 		get => showsTraffic;
-		set => Set(ref showsTraffic, value, ApplyChrome, affectsMeasure: false);
+		set => showsTrafficBinding = Register(showsTrafficBinding, value, value => Set(ref showsTraffic, value, ApplyChrome, affectsMeasure: false));
 	}
 	bool showsTraffic;
+	Binding<bool>? showsTrafficBinding;
 
 	/// <summary>
 	/// The markers dropped on the map.

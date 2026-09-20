@@ -663,6 +663,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	partial void ReloadItems() =>
 		QueueSnapshot();
 
+	partial void ReloadIndexTitles()
+	{
+		if (IsRealized)
+			Ui.ReloadData();
+	}
+
 	partial void ApplyChange() =>
 		QueueSnapshot();
 
@@ -828,6 +834,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 				created.HighlightBackground,
 				MultiSelects,
 				ReorderCommand is not null);
+			created.ObserveHighlightBackground(cell.SetHighlightBackground);
 		}
 
 		if (cell.Hosted is ICollectionItemView view)
@@ -952,7 +959,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (SectionIndexTitle is not Func<TSection, string> letterOf || !IsGrouped)
 			return null;
 
-		if (IndexTitles is IReadOnlyList<string> explicitTitles)
+		if (indexTitles is IReadOnlyList<string> explicitTitles)
 			return [.. explicitTitles];
 
 		string[] titles = new string[SectionCount];
@@ -1946,6 +1953,17 @@ internal sealed class SkeleCell(
 	public void SetAutomaticMinimumHeight(
 		double value) =>
 		automaticMinimumHeight = value;
+
+	public void SetHighlightBackground(
+		Brush? value)
+	{
+		highlight = value;
+
+		if (lit)
+			Hosted?.SetBackgroundOverride(value);
+
+		SetNeedsUpdateConfiguration();
+	}
 
 	bool lit;
 

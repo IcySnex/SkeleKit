@@ -58,7 +58,7 @@ internal sealed class TextViewView : ShowcaseView<TextViewViewModel>
 				.TwoWay((vm, val) => vm.LinkColorIndex = val),
 			SelectionChanged = index =>
 			{
-				text.LinkColor = index is 0 ? null : Colors.Blue;
+				text.LinkColor = index is 0 ? default : Colors.Blue;
 			}
 		};
 		linkColor.Items.Add("Tint");

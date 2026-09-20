@@ -50,22 +50,24 @@ public class DatePicker : Control
 	/// <summary>
 	/// The earliest pickable date, or null for no bound.
 	/// </summary>
-	public DateTime? Minimum
+	public Bindable<DateTime?> Minimum
 	{
 		get => minimum;
-		set => Set(ref minimum, value, ApplyRange, affectsMeasure: false);
+		set => minimumBinding = Register(minimumBinding, value, value => Set(ref minimum, value, ApplyRange, affectsMeasure: false));
 	}
 	DateTime? minimum;
+	Binding<DateTime?>? minimumBinding;
 
 	/// <summary>
 	/// The latest pickable date, or null for no bound.
 	/// </summary>
-	public DateTime? Maximum
+	public Bindable<DateTime?> Maximum
 	{
 		get => maximum;
-		set => Set(ref maximum, value, ApplyRange, affectsMeasure: false);
+		set => maximumBinding = Register(maximumBinding, value, value => Set(ref maximum, value, ApplyRange, affectsMeasure: false));
 	}
 	DateTime? maximum;
+	Binding<DateTime?>? maximumBinding;
 
 	/// <summary>
 	/// Invoked with the new value whenever the user picks a date.

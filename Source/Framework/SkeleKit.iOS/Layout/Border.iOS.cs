@@ -9,13 +9,13 @@ public partial class Border
 
 	partial void ApplyStrokeCore()
 	{
-		double thickness = Math.Max(0, StrokeThickness);
+		double thickness = Math.Max(0, strokeThickness);
 
-		if (StrokeDashPattern is not { Length: > 0 } pattern)
+		if (strokeDashPattern is not { Count: > 0 } pattern)
 		{
 			DropStrokeLayer();
 			Native.Layer.BorderWidth = (nfloat)thickness;
-			Native.Layer.BorderColor = Stroke?.ToUIColor().CGColor;
+			Native.Layer.BorderColor = stroke?.ToUIColor().CGColor;
 			return;
 		}
 
@@ -35,19 +35,25 @@ public partial class Border
 
 		CATransaction.Begin();
 		CATransaction.DisableActions = true;
-		strokeLayer.Hidden = Stroke is null || thickness <= 0;
-		strokeLayer.StrokeColor = Stroke?.ToUIColor().CGColor;
+		strokeLayer.Hidden = stroke is null || thickness <= 0;
+		strokeLayer.StrokeColor = stroke?.ToUIColor().CGColor;
 		strokeLayer.LineWidth = (nfloat)thickness;
-		strokeLayer.LineCap = StrokeLineCap switch
+		strokeLayer.LineCap = strokeLineCap switch
 		{
-			StrokeLineCap.Round => CAShapeLayer.CapRound,
-			StrokeLineCap.Square => CAShapeLayer.CapSquare,
+			SkeleKit.StrokeLineCap.Round => CAShapeLayer.CapRound,
+			SkeleKit.StrokeLineCap.Square => CAShapeLayer.CapSquare,
 			_ => CAShapeLayer.CapButt
 		};
 		strokeLayer.LineDashPattern = [.. pattern.Select(NSNumber.FromDouble)];
 		CATransaction.Commit();
 
 		SyncStrokeGeometry(new(Native.Bounds.Width, Native.Bounds.Height));
+	}
+
+	partial void ApplyStrokeDashPatternCore()
+	{
+		if (IsRealized)
+			ApplyStrokeCore();
 	}
 
 	partial void ArrangeStrokeCore(
@@ -63,7 +69,7 @@ public partial class Border
 		nfloat width = (nfloat)Math.Max(0, size.Width);
 		nfloat height = (nfloat)Math.Max(0, size.Height);
 		nfloat inset = (nfloat)Math.Min(
-			Math.Max(0, StrokeThickness) / 2,
+			Math.Max(0, strokeThickness) / 2,
 			Math.Min(width, height) / 2);
 		CGRect bounds = new(
 			inset,
@@ -100,11 +106,13 @@ public partial class Border
 	{
 		base.OnRealized();
 
+		HookStrokeDashPattern();
 		ApplyStrokeCore();
 	}
 
 	private protected override void OnUnrealized()
 	{
+		UnhookStrokeDashPattern();
 		DropStrokeLayer();
 		base.OnUnrealized();
 	}

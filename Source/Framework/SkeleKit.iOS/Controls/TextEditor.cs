@@ -136,12 +136,13 @@ public class TextEditor : Control
 	/// <summary>
 	/// The weight the text is drawn at.
 	/// </summary>
-	public FontWeight FontWeight
+	public Bindable<FontWeight> FontWeight
 	{
 		get => fontWeight;
-		set => Set(ref fontWeight, value, ApplyFont);
+		set => fontWeightBinding = Register(fontWeightBinding, value, value => Set(ref fontWeight, value, ApplyFont));
 	}
-	FontWeight fontWeight = FontWeight.Regular;
+	FontWeight fontWeight = SkeleKit.FontWeight.Regular;
+	Binding<FontWeight>? fontWeightBinding;
 
 	/// <summary>
 	/// The system font design the text uses.
@@ -264,7 +265,7 @@ public class TextEditor : Control
 
 		CGSize fit = view.SizeThatFits(ClampToFinite(availableSize));
 
-		UIFont font = view.Font ?? Fonts.Scaled(fontSize, FontWeight.Regular, FontDesign.Default, minFontSize, maxFontSize);
+		UIFont font = view.Font ?? Fonts.Scaled(fontSize, SkeleKit.FontWeight.Regular, FontDesign.Default, minFontSize, maxFontSize);
 		UIEdgeInsets inset = view.TextContainerInset;
 		nfloat lineFloor = (nfloat)Math.Ceiling(font.LineHeight) + inset.Top + inset.Bottom;
 

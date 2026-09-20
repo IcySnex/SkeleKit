@@ -372,12 +372,13 @@ public abstract partial class View
 	/// <summary>
 	/// Extra VoiceOver context describing what activating the view does, or null for none.
 	/// </summary>
-	public string? AccessibilityHint
+	public Bindable<string?> AccessibilityHint
 	{
 		get => accessibilityHint;
-		set => Set(ref accessibilityHint, value, ApplyAccessibility, affectsMeasure: false);
+		set => accessibilityHintBinding = Register(accessibilityHintBinding, value, value => Set(ref accessibilityHint, value, ApplyAccessibility, affectsMeasure: false));
 	}
 	string? accessibilityHint;
+	Binding<string?>? accessibilityHintBinding;
 
 	/// <summary>
 	/// The current value VoiceOver reads after the label (a slider's percentage), or null for the control's own default.
@@ -393,12 +394,13 @@ public abstract partial class View
 	/// <summary>
 	/// Extra traits VoiceOver applies on top of the control's own (Header, Selected, ...).
 	/// </summary>
-	public AccessibilityTraits AccessibilityTraits
+	public Bindable<AccessibilityTrait> AccessibilityTraits
 	{
 		get => accessibilityTraits;
-		set => Set(ref accessibilityTraits, value, ApplyAccessibility, affectsMeasure: false);
+		set => accessibilityTraitsBinding = Register(accessibilityTraitsBinding, value, value => Set(ref accessibilityTraits, value, ApplyAccessibility, affectsMeasure: false));
 	}
-	AccessibilityTraits accessibilityTraits;
+	AccessibilityTrait accessibilityTraits;
+	Binding<AccessibilityTrait>? accessibilityTraitsBinding;
 
 	/// <summary>
 	/// Identifier for UI tests. Never read to the user.
@@ -571,12 +573,17 @@ public abstract partial class View
 	/// <summary>
 	/// The background fill: a color, gradient or material, or null for transparent.
 	/// </summary>
-	public Brush? Background
+	public BindableBrush? Background
 	{
-		get => background;
-		set => Set(ref background, value, ApplyVisualState, affectsMeasure: false);
+		get => background is null ? null : new(background);
+		set => backgroundBinding = Register(
+			backgroundBinding,
+			value?.Expression,
+			value?.Value,
+			value => Set(ref background, value, ApplyVisualState, affectsMeasure: false));
 	}
 	Brush? background;
+	Binding<Brush?>? backgroundBinding;
 
 	/// <summary>
 	/// The tint color for this view and everything under it.
@@ -630,12 +637,13 @@ public abstract partial class View
 	/// <summary>
 	/// Opacity from 0 (transparent) to 1 (opaque).
 	/// </summary>
-	public double Opacity
+	public Bindable<double> Opacity
 	{
 		get => opacity;
-		set => Set(ref opacity, value, ApplyVisualState, affectsMeasure: false);
+		set => opacityBinding = Register(opacityBinding, value, value => Set(ref opacity, value, ApplyVisualState, affectsMeasure: false));
 	}
 	double opacity = 1.0;
+	Binding<double>? opacityBinding;
 
 	/// <summary>
 	/// Corner radius in points applied to the layer.

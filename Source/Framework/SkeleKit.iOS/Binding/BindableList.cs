@@ -11,7 +11,7 @@ namespace SkeleKit;
 /// </remarks>
 /// <typeparam name="TItem">The element type of the list.</typeparam>
 [CollectionBuilder(typeof(BindableList), nameof(BindableList.Create))]
-public readonly struct BindableList<TItem>
+public readonly struct BindableList<TItem> : IReadOnlyList<TItem>
 {
 	static BindingExpression<IReadOnlyList<TItem>?> Widen<TList>(
 		BindingExpression<TList?> expression) where TList : class, IReadOnlyList<TItem> =>
@@ -101,6 +101,34 @@ public readonly struct BindableList<TItem>
 
 	internal BindingExpression<IReadOnlyList<TItem>?>? Expression { get; }
 
+	/// <summary>
+	/// The number of current items. A binding that has not been evaluated yet is empty.
+	/// </summary>
+	public int Count => Value?.Count ?? 0;
+
+	/// <summary>
+	/// Gets a current item by index.
+	/// </summary>
+	public TItem this[int index] => (Value ?? [])[index];
+
+	/// <summary>
+	/// Adds an item when the wrapped source is mutable.
+	/// </summary>
+	/// <remarks>
+	/// Bound and read-only sources cannot be mutated through this wrapper.
+	/// </remarks>
+	public void Add(
+		TItem item)
+	{
+		if (Value is ICollection<TItem> collection)
+		{
+			collection.Add(item);
+			return;
+		}
+
+		throw new NotSupportedException("The wrapped list is read-only or supplied by a binding.");
+	}
+
 
 	// lets collection expressions infer the element type; current items only, never a live source
 	/// <summary>
@@ -109,6 +137,9 @@ public readonly struct BindableList<TItem>
 	/// <returns>An enumerator over the current items.</returns>
 	public IEnumerator<TItem> GetEnumerator() =>
 		(Value ?? []).GetEnumerator();
+
+	System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() =>
+		GetEnumerator();
 }
 
 /// <summary>

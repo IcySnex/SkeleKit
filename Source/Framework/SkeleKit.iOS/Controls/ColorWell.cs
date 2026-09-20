@@ -22,12 +22,13 @@ public class ColorWell : Control
 	/// <summary>
 	/// The title shown above the picker.
 	/// </summary>
-	public string? Title
+	public Bindable<string?> Title
 	{
 		get => title;
-		set => Set(ref title, value, ApplyTitle, affectsMeasure: false);
+		set => titleBinding = Register(titleBinding, value, value => Set(ref title, value, ApplyTitle, affectsMeasure: false));
 	}
 	string? title;
+	Binding<string?>? titleBinding;
 
 	/// <summary>
 	/// Whether the picker offers an opacity slider.

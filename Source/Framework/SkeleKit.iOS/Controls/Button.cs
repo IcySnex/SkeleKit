@@ -96,12 +96,13 @@ public class Button : Control
 	/// <summary>
 	/// Styles the button red, for destructive actions.
 	/// </summary>
-	public bool IsDestructive
+	public Bindable<bool> IsDestructive
 	{
 		get => isDestructive;
-		set => Set(ref isDestructive, value, ApplyConfiguration);
+		set => isDestructiveBinding = Register(isDestructiveBinding, value, value => Set(ref isDestructive, value, ApplyConfiguration));
 	}
 	bool isDestructive;
+	Binding<bool>? isDestructiveBinding;
 
 	/// <summary>
 	/// Shows a spinner in place of the icon while true. Bind it to a command's running state.

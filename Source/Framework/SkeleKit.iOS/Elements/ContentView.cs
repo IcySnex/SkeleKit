@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Collections.Specialized;
 using System.Windows.Input;
 
 namespace SkeleKit;
@@ -8,6 +9,7 @@ namespace SkeleKit;
 /// </summary>
 public abstract partial class ContentView : ContentHost
 {
+	bool searchScopesHooked;
 	internal Thickness PageSystemInsets { get; private set; } = Thickness.Zero;
 	internal bool PageIsRightToLeft { get; private set; }
 	internal Thickness PageSafeArea { get; private set; } = Thickness.Zero;
@@ -201,7 +203,13 @@ public abstract partial class ContentView : ContentHost
 	/// <summary>
 	/// The back button title the next pushed page shows, or null for this page's title.
 	/// </summary>
-	public string? BackButtonTitle { get; set; }
+	public Bindable<string?> BackButtonTitle
+	{
+		get => backButtonTitle;
+		set => backButtonTitleBinding = Register(backButtonTitleBinding, value, value => Set(ref backButtonTitle, value, ApplyPageChrome, affectsMeasure: false));
+	}
+	string? backButtonTitle;
+	Binding<string?>? backButtonTitleBinding;
 
 	/// <summary>
 	/// How the next pushed page's back button represents this page.
@@ -222,22 +230,46 @@ public abstract partial class ContentView : ContentHost
 	/// <summary>
 	/// The status bar look for this page.
 	/// </summary>
-	public StatusBarStyle StatusBar { get; set; }
+	public Bindable<StatusBarStyle> StatusBar
+	{
+		get => statusBar;
+		set => statusBarBinding = Register(statusBarBinding, value, value => Set(ref statusBar, value, ApplyPageChrome, affectsMeasure: false));
+	}
+	StatusBarStyle statusBar;
+	Binding<StatusBarStyle>? statusBarBinding;
 
 	/// <summary>
 	/// The tint for this page's bar buttons and back button, or null for the app tint.
 	/// </summary>
-	public Color? BarTint { get; set; }
+	public Bindable<Color?> BarTint
+	{
+		get => barTint;
+		set => barTintBinding = Register(barTintBinding, value, value => Set(ref barTint, value, ApplyPageChrome, affectsMeasure: false));
+	}
+	Color? barTint;
+	Binding<Color?>? barTintBinding;
 
 	/// <summary>
 	/// The navigation title's color, or null for the system default.
 	/// </summary>
-	public Color? TitleColor { get; set; }
+	public Bindable<Color?> TitleColor
+	{
+		get => titleColor;
+		set => titleColorBinding = Register(titleColorBinding, value, value => Set(ref titleColor, value, ApplyPageChrome, affectsMeasure: false));
+	}
+	Color? titleColor;
+	Binding<Color?>? titleColorBinding;
 
 	/// <summary>
 	/// The expanded large title's color, or null for the system default.
 	/// </summary>
-	public Color? LargeTitleColor { get; set; }
+	public Bindable<Color?> LargeTitleColor
+	{
+		get => largeTitleColor;
+		set => largeTitleColorBinding = Register(largeTitleColorBinding, value, value => Set(ref largeTitleColor, value, ApplyPageChrome, affectsMeasure: false));
+	}
+	Color? largeTitleColor;
+	Binding<Color?>? largeTitleColorBinding;
 
 	/// <summary>
 	/// Asked before the page is left, so unsaved changes can veto leaving.
@@ -293,15 +325,13 @@ public abstract partial class ContentView : ContentHost
 	/// <summary>
 	/// The badge's background color, or null for the system red.
 	/// </summary>
-	public Color? TabBadgeColor
+	public Bindable<Color?> TabBadgeColor
 	{
-		get;
-		set
-		{
-			field = value;
-			ApplyTabBadge();
-		}
+		get => tabBadgeColor;
+		set => tabBadgeColorBinding = Register(tabBadgeColorBinding, value, value => Set(ref tabBadgeColor, value, ApplyTabBadge, affectsMeasure: false));
 	}
+	Color? tabBadgeColor;
+	Binding<Color?>? tabBadgeColorBinding;
 
 	/// <summary>
 	/// Buttons in the navigation bar.
@@ -323,7 +353,13 @@ public abstract partial class ContentView : ContentHost
 	/// <remarks>
 	/// Setting it shows the search bar.
 	/// </remarks>
-	public string? SearchPlaceholder { get; set; }
+	public Bindable<string?> SearchPlaceholder
+	{
+		get => searchPlaceholder;
+		set => searchPlaceholderBinding = Register(searchPlaceholderBinding, value, value => Set(ref searchPlaceholder, value, ApplySearchConfiguration, affectsMeasure: false));
+	}
+	string? searchPlaceholder;
+	Binding<string?>? searchPlaceholderBinding;
 
 	/// <summary>
 	/// Whether the search bar collapses into the bar as the content scrolls.
@@ -338,7 +374,13 @@ public abstract partial class ContentView : ContentHost
 	/// <summary>
 	/// Titles of the scope buttons under an active search field. Empty for none.
 	/// </summary>
-	public IList<string> SearchScopes { get; } = [];
+	public BindableList<string> SearchScopes
+	{
+		get => new(searchScopes);
+		set => searchScopesBinding = Register(searchScopesBinding, value.Expression, value.Value, SetSearchScopes);
+	}
+	IReadOnlyList<string> searchScopes = new List<string>();
+	Binding<IReadOnlyList<string>?>? searchScopesBinding;
 
 	/// <summary>
 	/// Whether search scopes stay hidden until the search field contains text.
@@ -386,6 +428,54 @@ public abstract partial class ContentView : ContentHost
 	/// Invoked when the user cancels out of the search field.
 	/// </summary>
 	public Action? SearchCanceled { get; set; }
+	internal string? BackButtonTitleValue => backButtonTitle;
+	internal StatusBarStyle StatusBarValue => statusBar;
+	internal Color? BarTintValue => barTint;
+	internal Color? TitleColorValue => titleColor;
+	internal Color? LargeTitleColorValue => largeTitleColor;
+	internal string? SearchPlaceholderValue => searchPlaceholder;
+	internal IReadOnlyList<string> SearchScopeValues => searchScopes;
+
+	void SetSearchScopes(
+		IReadOnlyList<string>? value)
+	{
+		if (searchScopesHooked && searchScopes is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnSearchScopesChanged;
+
+		searchScopes = value ?? [];
+
+		if (searchScopesHooked && searchScopes is INotifyCollectionChanged live)
+			live.CollectionChanged += OnSearchScopesChanged;
+
+		ApplySearchConfiguration();
+	}
+
+	void HookSearchScopes()
+	{
+		if (searchScopesHooked)
+			return;
+
+		searchScopesHooked = true;
+		if (searchScopes is INotifyCollectionChanged live)
+			live.CollectionChanged += OnSearchScopesChanged;
+	}
+
+	void UnhookSearchScopes()
+	{
+		if (!searchScopesHooked)
+			return;
+
+		if (searchScopes is INotifyCollectionChanged live)
+			live.CollectionChanged -= OnSearchScopesChanged;
+
+		searchScopesHooked = false;
+	}
+
+	void OnSearchScopesChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs args) =>
+		ApplySearchConfiguration();
+
 	void ApplyTitle() =>
 		ApplyTitleCore();
 
@@ -398,6 +488,12 @@ public abstract partial class ContentView : ContentHost
 	void ApplySearchScope() =>
 		ApplySearchScopeCore();
 
+	void ApplyPageChrome() =>
+		ApplyPageChromeCore();
+
+	void ApplySearchConfiguration() =>
+		ApplySearchConfigurationCore();
+
 	partial void ApplyTitleCore();
 
 	partial void ApplyPromptCore();
@@ -405,6 +501,10 @@ public abstract partial class ContentView : ContentHost
 	partial void ApplySearchTextCore();
 
 	partial void ApplySearchScopeCore();
+
+	partial void ApplyPageChromeCore();
+
+	partial void ApplySearchConfigurationCore();
 
 	partial void ApplyTabBadgeCore();
 

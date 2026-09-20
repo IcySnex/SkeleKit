@@ -33,22 +33,24 @@ public class PageControl : Control
 	/// <summary>
 	/// The color of the unfilled dots, or null for the system default.
 	/// </summary>
-	public Color? DotColor
+	public Bindable<Color?> DotColor
 	{
 		get => dotColor;
-		set => Set(ref dotColor, value, ApplyColors, affectsMeasure: false);
+		set => dotColorBinding = Register(dotColorBinding, value, value => Set(ref dotColor, value, ApplyColors, affectsMeasure: false));
 	}
 	Color? dotColor;
+	Binding<Color?>? dotColorBinding;
 
 	/// <summary>
 	/// The color of the filled dot, or null for the system default.
 	/// </summary>
-	public Color? CurrentDotColor
+	public Bindable<Color?> CurrentDotColor
 	{
 		get => currentDotColor;
-		set => Set(ref currentDotColor, value, ApplyColors, affectsMeasure: false);
+		set => currentDotColorBinding = Register(currentDotColorBinding, value, value => Set(ref currentDotColor, value, ApplyColors, affectsMeasure: false));
 	}
 	Color? currentDotColor;
+	Binding<Color?>? currentDotColorBinding;
 
 	/// <summary>
 	/// Whether the control hides itself while there is only one page.

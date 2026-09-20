@@ -104,11 +104,13 @@ public class TextField : Control
 	/// <summary>
 	/// The local icon shown before the text, or null for none.
 	/// </summary>
-	public ImageSource? LeadingIcon
+	public Bindable<ImageSource?> LeadingIcon
 	{
-		get;
-		set => Set(ref field, value, ApplyLeading);
+		get => leadingIcon;
+		set => leadingIconBinding = Register(leadingIconBinding, value, value => Set(ref leadingIcon, value, ApplyLeading));
 	}
+	ImageSource? leadingIcon;
+	Binding<ImageSource?>? leadingIconBinding;
 
 	/// <summary>
 	/// The local icon shown after the text, or null for none.
@@ -116,11 +118,13 @@ public class TextField : Control
 	/// <remarks>
 	/// Shares the trailing slot with <see cref="ClearButton"/>, so an icon hides the clear button.
 	/// </remarks>
-	public ImageSource? TrailingIcon
+	public Bindable<ImageSource?> TrailingIcon
 	{
-		get;
-		set => Set(ref field, value, ApplyTrailing);
+		get => trailingIcon;
+		set => trailingIconBinding = Register(trailingIconBinding, value, value => Set(ref trailingIcon, value, ApplyTrailing));
 	}
+	ImageSource? trailingIcon;
+	Binding<ImageSource?>? trailingIconBinding;
 
 	/// <summary>
 	/// Which on-screen keyboard to show while editing.
@@ -278,12 +282,13 @@ public class TextField : Control
 	/// <summary>
 	/// The weight the text is drawn at.
 	/// </summary>
-	public FontWeight FontWeight
+	public Bindable<FontWeight> FontWeight
 	{
 		get => fontWeight;
-		set => Set(ref fontWeight, value, ApplyFont);
+		set => fontWeightBinding = Register(fontWeightBinding, value, value => Set(ref fontWeight, value, ApplyFont));
 	}
-	FontWeight fontWeight = FontWeight.Regular;
+	FontWeight fontWeight = SkeleKit.FontWeight.Regular;
+	Binding<FontWeight>? fontWeightBinding;
 
 	/// <summary>
 	/// The system font design the text uses.
@@ -319,7 +324,7 @@ public class TextField : Control
 
 	void ApplyLeading()
 	{
-		leadingView = LeadingIcon is ImageSource source && ResolveIcon(source) is UIImage image ? IconView(image) : null;
+		leadingView = leadingIcon is ImageSource source && ResolveIcon(source) is UIImage image ? IconView(image) : null;
 
 		Ui.LeftView = leadingView;
 		Ui.LeftViewMode = leadingView is null ? UITextFieldViewMode.Never : UITextFieldViewMode.Always;
@@ -500,7 +505,7 @@ public class TextField : Control
 
 	private protected virtual void ApplyTrailing()
 	{
-		trailingView = TrailingIcon is ImageSource source && ResolveIcon(source) is UIImage image ? IconView(image) : null;
+		trailingView = trailingIcon is ImageSource source && ResolveIcon(source) is UIImage image ? IconView(image) : null;
 
 		Ui.RightView = trailingView;
 		Ui.RightViewMode = trailingView is null ? UITextFieldViewMode.Never : UITextFieldViewMode.Always;

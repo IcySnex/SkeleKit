@@ -78,6 +78,48 @@ public class BindingTests
 	}
 
 	[Fact]
+	public void Background_TracksBoundColor()
+	{
+		MovieViewModel viewModel = new() { Accent = Colors.Indigo };
+		StubBound view = new()
+		{
+			Background = BindingFactory.Bind((MovieViewModel vm) => vm.Accent)
+		};
+		view.BindingContext = viewModel;
+
+		SolidBrush initial = Assert.IsType<SolidBrush>(view.Background?.Value);
+		Assert.Equal(Colors.Indigo, initial.Color);
+
+		viewModel.Accent = Colors.Pink;
+
+		SolidBrush updated = Assert.IsType<SolidBrush>(view.Background?.Value);
+		Assert.Equal(Colors.Pink, updated.Color);
+
+		viewModel.Accent = null;
+
+		Assert.Null(view.Background);
+	}
+
+	[Fact]
+	public void Background_AcceptsNonNullableColorBinding()
+	{
+		MovieViewModel viewModel = new() { RequiredAccent = Colors.Indigo };
+		StubBound view = new()
+		{
+			Background = BindingFactory.Bind((MovieViewModel vm) => vm.RequiredAccent)
+		};
+		view.BindingContext = viewModel;
+
+		SolidBrush initial = Assert.IsType<SolidBrush>(view.Background?.Value);
+		Assert.Equal(Colors.Indigo, initial.Color);
+
+		viewModel.RequiredAccent = Colors.Pink;
+
+		SolidBrush updated = Assert.IsType<SolidBrush>(view.Background?.Value);
+		Assert.Equal(Colors.Pink, updated.Color);
+	}
+
+	[Fact]
 	public void SearchState_RoundTrips()
 	{
 		MovieViewModel viewModel = new() { Query = "SkeleKit", SearchScope = 1 };
@@ -248,6 +290,18 @@ public class BindingTests
 		IReadOnlyList<string>? current = bound.Expression?.Getter(viewModel);
 
 		Assert.Equal(viewModel.Options, current);
+	}
+
+	[Fact]
+	public void BindableList_ExposesLiteralItems()
+	{
+		BindableList<string> items = new List<string> { "System", "Light" };
+
+		items.Add("Dark");
+
+		Assert.Equal(3, items.Count);
+		Assert.Equal("Dark", items[2]);
+		Assert.Equal(["System", "Light", "Dark"], items);
 	}
 
 	[Fact]

@@ -22,22 +22,24 @@ public class Slider : Control
 	/// <summary>
 	/// The minimum selectable value.
 	/// </summary>
-	public double Minimum
+	public Bindable<double> Minimum
 	{
 		get => minimum;
-		set => Set(ref minimum, value, ApplyRange, affectsMeasure: false);
+		set => minimumBinding = Register(minimumBinding, value, value => Set(ref minimum, value, ApplyRange, affectsMeasure: false));
 	}
 	double minimum;
+	Binding<double>? minimumBinding;
 
 	/// <summary>
 	/// The maximum selectable value.
 	/// </summary>
-	public double Maximum
+	public Bindable<double> Maximum
 	{
 		get => maximum;
-		set => Set(ref maximum, value, ApplyRange, affectsMeasure: false);
+		set => maximumBinding = Register(maximumBinding, value, value => Set(ref maximum, value, ApplyRange, affectsMeasure: false));
 	}
 	double maximum = 1;
+	Binding<double>? maximumBinding;
 
 	/// <summary>
 	/// The increment the value snaps to, or 0 for continuous.
@@ -45,12 +47,13 @@ public class Slider : Control
 	/// <remarks>
 	/// Stepping requires iOS 26 or later.
 	/// </remarks>
-	public double Step
+	public Bindable<double> Step
 	{
 		get => step;
-		set => Set(ref step, value, ApplyStep, affectsMeasure: false);
+		set => stepBinding = Register(stepBinding, value, value => Set(ref step, value, ApplyStep, affectsMeasure: false));
 	}
 	double step;
+	Binding<double>? stepBinding;
 
 	/// <summary>
 	/// Whether the value updates all through the drag, rather than only when the thumb is released.
@@ -65,52 +68,57 @@ public class Slider : Control
 	/// <summary>
 	/// The color of the filled part of the track, or null for the system tint.
 	/// </summary>
-	public Color? TrackColor
+	public Bindable<Color?> TrackColor
 	{
 		get => trackColor;
-		set => Set(ref trackColor, value, ApplyStyle, affectsMeasure: false);
+		set => trackColorBinding = Register(trackColorBinding, value, value => Set(ref trackColor, value, ApplyStyle, affectsMeasure: false));
 	}
 	Color? trackColor;
+	Binding<Color?>? trackColorBinding;
 
 	/// <summary>
 	/// The color of the unfilled part of the track, or null for the system default.
 	/// </summary>
-	public Color? EmptyTrackColor
+	public Bindable<Color?> EmptyTrackColor
 	{
 		get => emptyTrackColor;
-		set => Set(ref emptyTrackColor, value, ApplyStyle, affectsMeasure: false);
+		set => emptyTrackColorBinding = Register(emptyTrackColorBinding, value, value => Set(ref emptyTrackColor, value, ApplyStyle, affectsMeasure: false));
 	}
 	Color? emptyTrackColor;
+	Binding<Color?>? emptyTrackColorBinding;
 
 	/// <summary>
 	/// The thumb color, or null for the system default.
 	/// </summary>
-	public Color? ThumbColor
+	public Bindable<Color?> ThumbColor
 	{
 		get => thumbColor;
-		set => Set(ref thumbColor, value, ApplyStyle, affectsMeasure: false);
+		set => thumbColorBinding = Register(thumbColorBinding, value, value => Set(ref thumbColor, value, ApplyStyle, affectsMeasure: false));
 	}
 	Color? thumbColor;
+	Binding<Color?>? thumbColorBinding;
 
 	/// <summary>
 	/// The local icon shown at the minimum end, or null for none.
 	/// </summary>
-	public ImageSource? MinIcon
+	public Bindable<ImageSource?> MinIcon
 	{
 		get => minIcon;
-		set => Set(ref minIcon, value, ApplyStyle);
+		set => minIconBinding = Register(minIconBinding, value, value => Set(ref minIcon, value, ApplyStyle));
 	}
 	ImageSource? minIcon;
+	Binding<ImageSource?>? minIconBinding;
 
 	/// <summary>
 	/// The local icon shown at the maximum end, or null for none.
 	/// </summary>
-	public ImageSource? MaxIcon
+	public Bindable<ImageSource?> MaxIcon
 	{
 		get => maxIcon;
-		set => Set(ref maxIcon, value, ApplyStyle);
+		set => maxIconBinding = Register(maxIconBinding, value, value => Set(ref maxIcon, value, ApplyStyle));
 	}
 	ImageSource? maxIcon;
+	Binding<ImageSource?>? maxIconBinding;
 
 	/// <summary>
 	/// Invoked with the new value whenever the user moves the slider.
@@ -140,14 +148,9 @@ public class Slider : Control
 
 	void ApplyStyle()
 	{
-		if (trackColor is Color track)
-			Ui.MinimumTrackTintColor = track.ToUIColor();
-
-		if (emptyTrackColor is Color empty)
-			Ui.MaximumTrackTintColor = empty.ToUIColor();
-
-		if (thumbColor is Color thumb)
-			Ui.ThumbTintColor = thumb.ToUIColor();
+		Ui.MinimumTrackTintColor = trackColor?.ToUIColor();
+		Ui.MaximumTrackTintColor = emptyTrackColor?.ToUIColor();
+		Ui.ThumbTintColor = thumbColor?.ToUIColor();
 
 		Ui.MinValueImage = minIcon?.ResolveLocal();
 		Ui.MaxValueImage = maxIcon?.ResolveLocal();

@@ -8,6 +8,8 @@ internal interface ICollectionItemView
 
 	Brush? HighlightBackground { get; }
 
+	void ObserveHighlightBackground(Action<Brush?> changed);
+
 	void SetItem(object? item);
 }
 
@@ -21,7 +23,18 @@ public abstract class ItemView<TItem> : ContentHost, ICollectionItemView
 	/// <summary>
 	/// The background shown while the cell is pressed or selected, or null for no highlight.
 	/// </summary>
-	public Brush? HighlightBackground { get; set; } = Colors.Gray4;
+	public BindableBrush? HighlightBackground
+	{
+		get => highlightBackground is null ? null : new(highlightBackground);
+		set => highlightBackgroundBinding = Register(
+			highlightBackgroundBinding,
+			value?.Expression,
+			value?.Value,
+			SetHighlightBackground);
+	}
+	Brush? highlightBackground = Colors.Gray4;
+	Binding<Brush?>? highlightBackgroundBinding;
+	Action<Brush?>? highlightBackgroundChanged;
 
 	/// <summary>
 	/// The item this cell shows. Swapped on reuse; the bindings re-fire.
@@ -91,6 +104,20 @@ public abstract class ItemView<TItem> : ContentHost, ICollectionItemView
 
 
 	View ICollectionItemView.View => this;
+	Brush? ICollectionItemView.HighlightBackground => highlightBackground;
+	void ICollectionItemView.ObserveHighlightBackground(
+		Action<Brush?> changed) =>
+		highlightBackgroundChanged = changed;
+
+	void SetHighlightBackground(
+		Brush? value)
+	{
+		if (ReferenceEquals(highlightBackground, value))
+			return;
+
+		highlightBackground = value;
+		highlightBackgroundChanged?.Invoke(value);
+	}
 
 	void ICollectionItemView.SetItem(
 		object? item)

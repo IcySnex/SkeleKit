@@ -202,7 +202,13 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// A tapped letter with no section jumps to the nearest one at or after it.<br/>
 	/// Has no effect without <see cref="SectionIndexTitle"/>, which still supplies each section's letter.
 	/// </remarks>
-	public IReadOnlyList<string>? IndexTitles { get; set; }
+	public BindableList<string> IndexTitles
+	{
+		get => new(indexTitles);
+		set => indexTitlesBinding = Register(indexTitlesBinding, value.Expression, value.Value, SetIndexTitles);
+	}
+	IReadOnlyList<string>? indexTitles;
+	Binding<IReadOnlyList<string>?>? indexTitlesBinding;
 
 	/// <summary>
 	/// Invoked when the user scrolls within <see cref="LoadMoreThreshold"/> items of the end.
@@ -455,6 +461,28 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		ApplySelection();
 	}
 
+	void SetIndexTitles(
+		IReadOnlyList<string>? value)
+	{
+		if (ReferenceEquals(indexTitles, value))
+			return;
+
+		if (hooked && indexTitles is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnIndexTitlesChanged;
+
+		indexTitles = value;
+
+		if (hooked && indexTitles is INotifyCollectionChanged live)
+			live.CollectionChanged += OnIndexTitlesChanged;
+
+		ReloadIndexTitles();
+	}
+
+	void OnIndexTitlesChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs args) =>
+		ReloadIndexTitles();
+
 	void HookSources()
 	{
 		if (hooked)
@@ -470,6 +498,9 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 		if (selectedItems is INotifyCollectionChanged selection)
 			selection.CollectionChanged += OnSelectedItemsChanged;
+
+		if (indexTitles is INotifyCollectionChanged titles)
+			titles.CollectionChanged += OnIndexTitlesChanged;
 
 		HookSectionItems();
 	}
@@ -487,6 +518,9 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 		if (selectedItems is INotifyCollectionChanged selection)
 			selection.CollectionChanged -= OnSelectedItemsChanged;
+
+		if (indexTitles is INotifyCollectionChanged titles)
+			titles.CollectionChanged -= OnIndexTitlesChanged;
 
 		UnhookSectionItems();
 
@@ -620,6 +654,8 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	partial void ApplyKeyboardDismissCore();
 
 	partial void ReloadItems();
+
+	partial void ReloadIndexTitles();
 
 	partial void ApplyChange();
 

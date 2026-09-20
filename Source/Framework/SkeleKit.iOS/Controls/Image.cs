@@ -37,20 +37,24 @@ public class Image : Control
 	/// <summary>
 	/// A symbol or bundle image shown while a URL source is still loading, or null for none.
 	/// </summary>
-	public ImageSource? Placeholder
+	public Bindable<ImageSource?> Placeholder
 	{
-		get;
-		set => Set(ref field, value, affectsMeasure: false);
+		get => placeholder;
+		set => placeholderBinding = Register(placeholderBinding, value, value => Set(ref placeholder, value, ApplySource, affectsMeasure: false));
 	}
+	ImageSource? placeholder;
+	Binding<ImageSource?>? placeholderBinding;
 
 	/// <summary>
 	/// A symbol or bundle image shown when a URL source fails to load, or null to keep the placeholder.
 	/// </summary>
-	public ImageSource? Fallback
+	public Bindable<ImageSource?> Fallback
 	{
-		get;
-		set => Set(ref field, value, affectsMeasure: false);
+		get => fallback;
+		set => fallbackBinding = Register(fallbackBinding, value, value => Set(ref fallback, value, ApplySource, affectsMeasure: false));
 	}
+	ImageSource? fallback;
+	Binding<ImageSource?>? fallbackBinding;
 
 	/// <summary>
 	/// Whether a URL image cross-dissolves in once it arrives, instead of popping.
@@ -86,11 +90,13 @@ public class Image : Control
 	/// <summary>
 	/// An ambient effect the symbol performs continuously while set.
 	/// </summary>
-	public SymbolEffect SymbolEffect
+	public Bindable<SymbolEffect> SymbolEffect
 	{
-		get;
-		set => Set(ref field, value, ApplySymbolEffect, affectsMeasure: false);
+		get => symbolEffect;
+		set => symbolEffectBinding = Register(symbolEffectBinding, value, value => Set(ref symbolEffect, value, ApplySymbolEffect, affectsMeasure: false));
 	}
+	SymbolEffect symbolEffect;
+	Binding<SymbolEffect>? symbolEffectBinding;
 
 
 	void ApplyStretch()
@@ -112,11 +118,11 @@ public class Image : Control
 	{
 		Ui.RemoveAllSymbolEffects();
 
-		if (SymbolEffect is SymbolEffect.None)
+		if (symbolEffect is SkeleKit.SymbolEffect.None)
 			return;
 
 		Ui.AddSymbolEffect(
-			Effect(SymbolEffect),
+			Effect(symbolEffect),
 			NSSymbolEffectOptions.Create(NSSymbolEffectOptionsRepeatBehavior.CreateContinuous()),
 			animated: true);
 	}
@@ -137,7 +143,7 @@ public class Image : Control
 			return;
 		}
 
-		Show(Placeholder is ImageSource waiting ? ResolveSync(waiting) : null, animated: false);
+		Show(placeholder is ImageSource waiting ? ResolveSync(waiting) : null, animated: false);
 		loadCancellation = new();
 
 		LoadUrlAsync(current, loadCancellation.Token);
@@ -179,11 +185,11 @@ public class Image : Control
 		SymbolEffect effect) =>
 		effect switch
 		{
-			SymbolEffect.Bounce => NSSymbolBounceEffect.Create(),
-			SymbolEffect.Pulse => NSSymbolPulseEffect.Create(),
-			SymbolEffect.VariableColor => NSSymbolVariableColorEffect.Create(),
-			SymbolEffect.Breathe => NSSymbolBreatheEffect.Create(),
-			SymbolEffect.Wiggle => NSSymbolWiggleEffect.Create(),
+			SkeleKit.SymbolEffect.Bounce => NSSymbolBounceEffect.Create(),
+			SkeleKit.SymbolEffect.Pulse => NSSymbolPulseEffect.Create(),
+			SkeleKit.SymbolEffect.VariableColor => NSSymbolVariableColorEffect.Create(),
+			SkeleKit.SymbolEffect.Breathe => NSSymbolBreatheEffect.Create(),
+			SkeleKit.SymbolEffect.Wiggle => NSSymbolWiggleEffect.Create(),
 			_ => NSSymbolRotateEffect.Create()
 		};
 
@@ -221,7 +227,7 @@ public class Image : Control
 			if (image is null)
 			{
 				// a load can fail without throwing
-				if (Fallback is ImageSource failed)
+				if (fallback is ImageSource failed)
 					Show(ResolveSync(failed), animated: true);
 
 				return;
@@ -259,7 +265,7 @@ public class Image : Control
 	public void PlaySymbolEffect(
 		SymbolEffect effect)
 	{
-		if (!IsRealized || effect is SymbolEffect.None)
+		if (!IsRealized || effect is SkeleKit.SymbolEffect.None)
 			return;
 
 		Ui.AddSymbolEffect(

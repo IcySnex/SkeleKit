@@ -32,7 +32,7 @@ public sealed class ItemViewTests
 	public void HighlightBackground_DefaultsToSystemGray()
 	{
 		TestItemView view = new();
-		SolidBrush brush = Assert.IsType<SolidBrush>(view.HighlightBackground);
+		SolidBrush brush = Assert.IsType<SolidBrush>(view.HighlightBackground?.Value);
 
 		Assert.Equal(Colors.Gray4, brush.Color);
 	}
@@ -43,5 +43,18 @@ public sealed class ItemViewTests
 		TestItemView view = new() { HighlightBackground = null };
 
 		Assert.Null(view.HighlightBackground);
+	}
+
+	[Fact]
+	public void HighlightBackground_NotifiesOwningCell()
+	{
+		TestItemView view = new();
+		Brush? changedTo = null;
+		((ICollectionItemView)view).ObserveHighlightBackground(value => changedTo = value);
+
+		view.HighlightBackground = Colors.Pink;
+
+		SolidBrush brush = Assert.IsType<SolidBrush>(changedTo);
+		Assert.Equal(Colors.Pink, brush.Color);
 	}
 }
