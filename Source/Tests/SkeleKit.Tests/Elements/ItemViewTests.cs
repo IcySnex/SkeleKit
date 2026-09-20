@@ -13,7 +13,7 @@ public sealed class ItemViewTests
 
 
 		protected override void OnItemChanged(
-			TestItem? item) =>
+			TestItem item) =>
 			ChangedTo = item;
 	}
 
@@ -22,10 +22,20 @@ public sealed class ItemViewTests
 	public void Item_NotifiesRecycledView()
 	{
 		TestItem item = new();
-		TestItemView view = new() { Item = item };
+		TestItemView view = new();
+		view.SetItem(item);
 
 		Assert.Same(item, view.ChangedTo);
+		Assert.Same(item, view.Item);
 		Assert.Same(item, view.BindingContext);
+	}
+
+	[Fact]
+	public void Item_RejectsNullAssignment()
+	{
+		TestItemView view = new();
+
+		Assert.Throws<ArgumentNullException>(() => ((ICollectionItemView)view).SetItem(null!));
 	}
 
 	[Fact]

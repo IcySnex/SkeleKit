@@ -872,8 +872,11 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			header.Attach(view);
 		}
 
-		if (header.Hosted is ItemView<TSection> hosted)
-			hosted.Item = SectionAt(indexPath.Section);
+		TSection? boundSection = SectionAt(indexPath.Section);
+		header.Hidden = boundSection is null;
+
+		if (header.Hosted is ItemView<TSection> hosted && boundSection is not null)
+			hosted.SetItem(boundSection);
 
 		CollectionLayout sectionLayout = LayoutForSection(indexPath.Section);
 		header.SetContentInsets(sectionLayout is { Kind: CollectionLayoutKind.List, Grouped: false }

@@ -10,7 +10,7 @@ internal interface ICollectionItemView
 
 	void ObserveHighlightBackground(Action<Brush?> changed);
 
-	void SetItem(object? item);
+	void SetItem(object item);
 }
 
 /// <summary>
@@ -37,26 +37,28 @@ public abstract class ItemView<TItem> : ContentHost, ICollectionItemView
 	Action<Brush?>? highlightBackgroundChanged;
 
 	/// <summary>
-	/// The item this cell shows. Swapped on reuse; the bindings re-fire.
+	/// The item this cell shows, or null before its first assignment. Swapped by the owning collection on reuse; the bindings re-fire.
 	/// </summary>
-	public TItem? Item
-	{
-		get => BindingContext as TItem;
-		set
-		{
-			if (ReferenceEquals(Item, value))
-				return;
+	public TItem? Item => BindingContext as TItem;
 
-			BindingContext = value;
-			OnItemChanged(value);
-		}
+	internal void SetItem(
+		TItem item)
+	{
+		ArgumentNullException.ThrowIfNull(item);
+
+		if (ReferenceEquals(Item, item))
+			return;
+
+		BindingContext = item;
+		OnItemChanged(item);
 	}
+
 	/// <summary>
 	/// Raised whenever this recycled view receives a different item.
 	/// </summary>
-	/// <param name="item">The item now represented by the view, or null when it is cleared.</param>
+	/// <param name="item">The item now represented by the view.</param>
 	protected virtual void OnItemChanged(
-		TItem? item)
+		TItem item)
 	{ }
 
 
@@ -120,17 +122,13 @@ public abstract class ItemView<TItem> : ContentHost, ICollectionItemView
 	}
 
 	void ICollectionItemView.SetItem(
-		object? item)
+		object item)
 	{
-		if (item is null)
-		{
-			Item = null;
-			return;
-		}
+		ArgumentNullException.ThrowIfNull(item);
 
 		if (item is not TItem typed)
 			throw new ArgumentException($"An ItemView<{typeof(TItem).Name}> cannot display {item.GetType().Name}.", nameof(item));
 
-		Item = typed;
+		SetItem(typed);
 	}
 }

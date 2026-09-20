@@ -114,9 +114,9 @@ internal sealed class SectionCell : ItemView<SectionEntry>
 
 
 	protected override void OnItemChanged(
-		SectionEntry? item)
+		SectionEntry item)
 	{
-		bool featured = item?.IsFeatured is true;
+		bool featured = item.IsFeatured;
 		container.Height = featured ? 76 : 64;
 		container.Margin = featured ? Thickness.Zero : new(0, 3);
 		container.Background = featured
@@ -165,8 +165,8 @@ internal sealed class CollectionHeader : ItemView<CollectionSection>
 
 
 	protected override void OnItemChanged(
-		CollectionSection? section) =>
-		container.Margin = section?.Layout is CollectionLayoutKind.Carousel
+		CollectionSection section) =>
+		container.Margin = section.Layout is CollectionLayoutKind.Carousel
 			? new(0, 8, 8, 5)
 			: new(0, 8, 0, 5);
 }
@@ -190,6 +190,6 @@ internal sealed class CollectionFooter : ItemView<CollectionSection>
 
 
 	protected override void OnItemChanged(
-		CollectionSection? section) =>
+		CollectionSection section) =>
 		label.Margin = new(0, 3);
 }
