@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 
 namespace SkeleKit;
@@ -6,20 +7,103 @@ internal interface ICollectionItemView
 {
 	View View { get; }
 
+	object? CurrentItem { get; }
+
 	Brush? HighlightBackground { get; }
+
+	IReadOnlyList<ItemAccessory> Accessories { get; }
 
 	void ObserveHighlightBackground(Action<Brush?> changed);
 
+	void ObserveAccessories(Action changed);
+
 	void SetItem(object item);
+
+	void SetContentInsets(
+		double leading,
+		double trailing);
 }
 
 /// <summary>
 /// The element tree for one item in a <c>CollectionView</c>.
 /// </summary>
 /// <typeparam name="TItem">The item type the cell shows.</typeparam>
-public abstract class ItemView<TItem> : ContentHost, ICollectionItemView
+public abstract class ItemView<TItem> : ContentHost, ICollectionItemView, IItemAccessoryHost
 	where TItem : class
 {
+	sealed class AccessoryCollection(
+		ItemView<TItem> owner) : Collection<ItemAccessory>
+	{
+		protected override void InsertItem(
+			int index,
+			ItemAccessory item)
+		{
+			item.Attach(owner);
+			base.InsertItem(index, item);
+			owner.NotifyAccessoriesChanged();
+		}
+
+		protected override void SetItem(
+			int index,
+			ItemAccessory item)
+		{
+			if (ReferenceEquals(this[index], item))
+				return;
+
+			ItemAccessory previous = this[index];
+			item.Attach(owner);
+			base.SetItem(index, item);
+			previous.Detach();
+			owner.NotifyAccessoriesChanged();
+		}
+
+		protected override void RemoveItem(
+			int index)
+		{
+			ItemAccessory item = this[index];
+			base.RemoveItem(index);
+			item.Detach();
+			owner.NotifyAccessoriesChanged();
+		}
+
+		protected override void ClearItems()
+		{
+			ItemAccessory[] items = [.. this];
+			base.ClearItems();
+
+			foreach (ItemAccessory item in items)
+				item.Detach();
+
+			owner.NotifyAccessoriesChanged();
+		}
+	}
+
+
+	readonly AccessoryCollection accessories;
+
+	Action? accessoriesChanged;
+
+	double contentInsetLeading;
+	double contentInsetTrailing;
+
+
+	protected ItemView() =>
+		accessories = new(this);
+
+
+	/// <summary>
+	/// The native affordances pinned to this item's edges.
+	/// </summary>
+	/// <remarks>
+	/// Configure the collection in the template constructor. Later changes update the cell in place.
+	/// </remarks>
+	public IList<ItemAccessory> Accessories => accessories;
+
+
+	void NotifyAccessoriesChanged() =>
+		accessoriesChanged?.Invoke();
+
+
 	/// <summary>
 	/// The background shown while the cell is pressed or selected, or null for no highlight.
 	/// </summary>
@@ -69,18 +153,36 @@ public abstract class ItemView<TItem> : ContentHost, ICollectionItemView
 		if (Content is not View content)
 			return Size.Zero;
 
-		content.Measure(availableSize);
+		// space the native accessories reserved, which the content keeps clear of
+		double insets = contentInsetLeading + contentInsetTrailing;
 
-		return content.DesiredSize;
+		content.Measure(new(Math.Max(0, availableSize.Width - insets), availableSize.Height));
+		Size desired = content.DesiredSize;
+
+		return new(desired.Width + insets, desired.Height);
 	}
 
 	/// <inheritdoc/>
 	protected override Size ArrangeOverride(
 		Size finalSize)
 	{
-		Content?.Arrange(new(Point.Zero, finalSize));
+		double insets = contentInsetLeading + contentInsetTrailing;
+		Content?.Arrange(new(contentInsetLeading, 0, Math.Max(0, finalSize.Width - insets), finalSize.Height));
 
 		return finalSize;
+	}
+
+
+	void ICollectionItemView.SetContentInsets(
+		double leading,
+		double trailing)
+	{
+		if (contentInsetLeading == leading && contentInsetTrailing == trailing)
+			return;
+
+		contentInsetLeading = leading;
+		contentInsetTrailing = trailing;
+		InvalidateMeasure();
 	}
 
 
@@ -106,10 +208,26 @@ public abstract class ItemView<TItem> : ContentHost, ICollectionItemView
 
 
 	View ICollectionItemView.View => this;
+	object? ICollectionItemView.CurrentItem => Item;
+	IReadOnlyList<ItemAccessory> ICollectionItemView.Accessories => accessories;
 	Brush? ICollectionItemView.HighlightBackground => highlightBackground;
 	void ICollectionItemView.ObserveHighlightBackground(
 		Action<Brush?> changed) =>
 		highlightBackgroundChanged = changed;
+	void ICollectionItemView.ObserveAccessories(
+		Action changed) =>
+		accessoriesChanged = changed;
+
+	void IItemAccessoryHost.Track(
+		BindingBase binding) =>
+		TrackBinding(binding);
+
+	void IItemAccessoryHost.Untrack(
+		BindingBase binding) =>
+		UnregisterBinding(binding);
+
+	void IItemAccessoryHost.NotifyChanged() =>
+		NotifyAccessoriesChanged();
 
 	void SetHighlightBackground(
 		Brush? value)

@@ -114,6 +114,20 @@ public abstract partial class View
 			binding.Detach();
 	}
 
+	private protected void TrackBinding(
+		BindingBase binding)
+	{
+		bindings.Add(binding);
+		binding.Attach(BindingContext);
+	}
+
+	private protected void UnregisterBinding(
+		BindingBase binding)
+	{
+		binding.Detach();
+		bindings.Remove(binding);
+	}
+
 	/// <summary>
 	/// Drops the cached measurement here and up the tree, and asks the root host for a layout pass.
 	/// </summary>

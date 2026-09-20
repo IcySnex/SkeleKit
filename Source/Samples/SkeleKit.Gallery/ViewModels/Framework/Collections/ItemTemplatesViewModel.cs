@@ -38,17 +38,33 @@ internal sealed class TemplateActionEntry(
 	string title,
 	string symbol) : TemplateEntry(title, symbol);
 
+internal sealed partial class TemplateSelectEntry : TemplateEntry
+{
+	public TemplateSelectEntry(
+		string title,
+		string symbol,
+		bool isSelected) : base(title, symbol) =>
+		IsSelected = isSelected;
+
+
+	[ObservableProperty]
+	public partial bool IsSelected { get; set; }
+}
+
 internal sealed partial class ItemTemplatesViewModel : ShowcaseViewModel
 {
 	public TemplateEntry[] Items { get; } =
 	[
 		new TemplateNavigationEntry("Account", "person.crop.circle", "Personal"),
+		new TemplateSelectEntry("Automatic", "circle.lefthalf.filled", true),
+		new TemplateSelectEntry("Light", "sun.max", false),
+		new TemplateSelectEntry("Dark", "moon", false),
 		new TemplateToggleEntry("Notifications", "bell", true),
 		new TemplateActionEntry("Clear cached data", "trash")
 	];
 
 	[ObservableProperty]
-	public partial string Status { get; set; } = "Select a navigation or action row.";
+	public partial string Status { get; set; } = "The checkmark follows the selected appearance.";
 
 	public IReadOnlyList<Span> TemplatesCode { get; } =
 	[
@@ -66,13 +82,13 @@ internal sealed partial class ItemTemplatesViewModel : ShowcaseViewModel
 				public string Detail { get; } = detail;
 			}
 
-			sealed partial class ToggleSetting : Setting
+			sealed partial class SelectSetting : Setting
 			{
-				public ToggleSetting(string title, bool value) : base(title) =>
-					Value = value;
+				public SelectSetting(string title, bool isSelected) : base(title) =>
+					IsSelected = isSelected;
 
 				[ObservableProperty]
-				public partial bool Value { get; set; }
+				public partial bool IsSelected { get; set; }
 			}
 
 			CollectionView<Setting> settings = new()
@@ -81,22 +97,42 @@ internal sealed partial class ItemTemplatesViewModel : ShowcaseViewModel
 				ItemTemplateSelector = new ItemTemplateSelector<Setting>()
 					.Add<NavigationSetting>(
 						static () => new NavigationSettingCell())
-					.Add<ToggleSetting>(
-						static () => new ToggleSettingCell()),
+					.Add<SelectSetting>(
+						static () => new SelectSettingCell()),
 				Layout = CollectionLayout.List(grouped: true)
 			};
 
-			sealed class ToggleSettingCell : ItemView<ToggleSetting>
+			sealed class NavigationSettingCell : ItemView<NavigationSetting>
 			{
-				public ToggleSettingCell()
+				public NavigationSettingCell()
 				{
-					HighlightBackground = null;
+					Background = Colors.SecondaryGroupedBackground;
 
-					Content = new Switch
+					Accessories.Add(new LabelAccessory
 					{
-						IsOn = Bind(item => item.Value).TwoWay(
-							static (item, value) => item.Value = value)
-					};
+						Text = Bind(item => item.Detail),
+						Tint = Colors.SecondaryLabel
+					});
+
+					Accessories.Add(new DisclosureAccessory());
+
+					Content = new Label { Text = Bind(item => item.Title) };
+				}
+			}
+
+			sealed class SelectSettingCell : ItemView<SelectSetting>
+			{
+				public SelectSettingCell()
+				{
+					Background = Colors.SecondaryGroupedBackground;
+
+					Accessories.Add(new CheckmarkAccessory
+					{
+						IsVisible = Bind(item => item.IsSelected),
+						Tint = Colors.Teal
+					});
+
+					Content = new Label { Text = Bind(item => item.Title) };
 				}
 			}
 			""")
@@ -107,11 +143,25 @@ internal sealed partial class ItemTemplatesViewModel : ShowcaseViewModel
 	void Activate(
 		TemplateEntry item)
 	{
-		Status = item switch
+		switch (item)
 		{
-			TemplateNavigationEntry => $"Opened {item.Title}",
-			TemplateActionEntry => $"Ran {item.Title}",
-			_ => Status
-		};
+			case TemplateSelectEntry select:
+				foreach (TemplateEntry entry in Items)
+				{
+					if (entry is TemplateSelectEntry candidate)
+						candidate.IsSelected = ReferenceEquals(candidate, select);
+				}
+
+				Status = $"Selected the {select.Title} appearance.";
+				break;
+
+			case TemplateNavigationEntry:
+				Status = $"Opened {item.Title}";
+				break;
+
+			case TemplateActionEntry:
+				Status = $"Ran {item.Title}";
+				break;
+		}
 	}
 }

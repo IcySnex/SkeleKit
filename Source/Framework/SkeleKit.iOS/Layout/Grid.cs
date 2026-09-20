@@ -171,6 +171,12 @@ public class Grid : Panel
 		IReadOnlyList<GridLength> columns = EffectiveTracks(Columns);
 		IReadOnlyList<GridLength> rows = EffectiveTracks(Rows);
 
+		// star tracks fill the arranged bounds, not the measured ones: self-sizing parents measure
+		// with an unconstrained axis, and arranging on those cached sizes would pin star rows and
+		// columns to their fit-content size instead of stretching them to the final slot
+		columnWidths = ResolveTracks(columns, Math.Max(0, finalSize.Width - insets.Horizontal - ColumnSpacing * (columns.Count - 1)), horizontal: true);
+		rowHeights = ResolveTracks(rows, Math.Max(0, finalSize.Height - insets.Vertical - RowSpacing * (rows.Count - 1)), horizontal: false);
+
 		double[] columnOffsets = Offsets(columnWidths, ColumnSpacing);
 		double[] rowOffsets = Offsets(rowHeights, RowSpacing);
 

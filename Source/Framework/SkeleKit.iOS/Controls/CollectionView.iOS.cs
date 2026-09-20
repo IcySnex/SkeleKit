@@ -830,11 +830,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			ICollectionItemView created = CreateItemView(itemTemplate);
 
 			cell.Attach(
-				created.View,
-				created.HighlightBackground,
+				created,
 				MultiSelects,
 				ReorderCommand is not null);
-			created.ObserveHighlightBackground(cell.SetHighlightBackground);
 		}
 
 		if (cell.Hosted is ICollectionItemView view)
@@ -1923,34 +1921,103 @@ internal sealed class SkeleCell(
 {
 	public View? Hosted { get; private set; }
 
+	ICollectionItemView? source;
+	bool multiselects;
+	bool reorders;
+	bool editing;
+
 	Brush? highlight;
 	double automaticMinimumHeight;
 
 	public void Attach(
-		View view,
-		Brush? highlight,
+		ICollectionItemView item,
 		bool multiselects,
 		bool reorders)
 	{
-		Hosted = view;
-		this.highlight = highlight;
+		source = item;
+		Hosted = item.View;
+		highlight = item.HighlightBackground;
+		this.multiselects = multiselects;
+		this.reorders = reorders;
 
 		// one write; repaints during a peek desync the portal
 		BackgroundConfiguration = UIBackgroundConfiguration.ClearConfiguration;
 
-		ContentView.AddSubview(view.Realize());
+		ContentView.AddSubview(Hosted.Realize());
 
-		// edit-mode accessories: the circle and the drag handle
+		item.ObserveHighlightBackground(SetHighlightBackground);
+		item.ObserveAccessories(ApplyAccessories);
+
+		ApplyAccessories();
+	}
+
+	// system affordances, with the edit-mode circle and drag handle around them
+	void ApplyAccessories()
+	{
+		if (source is null)
+			return;
+
 		List<UICellAccessory> accessories = [];
 
 		if (multiselects)
 			accessories.Add(new UICellAccessoryMultiselect());
 
+		foreach (ItemAccessory accessory in source.Accessories)
+		{
+			// hidden accessories still reserve their slot in the list layout, so they are left out
+			if (!accessory.ResolvedIsVisible || !ShowsNow(accessory))
+				continue;
+
+			accessories.Add(NativeAccessory(accessory));
+		}
+
 		if (reorders)
 			accessories.Add(new UICellAccessoryReorder());
 
-		if (accessories.Count > 0)
-			Accessories = [.. accessories];
+		Accessories = [.. accessories];
+		SetNeedsLayout();
+	}
+
+	bool ShowsNow(
+		ItemAccessory accessory) =>
+		accessory.Display switch
+		{
+			AccessoryDisplay.WhenEditing => editing,
+			AccessoryDisplay.WhenNotEditing => !editing,
+			_ => true
+		};
+
+	UICellAccessory NativeAccessory(
+		ItemAccessory accessory)
+	{
+		UICellAccessory native = accessory switch
+		{
+			CheckmarkAccessory => new UICellAccessoryCheckmark(),
+			DisclosureAccessory => new UICellAccessoryDisclosureIndicator(),
+			DetailAccessory detail => new UICellAccessoryDetail
+			{
+				ActionHandler = () => RunDetailCommand(detail)
+			},
+			LabelAccessory label => new UICellAccessoryLabel(label.ResolvedText ?? "")
+			{
+				Font = Fonts.Preferred(label.TextStyle, label.FontWeight, FontDesign.Default)
+			},
+			_ => throw new InvalidOperationException($"Unknown item accessory '{accessory.GetType().Name}'.")
+		};
+
+		if (accessory.ResolvedTint is Color tint)
+			native.TintColor = tint.ToUIColor();
+
+		return native;
+	}
+
+	void RunDetailCommand(
+		DetailAccessory accessory)
+	{
+		object? item = source?.CurrentItem;
+
+		if (accessory.ResolvedCommand is ICommand command && command.CanExecute(item))
+			command.Execute(item);
 	}
 
 	public void SetAutomaticMinimumHeight(
@@ -1973,6 +2040,13 @@ internal sealed class SkeleCell(
 	public override void UpdateConfiguration(
 		UICellConfigurationState state)
 	{
+		// edit mode entering or leaving reshapes the reserved accessory space
+		if (editing != state.Editing)
+		{
+			editing = state.Editing;
+			ApplyAccessories();
+		}
+
 		if (highlight is null)
 			return;
 
@@ -1989,7 +2063,17 @@ internal sealed class SkeleCell(
 	{
 		base.LayoutSubviews();
 
-		Hosted?.Arrange(new(0, 0, ContentView.Bounds.Width, ContentView.Bounds.Height));
+		if (Hosted is null)
+			return;
+
+		// UIKit insets the content view to clear the accessories; the hosted view paints the whole
+		// row while its content steps back into the cleared gutter, like a system list row
+		CGRect content = ContentView.Frame;
+		nfloat leading = content.X;
+		nfloat trailing = (nfloat)Math.Max(0, (double)Bounds.Width - (double)content.GetMaxX());
+
+		source?.SetContentInsets(leading, trailing);
+		Hosted.Arrange(new(-leading, 0, Bounds.Width, ContentView.Bounds.Height));
 	}
 
 	public override UICollectionViewLayoutAttributes PreferredLayoutAttributesFittingAttributes(

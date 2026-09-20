@@ -17,6 +17,7 @@ internal sealed class ItemTemplatesView : ShowcaseView<ItemTemplatesViewModel>
 			ItemsSource = viewModel.Items,
 			ItemTemplateSelector = new ItemTemplateSelector<TemplateEntry>()
 				.Add<TemplateNavigationEntry>(static () => new TemplateNavigationCell())
+				.Add<TemplateSelectEntry>(static () => new TemplateSelectCell())
 				.Add<TemplateToggleEntry>(static () => new TemplateToggleCell())
 				.Add<TemplateActionEntry>(static () => new TemplateActionCell()),
 			ItemCommand = viewModel.ActivateCommand,
@@ -56,6 +57,14 @@ internal sealed class TemplateNavigationCell : ItemView<TemplateNavigationEntry>
 	{
 		Background = Colors.SecondaryGroupedBackground;
 
+		Accessories.Add(new LabelAccessory
+		{
+			Text = Bind(item => item.Detail),
+			Tint = Colors.SecondaryLabel
+		});
+
+		Accessories.Add(new DisclosureAccessory());
+
 		Content = new Grid
 		{
 			Padding = new(16, 0),
@@ -63,28 +72,13 @@ internal sealed class TemplateNavigationCell : ItemView<TemplateNavigationEntry>
 			Columns =
 			{
 				24,
-				GridLength.Star,
-				GridLength.Auto,
-				10
+				GridLength.Star
 			},
 
 			Children =
 			{
 				Icon(Bind(item => item.Symbol)),
-				Title(Bind(item => item.Title)).Column(1),
-				new Label
-				{
-					VerticalAlignment = VerticalAlignment.Center,
-					Text = Bind(item => item.Detail),
-					TextStyle = TextStyle.Body,
-					TextColor = Colors.SecondaryLabel,
-					MaxLines = 1
-				}.Column(2),
-				new Image
-				{
-					VerticalAlignment = VerticalAlignment.Center,
-					Source = ImageSource.Symbol("chevron.right", weight: FontWeight.Semibold, colors: [Colors.TertiaryLabel])
-				}.Column(3)
+				Title(Bind(item => item.Title)).Column(1)
 			}
 		};
 	}
@@ -113,6 +107,50 @@ internal sealed class TemplateNavigationCell : ItemView<TemplateNavigationEntry>
 			TextStyle = TextStyle.Body,
 			MaxLines = 1
 		};
+}
+
+internal sealed class TemplateSelectCell : ItemView<TemplateSelectEntry>
+{
+	public TemplateSelectCell()
+	{
+		Background = Colors.SecondaryGroupedBackground;
+
+		Accessories.Add(new CheckmarkAccessory
+		{
+			IsVisible = Bind(item => item.IsSelected),
+			Tint = Colors.Teal
+		});
+
+		Content = new Grid
+		{
+			Padding = new(16, 0),
+			ColumnSpacing = 12,
+			Columns =
+			{
+				24,
+				GridLength.Star
+			},
+
+			Children =
+			{
+				new Image
+				{
+					VerticalAlignment = VerticalAlignment.Center,
+					Height = 22,
+					Width = 22,
+					Source = Bind(item => item.Symbol)
+						.ConvertTo(value => ImageSource.Symbol(value, colors: [Colors.Label]))
+				},
+				new Label
+				{
+					VerticalAlignment = VerticalAlignment.Center,
+					Text = Bind(item => item.Title),
+					TextStyle = TextStyle.Body,
+					MaxLines = 1
+				}.Column(1)
+			}
+		};
+	}
 }
 
 internal sealed class TemplateToggleCell : ItemView<TemplateToggleEntry>
