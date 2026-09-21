@@ -732,7 +732,6 @@ public class SkeleApplication
 		UITabBarController controller)
 	{
 		if (!OperatingSystem.IsIOSVersionAtLeast(26)
-			|| OperatingSystem.IsIOSVersionAtLeast(27)
 			|| ActionTab is null
 			|| BubbleAction is null)
 			return;
@@ -966,7 +965,10 @@ public class SkeleApplication
 							tabsBuilder.BubbleTitle!,
 							bubbleImage,
 							bubbleView.Name,
-							_ => stack);
+							_ => stack)
+						{
+							PreferredPlacement = UITabPlacement.Pinned
+						};
 						prominentTab = bubble;
 					}
 					else if (OperatingSystem.IsIOSVersionAtLeast(26))
@@ -1004,7 +1006,10 @@ public class SkeleApplication
 							tabsBuilder.BubbleTitle!,
 							bubbleImage,
 							$"action:{tabsBuilder.BubbleTitle}",
-							static _ => new());
+							static _ => new())
+						{
+							PreferredPlacement = UITabPlacement.Pinned
+						};
 						prominentTab = bubble;
 					}
 					else if (OperatingSystem.IsIOSVersionAtLeast(26))
@@ -1028,8 +1033,7 @@ public class SkeleApplication
 					ActionTab = bubble;
 					tabs.Add(bubble);
 
-					if (OperatingSystem.IsIOSVersionAtLeast(26)
-						&& !OperatingSystem.IsIOSVersionAtLeast(27))
+					if (OperatingSystem.IsIOSVersionAtLeast(26))
 						CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => AttachBubbleInterceptor(controller));
 				}
 
