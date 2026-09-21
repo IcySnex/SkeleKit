@@ -836,6 +836,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (cell.Hosted is ICollectionItemView view)
 			view.SetItem(item);
 
+		cell.SetRetainsHighlight(RetainsHighlight);
+
 		CollectionLayout layout = LayoutForSection(indexPath.Section);
 		cell.SetAutomaticMinimumHeight(layout.Kind is CollectionLayoutKind.List
 			? SystemListMetrics.MinimumRowHeight(layout.Grouped)
@@ -1936,6 +1938,7 @@ internal sealed class SkeleCell(
 	UICellAccessoryCheckmark? selectionMark;
 
 	Brush? highlight;
+	bool retainsHighlight = true;
 	double automaticMinimumHeight;
 
 	public void Attach(
@@ -2067,6 +2070,16 @@ internal sealed class SkeleCell(
 		SetNeedsUpdateConfiguration();
 	}
 
+	public void SetRetainsHighlight(
+		bool value)
+	{
+		if (retainsHighlight == value)
+			return;
+
+		retainsHighlight = value;
+		SetNeedsUpdateConfiguration();
+	}
+
 	bool lit;
 
 	public override void UpdateConfiguration(
@@ -2083,13 +2096,29 @@ internal sealed class SkeleCell(
 		if (highlight is null)
 			return;
 
-		bool wantsLit = state.Selected || state.Highlighted;
+		bool wantsLit = state.Highlighted || state.Selected && (retainsHighlight || state.Editing);
 		if (wantsLit == lit && Hosted is not null)
 			return;
 
+		// the pressed look lands at once; releasing fades it outside the selection update, where
+		// UIKit disables animations
+		bool fades = lit && !wantsLit;
 		lit = wantsLit;
 
-		Hosted?.SetBackgroundOverride(wantsLit ? highlight : null);
+		if (Hosted is not View hosted)
+			return;
+
+		if (!fades)
+		{
+			hosted.SetBackgroundOverride(wantsLit ? highlight : null);
+			return;
+		}
+
+		DispatchQueue.MainQueue.DispatchAsync(() =>
+		{
+			if (!lit)
+				UIView.Animate(0.25, () => hosted.SetBackgroundOverride(null));
+		});
 	}
 
 	public override void LayoutSubviews()

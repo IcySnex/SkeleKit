@@ -184,11 +184,11 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	public Thickness? SeparatorInsets { get; set; }
 
 	/// <summary>
-	/// Whether a tapped row keeps its highlight until the page next appears.
+	/// Whether a highlighted row keeps its background until the page next appears.
 	/// </summary>
 	/// <remarks>
-	/// Applies to lists without a selection binding. The row appearance is defined by
-	/// <see cref="ItemView{TItem}.HighlightBackground"/>.
+	/// The row appearance is defined by <see cref="ItemView{TItem}.HighlightBackground"/>. With a selection
+	/// binding a false value still shows the selection checkmark; only the background is released.
 	/// </remarks>
 	public bool RetainsHighlight { get; set; } = true;
 

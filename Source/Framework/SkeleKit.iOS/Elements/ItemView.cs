@@ -105,7 +105,7 @@ public abstract class ItemView<TItem> : ContentHost, ICollectionItemView, IItemA
 
 
 	/// <summary>
-	/// The background shown while the cell is pressed or selected, or null for no highlight.
+	/// The background shown while the cell is pressed, and while selected when the collection retains the highlight. Null disables the highlight.
 	/// </summary>
 	public BindableBrush? HighlightBackground
 	{
