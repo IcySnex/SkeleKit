@@ -1008,7 +1008,10 @@ public class SkeleApplication
 							tabsBuilder.BubbleTitle!,
 							bubbleImage,
 							bubbleView.Name,
-							_ => stack);
+							_ => stack)
+						{
+							PreferredPlacement = UITabPlacement.Pinned
+						};
 					}
 
 					PageHost root = (PageHost)stack.ViewControllers![0];
@@ -1049,7 +1052,10 @@ public class SkeleApplication
 							tabsBuilder.BubbleTitle!,
 							bubbleImage,
 							$"action:{tabsBuilder.BubbleTitle}",
-							static _ => new());
+							static _ => new())
+						{
+							PreferredPlacement = UITabPlacement.Pinned
+						};
 					}
 
 					ActionTab = bubble;
