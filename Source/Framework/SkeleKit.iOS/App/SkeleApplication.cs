@@ -42,7 +42,9 @@ public class SkeleApplication
 		{
 			if (app is { ActionTab.Identifier: string action } && tab.Identifier == action)
 			{
-				CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => app.BubbleAction?.Invoke());
+				if (!app.TabsEditing)
+					CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(() => app.BubbleAction?.Invoke());
+
 				app.AttachBubbleInterceptor(tabBarController);
 
 				return false;
@@ -57,6 +59,20 @@ public class SkeleApplication
 			app?.BeginTabSelection();
 
 			return true;
+		}
+
+		public override void WillBeginEditing(
+			UITabBarController tabBarController)
+		{
+			if (app is not null)
+				app.TabsEditing = true;
+		}
+
+		public override void DidBeginEditing(
+			UITabBarController tabBarController)
+		{
+			if (app is not null)
+				app.TabsEditing = false;
 		}
 	}
 
@@ -424,6 +440,7 @@ public class SkeleApplication
 
 	internal bool AccessoryWanted => accessoryContent?.IsVisible.Value is true;
 	internal bool IsSwitchingTabs { get; private set; }
+	internal bool TabsEditing { get; set; }
 
 	internal UIUserInterfaceStyle UserInterfaceStyle =>
 		Theme.Appearance switch
@@ -745,7 +762,12 @@ public class SkeleApplication
 		UILongPressGestureRecognizer recognizer = null!;
 		recognizer = new(() =>
 		{
-			if (recognizer.State is UIGestureRecognizerState.Began)
+			if (TabsEditing)
+				return;
+
+			if (recognizer.State is UIGestureRecognizerState.Ended
+				&& recognizer.View is UIView view
+				&& view.Bounds.Contains(recognizer.LocationInView(view)))
 				BubbleAction?.Invoke();
 		});
 
