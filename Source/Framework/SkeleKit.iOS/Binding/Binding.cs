@@ -16,6 +16,10 @@ internal sealed class Binding<T>(
 {
 	readonly List<INotifyPropertyChanged> subscriptions = [];
 
+	readonly bool hasIntermediates = Array.Exists(
+		expression.Segments,
+		static segment => segment.Step is not null);
+
 	object? source;
 
 
@@ -57,8 +61,20 @@ internal sealed class Binding<T>(
 
 	void Refresh()
 	{
-		if (source is not null)
-			Attach(source);
+		if (source is null)
+			return;
+
+		// a path through replaceable intermediates must re-walk its subscriptions; a direct
+		// path is still subscribed to the same source, so re-evaluating is enough
+		if (!hasIntermediates)
+		{
+			apply(expression.Getter(source));
+			return;
+		}
+
+		object current = source;
+		Detach();
+		Attach(current);
 	}
 
 	bool Watches(
@@ -77,22 +93,32 @@ internal sealed class Binding<T>(
 	public override void Attach(
 		object? source)
 	{
-		Detach();
-		source = expression.Source ?? source;
+		object? resolved = expression.Source ?? source;
 
 		if (expression.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource
 			&& expression.Setter is null)
 			throw new InvalidOperationException("A writable binding needs a source setter.");
 
-		this.source = source;
-		if (source is null)
+		// the same source is still subscribed: only the produced value can have changed, so
+		// re-evaluating keeps cell rebinds and pinned bindings allocation-free
+		if (ReferenceEquals(this.source, resolved))
+		{
+			if (resolved is not null && expression.Mode is not BindingMode.OneWayToSource)
+				apply(expression.Getter(resolved));
+
+			return;
+		}
+
+		Detach();
+		this.source = resolved;
+		if (resolved is null)
 			return;
 
 		if (expression.Mode is not (BindingMode.OneTime or BindingMode.OneWayToSource))
-			Subscribe(source);
+			Subscribe(resolved);
 
 		if (expression.Mode is not BindingMode.OneWayToSource)
-			apply(expression.Getter(source));
+			apply(expression.Getter(resolved));
 	}
 
 	public override void Detach()

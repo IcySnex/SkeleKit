@@ -6,6 +6,12 @@ public partial class Border
 {
 	CAShapeLayer? strokeLayer;
 
+	bool strokeGeometryApplied;
+	nfloat strokeGeometryWidth = -1;
+	nfloat strokeGeometryHeight = -1;
+	nfloat strokeGeometryInset = -1;
+	nfloat strokeGeometryRadius = -1;
+
 
 	partial void ApplyStrokeCore()
 	{
@@ -31,6 +37,7 @@ public partial class Border
 				ZPosition = 1
 			};
 			Native.Layer.AddSublayer(strokeLayer);
+			strokeGeometryApplied = false;
 		}
 
 		CATransaction.Begin();
@@ -71,12 +78,22 @@ public partial class Border
 		nfloat inset = (nfloat)Math.Min(
 			Math.Max(0, strokeThickness) / 2,
 			Math.Min(width, height) / 2);
+		nfloat radius = (nfloat)Math.Max(0, ResolveCornerRadius(size) - inset);
+
+		// arranging runs on every rebind; rebuilding the path only when the shape changed
+		// keeps the dashed empty cells from allocating a UIBezierPath per pass
+		if (strokeGeometryApplied
+			&& width == strokeGeometryWidth
+			&& height == strokeGeometryHeight
+			&& inset == strokeGeometryInset
+			&& radius == strokeGeometryRadius)
+			return;
+
 		CGRect bounds = new(
 			inset,
 			inset,
 			Math.Max(0, width - inset * 2),
 			Math.Max(0, height - inset * 2));
-		nfloat radius = (nfloat)Math.Max(0, ResolveCornerRadius(size) - inset);
 
 		using UIBezierPath path = UIBezierPath.FromRoundedRect(bounds, radius);
 
@@ -85,6 +102,12 @@ public partial class Border
 		strokeLayer.Frame = new(0, 0, width, height);
 		strokeLayer.Path = path.CGPath;
 		CATransaction.Commit();
+
+		strokeGeometryApplied = true;
+		strokeGeometryWidth = width;
+		strokeGeometryHeight = height;
+		strokeGeometryInset = inset;
+		strokeGeometryRadius = radius;
 	}
 
 	void DropStrokeLayer()

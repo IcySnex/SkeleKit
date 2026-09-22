@@ -518,13 +518,14 @@ public abstract partial class View
 		if (native is null)
 			return;
 
+		CGRect current = native.Bounds;
 		CGRect next = new(frame.X, frame.Y, frame.Width, frame.Height);
-		bool resized = native.Bounds.Size != next.Size;
+		bool resized = current.Size != next.Size;
 
 		// always bounds+center, never Frame: an animation can leave the native transform non-identity
 		// while the model reads as untransformed, and setting Frame under a transform is undefined.
 		// The origin stays — a scroll view keeps its content offset there
-		native.Bounds = new(native.Bounds.X, native.Bounds.Y, next.Width, next.Height);
+		native.Bounds = new(current.X, current.Y, next.Width, next.Height);
 		native.Center = new(next.X + next.Width / 2, next.Y + next.Height / 2);
 
 		if (resized)
@@ -537,6 +538,9 @@ public abstract partial class View
 			ApplyTransform();
 		}
 	}
+
+	partial void CancelAnimationsCore() =>
+		native?.Layer.RemoveAllAnimations();
 
 	partial void ApplyInteractionCore()
 	{

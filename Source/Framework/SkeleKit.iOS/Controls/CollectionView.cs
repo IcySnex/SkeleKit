@@ -28,6 +28,9 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 	readonly List<INotifyPropertyChanged> sectionStateHooks = [];
 
+	// maps each hooked items collection and section model to its section index
+	readonly Dictionary<object, int> sectionIndex = new(ReferenceEqualityComparer.Instance);
+
 	int loadMoreFiredAt = -1;
 
 	internal bool SuppressSelectionSync;
@@ -597,18 +600,30 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		if (!hooked)
 			return;
 
-		foreach (TSection section in sections ?? [])
+		if (sections is not IReadOnlyList<TSection> groups)
 		{
-			if (section.Items is INotifyCollectionChanged live)
+			if (itemsSource is not null)
+				sectionIndex[itemsSource] = 0;
+
+			return;
+		}
+
+		for (int section = 0; section < groups.Count; section++)
+		{
+			TSection group = groups[section];
+
+			if (group.Items is INotifyCollectionChanged live)
 			{
 				live.CollectionChanged += OnSectionItemsChanged;
 				sectionItemHooks.Add(live);
+				sectionIndex[live] = section;
 			}
 
-			if (section is INotifyPropertyChanged notifier)
+			if (group is INotifyPropertyChanged notifier)
 			{
 				notifier.PropertyChanged += OnSectionPropertyChanged;
 				sectionStateHooks.Add(notifier);
+				sectionIndex[notifier] = section;
 			}
 		}
 	}
@@ -624,32 +639,38 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 			hook.PropertyChanged -= OnSectionPropertyChanged;
 
 		sectionStateHooks.Clear();
+		sectionIndex.Clear();
 	}
+
+	// -1 means the change cannot be pinned to a section, which callers treat as a rebuild
+	int SectionIndexFor(
+		object? sender) =>
+		sender is not null && sectionIndex.TryGetValue(sender, out int section) ? section : -1;
 
 	void OnItemsChanged(
 		object? sender,
 		NotifyCollectionChangedEventArgs e) =>
-		ApplyChange();
+		ItemsChanged(0, e);
 
 	void OnSectionsChanged(
 		object? sender,
 		NotifyCollectionChangedEventArgs e)
 	{
 		HookSectionItems();
-		ReloadItems();
+		SectionsChanged(e);
 	}
 
 	void OnSectionItemsChanged(
 		object? sender,
 		NotifyCollectionChangedEventArgs e) =>
-		ApplyChange();
+		ItemsChanged(SectionIndexFor(sender), e);
 
 	void OnSectionPropertyChanged(
 		object? sender,
 		PropertyChangedEventArgs e)
 	{
 		if (e.PropertyName is nameof(IExpandableSection<>.IsExpanded))
-			ApplyChange();
+			ApplyChange(SectionIndexFor(sender));
 	}
 
 	void OnSelectedItemsChanged(
@@ -719,7 +740,15 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 	partial void ReloadIndexTitles();
 
-	partial void ApplyChange();
+	partial void ApplyChange(
+		int section);
+
+	partial void ItemsChanged(
+		int section,
+		NotifyCollectionChangedEventArgs e);
+
+	partial void SectionsChanged(
+		NotifyCollectionChangedEventArgs e);
 
 	partial void MovedInSource();
 
@@ -770,7 +799,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 			return;
 
 		expandable.IsExpanded = !expandable.IsExpanded;
-		ApplyChange();
+		ApplyChange(section);
 	}
 
 	internal string? PrefetchUrl(

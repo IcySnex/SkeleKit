@@ -41,8 +41,16 @@ public abstract partial class View
 	internal void SetParent(
 		View? parent)
 	{
+		if (ReferenceEquals(Parent, parent))
+			return;
+
+		object? context = BindingContext;
 		Parent = parent;
-		OnBindingContextChanged();
+
+		// only a changed effective context needs bindings re-attached; creating a cell's
+		// tree under an unbound view stays free until its item arrives
+		if (!ReferenceEquals(context, BindingContext))
+			OnBindingContextChanged();
 	}
 
 
@@ -227,6 +235,14 @@ public abstract partial class View
 
 	internal virtual void ReapplyVisuals() =>
 		ApplyVisualState();
+
+	/// <summary>
+	/// Cancels animations running on this view and its descendants.
+	/// </summary>
+	internal virtual void CancelAnimations() =>
+		CancelAnimationsCore();
+
+	partial void CancelAnimationsCore();
 
 	internal virtual void PageWillAppear()
 	{ }

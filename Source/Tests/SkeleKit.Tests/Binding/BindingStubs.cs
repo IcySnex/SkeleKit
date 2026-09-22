@@ -78,6 +78,31 @@ class MovieViewModel : Notifier
 	}
 }
 
+// counts subscriptions, so binding churn is observable in tests
+class CountingViewModel : INotifyPropertyChanged
+{
+	PropertyChangedEventHandler? handlers;
+	int addCount;
+	int removeCount;
+
+	public event PropertyChangedEventHandler? PropertyChanged
+	{
+		add { addCount++; handlers += value; }
+		remove { removeCount++; handlers -= value; }
+	}
+
+	public int AddCount => addCount;
+
+	public int RemoveCount => removeCount;
+
+	string title = "";
+	public string Title
+	{
+		get => title;
+		set { title = value; handlers?.Invoke(this, new(nameof(Title))); }
+	}
+}
+
 class Movie : Notifier
 {
 	string name = "";

@@ -101,6 +101,14 @@ public abstract partial class Container : View
 			child.ReapplyVisuals();
 	}
 
+	internal override void CancelAnimations()
+	{
+		base.CancelAnimations();
+
+		foreach (View child in LogicalChildren)
+			child.CancelAnimations();
+	}
+
 	internal override void PageWillAppear()
 	{
 		foreach (View child in LogicalChildren)

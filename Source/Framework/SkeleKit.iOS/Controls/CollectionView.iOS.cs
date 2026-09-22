@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.Windows.Input;
 using CoreFoundation;
 using ObjCRuntime;
@@ -14,8 +15,20 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	internal const string LayoutHeaderId = "SkeleLayoutHeader";
 	internal const string LayoutFooterId = "SkeleLayoutFooter";
 
-	readonly Dictionary<object, ItemKey> keys = new(ReferenceEqualityComparer.Instance);
+	// items carry stable NSNumber identifiers; the diffable store hashes identifiers natively on
+	// every insert and comparison, where a managed key wrapper costs a trampoline per touch
+	readonly Dictionary<object, NSNumber> keys = new(ReferenceEqualityComparer.Instance);
+	readonly Dictionary<long, object> itemsById = [];
+	nint nextIdentifier;
+
 	readonly List<NSNumber> sectionKeys = [];
+
+	// the identifiers applied per section, so a change re-keys one section instead of the world
+	readonly List<NSNumber[]> sectionItems = [];
+	readonly HashSet<int> dirtySections = [];
+	bool structureDirty = true;
+	int appendedFrom = -1;
+
 	readonly Dictionary<ItemTemplateRegistration<TItem>, ICollectionItemView> sizingViews = [];
 	readonly HashSet<ICollectionItemView> itemViews = [];
 
@@ -337,14 +350,14 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		if (singleSelects)
 		{
-			if (selectedItem is TItem item && keys.TryGetValue(item, out ItemKey? key) && data.GetIndexPath(key) is NSIndexPath path)
+			if (selectedItem is TItem item && keys.TryGetValue(item, out NSNumber? key) && data.GetIndexPath(key) is NSIndexPath path)
 				wanted.Add(path);
 		}
 		else
 		{
 			foreach (TItem item in selectedItems!)
 			{
-				if (keys.TryGetValue(item, out ItemKey? key) && data.GetIndexPath(key) is NSIndexPath path)
+				if (keys.TryGetValue(item, out NSNumber? key) && data.GetIndexPath(key) is NSIndexPath path)
 					wanted.Add(path);
 			}
 		}
@@ -370,7 +383,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		ScrollPosition position = ScrollPosition.Top,
 		bool animated = true)
 	{
-		if (!IsRealized || data is null || !keys.TryGetValue(item, out ItemKey? key))
+		if (!IsRealized || data is null || !keys.TryGetValue(item, out NSNumber? key))
 			return;
 
 		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
@@ -553,6 +566,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		sizingViews.Clear();
 		sizedWithItem = false;
 
+		// the next realization builds against a fresh data source
+		structureDirty = true;
+		appendedFrom = -1;
+		dirtySections.Clear();
+		sectionItems.Clear();
+
 		Header?.Unrealize();
 		Footer?.Unrealize();
 
@@ -657,8 +676,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			Ui.DeselectItem(path, true);
 	}
 
-	partial void ReloadItems() =>
+	partial void ReloadItems()
+	{
+		// the section list itself changed: only a full rebuild knows the new shape
+		structureDirty = true;
 		QueueSnapshot();
+	}
 
 	partial void ReloadIndexTitles()
 	{
@@ -666,8 +689,158 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			Ui.ReloadData();
 	}
 
-	partial void ApplyChange() =>
+	partial void ApplyChange(
+		int section)
+	{
+		// an untracked sender means the sources changed shape under us
+		if (section < 0)
+		{
+			ReloadItems();
+			return;
+		}
+
+		dirtySections.Add(section);
 		QueueSnapshot();
+	}
+
+	partial void ItemsChanged(
+		int section,
+		NotifyCollectionChangedEventArgs e)
+	{
+		// a content-only replacement keeps its identifier: update the identity maps, rebind
+		// any visible cell, and skip the snapshot entirely
+		if (TryApplyContentChange(section, e))
+			return;
+
+		ApplyChange(section);
+	}
+
+	bool TryApplyContentChange(
+		int section,
+		NotifyCollectionChangedEventArgs e)
+	{
+		if (!IsRealized || data is null
+			|| structureDirty || dirtySections.Count > 0 || appendedFrom >= 0
+			|| section < 0 || section >= sectionItems.Count
+			|| e.Action is not NotifyCollectionChangedAction.Replace
+			|| e.OldItems is not { Count: > 0 } oldItems
+			|| e.NewItems is not { } newItems || oldItems.Count != newItems.Count
+			|| e.OldStartingIndex < 0 || e.OldStartingIndex != e.NewStartingIndex)
+			return false;
+
+		NSNumber[] identifiers = sectionItems[section];
+		int start = e.OldStartingIndex;
+		if (identifiers.Length != CountIn(section) || start > identifiers.Length - oldItems.Count)
+			return false;
+
+		// validate the whole range before touching either map: swaps, duplicate references,
+		// and template changes still need the structural diff
+		for (int offset = 0; offset < oldItems.Count; offset++)
+		{
+			if (oldItems[offset] is not TItem oldItem || newItems[offset] is not TItem newItem
+				|| !keys.TryGetValue(oldItem, out NSNumber? key)
+				|| !key.Equals(identifiers[start + offset])
+				|| !ReferenceEquals(TemplateFor(oldItem), TemplateFor(newItem))
+				|| (!ReferenceEquals(oldItem, newItem) && keys.ContainsKey(newItem)))
+				return false;
+		}
+
+		for (int offset = 0; offset < oldItems.Count; offset++)
+		{
+			TItem oldItem = (TItem)oldItems[offset]!;
+			TItem newItem = (TItem)newItems[offset]!;
+
+			if (ReferenceEquals(oldItem, newItem))
+				continue;
+
+			NSNumber key = identifiers[start + offset];
+			keys.Remove(oldItem);
+			keys[newItem] = key;
+			itemsById[key.LongValue] = newItem;
+
+			RemapSelection(oldItem, newItem);
+			RebindVisible(key, newItem);
+		}
+
+		return true;
+	}
+
+	void RebindVisible(
+		NSNumber key,
+		TItem item)
+	{
+		if (data?.GetIndexPath(key) is not NSIndexPath path)
+			return;
+
+		if (Ui.CellForItem(path) is not SkeleCell { Hosted: ICollectionItemView hosted } cell)
+			return;
+
+		if (UIAccessibility.IsReduceMotionEnabled)
+		{
+			hosted.SetItem(item);
+			return;
+		}
+
+		// content changes animate the way structural snapshot changes already do; a
+		// still-running animation from the previous item would fight the new values
+		int token = ++cell.AnimationToken;
+		hosted.View.CancelAnimations();
+
+		View.Animate(
+			Animation.Ease(0.25),
+			() => hosted.SetItem(item),
+			_ =>
+			{
+				if (cell.AnimationToken == token)
+					cell.AnimationToken = 0;
+			},
+			layout: false);
+	}
+
+	void RemapSelection(
+		TItem oldItem,
+		TItem newItem)
+	{
+		if (singleSelects && ReferenceEquals(selectedItem, oldItem))
+		{
+			selectedItem = newItem;
+			selectedItemBinding?.PushToSource(newItem);
+
+			return;
+		}
+
+		if (!multiSelects || selectedItems is not IList<TItem> list)
+			return;
+
+		for (int index = 0; index < list.Count; index++)
+		{
+			if (!ReferenceEquals(list[index], oldItem))
+				continue;
+
+			list[index] = newItem;
+			return;
+		}
+	}
+
+	partial void SectionsChanged(
+		NotifyCollectionChangedEventArgs e)
+	{
+		// sections appended at the tail extend the applied snapshot as-is
+		if (!structureDirty
+			&& sectionItems.Count > 0
+			&& e.Action is NotifyCollectionChangedAction.Add
+			&& e.OldItems is null
+			&& e.NewItems is { Count: > 0 } added
+			&& e.NewStartingIndex >= sectionItems.Count
+			&& e.NewStartingIndex + added.Count == SectionCount)
+		{
+			appendedFrom = appendedFrom < 0 ? e.NewStartingIndex : Math.Min(appendedFrom, e.NewStartingIndex);
+			QueueSnapshot();
+			return;
+		}
+
+		ReloadItems();
+	}
 
 	void QueueSnapshot()
 	{
@@ -709,6 +882,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		ApplySnapshot(completed);
 	}
 
+	// a full rebuild runs when the section list changes shape; item changes re-key only their own
+	// section, which keeps a one-day edit out of the every-item marshalling path
 	void ApplySnapshot(
 		Action? completed = null)
 	{
@@ -718,27 +893,69 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			return;
 		}
 
-		NSDiffableDataSourceSnapshot<NSNumber, ItemKey> snapshot = new();
-
 		int sections = SectionCount;
+
 		while (sectionKeys.Count < sections)
 			sectionKeys.Add(NSNumber.FromInt32(sectionKeys.Count));
 
+		bool appending = appendedFrom >= 0
+			&& appendedFrom == sectionItems.Count
+			&& appendedFrom <= sections;
+
+		// deleting identifiers from an applied snapshot costs several times more than appending
+		// them, so a change covering a wide slice of sections is cheaper as a full rebuild than
+		// as section-by-section re-keying
+		bool mostlyDirty = dirtySections.Count * 4 > sections;
+
+		bool full = structureDirty
+			|| sectionItems.Count == 0
+			|| (!appending && sectionItems.Count != sections)
+			|| mostlyDirty;
+
+		NSDiffableDataSourceSnapshot<NSNumber, NSNumber> snapshot = full
+			? new()
+			: data.Snapshot;
+
+		if (full)
+		{
+			sectionItems.Clear();
+
+			for (int section = 0; section < sections; section++)
+				sectionItems.Add([]);
+
+			if (sections > 0)
+				snapshot.AppendSections(SectionKeyRange(sections, 0));
+		}
+		else if (appending)
+		{
+			while (sectionItems.Count < sections)
+				sectionItems.Add([]);
+
+			if (sections > appendedFrom)
+				snapshot.AppendSections(SectionKeyRange(sections, appendedFrom));
+		}
+
+		// re-keying a section drops its old identifiers and re-appends them in current order
 		for (int section = 0; section < sections; section++)
 		{
-			NSNumber sectionKey = sectionKeys[section];
-			snapshot.AppendSections([sectionKey]);
+			bool touched = full
+				|| (appending && section >= appendedFrom)
+				|| dirtySections.Contains(section);
 
-			int count = Expanded(section) ? CountIn(section) : 0;
-			if (count == 0)
+			if (!touched)
 				continue;
 
-			ItemKey[] items = new ItemKey[count];
-			for (int index = 0; index < count; index++)
-				items[index] = KeyFor(ItemAt(section, index)!);
+			NSNumber[] previous = sectionItems[section];
 
-			snapshot.AppendItems(items, sectionKey);
+			if (previous.Length > 0)
+				snapshot.DeleteItems(previous);
+
+			sectionItems[section] = Rekey(snapshot, section, sectionKeys[section]);
 		}
+
+		structureDirty = false;
+		appendedFrom = -1;
+		dirtySections.Clear();
 
 		Prune();
 
@@ -760,6 +977,34 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		SyncHeaderChevrons();
 	}
 
+	NSNumber[] SectionKeyRange(
+		int count,
+		int start)
+	{
+		NSNumber[] keys = new NSNumber[count - start];
+		for (int index = start; index < count; index++)
+			keys[index - start] = sectionKeys[index];
+
+		return keys;
+	}
+
+	NSNumber[] Rekey(
+		NSDiffableDataSourceSnapshot<NSNumber, NSNumber> snapshot,
+		int section,
+		NSNumber sectionKey)
+	{
+		int count = Expanded(section) ? CountIn(section) : 0;
+		if (count == 0)
+			return [];
+
+		NSNumber[] identifiers = new NSNumber[count];
+		for (int index = 0; index < count; index++)
+			identifiers[index] = KeyFor(ItemAt(section, index)!);
+
+		snapshot.AppendItems(identifiers, sectionKey);
+		return identifiers;
+	}
+
 	void SyncHeaderChevrons()
 	{
 		if (!IsGrouped)
@@ -774,14 +1019,22 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		}
 	}
 
-	ItemKey KeyFor(
+	NSNumber KeyFor(
 		object item)
 	{
-		if (!keys.TryGetValue(item, out ItemKey? key))
-			keys[item] = key = new(item);
+		if (!keys.TryGetValue(item, out NSNumber? key))
+		{
+			key = NSNumber.FromLong(++nextIdentifier);
+			keys[item] = key;
+			itemsById[key.LongValue] = item;
+		}
 
 		return key;
 	}
+
+	// replaced items leave a stale identifier behind; pruning every change would put the
+	// O(all items) scan back on the hot path, so the map only shrinks once it outgrows the source
+	const int PruneSlack = 256;
 
 	void Prune()
 	{
@@ -789,7 +1042,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		for (int section = 0; section < SectionCount; section++)
 			live += CountIn(section);
 
-		if (keys.Count <= live)
+		if (keys.Count <= live + PruneSlack)
 			return;
 
 		HashSet<object> current = new(ReferenceEqualityComparer.Instance);
@@ -806,7 +1059,10 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		foreach (object item in keys.Keys.ToArray())
 		{
 			if (!current.Contains(item))
+			{
+				itemsById.Remove(keys[item].LongValue);
 				keys.Remove(item);
+			}
 		}
 	}
 
@@ -815,7 +1071,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		NSIndexPath indexPath,
 		NSObject identifier)
 	{
-		if (identifier is not ItemKey { Item: TItem item })
+		if (identifier is not NSNumber itemKey
+			|| !itemsById.TryGetValue(itemKey.LongValue, out object? bound)
+			|| bound is not TItem item)
 			throw new InvalidOperationException("The collection snapshot contains an invalid item identifier.");
 
 		ItemTemplateRegistration<TItem> itemTemplate = TemplateFor(item);
@@ -834,7 +1092,16 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		}
 
 		if (cell.Hosted is ICollectionItemView view)
+		{
+			// a running content-change animation from the previous item would fight the new values
+			if (cell.AnimationToken != 0)
+			{
+				cell.AnimationToken = 0;
+				view.View.CancelAnimations();
+			}
+
 			view.SetItem(item);
+		}
 
 		cell.SetRetainsHighlight(RetainsHighlight);
 
@@ -1870,7 +2137,7 @@ internal sealed class PreviewHost : UIViewController
 	}
 }
 
-internal sealed class CollectionSource : UICollectionViewDiffableDataSource<NSNumber, ItemKey>
+internal sealed class CollectionSource : UICollectionViewDiffableDataSource<NSNumber, NSNumber>
 {
 	readonly ICollectionHost? element;
 
@@ -1927,6 +2194,9 @@ internal sealed class SkeleCell(
 	NativeHandle handle) : UICollectionViewListCell(handle)
 {
 	public View? Hosted { get; private set; }
+
+	// non-zero while a content-change animation is running, so reuse can cancel it
+	internal int AnimationToken { get; set; }
 
 	ICollectionItemView? source;
 	bool selects;

@@ -392,6 +392,77 @@ public class BindingTests
 	}
 
 	[Fact]
+	public void ExplicitSource_RebindKeepsSubscriptions()
+	{
+		CountingViewModel source = new() { Title = "Interstellar" };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind(source, vm => vm.Title)
+		};
+		Assert.Equal(1, source.AddCount);
+
+		view.BindingContext = new MovieViewModel { Title = "Dune" };
+
+		Assert.Equal(1, source.AddCount);
+		Assert.Equal(0, source.RemoveCount);
+		Assert.Equal("Interstellar", view.Current);
+
+		source.Title = "Arrival";
+		Assert.Equal("Arrival", view.Current);
+	}
+
+	[Fact]
+	public void DirectSourceChange_KeepsSubscription()
+	{
+		CountingViewModel source = new() { Title = "Interstellar" };
+		StubBound view = new()
+		{
+			Text = BindingFactory.Bind(source, vm => vm.Title)
+		};
+
+		source.Title = "Dune";
+
+		Assert.Equal(1, source.AddCount);
+		Assert.Equal(0, source.RemoveCount);
+		Assert.Equal("Dune", view.Current);
+	}
+
+	[Fact]
+	public void SetParent_PropagatesNewContextOnce()
+	{
+		CountingViewModel source = new() { Title = "Interstellar" };
+		StackPanel root = new() { BindingContext = source };
+		StubBound child = new()
+		{
+			Text = BindingFactory.Bind((CountingViewModel vm) => vm.Title)
+		};
+
+		Assert.Equal(0, source.AddCount);
+
+		root.Children.Add(child);
+
+		Assert.Equal(1, source.AddCount);
+		Assert.Equal("Interstellar", child.Current);
+	}
+
+	[Fact]
+	public void SetParent_PinnedBindingDoesNotResubscribe()
+	{
+		CountingViewModel source = new() { Title = "Interstellar" };
+		StackPanel root = new() { BindingContext = new MovieViewModel() };
+		StubBound child = new()
+		{
+			Text = BindingFactory.Bind(source, vm => vm.Title)
+		};
+
+		root.Children.Add(child);
+
+		Assert.Equal(1, source.AddCount);
+		Assert.Equal(0, source.RemoveCount);
+		Assert.Equal("Interstellar", child.Current);
+	}
+
+	[Fact]
 	public void ExplicitSource_SurvivesPathAndConversion()
 	{
 		MovieViewModel source = new() { Movie = new() { Name = "Interstellar" } };

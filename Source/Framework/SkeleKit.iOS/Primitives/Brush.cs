@@ -72,6 +72,15 @@ public sealed class SolidBrush(
 	/// The color painted.
 	/// </summary>
 	public Color Color { get; } = color;
+
+
+	// value equality, so re-applying the same color skips the native property write
+	public override bool Equals(
+		object? obj) =>
+		obj is SolidBrush other && Color.Equals(other.Color);
+
+	public override int GetHashCode() =>
+		Color.GetHashCode();
 }
 
 
@@ -139,6 +148,28 @@ public sealed class LinearGradient : Brush
 			Start = new(0, 0.5),
 			End = new(1, 0.5)
 		};
+
+
+	// value equality, so re-applying the same gradient skips the native property write
+	public override bool Equals(
+		object? obj) =>
+		obj is LinearGradient other
+		&& Start.Equals(other.Start)
+		&& End.Equals(other.End)
+		&& Stops.SequenceEqual(other.Stops);
+
+	public override int GetHashCode()
+	{
+		HashCode hash = new();
+
+		hash.Add(Start);
+		hash.Add(End);
+
+		foreach (GradientStop stop in Stops)
+			hash.Add(stop);
+
+		return hash.ToHashCode();
+	}
 }
 
 
@@ -189,4 +220,12 @@ public sealed class Material(
 	/// How much the material blurs what sits behind it.
 	/// </summary>
 	public MaterialKind Kind { get; } = kind;
+
+
+	public override bool Equals(
+		object? obj) =>
+		obj is Material other && Kind == other.Kind;
+
+	public override int GetHashCode() =>
+		Kind.GetHashCode();
 }
