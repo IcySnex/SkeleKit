@@ -743,6 +743,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 				|| !ReferenceEquals(TemplateFor(oldItem), TemplateFor(newItem))
 				|| (!ReferenceEquals(oldItem, newItem) && keys.ContainsKey(newItem)))
 				return false;
+
+			// A read-only selection cannot be remapped in place. Use the structural
+			// path so it can drop the old selection without throwing mid-update.
+			if (multiSelects && !ReferenceEquals(oldItem, newItem)
+				&& !SelectionRemapping.CanReplace(selectedItems, oldItem))
+				return false;
 		}
 
 		for (int offset = 0; offset < oldItems.Count; offset++)
@@ -809,7 +815,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			return;
 		}
 
-		if (!multiSelects || selectedItems is not IList<TItem> list)
+		if (!multiSelects || selectedItems is not IList<TItem> { IsReadOnly: false } list)
 			return;
 
 		for (int index = 0; index < list.Count; index++)
