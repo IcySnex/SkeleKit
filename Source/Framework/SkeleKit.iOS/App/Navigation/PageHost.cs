@@ -338,14 +338,21 @@ internal sealed class PageHost : UIViewController
 		ApplyChrome(page);
 
 		UIView native = page.Realize();
+		View? scrollingView = FindScrolling(page);
+		SafeAreaEdges ignored = scrollingView?.IgnoresSafeArea ?? SafeAreaEdges.None;
+		// A primary scroll view may be wrapped by an overlay instead of being the page's direct
+		// content. Explicitly bleeding through both bars carries the same system-inset intent.
+		bool scrollBleedsUnderBars = ReferenceEquals(page.AutomaticScrollBleed, scrollingView)
+			|| (ignored.HasFlag(SafeAreaEdges.Top) && ignored.HasFlag(SafeAreaEdges.Bottom));
 		usesSystemScrollInsets = page.ScrollsUnderBars
 			&& page.SafeAreaEdges == SafeAreaEdges.All
-			&& page.AutomaticScrollBleed is ISystemInsetScroll scrolling
+			&& scrollBleedsUnderBars
+			&& scrollingView is ISystemInsetScroll scrolling
 			&& scrolling.UseSystemContentInsets();
 
 		View!.AddSubview(native);
 
-		UIScrollView? scroll = FindScrolling(page)?.Native as UIScrollView;
+		UIScrollView? scroll = scrollingView?.Native as UIScrollView;
 		if (scroll is not null)
 			SetContentScrollView(scroll, NSDirectionalRectEdge.Top | NSDirectionalRectEdge.Bottom);
 

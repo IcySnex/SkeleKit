@@ -31,13 +31,23 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	readonly Dictionary<ItemTemplateRegistration<TItem>, ICollectionItemView> sizingViews = [];
 	readonly HashSet<ICollectionItemView> itemViews = [];
+	readonly List<IndexedSourceChange> indexedChanges = [];
 
 	CollectionSource? data;
+	IndexedCollectionSource<TItem, TSection>? indexedData;
+	FixedGridLayout<TItem, TSection>? fixedLayout;
 	CollectionDelegate<TItem, TSection>? selection;
 	EmptyCollectionHost? emptyHost;
 	ItemTemplateRegistration<TItem>? defaultItemTemplate;
 
+	ItemView<TSection>? headerSizingView;
+	ItemView<TSection>? footerSizingView;
+	FixedGridAnchor? pendingFixedGridAnchor;
+	double fixedLayoutWidth = -1;
+
 	bool snapshotQueued;
+	bool indexedReloadQueued;
+	bool initialScrollPending = true;
 	bool usesSystemContentInsets;
 	bool layoutInsetsSynced;
 	Thickness layoutInsets;
@@ -52,9 +62,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			? ItemTemplateRegistration<TItem>.CreateDefault(CellId, template)
 			: null;
 
-		CollectionHost collection = new(this, CreateLayout(
-			SectionHeaderTemplate is not null,
-			SectionFooterTemplate is not null))
+		UICollectionViewLayout nativeLayout = CreateNativeLayout();
+
+		CollectionHost collection = new(this, nativeLayout)
 		{
 			BackgroundColor = UIColor.Clear,
 			InsetsLayoutMarginsFromSafeArea = false,
@@ -92,10 +102,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			new NSString(LayoutFooterKind),
 			LayoutFooterId);
 
-		data = new(this, collection, CellFor)
-		{
-			SupplementaryViewProvider = SupplementaryFor
-		};
+		ConfigureDataSource(collection);
 
 		selection = new(this);
 		collection.Delegate = selection;
@@ -107,6 +114,45 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		ApplyReorder(collection);
 
 		return collection;
+	}
+
+	void ConfigureDataSource(
+		UICollectionView collection)
+	{
+		indexedSourceMode = WantsIndexedSource;
+
+		if (UsesIndexedSource)
+		{
+			indexedData = new(this, CellForIndex, SupplementaryFor);
+			collection.DataSource = indexedData;
+			return;
+		}
+
+		data = new(this, collection, CellFor)
+		{
+			SupplementaryViewProvider = SupplementaryFor
+		};
+	}
+
+	partial void SourceKindChanged()
+	{
+		if (!IsRealized || indexedSourceMode == WantsIndexedSource)
+			return;
+
+		data = null;
+		indexedData = null;
+		indexedReloadQueued = false;
+		indexedChanges.Clear();
+		snapshotQueued = false;
+		structureDirty = true;
+		appendedFrom = -1;
+		dirtySections.Clear();
+		sectionItems.Clear();
+		sectionKeys.Clear();
+		keys.Clear();
+		itemsById.Clear();
+
+		ConfigureDataSource(Ui);
 	}
 
 	bool ISystemInsetScroll.UseSystemContentInsets()
@@ -247,11 +293,11 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		}
 
 		// a diff held back during a refreshing drag still has to land
-		FlushSnapshot();
+		FlushChanges();
 	}
 
 	void EndNativeRefresh()
-		=> FlushSnapshot(() =>
+		=> FlushChanges(() =>
 		{
 			refresh?.EndRefreshing();
 			SyncInsets();
@@ -315,8 +361,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	// the drop animation must settle against the moved data, not a stale snapshot
 	partial void MovedInSource()
 	{
-		QueueSnapshot();
-		FlushSnapshot();
+		if (UsesIndexedSource)
+			QueueIndexedReload();
+		else
+			QueueSnapshot();
+
+		FlushChanges();
 	}
 
 	partial void ApplyEditingCore()
@@ -333,7 +383,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	partial void ApplySelectionCore()
 	{
-		if (!IsRealized || data is null || SuppressSelectionSync)
+		if (!IsRealized || SuppressSelectionSync)
 			return;
 
 		bool active = isEditing || !SelectsOnlyWhileEditing;
@@ -344,6 +394,17 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		// selection that does not apply in this mode leaves the tapped row's transient highlight alone
 		if (!active || !SelectionConfigured)
+			return;
+
+		if (UsesIndexedSource)
+		{
+			foreach (NSIndexPath path in Ui.IndexPathsForVisibleItems)
+				SyncIndexedSelection(path.Section, path.Row);
+
+			return;
+		}
+
+		if (data is null)
 			return;
 
 		HashSet<NSIndexPath> wanted = [];
@@ -372,6 +433,26 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			Ui.SelectItem(path, false, UICollectionViewScrollPosition.None);
 	}
 
+	partial void SyncIndexedSelection(
+		int section,
+		int index)
+	{
+		if (!UsesIndexedSource || !SelectionConfigured || (!isEditing && SelectsOnlyWhileEditing)
+			|| ItemAt(section, index) is not TItem item)
+			return;
+
+		bool wanted = singleSelects
+			? ReferenceEquals(selectedItem, item)
+			: selectedItems?.Any(selected => ReferenceEquals(selected, item)) == true;
+		NSIndexPath path = NSIndexPath.FromRowSection(index, section);
+		bool selected = Ui.GetIndexPathsForSelectedItems()?.Contains(path) == true;
+
+		if (wanted && !selected)
+			Ui.SelectItem(path, false, UICollectionViewScrollPosition.None);
+		else if (!wanted && selected)
+			Ui.DeselectItem(path, false);
+	}
+
 	/// <summary>
 	/// Scrolls the list until <paramref name="item"/> is visible, aligned to the given viewport edge.
 	/// </summary>
@@ -383,12 +464,76 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		ScrollPosition position = ScrollPosition.Top,
 		bool animated = true)
 	{
-		if (!IsRealized || data is null || !keys.TryGetValue(item, out NSNumber? key))
+		if (!IsRealized)
 			return;
 
-		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
+		if (UsesIndexedSource)
+		{
+			for (int section = 0; section < SectionCount; section++)
+			{
+				for (int index = 0; index < CountIn(section); index++)
+				{
+					if (!ReferenceEquals(ItemAt(section, index), item))
+						continue;
 
-		UICollectionViewScrollPosition native = position switch
+					ScrollTo(section, index, position, animated);
+					return;
+				}
+			}
+
+			return;
+		}
+
+		if (data is null || !keys.TryGetValue(item, out NSNumber? key))
+			return;
+
+		if (data.GetIndexPath(key) is NSIndexPath path)
+			Ui.ScrollToItem(path, NativeScrollPosition(position), animated);
+	}
+
+	/// <summary>
+	/// Scrolls an indexed item into view.
+	/// </summary>
+	/// <param name="section">The zero-based section index.</param>
+	/// <param name="item">The zero-based item index within the section.</param>
+	/// <param name="position">Where the item lands in the viewport.</param>
+	/// <param name="animated">Whether the scroll is animated.</param>
+	public void ScrollTo(
+		int section,
+		int item,
+		ScrollPosition position = ScrollPosition.Top,
+		bool animated = true)
+	{
+		if (!IsRealized || section < 0 || section >= SectionCount || item < 0 || item >= CountIn(section))
+			return;
+
+		FlushChanges();
+		Ui.LayoutIfNeeded();
+		Ui.ScrollToItem(NSIndexPath.FromRowSection(item, section), NativeScrollPosition(position), animated);
+	}
+
+	/// <summary>
+	/// Scrolls to the beginning, middle, or end of the collection's content.
+	/// </summary>
+	/// <param name="position">The content position to reveal.</param>
+	/// <param name="animated">Whether the scroll is animated.</param>
+	public void ScrollTo(
+		ScrollPosition position,
+		bool animated = true)
+	{
+		if (!IsRealized)
+			return;
+
+		FlushChanges();
+		Ui.LayoutIfNeeded();
+		SetContentPosition(position, animated);
+	}
+
+	UICollectionViewScrollPosition NativeScrollPosition(
+		ScrollPosition position)
+	{
+		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
+		return position switch
 		{
 			ScrollPosition.Center => horizontal
 				? UICollectionViewScrollPosition.CenteredHorizontally
@@ -400,9 +545,30 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 				? UICollectionViewScrollPosition.Left
 				: UICollectionViewScrollPosition.Top
 		};
+	}
 
-		if (data.GetIndexPath(key) is NSIndexPath path)
-			Ui.ScrollToItem(path, native, animated);
+	void SetContentPosition(
+		ScrollPosition position,
+		bool animated)
+	{
+		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
+		nfloat viewport = horizontal ? Ui.Bounds.Width : Ui.Bounds.Height;
+		nfloat extent = horizontal ? Ui.ContentSize.Width : Ui.ContentSize.Height;
+		if (viewport <= 0 || extent <= 0)
+			return;
+
+		nfloat leading = horizontal ? Ui.AdjustedContentInset.Left : Ui.AdjustedContentInset.Top;
+		nfloat trailing = horizontal ? Ui.AdjustedContentInset.Right : Ui.AdjustedContentInset.Bottom;
+		nfloat start = -leading;
+		nfloat end = (nfloat)Math.Max((double)start, (double)(extent - viewport + trailing));
+		nfloat target = position switch
+		{
+			ScrollPosition.Center => (start + end) / 2,
+			ScrollPosition.Bottom => end,
+			_ => start
+		};
+		CGPoint current = Ui.ContentOffset;
+		Ui.SetContentOffset(horizontal ? new(target, current.Y) : new(current.X, target), animated);
 	}
 
 	internal void OnScrolled(
@@ -435,7 +601,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 					// the diff must land before done resets the swipe, or a removed row slides
 					// back into view for a beat before the queued snapshot takes it out
-					FlushSnapshot();
+					FlushChanges();
 					done(true);
 				});
 
@@ -540,6 +706,25 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		return new(cell.ContentView, parameters);
 	}
 
+	NSObject? contentSizeObserver;
+
+	partial void ObserveAccessibilityChanges()
+	{
+		if (contentSizeObserver is not null)
+			return;
+
+		contentSizeObserver = UIApplication.Notifications.ObserveContentSizeCategoryChanged((_, _) => InvalidateFixedGeometry(keepAnchor: true));
+	}
+
+	partial void UnobserveAccessibilityChanges()
+	{
+		if (contentSizeObserver is null)
+			return;
+
+		NSNotificationCenter.DefaultCenter.RemoveObserver(contentSizeObserver);
+		contentSizeObserver = null;
+	}
+
 	private protected override void ApplyProperties()
 	{
 		HookSources();
@@ -571,6 +756,17 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		appendedFrom = -1;
 		dirtySections.Clear();
 		sectionItems.Clear();
+		data = null;
+		indexedData = null;
+		fixedLayout = null;
+		pendingFixedGridAnchor = null;
+		headerSizingView = null;
+		footerSizingView = null;
+		fixedLayoutWidth = -1;
+		indexedReloadQueued = false;
+		indexedChanges.Clear();
+		indexedSourceMode = null;
+		initialScrollPending = true;
 
 		Header?.Unrealize();
 		Footer?.Unrealize();
@@ -669,6 +865,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		Header?.PageWillAppear();
 		Footer?.PageWillAppear();
 
+		// accessibility text size and the first-day setting can change while the page is off screen
+		InvalidateFixedGeometry(keepAnchor: true);
+
 		if (!IsRealized || isEditing || SelectsOutsideEditing)
 			return;
 
@@ -678,6 +877,15 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	partial void ReloadItems()
 	{
+		fixedLayout?.MarkGeometryDirty();
+
+		if (UsesIndexedSource)
+		{
+			indexedChanges.Clear();
+			QueueIndexedReload();
+			return;
+		}
+
 		// the section list itself changed: only a full rebuild knows the new shape
 		structureDirty = true;
 		QueueSnapshot();
@@ -685,13 +893,26 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	partial void ReloadIndexTitles()
 	{
-		if (IsRealized)
+		if (!IsRealized)
+			return;
+
+		if (UsesIndexedSource)
+			QueueIndexedReload();
+		else
 			Ui.ReloadData();
 	}
 
 	partial void ApplyChange(
 		int section)
 	{
+		fixedLayout?.MarkGeometryDirty();
+
+		if (UsesIndexedSource)
+		{
+			QueueIndexedReload();
+			return;
+		}
+
 		// an untracked sender means the sources changed shape under us
 		if (section < 0)
 		{
@@ -707,12 +928,62 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		int section,
 		NotifyCollectionChangedEventArgs e)
 	{
+		if (UsesIndexedSource)
+		{
+			if (TryApplyIndexedContentChange(section, e))
+				return;
+
+			QueueIndexedReload(IndexedSourceChange.Items(section, e));
+			return;
+		}
+
 		// a content-only replacement keeps its identifier: update the identity maps, rebind
 		// any visible cell, and skip the snapshot entirely
 		if (TryApplyContentChange(section, e))
 			return;
 
 		ApplyChange(section);
+	}
+
+	bool TryApplyIndexedContentChange(
+		int section,
+		NotifyCollectionChangedEventArgs e)
+	{
+		if (!IsRealized || indexedData is null
+			|| section < 0 || section >= SectionCount
+			|| e.Action is not NotifyCollectionChangedAction.Replace
+			|| e.OldItems is not { Count: > 0 } oldItems
+			|| e.NewItems is not { } newItems || oldItems.Count != newItems.Count
+			|| e.OldStartingIndex < 0 || e.OldStartingIndex != e.NewStartingIndex)
+			return false;
+
+		int start = e.OldStartingIndex;
+		if (start > CountIn(section) - oldItems.Count)
+			return false;
+
+		for (int offset = 0; offset < oldItems.Count; offset++)
+		{
+			if (oldItems[offset] is not TItem oldItem || newItems[offset] is not TItem newItem
+				|| !ReferenceEquals(TemplateFor(oldItem), TemplateFor(newItem)))
+				return false;
+
+			if (multiSelects && !ReferenceEquals(oldItem, newItem)
+				&& !SelectionRemapping.CanReplace(selectedItems, oldItem))
+				return false;
+		}
+
+		for (int offset = 0; offset < oldItems.Count; offset++)
+		{
+			TItem oldItem = (TItem)oldItems[offset]!;
+			TItem newItem = (TItem)newItems[offset]!;
+
+			if (!ReferenceEquals(oldItem, newItem))
+				RemapSelection(oldItem, newItem);
+
+			RebindIndexedVisible(section, start + offset, newItem);
+		}
+
+		return true;
 	}
 
 	bool TryApplyContentChange(
@@ -781,6 +1052,27 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (Ui.CellForItem(path) is not SkeleCell { Hosted: ICollectionItemView hosted } cell)
 			return;
 
+		RebindVisible(cell, hosted, item);
+	}
+
+	void RebindIndexedVisible(
+		int section,
+		int index,
+		TItem item)
+	{
+		NSIndexPath path = NSIndexPath.FromRowSection(index, section);
+		if (Ui.CellForItem(path) is not SkeleCell { Hosted: ICollectionItemView hosted } cell)
+			return;
+
+		RebindVisible(cell, hosted, item);
+	}
+
+	static void RebindVisible(
+		SkeleCell cell,
+		ICollectionItemView hosted,
+		TItem item)
+	{
+
 		if (UIAccessibility.IsReduceMotionEnabled)
 		{
 			hosted.SetItem(item);
@@ -831,6 +1123,14 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	partial void SectionsChanged(
 		NotifyCollectionChangedEventArgs e)
 	{
+		fixedLayout?.MarkGeometryDirty();
+
+		if (UsesIndexedSource)
+		{
+			QueueIndexedReload(IndexedSourceChange.Sections(e));
+			return;
+		}
+
 		// sections appended at the tail extend the applied snapshot as-is
 		if (!structureDirty
 			&& sectionItems.Count > 0
@@ -846,6 +1146,163 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		}
 
 		ReloadItems();
+	}
+
+	void QueueIndexedReload(
+		IndexedSourceChange? change = null)
+	{
+		if (!IsRealized || indexedData is null)
+			return;
+
+		fixedLayout?.MarkGeometryDirty();
+
+		if (change is IndexedSourceChange sourceChange)
+			indexedChanges.Add(sourceChange);
+
+		if (indexedReloadQueued)
+			return;
+
+		indexedReloadQueued = true;
+		DispatchQueue.MainQueue.DispatchAsync(() =>
+		{
+			if (!indexedReloadQueued)
+				return;
+
+			if (refresh is { Refreshing: true } && Ui.Dragging)
+				return;
+
+			indexedReloadQueued = false;
+			if (IsRealized)
+				ReloadIndexedData();
+		});
+	}
+
+	void ReloadIndexedData()
+	{
+		if (!IsRealized || indexedData is null)
+			return;
+
+		UICollectionView view = Ui;
+		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
+		double oldOffset = horizontal ? view.ContentOffset.X : view.ContentOffset.Y;
+		double oldViewport = horizontal ? view.Bounds.Width : view.Bounds.Height;
+		double oldExtent = horizontal ? view.ContentSize.Width : view.ContentSize.Height;
+		double oldLeading = horizontal ? view.AdjustedContentInset.Left : view.AdjustedContentInset.Top;
+		double oldTrailing = horizontal ? view.AdjustedContentInset.Right : view.AdjustedContentInset.Bottom;
+		double oldEnd = Math.Max(-oldLeading, oldExtent - oldViewport + oldTrailing);
+		bool pinnedToEnd = !initialScrollPending && Math.Abs(oldOffset - oldEnd) < 2;
+
+		NSIndexPath? anchor = view.IndexPathsForVisibleItems
+			.OrderBy(path => path.Section)
+			.ThenBy(path => path.Row)
+			.FirstOrDefault();
+		double relative = 0;
+		if (anchor is not null && view.GetLayoutAttributesForItem(anchor) is UICollectionViewLayoutAttributes oldAttributes)
+			relative = (horizontal ? oldAttributes.Frame.X : oldAttributes.Frame.Y) - oldOffset;
+
+		anchor = AdjustIndexedAnchor(anchor);
+		indexedChanges.Clear();
+
+		view.ReloadData();
+		view.CollectionViewLayout.InvalidateLayout();
+		view.LayoutIfNeeded();
+
+		if (initialScrollPending)
+		{
+			ApplyInitialScroll();
+			return;
+		}
+
+		if (pinnedToEnd)
+		{
+			SetContentPosition(ScrollPosition.Bottom, animated: false);
+			return;
+		}
+
+		if (anchor is not null && anchor.Section < SectionCount && anchor.Row < CountIn((int)anchor.Section)
+			&& view.GetLayoutAttributesForItem(anchor) is UICollectionViewLayoutAttributes newAttributes)
+		{
+			double target = (horizontal ? newAttributes.Frame.X : newAttributes.Frame.Y) - relative;
+			CGPoint current = view.ContentOffset;
+			view.SetContentOffset(horizontal ? new(target, current.Y) : new(current.X, target), false);
+		}
+
+		ApplySelectionCore();
+	}
+
+	NSIndexPath? AdjustIndexedAnchor(
+		NSIndexPath? anchor)
+	{
+		if (anchor is null)
+			return null;
+
+		int section = (int)anchor.Section;
+		int row = (int)anchor.Row;
+
+		foreach (IndexedSourceChange change in indexedChanges)
+		{
+			if (change.IsSectionChange)
+			{
+				if (!TryAdjustIndex(ref section, change))
+					return null;
+			}
+			else if (section == change.Section && !TryAdjustIndex(ref row, change))
+				return null;
+		}
+
+		return NSIndexPath.FromRowSection(row, section);
+	}
+
+	static bool TryAdjustIndex(
+		ref int index,
+		IndexedSourceChange change)
+	{
+		switch (change.Action)
+		{
+			case NotifyCollectionChangedAction.Add:
+				if (change.NewIndex >= 0 && index >= change.NewIndex)
+					index += change.NewCount;
+				return true;
+
+			case NotifyCollectionChangedAction.Remove:
+				if (change.OldIndex < 0)
+					return false;
+
+				if (index >= change.OldIndex + change.OldCount)
+					index -= change.OldCount;
+				else if (index >= change.OldIndex)
+					index = change.OldIndex;
+				return true;
+
+			case NotifyCollectionChangedAction.Replace:
+				if (change.OldIndex < 0 || change.NewIndex < 0)
+					return false;
+
+				if (index >= change.OldIndex + change.OldCount)
+					index += change.NewCount - change.OldCount;
+				else if (index >= change.OldIndex)
+					index = change.NewIndex + Math.Min(index - change.OldIndex, Math.Max(0, change.NewCount - 1));
+				return true;
+
+			case NotifyCollectionChangedAction.Move:
+				if (change.OldIndex < 0 || change.NewIndex < 0 || change.OldCount == 0)
+					return false;
+
+				if (index >= change.OldIndex && index < change.OldIndex + change.OldCount)
+					index = change.NewIndex + index - change.OldIndex;
+				else if (change.OldIndex < change.NewIndex
+					&& index >= change.OldIndex + change.OldCount
+					&& index < change.NewIndex + change.OldCount)
+					index -= change.OldCount;
+				else if (change.NewIndex < change.OldIndex
+					&& index >= change.NewIndex && index < change.OldIndex)
+					index += change.OldCount;
+				return true;
+
+			case NotifyCollectionChangedAction.Reset:
+			default:
+				return false;
+		}
 	}
 
 	void QueueSnapshot()
@@ -873,6 +1330,26 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		});
 	}
 
+	void FlushChanges(
+		Action? completed = null)
+	{
+		if (!UsesIndexedSource)
+		{
+			FlushSnapshot(completed);
+			return;
+		}
+
+		if (!indexedReloadQueued || !IsRealized)
+		{
+			completed?.Invoke();
+			return;
+		}
+
+		indexedReloadQueued = false;
+		ReloadIndexedData();
+		completed?.Invoke();
+	}
+
 	// coalescing waits a turn, but UIKit's own animations (a collapsing swipe, a settling refresh
 	// control) must not run against stale data: these apply the pending diff right now
 	void FlushSnapshot(
@@ -888,11 +1365,115 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		ApplySnapshot(completed);
 	}
 
+	internal void ApplyInitialScroll()
+	{
+		if (!initialScrollPending || !IsRealized)
+			return;
+
+		if (InitialScrollPosition is ScrollPosition.Top)
+		{
+			initialScrollPending = false;
+			return;
+		}
+
+		if (SectionCount == 0 || IsEmpty)
+			return;
+
+		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
+		nfloat viewport = horizontal ? Ui.Bounds.Width : Ui.Bounds.Height;
+		nfloat extent = horizontal ? Ui.ContentSize.Width : Ui.ContentSize.Height;
+		if (viewport <= 0 || extent <= 0)
+			return;
+
+		initialScrollPending = false;
+		SetContentPosition(InitialScrollPosition, animated: false);
+	}
+
+	readonly record struct FixedGridAnchor(
+		int Section,
+		double RelativeOffset);
+
+	// a width, text size, or item count change moves the section tops; the anchor keeps the
+	// first visible month in place across the rebuild
+	internal void InvalidateFixedGeometry(
+		bool keepAnchor)
+	{
+		if (fixedLayout is null || !IsRealized)
+			return;
+
+		FixedGridAnchor? anchor = keepAnchor ? CaptureFixedGridAnchor() : null;
+
+		fixedLayout.MarkGeometryDirty();
+		fixedLayout.InvalidateLayout();
+
+		if (anchor is FixedGridAnchor value)
+		{
+			Ui.LayoutIfNeeded();
+			RestoreFixedGridAnchor(value);
+		}
+	}
+
+	internal void BeginFixedLayoutBoundsChange(
+		double width)
+	{
+		if (fixedLayout is null || width == fixedLayoutWidth)
+			return;
+
+		fixedLayoutWidth = width;
+		pendingFixedGridAnchor = CaptureFixedGridAnchor();
+		fixedLayout.MarkGeometryDirty();
+		fixedLayout.InvalidateLayout();
+	}
+
+	internal void EndFixedLayoutBoundsChange()
+	{
+		if (pendingFixedGridAnchor is not FixedGridAnchor anchor)
+			return;
+
+		pendingFixedGridAnchor = null;
+		RestoreFixedGridAnchor(anchor);
+	}
+
+	FixedGridAnchor? CaptureFixedGridAnchor()
+	{
+		if (fixedLayout is null || !IsRealized)
+			return null;
+
+		NSIndexPath? path = Ui.IndexPathsForVisibleItems
+			.OrderBy(path => path.Section)
+			.ThenBy(path => path.Row)
+			.FirstOrDefault();
+
+		if (path is null || !fixedLayout.TrySectionTop((int)path.Section, out double top))
+			return null;
+
+		return new((int)path.Section, top - Ui.ContentOffset.Y);
+	}
+
+	void RestoreFixedGridAnchor(
+		FixedGridAnchor anchor)
+	{
+		if (fixedLayout is null || !IsRealized || !fixedLayout.TrySectionTop(anchor.Section, out double top))
+			return;
+
+		double minimum = -Ui.AdjustedContentInset.Top;
+		double maximum = Math.Max(minimum, fixedLayout.ContentHeight - Ui.Bounds.Height + Ui.AdjustedContentInset.Bottom);
+		double y = Math.Clamp(top - anchor.RelativeOffset, minimum, maximum);
+		CGPoint current = Ui.ContentOffset;
+
+		if (Math.Abs((double)current.Y - y) < 0.5)
+			return;
+
+		Ui.SetContentOffset(new CGPoint(current.X, y), false);
+	}
+
 	// a full rebuild runs when the section list changes shape; item changes re-key only their own
 	// section, which keeps a one-day edit out of the every-item marshalling path
 	void ApplySnapshot(
 		Action? completed = null)
 	{
+		fixedLayout?.MarkGeometryDirty();
+
 		if (data is null)
 		{
 			completed?.Invoke();
@@ -965,10 +1546,17 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		Prune();
 
-		// animating an off-screen collection is wasted work
 		bool animated = Ui.Window is not null;
-
-		if (completed is null)
+		if (initialScrollPending && InitialScrollPosition is not ScrollPosition.Top)
+		{
+			data.ApplySnapshot(snapshot, animated, () =>
+			{
+				Ui.LayoutIfNeeded();
+				ApplyInitialScroll();
+				completed?.Invoke();
+			});
+		}
+		else if (completed is null)
 			data.ApplySnapshot(snapshot, animated);
 		else
 			data.ApplySnapshot(snapshot, animated, completed);
@@ -1082,6 +1670,25 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			|| bound is not TItem item)
 			throw new InvalidOperationException("The collection snapshot contains an invalid item identifier.");
 
+		return BindCell(collectionView, indexPath, item);
+	}
+
+	internal SkeleCell CellForIndex(
+		UICollectionView collectionView,
+		NSIndexPath indexPath)
+	{
+		ObserveSection(indexPath.Section);
+		if (ItemAt(indexPath.Section, indexPath.Row) is not TItem item)
+			throw new InvalidOperationException("The indexed source returned no item for a visible index path.");
+
+		return BindCell(collectionView, indexPath, item);
+	}
+
+	SkeleCell BindCell(
+		UICollectionView collectionView,
+		NSIndexPath indexPath,
+		TItem item)
+	{
 		ItemTemplateRegistration<TItem> itemTemplate = TemplateFor(item);
 		SkeleCell cell = (SkeleCell)collectionView.DequeueReusableCell(itemTemplate.ReuseIdentifier, indexPath);
 
@@ -1119,7 +1726,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		return cell;
 	}
 
-	SkeleHeader SupplementaryFor(
+	internal SkeleHeader SupplementaryFor(
 		UICollectionView collectionView,
 		string kind,
 		NSIndexPath indexPath)
@@ -1131,6 +1738,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			return LayoutBoundaryFor(collectionView, kind, indexPath, Footer, LayoutFooterId);
 
 		bool footer = kind == UICollectionElementKindSectionKey.Footer.ToString();
+		ObserveSection(indexPath.Section);
 
 		SkeleHeader header = (SkeleHeader)collectionView.DequeueReusableSupplementaryView(
 			new NSString(kind),
@@ -1203,6 +1811,19 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	void ICollectionHost.SyncEmptyState() =>
 		SyncEmptyState();
+
+	void ICollectionHost.ApplyInitialScroll() =>
+		ApplyInitialScroll();
+
+	void ICollectionHost.BeginFixedLayoutBoundsChange(
+		double width) =>
+		BeginFixedLayoutBoundsChange(width);
+
+	void ICollectionHost.EndFixedLayoutBoundsChange() =>
+		EndFixedLayoutBoundsChange();
+
+	void ICollectionHost.SyncObservedSections() =>
+		SyncObservedSections();
 
 	void ICollectionHost.SyncInsets() =>
 		SyncInsets();
@@ -1425,6 +2046,49 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	internal ItemView<TSection>? CreateFooterView() =>
 		CreateSectionView(SectionFooterTemplate);
 
+	internal bool HasSectionHeader => SectionHeaderTemplate is not null;
+
+	internal bool HasSectionFooter => SectionFooterTemplate is not null;
+
+	internal FixedGridGeometry BuildFixedGridGeometry(
+		double width)
+	{
+		Thickness insets = ContentInsets;
+		double sectionWidth = Math.Max(1, width - insets.Horizontal - Layout.Spacing * 2);
+		double columnWidth = Math.Max(1, (width - insets.Horizontal - Layout.Spacing * (Layout.Columns + 1)) / Layout.Columns);
+
+		return new FixedGridGeometry(
+			SectionCount,
+			CountIn,
+			Layout.Columns,
+			Layout.Spacing,
+			RowHeight(columnWidth, Layout.ItemAspectRatio),
+			MeasureSectionView(ref headerSizingView, SectionHeaderTemplate, sectionWidth),
+			MeasureSectionView(ref footerSizingView, SectionFooterTemplate, sectionWidth),
+			insets,
+			width);
+	}
+
+	double MeasureSectionView(
+		ref ItemView<TSection>? sizingView,
+		Func<ItemView<TSection>>? template,
+		double width)
+	{
+		if (template is null)
+			return 0;
+
+		sizingView ??= CreateSectionView(template);
+
+		if (sizingView is null)
+			return 0;
+
+		if (SectionAt(0) is TSection section)
+			sizingView.SetItem(section);
+
+		sizingView.Measure(new(width, double.PositiveInfinity));
+		return sizingView.DesiredSize.Height;
+	}
+
 	internal void Select(
 		int section,
 		int index)
@@ -1446,6 +2110,21 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			return false;
 
 		return ItemActivation is not ICommand command || command.CanExecute(item);
+	}
+
+	UICollectionViewLayout CreateNativeLayout()
+	{
+		if (!Layout.IsFixedGeometry)
+			return CreateLayout(SectionHeaderTemplate is not null, SectionFooterTemplate is not null);
+
+		if (SectionLayout is not null)
+			throw new InvalidOperationException("CollectionLayout.FixedGrid does not support a per-section SectionLayout.");
+
+		if (Header is not null || Footer is not null)
+			throw new InvalidOperationException("CollectionLayout.FixedGrid does not support the collection Header or Footer.");
+
+		fixedLayout = new(this);
+		return fixedLayout;
 	}
 
 	UICollectionViewCompositionalLayout CreateLayout(
@@ -2018,9 +2697,13 @@ internal sealed class CollectionHost : UICollectionView, INavigationAccessoryScr
 	public override void LayoutSubviews()
 	{
 		element?.SyncInsets();
+		element?.BeginFixedLayoutBoundsChange(Bounds.Width);
 
 		base.LayoutSubviews();
 
+		element?.EndFixedLayoutBoundsChange();
+		element?.ApplyInitialScroll();
+		element?.SyncObservedSections();
 		element?.SyncInsetGroupedBoundaryInsets();
 		element?.SyncEmptyState();
 	}
@@ -2194,6 +2877,60 @@ internal sealed class CollectionSource : UICollectionViewDiffableDataSource<NSNu
 		string title,
 		nint atIndex) =>
 		NSIndexPath.FromRowSection(0, element?.IndexSection(title) ?? 0);
+}
+
+internal sealed class IndexedCollectionSource<TItem, TSection>(
+	CollectionView<TItem, TSection> element,
+	Func<UICollectionView, NSIndexPath, SkeleCell> cell,
+	Func<UICollectionView, string, NSIndexPath, SkeleHeader> supplementary) : UICollectionViewDataSource
+	where TItem : class
+	where TSection : class, ISection<TItem>
+{
+	readonly ICollectionHost host = element;
+
+	public override nint NumberOfSections(UICollectionView collectionView) =>
+		element.SectionCount;
+
+	public override nint GetItemsCount(
+		UICollectionView collectionView,
+		nint section) =>
+		element.Expanded((int)section) ? element.CountIn((int)section) : 0;
+
+	public override UICollectionViewCell GetCell(
+		UICollectionView collectionView,
+		NSIndexPath indexPath) =>
+		cell(collectionView, indexPath);
+
+	public override UICollectionReusableView GetViewForSupplementaryElement(
+		UICollectionView collectionView,
+		NSString elementKind,
+		NSIndexPath indexPath) =>
+		supplementary(collectionView, elementKind.ToString(), indexPath);
+
+	public override bool CanMoveItem(
+		UICollectionView collectionView,
+		NSIndexPath indexPath) =>
+		element.CanMove(indexPath.Section, indexPath.Row);
+
+	public override void MoveItem(
+		UICollectionView collectionView,
+		NSIndexPath sourceIndexPath,
+		NSIndexPath destinationIndexPath) =>
+		element.Move(
+			sourceIndexPath.Section,
+			sourceIndexPath.Row,
+			destinationIndexPath.Section,
+			destinationIndexPath.Row);
+
+	public override string[]? GetIndexTitles(
+		UICollectionView collectionView) =>
+		host.IndexTitles();
+
+	public override NSIndexPath GetIndexPath(
+		UICollectionView collectionView,
+		string title,
+		nint atIndex) =>
+		NSIndexPath.FromRowSection(0, host.IndexSection(title));
 }
 
 internal sealed class SkeleCell(

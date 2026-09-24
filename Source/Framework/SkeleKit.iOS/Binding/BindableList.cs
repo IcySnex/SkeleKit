@@ -81,6 +81,15 @@ public readonly struct BindableList<TItem> : IReadOnlyList<TItem>
 		BindingExpression<ObservableCollection<TItem>?> expression) =>
 		new(Widen(expression));
 
+	/// <summary>
+	/// Wraps an active binding to a virtualized list source.
+	/// </summary>
+	/// <param name="expression">The evaluation rule for the property.</param>
+	/// <returns>A virtualized list source using the binding expression.</returns>
+	public static implicit operator BindableList<TItem>(
+		BindingExpression<IVirtualizedList<TItem>?> expression) =>
+		new(Widen(expression));
+
 
 	BindableList(
 		BindingExpression<IReadOnlyList<TItem>?> expression)
@@ -143,10 +152,23 @@ public readonly struct BindableList<TItem> : IReadOnlyList<TItem>
 }
 
 /// <summary>
-/// Builds <see cref="BindableList{TItem}"/> values from collection expressions (<c>[a, b, c]</c>).
+/// Builds <see cref="BindableList{TItem}"/> values from collections and virtualized sources.
 /// </summary>
 public static class BindableList
 {
+	/// <summary>
+	/// Wraps a virtualized list for direct assignment to a list source property.
+	/// </summary>
+	/// <typeparam name="TItem">The element type of the list.</typeparam>
+	/// <param name="items">The virtualized list.</param>
+	/// <returns>A list source containing the virtualized list.</returns>
+	public static BindableList<TItem> Virtualized<TItem>(
+		IVirtualizedList<TItem> items)
+	{
+		ArgumentNullException.ThrowIfNull(items);
+		return new(items);
+	}
+
 	/// <summary>
 	/// Wraps the elements of a collection expression as a list source.
 	/// </summary>

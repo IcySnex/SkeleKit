@@ -10,7 +10,20 @@ namespace SkeleKit;
 /// </summary>
 /// <typeparam name="TItem">The item type.</typeparam>
 public class CollectionView<TItem> : CollectionView<TItem, ISection<TItem>>
-	where TItem : class;
+	where TItem : class
+{
+	/// <summary>
+	/// Scrolls an indexed item into view.
+	/// </summary>
+	/// <param name="item">The zero-based item index.</param>
+	/// <param name="position">Where the item lands in the viewport.</param>
+	/// <param name="animated">Whether the scroll is animated.</param>
+	public void ScrollTo(
+		int item,
+		ScrollPosition position = ScrollPosition.Top,
+		bool animated = true) =>
+		ScrollTo(0, item, position, animated);
+}
 
 /// <summary>
 /// A data-driven list, grid, or carousel whose groups carry their own section model.
@@ -31,6 +44,9 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	// maps each hooked items collection and section model to its section index
 	readonly Dictionary<object, int> sectionIndex = new(ReferenceEqualityComparer.Instance);
 
+	// sections with a live item or state subscription, pruned when they leave the viewport
+	readonly HashSet<int> observedSections = [];
+
 	int loadMoreFiredAt = -1;
 
 	internal bool SuppressSelectionSync;
@@ -48,6 +64,17 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	internal ICommand? ItemActivation => itemCommand;
 
 	internal bool IsGrouped => sections is not null;
+
+	bool WantsIndexedSource => sections is not null
+		? sections is IVirtualizedList<TSection>
+		: itemsSource is IVirtualizedList<TItem>;
+
+	// a source whose section type cannot expand never needs the section model for this question
+	static readonly bool SectionsCanExpand = typeof(IExpandableSection<TItem>).IsAssignableFrom(typeof(TSection));
+
+	internal bool UsesIndexedSource => indexedSourceMode ?? WantsIndexedSource;
+
+	bool? indexedSourceMode;
 
 	internal int SectionCount => sections?.Count ?? 1;
 
@@ -73,12 +100,12 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		}
 	}
 
-
 	/// <summary>
 	/// The items to show.
 	/// </summary>
 	/// <remarks>
 	/// Changes animate into place when the list is an <c>ObservableCollection</c>.
+	/// An <see cref="IVirtualizedList{TItem}"/> is read directly by index without creating a snapshot.
 	/// </remarks>
 	public BindableList<TItem> ItemsSource
 	{
@@ -91,6 +118,10 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// <summary>
 	/// Groups, each with its own header. Takes precedence over <see cref="ItemsSource"/>.
 	/// </summary>
+	/// <remarks>
+	/// Use <see cref="IVirtualizedSectionList{TItem, TSection}"/> when section counts and items
+	/// should be produced without first creating every section model.
+	/// </remarks>
 	public BindableList<TSection> GroupedItemsSource
 	{
 		get => new(sections);
@@ -250,6 +281,11 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// How many items from the end <see cref="LoadMoreCommand"/> fires at.
 	/// </summary>
 	public int LoadMoreThreshold { get; set; } = 4;
+
+	/// <summary>
+	/// Where the collection starts after its first nonempty layout.
+	/// </summary>
+	public ScrollPosition InitialScrollPosition { get; set; } = ScrollPosition.Top;
 
 	/// <summary>
 	/// Shown instead of the items while the source is empty.
@@ -468,6 +504,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		if (hooked && itemsSource is INotifyCollectionChanged live)
 			live.CollectionChanged += OnItemsChanged;
 
+		SourceKindChanged();
 		ReloadItems();
 	}
 
@@ -485,6 +522,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		if (hooked && sections is INotifyCollectionChanged live)
 			live.CollectionChanged += OnSectionsChanged;
 
+		SourceKindChanged();
 		HookSectionItems();
 		ReloadItems();
 	}
@@ -568,6 +606,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 			titles.CollectionChanged += OnIndexTitlesChanged;
 
 		HookSectionItems();
+		ObserveAccessibilityChanges();
 	}
 
 	void UnhookSources()
@@ -588,6 +627,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 			titles.CollectionChanged -= OnIndexTitlesChanged;
 
 		UnhookSectionItems();
+		UnobserveAccessibilityChanges();
 
 		hooked = false;
 	}
@@ -598,6 +638,11 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		UnhookSectionItems();
 
 		if (!hooked)
+			return;
+
+		// An indexed source may contain a very large, lazy section list. Observe sections
+		// only when UIKit asks to display them instead of enumerating the source here.
+		if (UsesIndexedSource && sections is not null)
 			return;
 
 		if (sections is not IReadOnlyList<TSection> groups)
@@ -628,6 +673,90 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		}
 	}
 
+	internal void ObserveSection(
+		int section)
+	{
+		if (!hooked || !UsesIndexedSource || sections is not IReadOnlyList<TSection> groups
+			|| section < 0 || section >= groups.Count)
+			return;
+
+		observedSections.Add(section);
+
+		TSection group = groups[section];
+
+		if (group.Items is INotifyCollectionChanged live && !sectionIndex.ContainsKey(live))
+		{
+			live.CollectionChanged += OnSectionItemsChanged;
+			sectionItemHooks.Add(live);
+			sectionIndex[live] = section;
+		}
+
+		if (group is INotifyPropertyChanged notifier && !sectionIndex.ContainsKey(notifier))
+		{
+			notifier.PropertyChanged += OnSectionPropertyChanged;
+			sectionStateHooks.Add(notifier);
+			sectionIndex[notifier] = section;
+		}
+	}
+
+	// A virtualized source materializes sections on demand and may replace an evicted instance.
+	// Drop the subscriptions of every section that left the viewport, so a source can keep its
+	// own cache bounded without the collection pinning old section models.
+	internal void SyncObservedSections()
+	{
+		if (!hooked || !UsesIndexedSource || sections is null || observedSections.Count == 0)
+			return;
+
+		HashSet<int> visible = [];
+
+		foreach (NSIndexPath path in Ui.IndexPathsForVisibleItems)
+			visible.Add((int)path.Section);
+
+		if (SectionHeaderTemplate is not null || SectionFooterTemplate is not null)
+		{
+			foreach (NSString kind in new NSString[]
+			{
+				UICollectionElementKindSectionKey.Header,
+				UICollectionElementKindSectionKey.Footer
+			})
+			{
+				foreach (NSIndexPath path in Ui.GetIndexPathsForVisibleSupplementaryElements(kind))
+					visible.Add((int)path.Section);
+			}
+		}
+
+		foreach (int section in observedSections.ToArray())
+		{
+			if (!visible.Contains(section))
+				UnobserveSection(section);
+		}
+	}
+
+	void UnobserveSection(
+		int section)
+	{
+		observedSections.Remove(section);
+
+		foreach (object hook in sectionIndex
+			.Where(pair => pair.Value == section)
+			.Select(pair => pair.Key)
+			.ToArray())
+		{
+			if (hook is INotifyCollectionChanged live)
+			{
+				live.CollectionChanged -= OnSectionItemsChanged;
+				sectionItemHooks.Remove(live);
+			}
+			else if (hook is INotifyPropertyChanged notifier)
+			{
+				notifier.PropertyChanged -= OnSectionPropertyChanged;
+				sectionStateHooks.Remove(notifier);
+			}
+
+			sectionIndex.Remove(hook);
+		}
+	}
+
 	void UnhookSectionItems()
 	{
 		foreach (INotifyCollectionChanged hook in sectionItemHooks)
@@ -640,6 +769,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 		sectionStateHooks.Clear();
 		sectionIndex.Clear();
+		observedSections.Clear();
 	}
 
 	// -1 means the change cannot be pinned to a section, which callers treat as a rebuild
@@ -752,6 +882,12 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 	partial void MovedInSource();
 
+	partial void SourceKindChanged();
+
+	partial void ObserveAccessibilityChanges();
+
+	partial void UnobserveAccessibilityChanges();
+
 
 	/// <inheritdoc/>
 	protected override Size MeasureOverride(
@@ -761,7 +897,9 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 	internal int CountIn(
 		int section) =>
-		sections is IReadOnlyList<TSection> groups
+		sections is IVirtualizedSectionList<TItem, TSection> virtualized
+			? section >= 0 && section < virtualized.Count ? virtualized.GetItemCount(section) : 0
+			: sections is IReadOnlyList<TSection> groups
 			? section >= 0 && section < groups.Count ? groups[section].Items.Count : 0
 			: itemsSource?.Count ?? 0;
 
@@ -769,6 +907,14 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		int section,
 		int index)
 	{
+		if (sections is IVirtualizedSectionList<TItem, TSection> virtualized)
+		{
+			return section >= 0 && section < virtualized.Count
+				&& index >= 0 && index < virtualized.GetItemCount(section)
+				? virtualized.GetItem(section, index)
+				: null;
+		}
+
 		IReadOnlyList<TItem>? items = sections is IReadOnlyList<TSection> groups
 			? section >= 0 && section < groups.Count ? groups[section].Items : null
 			: itemsSource;
@@ -790,7 +936,9 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 	internal bool Expanded(
 		int section) =>
-		SectionAt(section) is not IExpandableSection<TItem> expandable || expandable.IsExpanded;
+		!SectionsCanExpand
+		|| SectionAt(section) is not IExpandableSection<TItem> expandable
+		|| expandable.IsExpanded;
 
 	internal void ToggleSection(
 		int section)
@@ -939,6 +1087,12 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		int section,
 		int row)
 	{
+		if (UsesIndexedSource)
+		{
+			ObserveSection(section);
+			SyncIndexedSelection(section, row);
+		}
+
 		if (LoadMoreCommand is not ICommand command)
 			return;
 
@@ -964,10 +1118,23 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		if (command.CanExecute(parameter))
 			command.Execute(parameter);
 	}
+
+	partial void SyncIndexedSelection(
+		int section,
+		int index);
 }
 
 internal interface ICollectionHost
 {
+	void ApplyInitialScroll();
+
+	void BeginFixedLayoutBoundsChange(
+		double width);
+
+	void EndFixedLayoutBoundsChange();
+
+	void SyncObservedSections();
+
 	void KeyboardChanged(
 		Rect keyboard,
 		bool hiding,

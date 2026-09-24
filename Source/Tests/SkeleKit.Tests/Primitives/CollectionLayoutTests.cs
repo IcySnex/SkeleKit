@@ -87,6 +87,46 @@ public class CollectionLayoutTests
 	}
 
 	[Fact]
+	public void FixedGrid_MarksFixedGeometry()
+	{
+		CollectionLayout layout = CollectionLayout.FixedGrid(columns: 7, spacing: 6, itemAspectRatio: 1);
+
+		Assert.Equal(CollectionLayoutKind.Grid, layout.Kind);
+		Assert.True(layout.IsFixedGeometry);
+		Assert.Equal(7, layout.Columns);
+		Assert.Equal(6, layout.Spacing);
+		Assert.Equal(1, layout.ItemAspectRatio);
+	}
+
+	[Fact]
+	public void Grid_IsNotFixedGeometry()
+	{
+		CollectionLayout layout = CollectionLayout.Grid(columns: 3);
+
+		Assert.False(layout.IsFixedGeometry);
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(double.NaN)]
+	[InlineData(double.PositiveInfinity)]
+	public void FixedGrid_RejectsInvalidItemAspectRatio(
+		double itemAspectRatio) =>
+		Assert.Throws<ArgumentOutOfRangeException>(() => CollectionLayout.FixedGrid(7, itemAspectRatio: itemAspectRatio));
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-4)]
+	public void FixedGrid_ClampsColumnsToAtLeastOne(
+		int columns)
+	{
+		CollectionLayout layout = CollectionLayout.FixedGrid(columns);
+
+		Assert.Equal(1, layout.Columns);
+	}
+
+	[Fact]
 	public void Section_IsWhateverTheAppModelSays()
 	{
 		ISection<string> section = new Group("General", "settings", ["Appearance", "Language"]);

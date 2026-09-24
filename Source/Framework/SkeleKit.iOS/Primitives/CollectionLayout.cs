@@ -77,7 +77,7 @@ public readonly struct CollectionLayout
 	/// <returns>The list layout.</returns>
 	public static CollectionLayout List(
 		bool grouped = false) =>
-		new(CollectionLayoutKind.List, 1, 0, 0, null, grouped, CarouselSnap.None);
+		new(CollectionLayoutKind.List, 1, 0, 0, null, grouped, CarouselSnap.None, false);
 
 	/// <summary>
 	/// A grid of equal columns.
@@ -94,7 +94,31 @@ public readonly struct CollectionLayout
 		if (itemAspectRatio is double ratio && (!double.IsFinite(ratio) || ratio <= 0))
 			throw new ArgumentOutOfRangeException(nameof(itemAspectRatio), "An item aspect ratio must be finite and greater than zero.");
 
-		return new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, itemAspectRatio, false, CarouselSnap.None);
+		return new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, itemAspectRatio, false, CarouselSnap.None, false);
+	}
+
+	/// <summary>
+	/// A grid with fixed geometry that reads only the visible sections.
+	/// </summary>
+	/// <param name="columns">The number of columns per row.</param>
+	/// <param name="spacing">The gap between items, in points.</param>
+	/// <param name="itemAspectRatio">The item width divided by its height, or null to measure the first item template.</param>
+	/// <returns>The fixed grid layout.</returns>
+	/// <remarks>
+	/// SkeleKit measures the item template, the section header template, and the section footer template
+	/// one time at each geometry build. All sections use the measured sizes.
+	/// Use this layout with a virtualized source for a large or computed list.
+	/// Use <see cref="Grid"/> for self-sizing items.
+	/// </remarks>
+	public static CollectionLayout FixedGrid(
+		int columns,
+		double spacing = 8,
+		double? itemAspectRatio = null)
+	{
+		if (itemAspectRatio is double ratio && (!double.IsFinite(ratio) || ratio <= 0))
+			throw new ArgumentOutOfRangeException(nameof(itemAspectRatio), "An item aspect ratio must be finite and greater than zero.");
+
+		return new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, itemAspectRatio, false, CarouselSnap.None, true);
 	}
 
 	/// <summary>
@@ -108,7 +132,7 @@ public readonly struct CollectionLayout
 		double itemWidth,
 		double spacing = 8,
 		CarouselSnap snap = CarouselSnap.None) =>
-		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, null, false, snap);
+		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, null, false, snap, false);
 
 
 	CollectionLayout(
@@ -118,7 +142,8 @@ public readonly struct CollectionLayout
 		double itemWidth,
 		double? itemAspectRatio,
 		bool grouped,
-		CarouselSnap snap)
+		CarouselSnap snap,
+		bool isFixedGeometry)
 	{
 		Kind = kind;
 		Columns = columns;
@@ -127,6 +152,7 @@ public readonly struct CollectionLayout
 		ItemAspectRatio = itemAspectRatio;
 		Grouped = grouped;
 		Snap = snap;
+		IsFixedGeometry = isFixedGeometry;
 	}
 
 
@@ -167,4 +193,12 @@ public readonly struct CollectionLayout
 	/// How a carousel settles when the drag ends.
 	/// </summary>
 	public CarouselSnap Snap { get; }
+
+	/// <summary>
+	/// Whether the collection uses the visible-only fixed geometry layout.
+	/// </summary>
+	/// <remarks>
+	/// Set by <see cref="FixedGrid"/>. All other factories return false.
+	/// </remarks>
+	public bool IsFixedGeometry { get; }
 }
