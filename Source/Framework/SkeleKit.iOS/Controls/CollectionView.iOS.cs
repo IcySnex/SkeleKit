@@ -76,14 +76,17 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			AutomaticallyAdjustsScrollIndicatorInsets = false
 		};
 
+		// a fixed grid has no list affordances, so the cheaper plain cell carries it
+		Type cellClass = Layout.IsFixedGeometry ? typeof(SkelePlainCell) : typeof(SkeleCell);
+
 		if (ItemTemplateSelector is ItemTemplateSelector<TItem> selector)
 		{
 			foreach (ItemTemplateRegistration<TItem> itemTemplate in selector.Templates)
-				collection.RegisterClassForCell(typeof(SkeleCell), itemTemplate.ReuseIdentifier);
+				collection.RegisterClassForCell(cellClass, itemTemplate.ReuseIdentifier);
 		}
 		else
 		{
-			collection.RegisterClassForCell(typeof(SkeleCell), CellId);
+			collection.RegisterClassForCell(cellClass, CellId);
 		}
 		collection.RegisterClassForSupplementaryView(
 			typeof(SkeleHeader),
@@ -799,7 +802,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		foreach (UICollectionViewCell cell in Ui.VisibleCells)
 		{
-			if (cell is SkeleCell { Hosted: { } hosted })
+			if (cell is ISkeleHostCell { Hosted: { } hosted })
 				hosted.ReapplyVisuals();
 		}
 
@@ -815,7 +818,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		foreach (UICollectionViewCell cell in Ui.VisibleCells)
 		{
-			if (cell is not SkeleCell skele)
+			if (cell is not ISkeleHostCell skele)
 				continue;
 
 			if (skele.Hosted is { LocalTint: null } hosted)
@@ -844,8 +847,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		foreach (UICollectionViewCell nativeCell in Ui.VisibleCells)
 		{
-			if (nativeCell is not SkeleCell cell
-				|| Ui.IndexPathForCell(cell) is not NSIndexPath indexPath)
+			if (nativeCell is not ISkeleHostCell cell
+				|| Ui.IndexPathForCell(nativeCell) is not NSIndexPath indexPath)
 				continue;
 
 			CollectionLayout layout = LayoutForSection(indexPath.Section);
@@ -1049,7 +1052,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (data?.GetIndexPath(key) is not NSIndexPath path)
 			return;
 
-		if (Ui.CellForItem(path) is not SkeleCell { Hosted: ICollectionItemView hosted } cell)
+		if (Ui.CellForItem(path) is not ISkeleHostCell { Hosted: ICollectionItemView hosted } cell)
 			return;
 
 		RebindVisible(cell, hosted, item);
@@ -1061,14 +1064,14 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		TItem item)
 	{
 		NSIndexPath path = NSIndexPath.FromRowSection(index, section);
-		if (Ui.CellForItem(path) is not SkeleCell { Hosted: ICollectionItemView hosted } cell)
+		if (Ui.CellForItem(path) is not ISkeleHostCell { Hosted: ICollectionItemView hosted } cell)
 			return;
 
 		RebindVisible(cell, hosted, item);
 	}
 
 	static void RebindVisible(
-		SkeleCell cell,
+		ISkeleHostCell cell,
 		ICollectionItemView hosted,
 		TItem item)
 	{
@@ -1660,7 +1663,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		}
 	}
 
-	SkeleCell CellFor(
+	UICollectionViewCell CellFor(
 		UICollectionView collectionView,
 		NSIndexPath indexPath,
 		NSObject identifier)
@@ -1673,7 +1676,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		return BindCell(collectionView, indexPath, item);
 	}
 
-	internal SkeleCell CellForIndex(
+	internal UICollectionViewCell CellForIndex(
 		UICollectionView collectionView,
 		NSIndexPath indexPath)
 	{
@@ -1684,13 +1687,13 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		return BindCell(collectionView, indexPath, item);
 	}
 
-	SkeleCell BindCell(
+	UICollectionViewCell BindCell(
 		UICollectionView collectionView,
 		NSIndexPath indexPath,
 		TItem item)
 	{
 		ItemTemplateRegistration<TItem> itemTemplate = TemplateFor(item);
-		SkeleCell cell = (SkeleCell)collectionView.DequeueReusableCell(itemTemplate.ReuseIdentifier, indexPath);
+		ISkeleHostCell cell = (ISkeleHostCell)collectionView.DequeueReusableCell(itemTemplate.ReuseIdentifier, indexPath);
 
 		// the tree is built once per recycled cell, then only rebound
 		if (cell.Hosted is null)
@@ -1699,6 +1702,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 			cell.Attach(
 				created,
+				fixedLayout is not null,
 				SelectionConfigured,
 				ReorderCommand is not null,
 				ShowsSelectionCheckmark && SelectsOutsideEditing);
@@ -1723,7 +1727,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			? SystemListMetrics.MinimumRowHeight(layout.Grouped)
 			: 0);
 
-		return cell;
+		return (UICollectionViewCell)cell;
 	}
 
 	internal SkeleHeader SupplementaryFor(
@@ -1744,6 +1748,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			new NSString(kind),
 			footer ? FooterId : HeaderId,
 			indexPath);
+
+		header.FixedSize = fixedLayout is not null;
 
 		if (header.Hosted is null && (footer ? CreateFooterView() : CreateHeaderView()) is ItemView<TSection> view)
 		{
@@ -2123,6 +2129,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (Header is not null || Footer is not null)
 			throw new InvalidOperationException("CollectionLayout.FixedGrid does not support the collection Header or Footer.");
 
+		if (ShowsSelectionCheckmark || ReorderCommand is not null || SwipeActions.Count > 0)
+			throw new InvalidOperationException("CollectionLayout.FixedGrid does not support selection checkmarks, drag reordering, or swipe actions.");
+
 		fixedLayout = new(this);
 		return fixedLayout;
 	}
@@ -2492,7 +2501,7 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 		UICollectionView collectionView,
 		NSIndexPath indexPath)
 	{
-		if (collectionView.CellForItem(indexPath) is SkeleCell { Hosted: { } hosted }
+		if (collectionView.CellForItem(indexPath) is ISkeleHostCell { Hosted: { } hosted }
 			&& !hosted.IsInteractionEnabled)
 			return false;
 
@@ -2881,7 +2890,7 @@ internal sealed class CollectionSource : UICollectionViewDiffableDataSource<NSNu
 
 internal sealed class IndexedCollectionSource<TItem, TSection>(
 	CollectionView<TItem, TSection> element,
-	Func<UICollectionView, NSIndexPath, SkeleCell> cell,
+	Func<UICollectionView, NSIndexPath, UICollectionViewCell> cell,
 	Func<UICollectionView, string, NSIndexPath, SkeleHeader> supplementary) : UICollectionViewDataSource
 	where TItem : class
 	where TSection : class, ISection<TItem>
@@ -2934,12 +2943,12 @@ internal sealed class IndexedCollectionSource<TItem, TSection>(
 }
 
 internal sealed class SkeleCell(
-	NativeHandle handle) : UICollectionViewListCell(handle)
+	NativeHandle handle) : UICollectionViewListCell(handle), ISkeleHostCell
 {
 	public View? Hosted { get; private set; }
 
 	// non-zero while a content-change animation is running, so reuse can cancel it
-	internal int AnimationToken { get; set; }
+	public int AnimationToken { get; set; }
 
 	ICollectionItemView? source;
 	bool selects;
@@ -2947,6 +2956,14 @@ internal sealed class SkeleCell(
 	bool selectionCheckmark;
 	bool editing;
 	bool selected;
+	bool fixedSize;
+
+	// the last arrangement, so a layout pass that changes nothing does not arrange again
+	nfloat arrangedWidth;
+	nfloat arrangedLeading;
+	nfloat arrangedTrailing;
+	nfloat arrangedContentHeight;
+	bool arrangementValid;
 
 	UICellAccessoryCheckmark? selectionMark;
 
@@ -2956,6 +2973,7 @@ internal sealed class SkeleCell(
 
 	public void Attach(
 		ICollectionItemView item,
+		bool fixedSize,
 		bool selects,
 		bool reorders,
 		bool selectionCheckmark)
@@ -2963,10 +2981,12 @@ internal sealed class SkeleCell(
 		source = item;
 		Hosted = item.View;
 		highlight = item.HighlightBackground;
+		this.fixedSize = fixedSize;
 		this.selects = selects;
 		this.reorders = reorders;
 		this.selectionCheckmark = selectionCheckmark;
 		selected = Selected;
+		arrangementValid = false;
 
 		// one write; repaints during a peek desync the portal
 		BackgroundConfiguration = UIBackgroundConfiguration.ClearConfiguration;
@@ -3020,7 +3040,7 @@ internal sealed class SkeleCell(
 		SetNeedsLayout();
 	}
 
-	internal void ApplySelectionTint()
+	public void ApplySelectionTint()
 	{
 		if (selectionMark is not null)
 			selectionMark.TintColor = Hosted?.EffectiveTint?.ToUIColor();
@@ -3146,6 +3166,20 @@ internal sealed class SkeleCell(
 		CGRect content = ContentView.Frame;
 		nfloat leading = content.X;
 		nfloat trailing = (nfloat)Math.Max(0, (double)Bounds.Width - (double)content.GetMaxX());
+		nfloat contentHeight = ContentView.Bounds.Height;
+
+		if (arrangementValid
+			&& arrangedWidth == Bounds.Width
+			&& arrangedLeading == leading
+			&& arrangedTrailing == trailing
+			&& arrangedContentHeight == contentHeight)
+			return;
+
+		arrangementValid = true;
+		arrangedWidth = Bounds.Width;
+		arrangedLeading = leading;
+		arrangedTrailing = trailing;
+		arrangedContentHeight = contentHeight;
 
 		source?.SetContentInsets(leading, trailing);
 		Hosted.Arrange(new(-leading, 0, Bounds.Width, ContentView.Bounds.Height));
@@ -3154,7 +3188,8 @@ internal sealed class SkeleCell(
 	public override UICollectionViewLayoutAttributes PreferredLayoutAttributesFittingAttributes(
 		UICollectionViewLayoutAttributes layoutAttributes)
 	{
-		if (Hosted is null)
+		// the fixed layout owns every frame; no content measurement is needed
+		if (fixedSize || Hosted is null)
 			return layoutAttributes;
 
 		Hosted.Measure(new(layoutAttributes.Frame.Width, double.PositiveInfinity));
@@ -3193,6 +3228,8 @@ internal sealed class SkeleHeader(
 
 
 	public View? Hosted { get; private set; }
+
+	internal bool FixedSize { get; set; }
 
 
 	public void Attach(
@@ -3270,7 +3307,7 @@ internal sealed class SkeleHeader(
 	public override UICollectionViewLayoutAttributes PreferredLayoutAttributesFittingAttributes(
 		UICollectionViewLayoutAttributes layoutAttributes)
 	{
-		if (Hosted is null)
+		if (FixedSize || Hosted is null)
 			return layoutAttributes;
 
 		Thickness insets = contentInsets?.Invoke() ?? Thickness.Zero;
