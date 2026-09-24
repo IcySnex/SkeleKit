@@ -375,8 +375,19 @@ public class SkeleApplication
 			return;
 		}
 
-		if (page is not null && PageHost.FindScrolling(page)?.Native is UIScrollView scroll)
-			scroll.SetContentOffset(new(scroll.ContentOffset.X, -scroll.AdjustedContentInset.Top), true);
+		if (page is not null)
+		{
+			View? scrolling = PageHost.FindScrolling(page);
+
+			if (scrolling is IDefaultScrollTarget target)
+			{
+				target.ScrollToDefault(animated: true);
+				return;
+			}
+
+			if (scrolling?.Native is UIScrollView scroll)
+				scroll.SetContentOffset(new(scroll.ContentOffset.X, -scroll.AdjustedContentInset.Top), true);
+		}
 	}
 
 

@@ -30,7 +30,7 @@ public class CollectionView<TItem> : CollectionView<TItem, ISection<TItem>>
 /// </summary>
 /// <typeparam name="TItem">The item type.</typeparam>
 /// <typeparam name="TSection">The section model the header and footer templates bind to.</typeparam>
-public partial class CollectionView<TItem, TSection> : Container, ICollectionHost
+public partial class CollectionView<TItem, TSection> : Container, ICollectionHost, IDefaultScrollTarget
 	where TItem : class
 	where TSection : class, ISection<TItem>
 {
@@ -283,9 +283,14 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	public int LoadMoreThreshold { get; set; } = 4;
 
 	/// <summary>
-	/// Where the collection starts after its first nonempty layout.
+	/// Where the collection starts after its first nonempty layout, and where a system
+	/// scroll-to-top gesture (status bar, the selected tab, or the navigation bar) lands.
 	/// </summary>
-	public ScrollPosition InitialScrollPosition { get; set; } = ScrollPosition.Top;
+	/// <remarks>
+	/// The default is <see cref="ScrollPosition.Top"/>. Set it to <see cref="ScrollPosition.Bottom"/>
+	/// for content whose newest entry is at the end, such as a calendar or a chat.
+	/// </remarks>
+	public ScrollPosition DefaultScrollPosition { get; set; } = ScrollPosition.Top;
 
 	/// <summary>
 	/// Shown instead of the items while the source is empty.
@@ -1122,6 +1127,15 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	partial void SyncIndexedSelection(
 		int section,
 		int index);
+}
+
+/// <summary>
+/// A scroll view that knows the position it returns to for system scroll-to-top gestures.
+/// </summary>
+internal interface IDefaultScrollTarget
+{
+	void ScrollToDefault(
+		bool animated);
 }
 
 internal interface ICollectionHost

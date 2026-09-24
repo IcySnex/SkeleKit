@@ -532,6 +532,12 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		SetContentPosition(position, animated);
 	}
 
+	// the system gesture path asks the collection for its default position; the app keeps
+	// control of its own state and calls ScrollTo with an explicit position
+	void IDefaultScrollTarget.ScrollToDefault(
+		bool animated) =>
+		ScrollTo(DefaultScrollPosition, animated);
+
 	UICollectionViewScrollPosition NativeScrollPosition(
 		ScrollPosition position)
 	{
@@ -1373,7 +1379,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (!initialScrollPending || !IsRealized)
 			return;
 
-		if (InitialScrollPosition is ScrollPosition.Top)
+		if (DefaultScrollPosition is ScrollPosition.Top)
 		{
 			initialScrollPending = false;
 			return;
@@ -1389,7 +1395,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			return;
 
 		initialScrollPending = false;
-		SetContentPosition(InitialScrollPosition, animated: false);
+		SetContentPosition(DefaultScrollPosition, animated: false);
 	}
 
 	readonly record struct FixedGridAnchor(
@@ -1550,7 +1556,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		Prune();
 
 		bool animated = Ui.Window is not null;
-		if (initialScrollPending && InitialScrollPosition is not ScrollPosition.Top)
+		if (initialScrollPending && DefaultScrollPosition is not ScrollPosition.Top)
 		{
 			data.ApplySnapshot(snapshot, animated, () =>
 			{
@@ -2568,6 +2574,14 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 		UIScrollView scrollView,
 		bool willDecelerate) =>
 		element.OnDragEnded();
+
+	// the system asks before it jumps to the top: the default position answers instead
+	public override bool ShouldScrollToTop(
+		UIScrollView scrollView)
+	{
+		element.ScrollTo(element.DefaultScrollPosition, animated: true);
+		return false;
+	}
 
 	public override UIContextMenuConfiguration? GetContextMenuConfiguration(
 		UICollectionView collectionView,
