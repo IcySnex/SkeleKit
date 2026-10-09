@@ -494,6 +494,15 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		set => Set(ref field, value, ApplyKeyboardDismiss, affectsMeasure: false);
 	} = KeyboardDismiss.OnDrag;
 
+	/// <summary>
+	/// Whether the scroll indicator is shown.
+	/// </summary>
+	public bool ShowsIndicator
+	{
+		get;
+		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
+	} = true;
+
 
 	void SetItemsSource(
 		IReadOnlyList<TItem>? value)
@@ -848,6 +857,9 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	void ApplyKeyboardDismiss() =>
 		ApplyKeyboardDismissCore();
 
+	void ApplyBehavior() =>
+		ApplyBehaviorCore();
+
 	// needs a writable list; an array throws on RemoveAt
 	IList<TItem>? WritableIn(
 		int section)
@@ -870,6 +882,8 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	partial void ApplyKeyboardAvoidanceCore();
 
 	partial void ApplyKeyboardDismissCore();
+
+	partial void ApplyBehaviorCore();
 
 	partial void ReloadItems();
 

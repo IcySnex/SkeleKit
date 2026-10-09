@@ -284,6 +284,18 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		};
 	}
 
+	partial void ApplyBehaviorCore()
+	{
+		if (!IsRealized)
+			return;
+
+		// a carousel scrolls horizontally, every other layout vertically
+		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
+
+		Ui.ShowsVerticalScrollIndicator = ShowsIndicator && !horizontal;
+		Ui.ShowsHorizontalScrollIndicator = ShowsIndicator && horizontal;
+	}
+
 	bool endsAfterDrag;
 
 	internal void OnDragEnded()
@@ -740,6 +752,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		ReloadItems();
 		ApplyEditingCore();
 		ApplyKeyboardDismissCore();
+		ApplyBehavior();
 		ObserveRefreshCommand();
 		ApplyRefresh(Ui);
 	}
