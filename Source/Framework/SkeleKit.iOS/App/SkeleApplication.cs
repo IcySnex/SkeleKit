@@ -1139,7 +1139,8 @@ public class SkeleApplication
 	{
 		Current = this;
 		lifecycleServices = Services.GetServices<IApplicationLifecycle>().ToArray();
-		InvokeLifecycleAsync(lifecycle => lifecycle.StartAsync())
+
+		Task.Run(() => InvokeLifecycleAsync(lifecycle => lifecycle.StartAsync()))
 			.GetAwaiter()
 			.GetResult();
 
