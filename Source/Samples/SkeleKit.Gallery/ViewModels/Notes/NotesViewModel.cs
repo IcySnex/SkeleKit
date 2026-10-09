@@ -16,7 +16,7 @@ internal sealed partial class NotesViewModel(
 			[
 				new(
 					"Roadmap",
-					"Shipped in 0.2.1",
+					"Shipped in 0.3.0",
 					"Native split view support lands as the app shell or a tab destination, including tabs placed only in the sidebar. Per-column navigation keeps each stack independent."),
 				new(
 					"Research",

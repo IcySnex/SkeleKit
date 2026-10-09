@@ -20,26 +20,25 @@
         <PackageTags>skelekit;ios;uikit;dotnet-ios;ui-framework;mvvm;aot;csharp</PackageTags>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageReleaseNotes><![CDATA[- Target the iOS 27 SDK (net10.0-ios27.0, Xcode 27).
-- Add navigation bar accessory.
-- Add ability to disable specific ItemViews of CollectionView.
-- Allow pining header of CollectionView.
-- Add justified text alignment to Label and TextView.
-- add min font size to Label and TextView.
-- Add text style customization for Spans.
-- Allow deconstruction of two-way bindings.
-- Rework app lifecycle and add one-time Start/Stop events
-- Allow implicit conversion for array list bindings.
-- Allow disabling layout pass when using View.Animate.
-- Make tint only source of truths for accent colors on views.
-- Add subtitle to menus in Button, Hold, Picker etc.
-- Allow minimizing navigation bar on iOS 27.
-- Introduce automatic/soft/hard scroll edge on iOS 27.
-- Add visibility priority for toolbar items on iOS 27.
-- Fix search and action bubble on iOS 27.
-- Allow custom sheet placement for modals on iOS 27.
-- Add grammar checking to TextField and TextEditor on iOS 27.
-- Move iPad only sidebar to new centralized unified one for iOS 27.]]></PackageReleaseNotes>
+        <PackageReleaseNotes><![CDATA[- Add native split views as app shell, tab destination or sidebar destination.
+- Add adaptive layout configuration to split views.
+- Add TabPlacement.Hidden for destinations that are only reached programmatically.
+- Add global Theme on SkeleApplication combining tint, appearance, navigation title style, top scroll edge and tab bar minimization.
+- Inherit Theme.NavigationTitleStyle and Theme.TopScrollEdgeStyle and apply theme changes live.
+- Add IMailer to compose mails.
+- Fix navigation bar accessory not respecting safe area.
+- Rename implicit styles API (Theme to Styles).
+- Add CollectionLayout.FixedGrid: a visible-only grid for large virtualized sources.
+- Add virtualized items and sections sources for very large collections, with major collection optimizations.
+- Rename InitialScrollPosition to DefaultScrollPosition and land system scroll-to-top gestures there.
+- Add native accessories to item views.
+- Make more view properties bindable.
+- Add dotted border strokes.
+- Add item aspect ratio to grid layouts.
+- Allow hiding the collection scroll indicator.
+- Fix action bubble placement and activation on iOS 18 and 27.
+- Cache color conversions for faster cell rebinds.
+- Fix application startup deadlocking with awaited lifecycle services.]]></PackageReleaseNotes>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <Copyright>Copyright © IcySnex</Copyright>
 
