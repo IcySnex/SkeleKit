@@ -3,6 +3,11 @@ namespace SkeleKit;
 
 internal static class ColorInterop
 {
+	const int CacheLimit = 256;
+
+	static readonly Lock gate = new();
+	static readonly Dictionary<Color, UIColor> conversions = [];
+
 	static UIColor Rgba(
 		double red,
 		double green,
@@ -50,6 +55,24 @@ internal static class ColorInterop
 	// ReSharper disable once InconsistentNaming
 	public static UIColor ToUIColor(
 		this Color color)
+	{
+		lock (gate)
+		{
+			if (conversions.TryGetValue(color, out UIColor? cached))
+				return cached;
+
+			UIColor created = Convert(color);
+
+			if (conversions.Count >= CacheLimit)
+				conversions.Clear();
+
+			conversions[color] = created;
+			return created;
+		}
+	}
+
+	static UIColor Convert(
+		Color color)
 	{
 		if (color.Pair is Color.DynamicPair pair)
 		{
