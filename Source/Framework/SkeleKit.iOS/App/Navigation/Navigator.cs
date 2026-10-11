@@ -106,9 +106,10 @@ internal sealed class Navigator(
 		IReadOnlyList<Detent> detents = style.Detents ?? [Detent.Large];
 		ConfigurePresentation(wrapper, style, detents, host);
 
-		presenter.PresentViewController(wrapper, true, null);
+		TaskCompletionSource completion = new();
+		presenter.PresentViewController(wrapper, true, completion.SetResult);
 
-		return Task.CompletedTask;
+		return completion.Task;
 	}
 
 	Task PresentSafari(
