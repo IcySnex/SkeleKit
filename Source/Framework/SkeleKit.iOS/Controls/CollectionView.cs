@@ -512,6 +512,20 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
 	} = true;
 
+	/// <summary>
+	/// Whether the collection sizes to its content instead of filling the space its parent offers.
+	/// </summary>
+	/// <remarks>
+	/// Flat single-section grid layouts measure exactly; every other layout keeps filling.
+	/// Enable it when a self-sizing parent — a content sheet detent, a stack panel — should
+	/// take the collection's item height instead of the offered space.
+	/// </remarks>
+	public bool SizesToContent
+	{
+		get;
+		set => Set(ref field, value);
+	}
+
 
 	void SetItemsSource(
 		IReadOnlyList<TItem>? value)
@@ -920,7 +934,18 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// <inheritdoc/>
 	protected override Size MeasureOverride(
 		Size availableSize) =>
-		new(double.IsFinite(availableSize.Width) ? availableSize.Width : 0, double.IsFinite(availableSize.Height) ? availableSize.Height : 0);
+		SizesToContent
+			? MeasureContentCore(availableSize)
+			: Fill(availableSize);
+
+	private partial Size MeasureContentCore(
+		Size availableSize);
+
+	static Size Fill(
+		Size availableSize) =>
+		new(
+			double.IsFinite(availableSize.Width) ? availableSize.Width : 0,
+			double.IsFinite(availableSize.Height) ? availableSize.Height : 0);
 
 
 	internal int CountIn(

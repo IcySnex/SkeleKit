@@ -23,7 +23,8 @@ internal sealed class FixedGridGeometry
 		double headerHeight,
 		double footerHeight,
 		Thickness insets,
-		double width)
+		double width,
+		Thickness? outerSpacing = null)
 	{
 		ArgumentNullException.ThrowIfNull(itemCount);
 		ArgumentOutOfRangeException.ThrowIfNegative(sectionCount);
@@ -38,7 +39,8 @@ internal sealed class FixedGridGeometry
 		TopInset = insets.Top;
 		BottomInset = insets.Bottom;
 		Width = Math.Max(0, width);
-		ItemWidth = Math.Max(1, (Width - insets.Horizontal - Spacing * (Columns + 1)) / Columns);
+		outer = outerSpacing ?? new Thickness(Spacing);
+		ItemWidth = Math.Max(1, (Width - insets.Horizontal - outer.Horizontal - Spacing * (Columns - 1)) / Columns);
 
 		sectionTops = new double[sectionCount];
 		sectionEnds = new double[sectionCount];
@@ -53,11 +55,11 @@ internal sealed class FixedGridGeometry
 			int rows = Rows(count);
 			double content = rows > 0 ? rows * ItemHeight + (rows - 1) * Spacing : 0;
 
-			double height = Spacing
+			double height = outer.Top
 				+ HeaderHeight
 				+ content
 				+ FooterHeight
-				+ Spacing
+				+ outer.Bottom
 				+ (section == 0 ? TopInset : 0)
 				+ (section == sectionCount - 1 ? BottomInset : 0);
 
@@ -72,13 +74,16 @@ internal sealed class FixedGridGeometry
 	}
 
 
+	readonly Thickness outer;
+
+
 	/// <summary>
 	/// Columns per row.
 	/// </summary>
 	public int Columns { get; }
 
 	/// <summary>
-	/// The gap between items, between item rows, and around a section, in points.
+	/// The gap between items, rows, and sections, in points.
 	/// </summary>
 	public double Spacing { get; }
 
@@ -164,7 +169,7 @@ internal sealed class FixedGridGeometry
 	/// </summary>
 	public double SectionContentTop(
 		int section) =>
-		SectionTop(section) + (section == 0 ? TopInset : 0) + Spacing + HeaderHeight;
+		SectionTop(section) + (section == 0 ? TopInset : 0) + outer.Top + HeaderHeight;
 
 	/// <summary>
 	/// The height of a section's item area.
@@ -182,8 +187,8 @@ internal sealed class FixedGridGeometry
 	public Rect HeaderFrame(
 		int section) =>
 		new(
-			LeftInset + Spacing,
-			SectionTop(section) + (section == 0 ? TopInset : 0) + Spacing,
+			LeftInset + outer.Left,
+			SectionTop(section) + (section == 0 ? TopInset : 0) + outer.Top,
 			HeaderWidth,
 			HeaderHeight);
 
@@ -194,7 +199,7 @@ internal sealed class FixedGridGeometry
 		int section,
 		int itemCount) =>
 		new(
-			LeftInset + Spacing,
+			LeftInset + outer.Left,
 			SectionContentTop(section) + SectionItemsHeight(itemCount),
 			HeaderWidth,
 			FooterHeight);
@@ -210,7 +215,7 @@ internal sealed class FixedGridGeometry
 		int column = item % Columns;
 
 		return new(
-			LeftInset + Spacing + column * (ItemWidth + Spacing),
+			LeftInset + outer.Left + column * (ItemWidth + Spacing),
 			SectionContentTop(section) + row * (ItemHeight + Spacing),
 			ItemWidth,
 			ItemHeight);
@@ -268,5 +273,5 @@ internal sealed class FixedGridGeometry
 
 
 	double HeaderWidth =>
-		Math.Max(0, Width - LeftInset - RightInset - Spacing * 2);
+		Math.Max(0, Width - LeftInset - RightInset - outer.Horizontal);
 }

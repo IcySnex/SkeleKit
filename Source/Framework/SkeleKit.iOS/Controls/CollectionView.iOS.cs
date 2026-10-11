@@ -2083,8 +2083,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		double width)
 	{
 		Thickness insets = ContentInsets;
-		double sectionWidth = Math.Max(1, width - insets.Horizontal - Layout.Spacing * 2);
-		double columnWidth = Math.Max(1, (width - insets.Horizontal - Layout.Spacing * (Layout.Columns + 1)) / Layout.Columns);
+		Thickness outer = Layout.OuterSpacing ?? new Thickness(Layout.Spacing);
+		double sectionWidth = Math.Max(1, width - insets.Horizontal - outer.Horizontal);
+		double columnWidth = Math.Max(1, (width - insets.Horizontal - outer.Horizontal - Layout.Spacing * (Layout.Columns - 1)) / Layout.Columns);
 
 		return new FixedGridGeometry(
 			SectionCount,
@@ -2095,7 +2096,41 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			MeasureSectionView(ref headerSizingView, SectionHeaderTemplate, sectionWidth),
 			MeasureSectionView(ref footerSizingView, SectionFooterTemplate, sectionWidth),
 			insets,
-			width);
+			width,
+			Layout.OuterSpacing);
+	}
+
+	/// <summary>
+	/// Measures a grid's exact content height so self-sizing parents — sheet content detents,
+	/// stack panels — size to the items instead of the offered space.
+	/// </summary>
+	/// <remarks>
+	/// Flat single-section grids only; every other layout keeps filling.
+	/// </remarks>
+	private partial Size MeasureContentCore(
+		Size availableSize)
+	{
+		if (!double.IsFinite(availableSize.Width)
+			|| Layout is not { Kind: CollectionLayoutKind.Grid, IsFixedGeometry: false }
+			|| SectionLayout is not null
+			|| Header is not null
+			|| Footer is not null
+			|| itemsSource is not { Count: > 0 } items)
+			return Fill(availableSize);
+
+		Thickness insets = ContentInsets;
+		Thickness outer = Layout.OuterSpacing ?? new Thickness(Layout.Spacing);
+		double inner = Math.Max(1, availableSize.Width - insets.Horizontal - outer.Horizontal);
+		double column = Math.Max(1, (inner - Layout.Spacing * (Layout.Columns - 1)) / Layout.Columns);
+		double row = Math.Max(1, RowHeight(column, Layout.ItemAspectRatio));
+		int rows = (items.Count + Layout.Columns - 1) / Layout.Columns;
+
+		double height = outer.Vertical
+			+ rows * row
+			+ Math.Max(0, rows - 1) * Layout.Spacing
+			+ insets.Vertical;
+
+		return new Size(Fill(availableSize).Width, height);
 	}
 
 	double MeasureSectionView(
@@ -2439,7 +2474,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		nfloat width)
 	{
 		nfloat spacing = (nfloat)layout.Spacing;
-		double column = Math.Max(1, (width - spacing * (layout.Columns + 1)) / layout.Columns);
+		Thickness outer = layout.OuterSpacing ?? new Thickness(layout.Spacing);
+		double column = Math.Max(1, (width - outer.Horizontal - spacing * (layout.Columns - 1)) / layout.Columns);
 		nfloat height = (nfloat)Math.Max(1, RowHeight(column, layout.ItemAspectRatio));
 
 		NSCollectionLayoutItem item = NSCollectionLayoutItem.Create(
@@ -2458,7 +2494,11 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		NSCollectionLayoutSection section = NSCollectionLayoutSection.Create(group);
 		section.InterGroupSpacing = spacing;
-		section.ContentInsets = new(spacing, spacing, spacing, spacing);
+		section.ContentInsets = new(
+			(nfloat)outer.Top,
+			(nfloat)outer.Left,
+			(nfloat)outer.Bottom,
+			(nfloat)outer.Right);
 
 		AddBoundaries(section, headers, footers);
 

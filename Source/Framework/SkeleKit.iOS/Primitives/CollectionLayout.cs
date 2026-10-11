@@ -77,7 +77,7 @@ public readonly struct CollectionLayout
 	/// <returns>The list layout.</returns>
 	public static CollectionLayout List(
 		bool grouped = false) =>
-		new(CollectionLayoutKind.List, 1, 0, 0, null, grouped, CarouselSnap.None, false);
+		new(CollectionLayoutKind.List, 1, 0, 0, null, grouped, CarouselSnap.None, false, null);
 
 	/// <summary>
 	/// A grid of equal columns.
@@ -85,16 +85,18 @@ public readonly struct CollectionLayout
 	/// <param name="columns">The number of columns per row.</param>
 	/// <param name="spacing">The gap between items, in points.</param>
 	/// <param name="itemAspectRatio">The item width divided by its height, or null to measure the item template.</param>
+	/// <param name="outerSpacing">The spacing between the grid and the collection's edges, or null to match <paramref name="spacing"/>.</param>
 	/// <returns>The grid layout.</returns>
 	public static CollectionLayout Grid(
 		int columns,
 		double spacing = 8,
-		double? itemAspectRatio = null)
+		double? itemAspectRatio = null,
+		Thickness? outerSpacing = null)
 	{
-		if (itemAspectRatio is double ratio && (!double.IsFinite(ratio) || ratio <= 0))
-			throw new ArgumentOutOfRangeException(nameof(itemAspectRatio), "An item aspect ratio must be finite and greater than zero.");
+		ValidateAspectRatio(itemAspectRatio);
+		ValidateOuterSpacing(outerSpacing);
 
-		return new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, itemAspectRatio, false, CarouselSnap.None, false);
+		return new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, itemAspectRatio, false, CarouselSnap.None, false, outerSpacing);
 	}
 
 	/// <summary>
@@ -103,6 +105,7 @@ public readonly struct CollectionLayout
 	/// <param name="columns">The number of columns per row.</param>
 	/// <param name="spacing">The gap between items, in points.</param>
 	/// <param name="itemAspectRatio">The item width divided by its height, or null to measure the first item template.</param>
+	/// <param name="outerSpacing">The spacing between the grid and the collection's edges, or null to match <paramref name="spacing"/>.</param>
 	/// <returns>The fixed grid layout.</returns>
 	/// <remarks>
 	/// SkeleKit measures the item template, the section header template, and the section footer template
@@ -113,12 +116,13 @@ public readonly struct CollectionLayout
 	public static CollectionLayout FixedGrid(
 		int columns,
 		double spacing = 8,
-		double? itemAspectRatio = null)
+		double? itemAspectRatio = null,
+		Thickness? outerSpacing = null)
 	{
-		if (itemAspectRatio is double ratio && (!double.IsFinite(ratio) || ratio <= 0))
-			throw new ArgumentOutOfRangeException(nameof(itemAspectRatio), "An item aspect ratio must be finite and greater than zero.");
+		ValidateAspectRatio(itemAspectRatio);
+		ValidateOuterSpacing(outerSpacing);
 
-		return new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, itemAspectRatio, false, CarouselSnap.None, true);
+		return new(CollectionLayoutKind.Grid, Math.Max(1, columns), spacing, 0, itemAspectRatio, false, CarouselSnap.None, true, outerSpacing);
 	}
 
 	/// <summary>
@@ -132,7 +136,27 @@ public readonly struct CollectionLayout
 		double itemWidth,
 		double spacing = 8,
 		CarouselSnap snap = CarouselSnap.None) =>
-		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, null, false, snap, false);
+		new(CollectionLayoutKind.Carousel, 1, spacing, itemWidth, null, false, snap, false, null);
+
+
+	static void ValidateAspectRatio(
+		double? itemAspectRatio)
+	{
+		if (itemAspectRatio is double ratio && (!double.IsFinite(ratio) || ratio <= 0))
+			throw new ArgumentOutOfRangeException(nameof(itemAspectRatio), "An item aspect ratio must be finite and greater than zero.");
+	}
+
+	static void ValidateOuterSpacing(
+		Thickness? outerSpacing)
+	{
+		if (outerSpacing is not { } outer)
+			return;
+
+		if (!double.IsFinite(outer.Left) || !double.IsFinite(outer.Top)
+			|| !double.IsFinite(outer.Right) || !double.IsFinite(outer.Bottom)
+			|| outer.Left < 0 || outer.Top < 0 || outer.Right < 0 || outer.Bottom < 0)
+			throw new ArgumentOutOfRangeException(nameof(outerSpacing), "Outer spacing values must be finite and non-negative.");
+	}
 
 
 	CollectionLayout(
@@ -143,7 +167,8 @@ public readonly struct CollectionLayout
 		double? itemAspectRatio,
 		bool grouped,
 		CarouselSnap snap,
-		bool isFixedGeometry)
+		bool isFixedGeometry,
+		Thickness? outerSpacing)
 	{
 		Kind = kind;
 		Columns = columns;
@@ -153,6 +178,7 @@ public readonly struct CollectionLayout
 		Grouped = grouped;
 		Snap = snap;
 		IsFixedGeometry = isFixedGeometry;
+		OuterSpacing = outerSpacing;
 	}
 
 
@@ -170,6 +196,11 @@ public readonly struct CollectionLayout
 	/// Gap between items, in points.
 	/// </summary>
 	public double Spacing { get; }
+
+	/// <summary>
+	/// The spacing between the grid and the collection's edges, or null to match <see cref="Spacing"/>.
+	/// </summary>
+	public Thickness? OuterSpacing { get; }
 
 	/// <summary>
 	/// Item width for a carousel, in points.
