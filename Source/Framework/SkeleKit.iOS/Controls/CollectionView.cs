@@ -503,6 +503,15 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
 	} = true;
 
+	/// <summary>
+	/// Whether the collection rubber-bands past its content edges when dragged, or stops at them.
+	/// </summary>
+	public bool Bounces
+	{
+		get;
+		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
+	} = true;
+
 
 	void SetItemsSource(
 		IReadOnlyList<TItem>? value)

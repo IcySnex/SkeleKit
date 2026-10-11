@@ -110,6 +110,15 @@ public partial class ScrollView : ContentHost
 	} = true;
 
 	/// <summary>
+	/// Whether the scroll view rubber-bands past its content edges when dragged, or stops at them.
+	/// </summary>
+	public bool Bounces
+	{
+		get;
+		set => Set(ref field, value, ApplyBehavior, affectsMeasure: false);
+	} = true;
+
+	/// <summary>
 	/// The color of the scroll indicator.
 	/// </summary>
 	public IndicatorStyle IndicatorStyle

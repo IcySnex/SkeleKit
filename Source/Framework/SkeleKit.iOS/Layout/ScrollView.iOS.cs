@@ -214,6 +214,10 @@ public partial class ScrollView : ISystemInsetScroll
 		host.ShowsVerticalScrollIndicator = ShowsIndicator && vertical;
 		host.ShowsHorizontalScrollIndicator = ShowsIndicator && !vertical;
 
+		host.Bounces = Bounces;
+		host.AlwaysBounceVertical = Bounces && vertical;
+		host.AlwaysBounceHorizontal = Bounces && !vertical;
+
 		host.IndicatorStyle = IndicatorStyle switch
 		{
 			IndicatorStyle.Dark => UIScrollViewIndicatorStyle.Black,
@@ -378,8 +382,8 @@ public partial class ScrollView : ISystemInsetScroll
 		UIScrollView host = (UIScrollView)Native;
 		bool vertical = Orientation == Orientation.Vertical;
 
-		host.AlwaysBounceVertical = vertical;
-		host.AlwaysBounceHorizontal = !vertical;
+		host.AlwaysBounceVertical = Bounces && vertical;
+		host.AlwaysBounceHorizontal = Bounces && !vertical;
 
 		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never;
 

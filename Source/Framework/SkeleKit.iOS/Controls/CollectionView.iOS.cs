@@ -294,6 +294,10 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		Ui.ShowsVerticalScrollIndicator = ShowsIndicator && !horizontal;
 		Ui.ShowsHorizontalScrollIndicator = ShowsIndicator && horizontal;
+
+		Ui.Bounces = Bounces;
+		Ui.AlwaysBounceVertical = Bounces && !horizontal;
+		Ui.AlwaysBounceHorizontal = Bounces && horizontal;
 	}
 
 	bool endsAfterDrag;

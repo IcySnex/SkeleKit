@@ -298,8 +298,13 @@ internal sealed class PageHost : UIViewController
 
 		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Top) && !navigation.NavigationBarHidden)
 			height += Math.Max(View?.SafeAreaInsets.Top ?? 0, navigation.NavigationBar.Bounds.Height);
-		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Bottom) && !navigation.ToolbarHidden)
-			height += navigation.Toolbar.Bounds.Height;
+
+		// the page's content area is inset from the bottom too, so the detent has to cover it
+		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Bottom))
+		{
+			double toolbar = navigation.ToolbarHidden ? 0 : navigation.Toolbar.Bounds.Height;
+			height += Math.Max(View?.SafeAreaInsets.Bottom ?? 0, toolbar);
+		}
 
 		return height;
 	}
