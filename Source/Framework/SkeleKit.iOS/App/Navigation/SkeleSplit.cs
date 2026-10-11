@@ -2,8 +2,11 @@ namespace SkeleKit;
 
 internal sealed class SkeleSplit : UISplitViewController
 {
+	internal static event Action<SkeleSplit>? CollapsedChanged;
+
 	readonly SplitViewColumn navigationColumn;
 	UINavigationController? visibleNavigationStack;
+	bool? collapsed;
 
 
 	public SkeleSplit(
@@ -29,8 +32,6 @@ internal sealed class SkeleSplit : UISplitViewController
 		{
 			if (Collapsed)
 			{
-				// while collapsed UIKit shows a single column: the compact stack when declared,
-				// otherwise the top column, which viewControllers exposes as its only entry
 				if (GetViewController(UISplitViewControllerColumn.Compact) is UINavigationController compact)
 					return compact;
 
@@ -147,9 +148,24 @@ internal sealed class SkeleSplit : UISplitViewController
 		}
 	}
 
+	void NotifyCollapsedChanged()
+	{
+		if (collapsed == Collapsed)
+			return;
+
+		bool? wasCollapsed = collapsed;
+		collapsed = Collapsed;
+
+		// the first observation only records the starting state
+		if (wasCollapsed is not null)
+			CollapsedChanged?.Invoke(this);
+	}
+
 	public override void ViewDidLayoutSubviews()
 	{
 		base.ViewDidLayoutSubviews();
+
+		NotifyCollapsedChanged();
 
 		if (!OperatingSystem.IsIOSVersionAtLeast(27))
 			return;

@@ -11,6 +11,11 @@ public interface ISplitView
 	bool IsCollapsed { get; }
 
 	/// <summary>
+	/// Raised when the active split view switches between collapsed and expanded.
+	/// </summary>
+	event Action<bool>? CollapsedChanged;
+
+	/// <summary>
 	/// Returns whether the given column is currently visible.
 	/// </summary>
 	/// <remarks>

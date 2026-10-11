@@ -236,21 +236,18 @@ public class SkeleApplication
 		StackFor(Root());
 
 	/// <summary>
-	/// Walks the presented controller chain of the key window once and reports the deepest
-	/// navigation stack plus the active split view it passes through.
+	/// Walks the presented controller chain of the key window and reports the deepest navigation
+	/// stack, so a modal-owned stack becomes the active one.
 	/// </summary>
-	static (UINavigationController? Stack, SkeleSplit? Split) WalkShell()
+	static UINavigationController? ActiveStack()
 	{
 		UIViewController? controller = Root();
 		UINavigationController? stack = null;
-		SkeleSplit? split = null;
 
 		while (controller is not null)
 		{
 			if (controller is UINavigationController navigation)
 				stack = navigation;
-			if (controller is SkeleSplit candidate)
-				split = candidate;
 
 			// A presentation is visually above its presenter's container hierarchy.
 			// Follow it first, then continue through the selected/visible child so the
@@ -271,14 +268,34 @@ public class SkeleApplication
 			controller = next;
 		}
 
-		return (stack, split);
+		return stack;
 	}
 
-	static UINavigationController? ActiveStack() =>
-		WalkShell().Stack;
+	/// <summary>
+	/// Finds the split view of the selected tab. Presentations live above the shell and can't
+	/// contain splits, so this walk ignores them — unlike <see cref="ActiveStack"/>, a modal
+	/// must not hide the split its presenter belongs to.
+	/// </summary>
+	static SkeleSplit? ActiveSplit()
+	{
+		UIViewController? controller = Root();
 
-	static SkeleSplit? ActiveSplit() =>
-		WalkShell().Split;
+		while (controller is not null)
+		{
+			if (controller is SkeleSplit split)
+				return split;
+
+			controller = controller switch
+			{
+				UITabBarController tabs => tabs.SelectedViewController,
+				UINavigationController navigation => navigation.TopViewController,
+				UISplitViewController plain => plain.ViewControllers.LastOrDefault(),
+				_ => null
+			};
+		}
+
+		return null;
+	}
 
 	/// <summary>
 	/// Resolves the navigation stack of a split view column. When the split view is collapsed,

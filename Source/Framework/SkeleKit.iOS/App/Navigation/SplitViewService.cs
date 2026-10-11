@@ -1,8 +1,27 @@
 namespace SkeleKit;
 
-internal sealed class SplitViewService(
-	Func<SkeleSplit?> activeSplit) : ISplitView
+internal sealed class SplitViewService : ISplitView
 {
+	readonly Func<SkeleSplit?> activeSplit;
+
+	public SplitViewService(
+		Func<SkeleSplit?> activeSplit)
+	{
+		this.activeSplit = activeSplit;
+		SkeleSplit.CollapsedChanged += OnSplitCollapsedChanged;
+	}
+
+
+	public event Action<bool>? CollapsedChanged;
+
+
+	void OnSplitCollapsedChanged(
+		SkeleSplit split)
+	{
+		if (ReferenceEquals(split, activeSplit()))
+			CollapsedChanged?.Invoke(split.Collapsed);
+	}
+
 	SkeleSplit Active() =>
 		activeSplit()
 		?? throw new InvalidOperationException("There is no active split view controller.");
