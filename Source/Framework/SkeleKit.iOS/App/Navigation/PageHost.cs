@@ -1298,14 +1298,27 @@ internal sealed class PageHost : UIViewController
 
 	void ApplyBackGuard()
 	{
-		if (Page?.ConfirmLeave is not null
-			&& backAction is null
-			&& NavigationController is UINavigationController leavable
-			&& (leavable.ViewControllers?.Length > 1 || leavable.PresentingViewController is not null))
+		if (Page?.ConfirmLeave is null)
 		{
-			backAction = UIAction.Create("", null, null, _ => ConfirmBack());
-			NavigationItem.BackAction = backAction;
+			// the guard is gone: restore the back button's default pop
+			if (backAction is not null)
+			{
+				backAction = null;
+				NavigationItem.BackAction = null;
+			}
+
+			return;
 		}
+
+		// only a page with something beneath it has a back button to reroute; setting BackAction
+		// on a stack root makes UIKit synthesize a visible back button where none existed
+		if (backAction is not null
+			|| NavigationController is not UINavigationController leavable
+			|| leavable.ViewControllers is not { Length: > 1 })
+			return;
+
+		backAction = UIAction.Create("", null, null, _ => ConfirmBack());
+		NavigationItem.BackAction = backAction;
 	}
 
 	void ApplySheetGuard()
@@ -1315,9 +1328,16 @@ internal sealed class PageHost : UIViewController
 
 		bool popover = sheet.PresentationController is UIPopoverPresentationController;
 
-		sheet.ModalInPresentation = Page?.ConfirmLeave is not null && !popover;
+		// a dismissal takes the whole presented stack down, so any guarded page in it vetoes,
+		// not just the page that happens to be on top
+		bool guarded = sheet.ViewControllers?.Any(
+			controller => controller is PageHost page && page.Page?.ConfirmLeave is not null) is true;
 
-		if (Page?.ConfirmLeave is not null && sheet.PresentationController is UIPresentationController presentation)
+		sheet.ModalInPresentation = guarded && !popover;
+
+		if (guarded
+			&& sheet.PresentationController is UIPresentationController presentation
+			&& presentation.Delegate is not SheetGuard)
 		{
 			dismissGuard ??= new(this);
 			presentation.Delegate = dismissGuard;
@@ -1383,7 +1403,18 @@ internal sealed class PageHost : UIViewController
 	// ReSharper disable once AsyncVoidMethod
 	async void ConfirmDismiss()
 	{
-		if (Page?.ConfirmLeave is Func<Task<bool>> confirm && !await confirm())
+		if (NavigationController is UINavigationController stack)
+		{
+			// every guarded page in the stack gets a veto, top down; the first no keeps the modal open
+			foreach (UIViewController controller in (stack.ViewControllers ?? []).Reverse())
+			{
+				if (controller is PageHost page
+					&& page.Page?.ConfirmLeave is Func<Task<bool>> confirm
+					&& !await confirm())
+					return;
+			}
+		}
+		else if (Page?.ConfirmLeave is Func<Task<bool>> confirm && !await confirm())
 			return;
 
 		NavigationController?.DismissViewController(true, null);
