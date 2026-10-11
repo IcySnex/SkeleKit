@@ -226,6 +226,17 @@ public interface INavigator
 	/// <returns>A task representing the async operation.</returns>
 	Task DismissAsync();
 
+	/// <summary>
+	/// Dismisses the top-most presented page when its view model is the given instance.
+	/// </summary>
+	/// <remarks>
+	/// Returns <c>false</c> without dismissing when another modal, an alert, or nothing is on top
+	/// </remarks>
+	/// <param name="viewModel">The view model of the page to dismiss.</param>
+	/// <returns>A task containing true when that page was dismissed, or false when it wasn't on top.</returns>
+	Task<bool> TryDismissAsync(
+		object viewModel);
+
 
 	/// <summary>
 	/// Opens a web address in an in-app Safari browser, with the system reader, share and done chrome.

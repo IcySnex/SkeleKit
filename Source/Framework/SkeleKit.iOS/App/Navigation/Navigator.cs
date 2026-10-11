@@ -35,19 +35,35 @@ internal sealed class Navigator(
 	static readonly PopoverStay Stay = new();
 
 
-	static UIViewController? Top()
-	{
-		UIViewController? controller = UIApplication.SharedApplication
+	static UIViewController? Root() =>
+		UIApplication.SharedApplication
 			.ConnectedScenes
 			.OfType<UIWindowScene>()
 			.SelectMany(scene => scene.Windows)
 			.FirstOrDefault(window => window.IsKeyWindow)?
 			.RootViewController;
 
+	static UIViewController? Top()
+	{
+		UIViewController? controller = Root();
+
 		while (controller?.PresentedViewController is UIViewController presented)
 			controller = presented;
 
 		return controller;
+	}
+
+	static PageHost? TopPresentedHost()
+	{
+		if (Root()?.PresentedViewController is null)
+			return null;
+
+		return Top() switch
+		{
+			UINavigationController { TopViewController: PageHost host } => host,
+			PageHost host => host,
+			_ => null
+		};
 	}
 
 	void Present<T>(
@@ -518,6 +534,25 @@ internal sealed class Navigator(
 			logger.LogWarning("Failed to dismiss because no active view controller is available.");
 			completion.SetResult();
 		}
+
+		return completion.Task;
+	}
+
+	public Task<bool> TryDismissAsync(
+		object viewModel)
+	{
+		if (viewModel is null
+			|| TopPresentedHost() is not PageHost host
+			|| !ReferenceEquals(host.Page?.BindingContext, viewModel)
+			|| host.NavigationController is not UINavigationController wrapper)
+			return Task.FromResult(false);
+
+		TaskCompletionSource<bool> completion = new();
+		wrapper.DismissViewController(true, () =>
+		{
+			Prune();
+			completion.SetResult(true);
+		});
 
 		return completion.Task;
 	}
