@@ -32,7 +32,7 @@ public sealed class ToolbarItem
 		set
 		{
 			field = value;
-			Changed?.Invoke();
+			Changed?.Invoke(this);
 		}
 	}
 
@@ -45,7 +45,7 @@ public sealed class ToolbarItem
 		set
 		{
 			field = value;
-			Changed?.Invoke();
+			Changed?.Invoke(this);
 		}
 	}
 
@@ -61,11 +61,11 @@ public sealed class ToolbarItem
 		set
 		{
 			field = value;
-			Changed?.Invoke();
+			Changed?.Invoke(this);
 		}
 	} = true;
 
-	internal event Action? Changed;
+	internal event Action<ToolbarItem>? Changed;
 
 	/// <summary>
 	/// Which side of the bar the item sits on.
@@ -89,7 +89,7 @@ public sealed class ToolbarItem
 		set
 		{
 			field = value;
-			Changed?.Invoke();
+			Changed?.Invoke(this);
 		}
 	} = ToolbarVisibilityPriority.Standard;
 
@@ -102,7 +102,7 @@ public sealed class ToolbarItem
 		set
 		{
 			field = value;
-			Changed?.Invoke();
+			Changed?.Invoke(this);
 		}
 	}
 

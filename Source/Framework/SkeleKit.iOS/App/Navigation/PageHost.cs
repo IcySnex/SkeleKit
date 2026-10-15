@@ -176,6 +176,8 @@ internal sealed class PageHost : UIViewController
 	readonly List<UIAction> menuActions = [];
 	readonly List<ToolbarItem> observedItems = [];
 	readonly Dictionary<UIBarButtonItem, ToolbarItem> nativeToolbarItems = [];
+	// natives persist across applies so adding or removing an item fades instead of rebuilding the bar
+	readonly Dictionary<ToolbarItem, UIBarButtonItem> toolbarNatives = [];
 
 	UITapGestureRecognizer? dismissKeyboard;
 	UIView? keyboardFocus;
@@ -746,25 +748,25 @@ internal sealed class PageHost : UIViewController
 		if (item.Menu.Count > 0)
 			return MenuBar(item);
 
-		UIAction action = UIAction.Create(
-			item.Text ?? "",
-			item.Icon?.ResolveLocal(),
-			null,
-			_ =>
-			{
-				if (item.Command is ICommand command && command.CanExecute(item.CommandParameter))
-					command.Execute(item.CommandParameter);
-			});
+		UIBarButtonItem native = toolbarNatives.GetValueOrDefault(item) is { Menu: null } cached
+			? cached
+			: new(UIAction.Create(
+				item.Text ?? "",
+				item.Icon?.ResolveLocal(),
+				null,
+				_ =>
+				{
+					if (item.Command is ICommand command && command.CanExecute(item.CommandParameter))
+						command.Execute(item.CommandParameter);
+				}));
 
-		UIBarButtonItem native = new(action)
-		{
-			Enabled = item.Command?.CanExecute(item.CommandParameter) ?? true
-		};
+		native.Enabled = item.Command?.CanExecute(item.CommandParameter) ?? true;
 
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
 		ApplyVisibilityPriority(native, item);
+		toolbarNatives[item] = native;
 		nativeToolbarItems[native] = item;
 		native.TintColor = EffectiveBarTint(Page, item);
 
@@ -825,14 +827,19 @@ internal sealed class PageHost : UIViewController
 	{
 		UIMenu menu = BuildMenu(item);
 
-		UIBarButtonItem native = item.Icon is ImageSource icon
-			? new(icon.ResolveLocal(), menu)
-			: new(item.Text ?? "", menu);
+		UIBarButtonItem native = toolbarNatives.GetValueOrDefault(item) is { Menu: not null } cached
+			? cached
+			: item.Icon is ImageSource icon
+				? new(icon.ResolveLocal(), menu)
+				: new(item.Text ?? "", menu);
+
+		native.Menu = menu;
 
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
 		ApplyVisibilityPriority(native, item);
+		toolbarNatives[item] = native;
 		nativeToolbarItems[native] = item;
 		native.TintColor = EffectiveBarTint(Page, item);
 
@@ -1098,10 +1105,16 @@ internal sealed class PageHost : UIViewController
 			item.Changed += OnToolbarItemChanged;
 			observedItems.Add(item);
 		}
+
+		foreach (ToolbarItem item in toolbarNatives.Keys.Except(observedItems).ToArray())
+			toolbarNatives.Remove(item);
 	}
 
-	void OnToolbarItemChanged()
+	void OnToolbarItemChanged(
+		ToolbarItem item)
 	{
+		toolbarNatives.Remove(item);
+
 		if (Page is ContentView page)
 			ApplyToolbar(page);
 	}
@@ -1125,6 +1138,9 @@ internal sealed class PageHost : UIViewController
 		menuActions.Clear();
 		nativeToolbarItems.Clear();
 		ObserveToolbar(page);
+
+		// bar changes animate once the page is on screen; the first apply appears with the page
+		bool animated = IsViewLoaded && View.Window is not null;
 
 		List<UIBarButtonItem> leading = [];
 		List<UIBarButtonItem> trailing = [];
@@ -1151,11 +1167,11 @@ internal sealed class PageHost : UIViewController
 			NavigationItem.LeadingItemGroups = [.. groups];
 		}
 		else
-			NavigationItem.LeftBarButtonItems = [.. leading];
+			NavigationItem.SetLeftBarButtonItems([.. leading], animated);
 
 		// leading items sit next to Back, they do not replace it
 		NavigationItem.LeftItemsSupplementBackButton = true;
-		NavigationItem.RightBarButtonItems = [.. trailing];
+		NavigationItem.SetRightBarButtonItems([.. trailing], animated);
 
 		if (page.BottomToolbarItems.Count == 0)
 		{
@@ -1177,7 +1193,7 @@ internal sealed class PageHost : UIViewController
 			bottom.Add(Bar(item));
 		}
 
-		SetToolbarItems([.. bottom], false);
+		SetToolbarItems([.. bottom], animated);
 		ApplyToolbarTint(page);
 	}
 
