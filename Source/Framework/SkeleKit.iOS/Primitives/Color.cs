@@ -167,4 +167,40 @@ public readonly record struct Color(
 				: new(pair.Light.WithAlpha(alpha), pair.Dark.WithAlpha(alpha))
 		};
 	}
+
+	/// <summary>
+	/// Returns a copy of this color with <paramref name="transform"/> applied to each appearance variant.
+	/// </summary>
+	/// <remarks>
+	/// Dynamic colors are transformed once per variant and stay dynamic; flat colors are transformed directly.
+	/// System colors keep their UIKit resolution, so channel edits are invisible when they render.
+	/// </remarks>
+	/// <param name="transform">The transformation applied to the light and dark variants.</param>
+	/// <returns>A copy with the transformation applied to each appearance.</returns>
+	public Color Map(
+		Func<Color, Color> transform) =>
+		Pair is DynamicPair pair
+			? Dynamic(transform(pair.Light), transform(pair.Dark))
+			: transform(this);
+
+	/// <summary>
+	/// Returns a dynamic copy with the light and dark variants each produced by their own transformation.
+	/// </summary>
+	/// <remarks>
+	/// A color without explicit variants is used as both appearances, so the result gains variants.
+	/// System colors keep their UIKit resolution, so channel edits are invisible when they render.
+	/// </remarks>
+	/// <param name="light">The transformation applied to the light variant.</param>
+	/// <param name="dark">The transformation applied to the dark variant.</param>
+	/// <returns>A dynamic copy with each appearance transformed.</returns>
+	public Color Map(
+		Func<Color, Color> light,
+		Func<Color, Color> dark)
+	{
+		DynamicPair? pair = Pair;
+
+		return pair is null
+			? Dynamic(light(this), dark(this))
+			: Dynamic(light(pair.Light), dark(pair.Dark));
+	}
 }

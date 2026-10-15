@@ -91,4 +91,73 @@ public class ColorTests
 		Assert.True(color.Pair!.Light.HasSystemAlphaOverride);
 		Assert.True(color.Pair.Dark.HasSystemAlphaOverride);
 	}
+
+	[Fact]
+	public void Map_TransformsAFlatColor()
+	{
+		Color color = Color.FromHex(0x000000).Map(c => c with { Red = 1.0 });
+
+		Assert.Equal(1.0, color.Red);
+		Assert.Null(color.Pair);
+	}
+
+	[Fact]
+	public void Map_TransformsBothAppearances()
+	{
+		Color color = Color.Dynamic(Color.FromHex(0x000000), Color.FromHex(0x000000))
+			.Map(c => c with { Red = 1.0 });
+
+		Assert.Equal(1.0, color.Red);
+		Assert.NotNull(color.Pair);
+		Assert.Equal(1.0, color.Pair!.Light.Red);
+		Assert.Equal(1.0, color.Pair.Dark.Red);
+	}
+
+	[Fact]
+	public void Map_PreservesSystemColors()
+	{
+		Color color = Colors.Red.Map(c => c with { Red = 0 });
+
+		Assert.Equal(SystemColor.Red, color.System);
+		Assert.Equal(0, color.Red);
+	}
+
+	[Fact]
+	public void Map_WithSeparateTransforms_AppliesEachToItsAppearance()
+	{
+		Color color = Color.Dynamic(Color.FromHex(0x000000), Color.FromHex(0x000000))
+			.Map(light => light with { Red = 1.0 }, dark => dark with { Blue = 1.0 });
+
+		Assert.NotNull(color.Pair);
+		Assert.Equal(1.0, color.Pair!.Light.Red);
+		Assert.Equal(0, color.Pair.Light.Blue);
+		Assert.Equal(0, color.Pair.Dark.Red);
+		Assert.Equal(1.0, color.Pair.Dark.Blue);
+	}
+
+	[Fact]
+	public void Map_WithSeparateTransforms_MakesAFlatColorDynamic()
+	{
+		Color color = Color.FromHex(0x808080)
+			.Map(light => light with { Red = 1.0 }, dark => dark with { Blue = 1.0 });
+
+		double gray = 0x80 / 255.0;
+
+		Assert.NotNull(color.Pair);
+		Assert.Equal(1.0, color.Pair!.Light.Red);
+		Assert.Equal(gray, color.Pair.Light.Green);
+		Assert.Equal(gray, color.Pair.Light.Blue);
+		Assert.Equal(gray, color.Pair.Dark.Red);
+		Assert.Equal(gray, color.Pair.Dark.Green);
+		Assert.Equal(1.0, color.Pair.Dark.Blue);
+	}
+
+	[Fact]
+	public void Map_WithSeparateTransforms_PreservesSystemVariants()
+	{
+		Color color = Colors.Red.Map(light => light, dark => dark);
+
+		Assert.Equal(SystemColor.Red, color.Pair!.Light.System);
+		Assert.Equal(SystemColor.Red, color.Pair.Dark.System);
+	}
 }
