@@ -96,38 +96,77 @@ internal sealed class Navigator(
 		PageHost host,
 		ModalStyle style)
 	{
-		if (Top() is not UIViewController presenter)
-		{
-			logger.LogWarning("Failed to present modal because no active view controller is available.");
-			return Task.CompletedTask;
-		}
-
 		UINavigationController wrapper = new(host);
 		IReadOnlyList<Detent> detents = style.Detents ?? [Detent.Large];
 		ConfigurePresentation(wrapper, style, detents, host);
 
-		TaskCompletionSource completion = new();
-		presenter.PresentViewController(wrapper, true, completion.SetResult);
-
-		return completion.Task;
+		return PresentOnTop(wrapper);
 	}
 
 	Task PresentSafari(
 		SFSafariViewController browser,
 		ModalStyle style)
 	{
-		if (Top() is not UIViewController presenter)
-		{
-			logger.LogWarning("Failed to present browser because no active view controller is available.");
-			return Task.CompletedTask;
-		}
-
 		ModalStyle safariStyle = SafariStyle(style);
 		IReadOnlyList<Detent> detents = safariStyle.Detents ?? [Detent.Large];
 		ConfigurePresentation(browser, safariStyle, detents, null);
 
+		return PresentOnTop(browser);
+	}
+
+	Task PresentOnTop(
+		UIViewController controller)
+	{
 		TaskCompletionSource completion = new();
-		presenter.PresentViewController(browser, true, completion.SetResult);
+		bool started = false;
+
+		void Attempt()
+		{
+			if (started || completion.Task.IsCompleted)
+				return;
+
+			UIViewController? presenter = Root();
+
+			while (presenter?.PresentedViewController is UIViewController presented)
+			{
+				if (ReferenceEquals(presented, controller))
+				{
+					// the controller is already up: an earlier attempt presented it
+					completion.TrySetResult();
+					return;
+				}
+
+				if (presented.IsBeingPresented
+					|| presented.IsBeingDismissed
+					|| presented.View?.Window is null)
+				{
+					// the state update lands within the current run loop
+					CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(Attempt);
+					return;
+				}
+
+				presenter = presented;
+			}
+
+			if (presenter is null)
+			{
+				logger.LogWarning("Failed to present modal because no active view controller is available.");
+				completion.TrySetResult();
+				return;
+			}
+
+			if (ReferenceEquals(presenter, controller))
+			{
+				// a hosted sheet window makes the controller its own window's root: it is up already
+				completion.TrySetResult();
+				return;
+			}
+
+			started = true;
+			presenter.PresentViewController(controller, true, completion.SetResult);
+		}
+
+		Attempt();
 
 		return completion.Task;
 	}
