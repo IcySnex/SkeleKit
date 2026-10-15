@@ -275,13 +275,7 @@ internal sealed class PageHost : UIViewController
 		if (Page is not ContentView page || View is not UIView view)
 			return maximum;
 
-		UIEdgeInsets safe = view.SafeAreaInsets;
-		double width = view.Bounds.Width;
-
-		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Leading))
-			width -= safe.Left;
-		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Trailing))
-			width -= safe.Right;
+		double width = view.Bounds.Width - page.PageExtraInsets.Horizontal;
 
 		Size desired = page.MeasurePageContent(new(Math.Max(0, width), maximum));
 
@@ -297,13 +291,19 @@ internal sealed class PageHost : UIViewController
 		double height = 0;
 
 		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Top) && !navigation.NavigationBarHidden)
-			height += Math.Max(View?.SafeAreaInsets.Top ?? 0, navigation.NavigationBar.Bounds.Height);
+		{
+			double top = Math.Max(View?.SafeAreaInsets.Top ?? 0, page.PageExtraInsets.Top);
+
+			height += Math.Max(top, navigation.NavigationBar.Bounds.Height);
+		}
 
 		// the page's content area is inset from the bottom too, so the detent has to cover it
 		if (page.SafeAreaEdges.HasFlag(SafeAreaEdges.Bottom))
 		{
 			double toolbar = navigation.ToolbarHidden ? 0 : navigation.Toolbar.Bounds.Height;
-			height += Math.Max(View?.SafeAreaInsets.Bottom ?? 0, toolbar);
+			double bottom = Math.Max(View?.SafeAreaInsets.Bottom ?? 0, page.PageExtraInsets.Bottom);
+
+			height += Math.Max(bottom, toolbar);
 		}
 
 		return height;
@@ -1067,8 +1067,9 @@ internal sealed class PageHost : UIViewController
 		{
 			CGRect keyboard = UIKeyboard.FrameEndFromNotification(notification);
 			CGRect pageInWindow = View.ConvertRectToView(View.Bounds, null);
+			double bottom = Math.Max((double)View.SafeAreaInsets.Bottom, Page.PageExtraInsets.Bottom);
 
-			cover = (nfloat)Math.Max(0, pageInWindow.GetMaxY() - keyboard.GetMinY() - View.SafeAreaInsets.Bottom);
+			cover = (nfloat)Math.Max(0, pageInWindow.GetMaxY() - keyboard.GetMinY() - bottom);
 		}
 
 		if (cover == keyboardCover)
@@ -1629,15 +1630,12 @@ internal sealed class PageHost : UIViewController
 		LayoutNavigationAccessory();
 		UpdateSystemInsets();
 		UIEdgeInsets safe = View!.SafeAreaInsets;
+		Thickness extra = Page.PageExtraInsets;
 		Thickness pageSafeArea = usesSystemScrollInsets
 			? new(safe.Left, 0, safe.Right, 0)
 			: new(safe.Left, safe.Top, safe.Right, safe.Bottom);
 		CGRect frame = View.Bounds;
-		nfloat availableWidth = frame.Width;
-		if (Page.SafeAreaEdges.HasFlag(SafeAreaEdges.Leading))
-			availableWidth -= safe.Left;
-		if (Page.SafeAreaEdges.HasFlag(SafeAreaEdges.Trailing))
-			availableWidth -= safe.Right;
+		nfloat availableWidth = frame.Width - (nfloat)extra.Horizontal;
 		nfloat chrome = (nfloat)ChromeHeight(Page);
 
 		if (contentWidth != availableWidth || contentChrome != chrome)
@@ -1656,7 +1654,9 @@ internal sealed class PageHost : UIViewController
 		Page.Native.LayoutIfNeeded();
 
 		CGRect target = focused.ConvertRectToView(focused.Bounds, View);
-		nfloat bottomInset = Page.SafeAreaEdges.HasFlag(SafeAreaEdges.Bottom) ? safe.Bottom : 0;
+		nfloat bottomInset = Page.SafeAreaEdges.HasFlag(SafeAreaEdges.Bottom)
+			? (nfloat)Math.Max(safe.Bottom, extra.Bottom)
+			: 0;
 		nfloat visibleBottom = frame.GetMaxY() - bottomInset - keyboardCover;
 		nfloat hidden = target.GetMaxY() + 8 - visibleBottom;
 

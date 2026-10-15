@@ -75,6 +75,22 @@ public abstract partial class ContentView : ContentHost
 	} = SafeAreaEdges.All;
 
 	/// <summary>
+	/// The least content insets the page keeps on each side, or zero for none.
+	/// </summary>
+	/// <remarks>
+	/// The system safe area and the page's padding count toward the minimum instead of adding to it,
+	/// so a home indicator is never padded twice, while a system that reports none — an iPad sheet's
+	/// bottom — still keeps content off the edge. Only edges selected by <see cref="SafeAreaEdges"/>
+	/// are raised. A <see cref="Detent.Content"/> sheet includes the raised insets in its measured
+	/// height so the sheet does not have to scroll to reveal them.
+	/// </remarks>
+	public Thickness MinimumContentInsets
+	{
+		get;
+		set => Set(ref field, value);
+	}
+
+	/// <summary>
 	/// Whether scrolling content passes under the navigation bar so the bar blurs over it.
 	/// </summary>
 	public bool ScrollsUnderBars
@@ -643,14 +659,34 @@ public abstract partial class ContentView : ContentHost
 		get
 		{
 			Thickness content = ContentInsets;
+			Thickness extra = PageExtraInsets;
+
+			return new(
+				content.Left + extra.Left,
+				content.Top + extra.Top,
+				content.Right + extra.Right,
+				content.Bottom + extra.Bottom);
+		}
+	}
+
+	/// <summary>
+	/// What the page insets beyond its content padding: the safe area on the edges
+	/// <see cref="SafeAreaEdges"/> selects, raised to <see cref="MinimumContentInsets"/>.
+	/// </summary>
+	internal Thickness PageExtraInsets
+	{
+		get
+		{
+			Thickness content = ContentInsets;
 			Thickness safe = PageSafeArea;
+			Thickness minimum = MinimumContentInsets;
 			SafeAreaEdges edges = SafeAreaEdges;
 
 			return new(
-				content.Left + (edges.HasFlag(SafeAreaEdges.Leading) ? safe.Left : 0),
-				content.Top + (edges.HasFlag(SafeAreaEdges.Top) ? safe.Top : 0),
-				content.Right + (edges.HasFlag(SafeAreaEdges.Trailing) ? safe.Right : 0),
-				content.Bottom + (edges.HasFlag(SafeAreaEdges.Bottom) ? safe.Bottom : 0));
+				edges.HasFlag(SafeAreaEdges.Leading) ? Math.Max(safe.Left, minimum.Left - content.Left) : 0,
+				edges.HasFlag(SafeAreaEdges.Top) ? Math.Max(safe.Top, minimum.Top - content.Top) : 0,
+				edges.HasFlag(SafeAreaEdges.Trailing) ? Math.Max(safe.Right, minimum.Right - content.Right) : 0,
+				edges.HasFlag(SafeAreaEdges.Bottom) ? Math.Max(safe.Bottom, minimum.Bottom - content.Bottom) : 0);
 		}
 	}
 

@@ -155,6 +155,95 @@ public class PaddingTests
 	}
 
 	[Fact]
+	public void ContentView_MinimumContentInsets_RaisesASmallerSystemInset()
+	{
+		StubLeaf leaf = new(40, 20);
+		TestPage page = new()
+		{
+			MinimumContentInsets = new(4, 6, 8, 12),
+			Content = leaf
+		};
+		// an iPad sheet reports no bottom inset at all
+		page.UpdatePageLayout(new(0));
+
+		page.Measure(new(100, 80));
+		page.Arrange(new(0, 0, 100, 80));
+
+		Assert.Equal(new Rect(4, 6, 88, 62), leaf.ArrangedBounds);
+	}
+
+	[Fact]
+	public void ContentView_MinimumContentInsets_CountsPaddingTowardTheMinimum()
+	{
+		StubLeaf leaf = new(40, 20);
+		TestPage page = new()
+		{
+			Padding = new Thickness(0, 0, 0, 20),
+			MinimumContentInsets = new Thickness(0, 0, 0, 12),
+			Content = leaf
+		};
+		page.UpdatePageLayout(new(0));
+
+		page.Measure(new(100, 80));
+		page.Arrange(new(0, 0, 100, 80));
+
+		Assert.Equal(new Rect(0, 0, 100, 60), leaf.ArrangedBounds);
+	}
+
+	[Fact]
+	public void ContentView_MinimumContentInsets_LargerSystemInsetWins()
+	{
+		StubLeaf leaf = new(40, 20);
+		TestPage page = new()
+		{
+			MinimumContentInsets = new(4, 6, 8, 12),
+			Content = leaf
+		};
+		// a home indicator already exceeds the minimum
+		page.UpdatePageLayout(new(10, 20, 30, 34));
+
+		page.Measure(new(100, 80));
+		page.Arrange(new(0, 0, 100, 80));
+
+		Assert.Equal(new Rect(10, 20, 60, 26), leaf.ArrangedBounds);
+	}
+
+	[Fact]
+	public void ContentView_MinimumContentInsets_MixesSystemAndMinimumPerEdge()
+	{
+		StubLeaf leaf = new(40, 20);
+		TestPage page = new()
+		{
+			MinimumContentInsets = new(20, 6, 30, 12),
+			Content = leaf
+		};
+		page.UpdatePageLayout(new(10, 20, 30, 0));
+
+		page.Measure(new(100, 80));
+		page.Arrange(new(0, 0, 100, 80));
+
+		Assert.Equal(new Rect(20, 20, 50, 48), leaf.ArrangedBounds);
+	}
+
+	[Fact]
+	public void ContentView_MinimumContentInsets_IgnoredWithoutTheSafeAreaEdge()
+	{
+		StubLeaf leaf = new(40, 20);
+		TestPage page = new()
+		{
+			SafeAreaEdges = SafeAreaEdges.Leading | SafeAreaEdges.Top,
+			MinimumContentInsets = new(4, 6, 8, 12),
+			Content = leaf
+		};
+		page.UpdatePageLayout(new(10, 20, 30, 34));
+
+		page.Measure(new(100, 80));
+		page.Arrange(new(0, 0, 100, 80));
+
+		Assert.Equal(new Rect(10, 20, 90, 60), leaf.ArrangedBounds);
+	}
+
+	[Fact]
 	public void ContentView_KeyboardConstrainsAndOffsetsOnlyContent()
 	{
 		StubLeaf leaf = new(40, 20);
