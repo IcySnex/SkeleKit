@@ -34,7 +34,12 @@ public enum BackButtonStyle
 	/// <summary>
 	/// The chevron alone.
 	/// </summary>
-	Minimal
+	Minimal,
+
+	/// <summary>
+	/// No back button on the next pushed page. The page does not support the pop swipe.
+	/// </summary>
+	None
 }
 
 /// <summary>

@@ -738,6 +738,7 @@ internal sealed class PageHost : UIViewController
 		InstallPage();
 		NavigationController?.SetNavigationBarHidden(fresh.HidesNavigationBar, false);
 		ApplyLeaveGuard();
+		ApplyBackButtonVisibility();
 
 		View!.SetNeedsLayout();
 	}
@@ -1371,7 +1372,8 @@ internal sealed class PageHost : UIViewController
 		if (NavigationController is not UINavigationController stack)
 			return;
 
-		bool free = Page?.ConfirmLeave is null;
+		// a page without a back button has nothing to pop by swipe
+		bool free = Page?.ConfirmLeave is null && !HidesBackButton();
 
 		if (stack.InteractivePopGestureRecognizer is UIGestureRecognizer swipe)
 			swipe.Enabled = free;
@@ -1379,6 +1381,24 @@ internal sealed class PageHost : UIViewController
 		// iOS 26 pops from anywhere in the content, not just the edge
 		if (OperatingSystem.IsIOSVersionAtLeast(26) && stack.InteractiveContentPopGestureRecognizer is UIGestureRecognizer contentSwipe)
 			contentSwipe.Enabled = free;
+	}
+
+	void ApplyBackButtonVisibility() =>
+		NavigationItem.HidesBackButton = HidesBackButton();
+
+	bool HidesBackButton()
+	{
+		if (NavigationController is not UINavigationController stack
+			|| stack.ViewControllers is not UIViewController[] controllers)
+			return false;
+
+		// HidesBackButton belongs to the top item, so the page below decides whether this page
+		// shows a back button at all
+		int index = Array.IndexOf(controllers, this);
+
+		return index > 0
+			&& controllers[index - 1] is PageHost previous
+			&& previous.Page?.BackButtonStyle is BackButtonStyle.None;
 	}
 
 	void PreserveNavigationBarAppearance()
@@ -1546,6 +1566,7 @@ internal sealed class PageHost : UIViewController
 
 		ApplyBackGuard();
 		ApplySheetGuard();
+		ApplyBackButtonVisibility();
 	}
 
 	public override void ViewDidAppear(
