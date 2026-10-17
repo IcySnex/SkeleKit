@@ -266,9 +266,15 @@ internal sealed class Navigator(
 			context =>
 			{
 				double maximum = context.MaximumDetentValue;
-				double content = weakHost.TryGetTarget(out PageHost? target)
-					? target.MeasureContent(maximum)
-					: maximum;
+				double content = maximum;
+
+				if (weakHost.TryGetTarget(out PageHost? anchor))
+				{
+					anchor.MaximumDetentValue = maximum;
+
+					PageHost page = anchor.ContentPage();
+					content = page.MeasureContent(maximum, anchor);
+				}
 
 				return (nfloat)detent.Resolve(maximum, content);
 			});
@@ -387,6 +393,60 @@ internal sealed class Navigator(
 	}
 
 
+	// a content sheet is as tall as its visible page, so the flag travels along the stack
+	static void Push(
+		UINavigationController stack,
+		PageHost host)
+	{
+		if (stack.TopViewController is PageHost previous && previous.HasContentDetent)
+		{
+			host.AttachContentDetent();
+			PrepareContentPush(stack, previous, host);
+			stack.PushViewController(host, true);
+			PageHost.SetPendingDetentPage(stack, null);
+			return;
+		}
+
+		stack.PushViewController(host, true);
+	}
+
+	static void PrepareContentPush(
+		UINavigationController stack,
+		PageHost previous,
+		PageHost host)
+	{
+		// A navigation push snapshots its pages before the transition starts. If the sheet is
+		// still at the old detent at that point, the snapshot is the old height and stays there
+		// while the sheet chrome grows around it. Measuring and resizing first makes the
+		// snapshots full height; the growing card then reveals them instead of clipping them.
+		if (stack.SheetPresentationController is not UISheetPresentationController sheet
+			|| stack.View is not UIView wrapper)
+			return;
+
+		PageHost anchor = stack.ViewControllers is { Length: > 0 } controllers
+			&& controllers[0] is PageHost first
+				? first
+				: previous;
+
+		if (anchor.MaximumDetentValue <= 0)
+			return;
+
+		PageHost.SetPendingDetentPage(stack, host);
+
+		UIView hostView = host.View!;
+		hostView.Frame = new(0, 0, wrapper.Bounds.Width, wrapper.Bounds.Height);
+		hostView.LayoutIfNeeded();
+
+		double content = host.MeasureContent(anchor.MaximumDetentValue, anchor);
+		nfloat resolved = (nfloat)content + wrapper.SafeAreaInsets.Bottom;
+
+		hostView.Frame = new(0, 0, wrapper.Bounds.Width, resolved);
+		hostView.LayoutIfNeeded();
+
+		sheet.AnimateChanges(sheet.InvalidateDetents);
+	}
+
+
 	public Task PushAsync<TViewModel>() where TViewModel : class =>
 		PushAsync(registry.CreateViewModel(typeof(TViewModel), services));
 
@@ -401,7 +461,7 @@ internal sealed class Navigator(
 			throw new InvalidOperationException("There is no navigation stack to push onto.");
 
 		PageHost host = Track(registry.CreatePage(viewModel, services));
-		stack.PushViewController(host, true);
+		Push(stack, host);
 
 		return Task.CompletedTask;
 	}
@@ -416,7 +476,7 @@ internal sealed class Navigator(
 			throw new InvalidOperationException("There is no navigation stack to push onto.");
 
 		PageHost host = Track(registry.CreatePage(view, services));
-		stack.PushViewController(host, true);
+		Push(stack, host);
 
 		return Task.CompletedTask;
 	}
@@ -480,7 +540,7 @@ internal sealed class Navigator(
 	{
 		UINavigationController stack = ColumnStack(column);
 		PageHost host = Track(registry.CreatePage(viewModel, services));
-		stack.PushViewController(host, true);
+		Push(stack, host);
 
 		return Task.CompletedTask;
 	}
@@ -495,7 +555,7 @@ internal sealed class Navigator(
 	{
 		UINavigationController stack = ColumnStack(column);
 		PageHost host = Track(registry.CreatePage(view, services));
-		stack.PushViewController(host, true);
+		Push(stack, host);
 
 		return Task.CompletedTask;
 	}

@@ -1,4 +1,5 @@
 using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using ObjCRuntime;
 
@@ -49,6 +50,9 @@ internal sealed class PageHost : UIViewController
 
 	static readonly List<WeakReference<PageHost>> Live = [];
 	static readonly UIImage TransparentScopeBackground = new();
+	static readonly ConditionalWeakTable<UINavigationController, PageHost> PendingDetentPages = [];
+	static readonly ConditionalWeakTable<UINavigationController, object> DeferredContentDetents = [];
+	static readonly object DeferredDetentMarker = new();
 
 	static IUIViewControllerTransitionCoordinator? appearingTransition;
 
@@ -190,6 +194,7 @@ internal sealed class PageHost : UIViewController
 	SheetGuard? dismissGuard;
 	bool hasContentDetent;
 	bool contentDetentPending;
+	bool hasAppeared;
 	nfloat contentWidth;
 	nfloat contentChrome;
 	UINavigationBarAppearance? savedScrollEdgeAppearance;
@@ -250,9 +255,49 @@ internal sealed class PageHost : UIViewController
 	internal void AttachContentDetent() =>
 		hasContentDetent = true;
 
+	internal bool HasContentDetent =>
+		hasContentDetent;
+
+	internal double MaximumDetentValue { get; set; }
+
+	internal static void SetPendingDetentPage(
+		UINavigationController stack,
+		PageHost? page)
+	{
+		PendingDetentPages.Remove(stack);
+
+		if (page is not null)
+			PendingDetentPages.Add(stack, page);
+	}
+
+	internal PageHost ContentPage()
+	{
+		// a push measures its incoming page before the transition starts so the sheet can grow
+		// before UIKit snapshots the navigation transition
+		if (NavigationController is UINavigationController stack
+			&& PendingDetentPages.TryGetValue(stack, out PageHost? pending)
+			&& pending.IsViewLoaded
+			&& pending.View is UIView pendingView
+			&& pendingView.Bounds.Width > 0)
+			return pending;
+
+		// during a push the incoming page may not be laid out yet; it re-measures when it appears
+		if (NavigationController?.TopViewController is not PageHost top
+			|| !top.IsViewLoaded
+			|| top.View is not UIView view
+			|| view.Bounds.Width <= 0)
+			return this;
+
+		return top;
+	}
+
 	internal void ContentMeasureInvalidated()
 	{
 		if (contentDetentPending || !hasContentDetent)
+			return;
+
+		if (NavigationController is UINavigationController deferred
+			&& DeferredContentDetents.TryGetValue(deferred, out _))
 			return;
 
 		contentDetentPending = true;
@@ -261,7 +306,9 @@ internal sealed class PageHost : UIViewController
 		{
 			contentDetentPending = false;
 
-			if (NavigationController?.SheetPresentationController is not UISheetPresentationController sheet)
+			if (NavigationController is not UINavigationController stack
+				|| DeferredContentDetents.TryGetValue(stack, out _)
+				|| stack.SheetPresentationController is not UISheetPresentationController sheet)
 				return;
 
 			if (UIAccessibility.IsReduceMotionEnabled)
@@ -271,8 +318,99 @@ internal sealed class PageHost : UIViewController
 		});
 	}
 
+	void ApplyPopDetent(
+		IUIViewControllerTransitionCoordinator? transition)
+	{
+		// a first appearance is presentation or push; only a returning page changes the sheet
+		if (!hasAppeared || NavigationController is not UINavigationController stack)
+			return;
+
+		// a back button pops right away, so the sheet can animate with it; an interactive back
+		// gesture would resize the sheet under the finger, which reads as a second animation.
+		// Defer that case until the gesture has committed and the pop has settled.
+		if (transition is not { InitiallyInteractive: true } interactive)
+		{
+			DeferredContentDetents.Remove(stack);
+			PendingDetentPages.Remove(stack);
+			PendingDetentPages.Add(stack, this);
+			ContentMeasureInvalidated();
+			return;
+		}
+
+		DeferredContentDetents.Remove(stack);
+		DeferredContentDetents.Add(stack, DeferredDetentMarker);
+
+		bool started = false;
+
+		void StartResize()
+		{
+			if (started)
+				return;
+
+			started = true;
+			DeferredContentDetents.Remove(stack);
+			PendingDetentPages.Remove(stack);
+			PendingDetentPages.Add(stack, this);
+			ContentMeasureInvalidated();
+		}
+
+		// the finger has left the screen: the gesture has committed and the pop is now animating
+		// to completion, so start the height animation alongside the remainder of the transition
+		interactive.NotifyWhenInteractionChanges(context =>
+		{
+			if (!context.IsInteractive && !context.IsCancelled)
+				StartResize();
+		});
+
+		bool scheduled = interactive.AnimateAlongsideTransition(
+			static _ => { },
+			context =>
+			{
+				if (context.IsCancelled)
+				{
+					DeferredContentDetents.Remove(stack);
+					PendingDetentPages.Remove(stack);
+
+					if (started)
+						(stack.TopViewController as PageHost)?.ContentMeasureInvalidated();
+
+					return;
+				}
+
+				StartResize();
+			});
+
+		if (!scheduled)
+		{
+			DeferredContentDetents.Remove(stack);
+			StartResize();
+		}
+	}
+
+	void SyncHostToSheet()
+	{
+		// a push or pop keeps this view at its pre-transition size until it commits; matching the
+		// wrapper here lets the page fill the sheet while the transition still runs, clipped by
+		// the card instead of leaving a gap
+		if (View is not UIView view
+			|| NavigationController?.View is not UIView wrapper
+			|| (view.Bounds.Width == wrapper.Bounds.Width && view.Bounds.Height == wrapper.Bounds.Height))
+			return;
+
+		view.Frame = new(
+			view.Frame.X,
+			view.Frame.Y,
+			wrapper.Bounds.Width,
+			wrapper.Bounds.Height);
+	}
+
 	internal double MeasureContent(
-		double maximum)
+		double maximum) =>
+		MeasureContent(maximum, this);
+
+	internal double MeasureContent(
+		double maximum,
+		PageHost chromeHost)
 	{
 		if (Page is not ContentView page || View is not UIView view)
 			return maximum;
@@ -281,7 +419,7 @@ internal sealed class PageHost : UIViewController
 
 		Size desired = page.MeasurePageContent(new(Math.Max(0, width), maximum));
 
-		return desired.Height + ChromeHeight(page);
+		return desired.Height + chromeHost.ChromeHeight(page);
 	}
 
 	double ChromeHeight(
@@ -1533,7 +1671,8 @@ internal sealed class PageHost : UIViewController
 
 		// before the transition: a lit row fades out with the pop, not after it
 		IUIViewControllerTransitionCoordinator? previous = appearingTransition;
-		appearingTransition = animated ? this.GetTransitionCoordinator() : null;
+		IUIViewControllerTransitionCoordinator? transition = animated ? this.GetTransitionCoordinator() : null;
+		appearingTransition = transition;
 
 		try
 		{
@@ -1543,6 +1682,8 @@ internal sealed class PageHost : UIViewController
 		{
 			appearingTransition = previous;
 		}
+
+		ApplyPopDetent(transition);
 
 		NavigationController?.SetNavigationBarHidden(Page.HidesNavigationBar, animated);
 		TransitionNavigationAccessory(!Page.HidesNavigationBar, animated);
@@ -1574,6 +1715,11 @@ internal sealed class PageHost : UIViewController
 	{
 		base.ViewDidAppear(animated);
 
+		hasAppeared = true;
+
+		if (NavigationController is UINavigationController stack)
+			PendingDetentPages.Remove(stack);
+
 		ApplyPopGestures();
 
 		SkeleApplication.Current?.CompleteTabSelection(this);
@@ -1587,6 +1733,9 @@ internal sealed class PageHost : UIViewController
 			NavigationController?.NavigationBar.SetNeedsLayout();
 			NavigationController?.NavigationBar.LayoutIfNeeded();
 		}
+
+		// the sheet's content detent follows the page that just appeared
+		ContentMeasureInvalidated();
 	}
 
 	public override void ViewWillDisappear(
@@ -1666,12 +1815,18 @@ internal sealed class PageHost : UIViewController
 
 		LayoutNavigationAccessory();
 		UpdateSystemInsets();
+
+		// a push or pop keeps this view at its pre-transition size until it commits; matching the
+		// wrapper first lets the page lay out at the sheet's final size in a single pass
+		SyncHostToSheet();
+
 		UIEdgeInsets safe = View!.SafeAreaInsets;
 		Thickness extra = Page.PageExtraInsets;
 		Thickness pageSafeArea = usesSystemScrollInsets
 			? new(safe.Left, 0, safe.Right, 0)
 			: new(safe.Left, safe.Top, safe.Right, safe.Bottom);
 		CGRect frame = View.Bounds;
+
 		nfloat availableWidth = frame.Width - (nfloat)extra.Horizontal;
 		nfloat chrome = (nfloat)ChromeHeight(Page);
 
@@ -1683,6 +1838,7 @@ internal sealed class PageHost : UIViewController
 		}
 
 		Page.UpdatePageLayout(pageSafeArea, keyboardCover);
+
 		Page.ApplyHostFrame(new(frame.X, frame.Y, frame.Width, frame.Height));
 
 		if (keyboardCover <= 0 || keyboardFocus is not UIView focused)
