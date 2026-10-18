@@ -11,10 +11,10 @@ internal sealed class GridsView : ShowcaseView<GridsViewModel>
 	{
 		AddCodePage("Grids code", () => viewModel.GridCode);
 
-		ToolbarItems.Add(new ToolbarItem
+		ToolbarItems.Add(new ToolbarMenu
 		{
 			Icon = ImageSource.Symbol("ellipsis.circle"),
-			Menu =
+			Actions =
 			{
 				new MenuAction
 				{

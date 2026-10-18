@@ -15,7 +15,7 @@ internal abstract class CatalogView<TViewModel> : TintView<TViewModel>
 		Title = title;
 		Background = Colors.GroupedBackground;
 
-		ToolbarItems.Add(new()
+		ToolbarItems.Add(new ToolbarButton
 		{
 			Icon = ImageSource.Symbol("info.circle"),
 			Command = viewModel.ShowInfoCommand

@@ -227,7 +227,7 @@ internal sealed class PageChromeDemo : ContentView
 				string text,
 				ToolbarVisibilityPriority priority,
 				bool primary = false) =>
-				ToolbarItems.Add(new ToolbarItem
+				ToolbarItems.Add(new ToolbarButton
 				{
 					Text = text,
 					IsPrimary = primary,
@@ -249,14 +249,14 @@ internal sealed class PageChromeDemo : ContentView
 
 		if (configuration.HasBottomToolbar)
 		{
-			BottomToolbarItems.Add(new ToolbarItem
+			BottomToolbarItems.Add(new ToolbarButton
 			{
 				Text = "Refresh",
 				Icon = ImageSource.Symbol("arrow.clockwise"),
 				Command = Command.From(() => status.Text = "Bottom action tapped")
 			});
 
-			BottomToolbarItems.Add(new ToolbarItem
+			BottomToolbarItems.Add(new ToolbarButton
 			{
 				Text = "Done",
 				Icon = ImageSource.Symbol("checkmark"),

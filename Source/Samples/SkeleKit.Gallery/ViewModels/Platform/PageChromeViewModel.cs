@@ -243,7 +243,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	string ToolbarCode =>
 		$$"""
 		if ({{Bool(HasToolbar)}})
-			page.ToolbarItems.Add(new ToolbarItem
+			page.ToolbarItems.Add(new ToolbarButton
 			{
 				Icon = ImageSource.Symbol("plus"),
 				IsPrimary = true,
@@ -251,7 +251,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 			});
 
 		if ({{Bool(HasBottomToolbar)}})
-			page.BottomToolbarItems.Add(new ToolbarItem { Text = "Done", Icon = ImageSource.Symbol("checkmark"), IsPrimary = true, Tint = Colors.Green });
+			page.BottomToolbarItems.Add(new ToolbarButton { Text = "Done", Icon = ImageSource.Symbol("checkmark"), IsPrimary = true, Tint = Colors.Green });
 		""";
 
 	string NavigationAccessoryCode =>

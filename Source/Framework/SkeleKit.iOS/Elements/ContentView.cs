@@ -350,12 +350,12 @@ public abstract partial class ContentView : ContentHost
 	Binding<Color?>? tabBadgeColorBinding;
 
 	/// <summary>
-	/// Buttons in the navigation bar.
+	/// Entries in the navigation bar.
 	/// </summary>
 	public IList<ToolbarItem> ToolbarItems { get; } = [];
 
 	/// <summary>
-	/// Buttons along the screen's bottom edge.
+	/// Entries along the screen's bottom edge.
 	/// </summary>
 	/// <remarks>
 	/// The toolbar stays hidden while a tab bar occupies the bottom edge.

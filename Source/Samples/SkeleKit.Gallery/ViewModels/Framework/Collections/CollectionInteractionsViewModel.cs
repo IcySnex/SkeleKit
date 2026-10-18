@@ -92,7 +92,7 @@ internal sealed partial class CollectionInteractionsViewModel : ShowcaseViewMode
 				}
 			};
 
-			ToolbarItem edit = new()
+			ToolbarButton edit = new()
 			{
 				Text = "Edit",
 				Command = viewModel.ToggleEditingCommand

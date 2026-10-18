@@ -11,7 +11,7 @@ internal sealed class CollectionInteractionsView : ShowcaseView<CollectionIntera
 	{
 		AddCodePage("Collection interactions code", () => viewModel.InteractionsCode);
 
-		ToolbarItem edit = new()
+		ToolbarButton edit = new()
 		{
 			Text = "Edit",
 			Command = viewModel.ToggleEditingCommand

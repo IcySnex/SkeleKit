@@ -7,7 +7,8 @@ namespace SkeleKit.Gallery.Views.Showcase;
 internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 	where TViewModel : ShowcaseViewModel
 {
-	readonly ToolbarItem appearanceItem;
+	readonly ToolbarButton appearanceItem;
+	readonly ToolbarGroup toolbarGroup;
 
 
 	protected ShowcaseView(
@@ -24,7 +25,7 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 			Command = Command.From(CycleAppearance)
 		};
 		UpdateAppearanceItem();
-		ToolbarItems.Add(appearanceItem);
+		ToolbarItems.Add(toolbarGroup = new(appearanceItem));
 
 		Sections = new()
 		{
@@ -46,7 +47,7 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 	protected void AddCodePage(
 		string title,
 		Func<IReadOnlyList<Span>> source) =>
-		ToolbarItems.Add(new ToolbarItem
+		toolbarGroup.Items.Add(new ToolbarButton
 		{
 			Icon = ImageSource.Symbol("chevron.left.forwardslash.chevron.right"),
 			Command = Command.From(() =>

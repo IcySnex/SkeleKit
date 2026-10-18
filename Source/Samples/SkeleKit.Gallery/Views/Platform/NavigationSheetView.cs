@@ -12,7 +12,7 @@ internal sealed class NavigationSheetView : ContentView<NavigationSheetViewModel
 		NavigationTitleStyle = TitleStyle.Inline;
 		Background = Colors.GroupedBackground;
 
-		ToolbarItems.Add(new()
+		ToolbarItems.Add(new ToolbarButton
 		{
 			Text = "Done",
 			Command = viewModel.DismissCommand

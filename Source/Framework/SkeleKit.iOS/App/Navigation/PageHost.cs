@@ -179,9 +179,9 @@ internal sealed class PageHost : UIViewController
 	// ReSharper disable once CollectionNeverQueried.Local
 	readonly List<UIAction> menuActions = [];
 	readonly List<ToolbarItem> observedItems = [];
-	readonly Dictionary<UIBarButtonItem, ToolbarItem> nativeToolbarItems = [];
+	readonly Dictionary<UIBarButtonItem, ToolbarAction> nativeToolbarItems = [];
 	// natives persist across applies so adding or removing an item fades instead of rebuilding the bar
-	readonly Dictionary<ToolbarItem, UIBarButtonItem> toolbarNatives = [];
+	readonly Dictionary<ToolbarAction, UIBarButtonItem> toolbarNatives = [];
 
 	UITapGestureRecognizer? dismissKeyboard;
 	UIView? keyboardFocus;
@@ -882,14 +882,19 @@ internal sealed class PageHost : UIViewController
 	}
 
 	UIBarButtonItem Bar(
-		ToolbarItem item)
-	{
-		if (item.Menu.Count > 0)
-			return MenuBar(item);
+		ToolbarAction item) =>
+		item switch
+		{
+			ToolbarButton button => ButtonBar(button),
+			ToolbarMenu menu => MenuBar(menu),
+			_ => throw new InvalidOperationException($"Unsupported toolbar action '{item.GetType()}'.")
+		};
 
-		UIBarButtonItem native = toolbarNatives.GetValueOrDefault(item) is { Menu: null } cached
-			? cached
-			: new(UIAction.Create(
+	UIBarButtonItem ButtonBar(
+		ToolbarButton item)
+	{
+		UIBarButtonItem native = toolbarNatives.GetValueOrDefault(item)
+			?? new(UIAction.Create(
 				item.Text ?? "",
 				item.Icon?.ResolveLocal(),
 				null,
@@ -900,31 +905,24 @@ internal sealed class PageHost : UIViewController
 				}));
 
 		native.Enabled = item.Command?.CanExecute(item.CommandParameter) ?? true;
-
-		if (item.IsPrimary)
-			native.Style = UIBarButtonItemStyle.Done;
-
-		ApplyVisibilityPriority(native, item);
-		toolbarNatives[item] = native;
-		nativeToolbarItems[native] = item;
-		native.TintColor = EffectiveBarTint(Page, item);
+		ApplyAction(native, item);
 
 		return native;
 	}
 
 	static UIColor? EffectiveBarTint(
 		ContentView? page,
-		ToolbarItem? item = null) =>
+		ToolbarAction? item = null) =>
 		(item?.Tint ?? page?.BarTintValue ?? SkeleApplication.Current?.Theme.Tint)?.ToUIColor();
 
 	UIMenu BuildMenu(
-		ToolbarItem item)
+		ToolbarMenu item)
 	{
-		UIAction[] entries = new UIAction[item.Menu.Count];
+		UIAction[] entries = new UIAction[item.Actions.Count];
 
-		for (int index = 0; index < item.Menu.Count; index++)
+		for (int index = 0; index < item.Actions.Count; index++)
 		{
-			MenuAction entry = item.Menu[index];
+			MenuAction entry = item.Actions[index];
 
 			entries[index] = UIAction.Create(
 				entry.Text,
@@ -948,7 +946,7 @@ internal sealed class PageHost : UIViewController
 
 	static void ApplyVisibilityPriority(
 		UIBarButtonItem native,
-		ToolbarItem item)
+		ToolbarAction item)
 	{
 		if (!OperatingSystem.IsIOSVersionAtLeast(27))
 			return;
@@ -962,18 +960,25 @@ internal sealed class PageHost : UIViewController
 	}
 
 	UIBarButtonItem MenuBar(
-		ToolbarItem item)
+		ToolbarMenu item)
 	{
 		UIMenu menu = BuildMenu(item);
 
-		UIBarButtonItem native = toolbarNatives.GetValueOrDefault(item) is { Menu: not null } cached
-			? cached
-			: item.Icon is ImageSource icon
+		UIBarButtonItem native = toolbarNatives.GetValueOrDefault(item)
+			?? (item.Icon is ImageSource icon
 				? new(icon.ResolveLocal(), menu)
-				: new(item.Text ?? "", menu);
+				: new(item.Text ?? "", menu));
 
 		native.Menu = menu;
+		ApplyAction(native, item);
 
+		return native;
+	}
+
+	void ApplyAction(
+		UIBarButtonItem native,
+		ToolbarAction item)
+	{
 		if (item.IsPrimary)
 			native.Style = UIBarButtonItemStyle.Done;
 
@@ -981,8 +986,6 @@ internal sealed class PageHost : UIViewController
 		toolbarNatives[item] = native;
 		nativeToolbarItems[native] = item;
 		native.TintColor = EffectiveBarTint(Page, item);
-
-		return native;
 	}
 
 	void ApplyChrome(
@@ -1239,20 +1242,32 @@ internal sealed class PageHost : UIViewController
 
 		observedItems.Clear();
 
-		foreach (ToolbarItem item in page.ToolbarItems.Concat(page.BottomToolbarItems))
+		foreach (ToolbarItem entry in page.ToolbarItems.Concat(page.BottomToolbarItems))
+			Observe(entry);
+
+		foreach (ToolbarAction item in toolbarNatives.Keys.Except(observedItems.OfType<ToolbarAction>()).ToArray())
+			toolbarNatives.Remove(item);
+
+
+		void Observe(
+			ToolbarItem item)
 		{
 			item.Changed += OnToolbarItemChanged;
 			observedItems.Add(item);
-		}
 
-		foreach (ToolbarItem item in toolbarNatives.Keys.Except(observedItems).ToArray())
-			toolbarNatives.Remove(item);
+			if (item is ToolbarGroup group)
+			{
+				foreach (ToolbarAction action in group.Items)
+					Observe(action);
+			}
+		}
 	}
 
 	void OnToolbarItemChanged(
 		ToolbarItem item)
 	{
-		toolbarNatives.Remove(item);
+		if (item is ToolbarAction action)
+			toolbarNatives.Remove(action);
 
 		if (Page is ContentView page)
 			ApplyToolbar(page);
@@ -1271,6 +1286,28 @@ internal sealed class PageHost : UIViewController
 		recovery.Hidden = SkeleApplication.Current?.ShowsSidebarRecovery(this) is not true;
 	}
 
+	List<UIBarButtonItem> RenderEntry(
+		ToolbarItem entry)
+	{
+		List<UIBarButtonItem> items = [];
+
+		if (!entry.IsVisible)
+			return items;
+
+		if (entry is ToolbarGroup group)
+		{
+			foreach (ToolbarAction action in group.Items)
+			{
+				if (action.IsVisible)
+					items.Add(Bar(action));
+			}
+		}
+		else if (entry is ToolbarAction action && action.IsVisible)
+			items.Add(Bar(action));
+
+		return items;
+	}
+
 	void ApplyToolbar(
 		ContentView page)
 	{
@@ -1281,17 +1318,26 @@ internal sealed class PageHost : UIViewController
 		// bar changes animate once the page is on screen; the first apply appears with the page
 		bool animated = IsViewLoaded && View.Window is not null;
 
-		List<UIBarButtonItem> leading = [];
+		List<List<UIBarButtonItem>> leadingGroups = [];
 		List<UIBarButtonItem> trailing = [];
 
-		foreach (ToolbarItem item in page.ToolbarItems)
+		foreach (ToolbarItem entry in page.ToolbarItems)
 		{
-			if (!item.IsVisible)
+			List<UIBarButtonItem> items = RenderEntry(entry);
+			if (items.Count == 0)
 				continue;
 
-			UIBarButtonItem native = Bar(item);
+			if (entry.Side is ToolbarSide.Leading)
+			{
+				leadingGroups.Add(items);
+				continue;
+			}
 
-			(item.Side is ToolbarSide.Leading ? leading : trailing).Add(native);
+			// iOS 26 draws image items in shared glass groups; a zero-width space starts a new one
+			if (OperatingSystem.IsIOSVersionAtLeast(26) && trailing.Count > 0)
+				trailing.Add(UIBarButtonItem.CreateFixedSpaceItem());
+
+			trailing.AddRange(items);
 		}
 
 		if (OperatingSystem.IsIOSVersionAtLeast(27))
@@ -1300,13 +1346,24 @@ internal sealed class PageHost : UIViewController
 			recovery.Hidden = SkeleApplication.Current?.ShowsSidebarRecovery(this) is not true;
 
 			List<UIBarButtonItemGroup> groups = [recovery];
-			if (leading.Count > 0)
-				groups.Add(new([.. leading], null));
+			foreach (List<UIBarButtonItem> items in leadingGroups)
+				groups.Add(new([.. items], null));
 
 			NavigationItem.LeadingItemGroups = [.. groups];
 		}
 		else
+		{
+			List<UIBarButtonItem> leading = [];
+			foreach (List<UIBarButtonItem> items in leadingGroups)
+			{
+				if (OperatingSystem.IsIOSVersionAtLeast(26) && leading.Count > 0)
+					leading.Add(UIBarButtonItem.CreateFixedSpaceItem());
+
+				leading.AddRange(items);
+			}
+
 			NavigationItem.SetLeftBarButtonItems([.. leading], animated);
+		}
 
 		// leading items sit next to Back, they do not replace it
 		NavigationItem.LeftItemsSupplementBackButton = true;
@@ -1320,16 +1377,17 @@ internal sealed class PageHost : UIViewController
 
 		List<UIBarButtonItem> bottom = [];
 
-		foreach (ToolbarItem item in page.BottomToolbarItems)
+		foreach (ToolbarItem entry in page.BottomToolbarItems)
 		{
-			if (!item.IsVisible)
+			List<UIBarButtonItem> items = RenderEntry(entry);
+			if (items.Count == 0)
 				continue;
 
-			// flexible spaces spread the actions across the bar
+			// flexible spaces spread the groups across the bar
 			if (bottom.Count > 0)
 				bottom.Add(new(UIBarButtonSystemItem.FlexibleSpace));
 
-			bottom.Add(Bar(item));
+			bottom.AddRange(items);
 		}
 
 		SetToolbarItems([.. bottom], animated);
@@ -1339,7 +1397,7 @@ internal sealed class PageHost : UIViewController
 	void ApplyToolbarTint(
 		ContentView page)
 	{
-		foreach ((UIBarButtonItem native, ToolbarItem item) in nativeToolbarItems)
+		foreach ((UIBarButtonItem native, ToolbarAction item) in nativeToolbarItems)
 			native.TintColor = EffectiveBarTint(page, item);
 
 		if (NavigationController?.Toolbar is not UIToolbar toolbar)

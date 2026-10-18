@@ -26,7 +26,7 @@ internal sealed class SearchView : TintView<SearchViewModel>
 		SearchScopes.Add("Framework");
 		SearchScopes.Add("Platform");
 
-		ToolbarItems.Add(new()
+		ToolbarItems.Add(new ToolbarButton
 		{
 			Icon = ImageSource.Symbol("info.circle"),
 			Command = viewModel.ShowInfoCommand

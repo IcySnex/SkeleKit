@@ -7,7 +7,7 @@ public class ToolbarItemTests
 	[Fact]
 	public void VisibilityPriority_DefaultsToStandardAndNotifiesChanges()
 	{
-		ToolbarItem item = new();
+		ToolbarButton item = new();
 		ToolbarItem? sender = null;
 		int changes = 0;
 		item.Changed += changed =>

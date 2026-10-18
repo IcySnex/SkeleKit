@@ -11,7 +11,7 @@ internal sealed class AboutView : ContentView<AboutViewModel>
 		Title = "SkeleKit";
 		Background = Colors.GroupedBackground;
 
-		ToolbarItems.Add(new()
+		ToolbarItems.Add(new ToolbarButton
 		{
 			Icon = ImageSource.Symbol("xmark"),
 			Tint = Colors.Indigo,

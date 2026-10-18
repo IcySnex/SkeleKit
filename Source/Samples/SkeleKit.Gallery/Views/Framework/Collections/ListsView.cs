@@ -11,10 +11,10 @@ internal sealed class ListsView : ShowcaseView<ListsViewModel>
 	{
 		AddCodePage("Lists code", () => viewModel.ListCode);
 
-		ToolbarItems.Add(new ToolbarItem
+		ToolbarItems.Add(new ToolbarMenu
 		{
 			Icon = ImageSource.Symbol("ellipsis.circle"),
-			Menu =
+			Actions =
 			{
 				new MenuAction
 				{

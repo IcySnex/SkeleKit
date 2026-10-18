@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace SkeleKit;
@@ -19,34 +20,15 @@ public enum ToolbarSide
 }
 
 /// <summary>
-/// A button in the page's navigation bar.
+/// An entry in a page's navigation bar or bottom toolbar.
 /// </summary>
-public sealed class ToolbarItem
+/// <remarks>
+/// Use <see cref="ToolbarButton"/>, <see cref="ToolbarMenu"/>, or <see cref="ToolbarGroup"/>.
+/// </remarks>
+public abstract class ToolbarItem
 {
-	/// <summary>
-	/// The item's text, or null when it shows only an icon.
-	/// </summary>
-	public string? Text
+	internal ToolbarItem()
 	{
-		get;
-		set
-		{
-			field = value;
-			Changed?.Invoke(this);
-		}
-	}
-
-	/// <summary>
-	/// The local icon, or null for a text-only item.
-	/// </summary>
-	public ImageSource? Icon
-	{
-		get;
-		set
-		{
-			field = value;
-			Changed?.Invoke(this);
-		}
 	}
 
 	/// <summary>
@@ -61,21 +43,75 @@ public sealed class ToolbarItem
 		set
 		{
 			field = value;
-			Changed?.Invoke(this);
+			OnChanged();
 		}
 	} = true;
 
 	internal event Action<ToolbarItem>? Changed;
 
+	private protected void OnChanged() =>
+		Changed?.Invoke(this);
+
 	/// <summary>
 	/// Which side of the bar the item sits on.
 	/// </summary>
+	/// <remarks>
+	/// Only used for top-level entries. The value is ignored for actions inside a
+	/// <see cref="ToolbarGroup"/>.
+	/// </remarks>
 	public ToolbarSide Side { get; set; } = ToolbarSide.Trailing;
+}
+
+/// <summary>
+/// A toolbar item that performs an action or opens a menu.
+/// </summary>
+public abstract class ToolbarAction : ToolbarItem
+{
+	internal ToolbarAction()
+	{
+	}
+
+	/// <summary>
+	/// The item's text, or null when it shows only an icon.
+	/// </summary>
+	public string? Text
+	{
+		get;
+		set
+		{
+			field = value;
+			OnChanged();
+		}
+	}
+
+	/// <summary>
+	/// The local icon, or null for a text-only item.
+	/// </summary>
+	public ImageSource? Icon
+	{
+		get;
+		set
+		{
+			field = value;
+			OnChanged();
+		}
+	}
 
 	/// <summary>
 	/// Whether the item is rendered as the prominent action.
 	/// </summary>
-	public bool IsPrimary { get; set; }
+	/// <remarks>
+	/// A prominent item does not share its Liquid Glass background with other items.
+	/// </remarks>
+	public bool IsPrimary
+	{
+		get;
+		set
+		{
+			field = value;
+			OnChanged();
+		}
+	}
 
 	/// <summary>
 	/// How long the item remains visible when the bar has limited space.
@@ -89,7 +125,7 @@ public sealed class ToolbarItem
 		set
 		{
 			field = value;
-			Changed?.Invoke(this);
+			OnChanged();
 		}
 	} = ToolbarVisibilityPriority.Standard;
 
@@ -102,15 +138,16 @@ public sealed class ToolbarItem
 		set
 		{
 			field = value;
-			Changed?.Invoke(this);
+			OnChanged();
 		}
 	}
+}
 
-	/// <summary>
-	/// Menu entries shown on tap instead of invoking <see cref="Command"/>. Empty for a plain item.
-	/// </summary>
-	public IList<MenuAction> Menu { get; } = [];
-
+/// <summary>
+/// A button in the page's navigation bar or bottom toolbar.
+/// </summary>
+public sealed class ToolbarButton : ToolbarAction
+{
 	/// <summary>
 	/// Invoked when the item is tapped; its CanExecute drives the enabled state.
 	/// </summary>
@@ -120,4 +157,51 @@ public sealed class ToolbarItem
 	/// The parameter passed to <see cref="Command"/>.
 	/// </summary>
 	public object? CommandParameter { get; set; }
+}
+
+/// <summary>
+/// A button that opens a menu in the page's navigation bar or bottom toolbar.
+/// </summary>
+public sealed class ToolbarMenu : ToolbarAction
+{
+	readonly ObservableCollection<MenuAction> actions = [];
+
+	public ToolbarMenu()
+	{
+		actions.CollectionChanged += (_, _) => OnChanged();
+	}
+
+	/// <summary>
+	/// Menu entries shown on tap.
+	/// </summary>
+	public IList<MenuAction> Actions => actions;
+}
+
+/// <summary>
+/// A set of toolbar actions rendered as one visual group.
+/// </summary>
+/// <remarks>
+/// Items are laid out contiguously. On iOS 26 and later, adjacent top-level entries are
+/// separated so each group keeps its own Liquid Glass background.
+/// </remarks>
+public sealed class ToolbarGroup : ToolbarItem
+{
+	readonly ObservableCollection<ToolbarAction> items = [];
+
+	public ToolbarGroup()
+	{
+		items.CollectionChanged += (_, _) => OnChanged();
+	}
+
+	public ToolbarGroup(
+		params ToolbarAction[] items) : this()
+	{
+		foreach (ToolbarAction item in items)
+			Items.Add(item);
+	}
+
+	/// <summary>
+	/// The actions in the group. Groups cannot contain other groups.
+	/// </summary>
+	public IList<ToolbarAction> Items => items;
 }
