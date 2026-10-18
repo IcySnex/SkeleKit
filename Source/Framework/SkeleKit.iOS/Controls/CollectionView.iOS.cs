@@ -1741,7 +1741,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 				SelectionConfigured,
 				SelectsOnlyWhileEditing,
 				ReorderCommand is not null,
-				ShowsSelectionCheckmark && SelectsOutsideEditing);
+				ShowsSelectionCheckmark && SelectsOutsideEditing,
+				SwipeCornerRadius);
 		}
 
 		if (cell.Hosted is ICollectionItemView view)
@@ -3058,6 +3059,11 @@ internal sealed class SkeleCell(
 	Brush? highlight;
 	bool retainsHighlight = true;
 	bool selectsOnlyWhileEditing;
+	bool swiped;
+	bool hasBaseCorner;
+	double baseCornerRadius;
+	CornerCurve baseCornerCurve;
+	double swipeCornerRadius;
 	double automaticMinimumHeight;
 
 	public void Attach(
@@ -3066,7 +3072,8 @@ internal sealed class SkeleCell(
 		bool selects,
 		bool selectsOnlyWhileEditing,
 		bool reorders,
-		bool selectionCheckmark)
+		bool selectionCheckmark,
+		double swipeCornerRadius)
 	{
 		source = item;
 		Hosted = item.View;
@@ -3076,7 +3083,10 @@ internal sealed class SkeleCell(
 		this.selectsOnlyWhileEditing = selectsOnlyWhileEditing;
 		this.reorders = reorders;
 		this.selectionCheckmark = selectionCheckmark;
+		this.swipeCornerRadius = swipeCornerRadius;
 		selected = Selected;
+		swiped = false;
+		hasBaseCorner = false;
 		arrangementValid = false;
 
 		// one write; repaints during a peek desync the portal
@@ -3220,6 +3230,30 @@ internal sealed class SkeleCell(
 			editing = state.Editing;
 			selected = state.Selected;
 			ApplyAccessories();
+		}
+
+		if (swiped != state.Swiped)
+		{
+			swiped = state.Swiped;
+
+			if (Hosted is View hostedView)
+			{
+				if (swiped)
+				{
+					baseCornerRadius = hostedView.CornerRadius;
+					baseCornerCurve = hostedView.CornerCurve;
+					hasBaseCorner = true;
+
+					hostedView.CornerCurve = CornerCurve.Continuous;
+					hostedView.CornerRadius = Math.Max(baseCornerRadius, swipeCornerRadius);
+				}
+				else if (hasBaseCorner)
+				{
+					hostedView.CornerRadius = baseCornerRadius;
+					hostedView.CornerCurve = baseCornerCurve;
+					hasBaseCorner = false;
+				}
+			}
 		}
 
 		if (highlight is null)

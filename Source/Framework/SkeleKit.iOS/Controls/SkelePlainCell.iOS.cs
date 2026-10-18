@@ -20,7 +20,8 @@ internal interface ISkeleHostCell
 		bool selects,
 		bool selectsOnlyWhileEditing,
 		bool reorders,
-		bool selectionCheckmark);
+		bool selectionCheckmark,
+		double swipeCornerRadius);
 
 	void SetAutomaticMinimumHeight(
 		double value);
@@ -73,7 +74,8 @@ internal sealed class SkelePlainCell(
 		bool selects,
 		bool selectsOnlyWhileEditing,
 		bool reorders,
-		bool selectionCheckmark)
+		bool selectionCheckmark,
+		double swipeCornerRadius)
 	{
 		source = item;
 		Hosted = item.View;

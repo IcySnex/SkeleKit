@@ -228,6 +228,15 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	public bool RetainsHighlight { get; set; } = true;
 
 	/// <summary>
+	/// Corner radius applied to a row's content while its swipe actions are visible.
+	/// Defaults to the system inset-grouped list radius.
+	/// </summary>
+	/// <remarks>
+	/// This rounds the sliding row, not the swipe action buttons. Normal rows are unaffected.
+	/// </remarks>
+	public double SwipeCornerRadius { get; set; } = OperatingSystem.IsIOSVersionAtLeast(26) ? SystemCornerRadius.GroupedList : 0;
+
+	/// <summary>
 	/// Whether taps change the selection only while editing. Defaults to false.
 	/// </summary>
 	/// <remarks>
