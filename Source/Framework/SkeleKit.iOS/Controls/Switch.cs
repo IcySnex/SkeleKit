@@ -20,17 +20,6 @@ public class Switch : Control
 	Binding<bool>? isOnBinding;
 
 	/// <summary>
-	/// The fill color while on, or null for the inherited tint.
-	/// </summary>
-	public Bindable<Color?> OnColor
-	{
-		get => onColor;
-		set => onColorBinding = Register(onColorBinding, value, value => Set(ref onColor, value, ApplyColors, affectsMeasure: false));
-	}
-	Color? onColor;
-	Binding<Color?>? onColorBinding;
-
-	/// <summary>
 	/// The thumb color, or null for the system default.
 	/// </summary>
 	public Bindable<Color?> ThumbColor
@@ -52,8 +41,8 @@ public class Switch : Control
 
 	void ApplyColors()
 	{
-		// ignores the view tint, needs its own colors
-		Ui.OnTintColor = (onColor ?? EffectiveTint)?.ToUIColor();
+		// UISwitch doesn't apply the view tint to its on-track color, so mirror it explicitly.
+		Ui.OnTintColor = EffectiveTint?.ToUIColor();
 		Ui.ThumbTintColor = thumbColor?.ToUIColor();
 	}
 

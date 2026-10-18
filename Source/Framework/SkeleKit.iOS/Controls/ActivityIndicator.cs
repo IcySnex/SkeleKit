@@ -29,17 +29,6 @@ public class ActivityIndicator : Control
 	}
 	bool isLarge;
 
-	/// <summary>
-	/// The spinner color, or null for the system default.
-	/// </summary>
-	public Bindable<Color?> Color
-	{
-		get => color;
-		set => colorBinding = Register(colorBinding, value, value => Set(ref color, value, ApplyColor, affectsMeasure: false));
-	}
-	Color? color;
-	Binding<Color?>? colorBinding;
-
 
 	void ApplyIsAnimating()
 	{
@@ -54,8 +43,9 @@ public class ActivityIndicator : Control
 
 	void ApplyColor()
 	{
-		// ignores the view tint, needs its own Color
-		Ui.Color = (color ?? EffectiveTint)?.ToUIColor();
+		// UIActivityIndicatorView doesn't derive its spinner color from UIView.TintColor,
+		// so apply the effective tint explicitly.
+		Ui.Color = EffectiveTint?.ToUIColor();
 	}
 
 

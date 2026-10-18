@@ -10,7 +10,9 @@ public class ToolbarGroupTests
 		ToolbarButton first = new();
 		ToolbarMenu second = new();
 
-		ToolbarGroup group = new(first, second);
+		ToolbarGroup group = new();
+		group.Items.Add(first);
+		group.Items.Add(second);
 
 		Assert.Equal([first, second], group.Items);
 	}

@@ -20,7 +20,7 @@ internal sealed class ActivityIndicatorView : ShowcaseView<ActivityIndicatorView
 		{
 			IsAnimating = Bind(vm => vm.IsAnimating),
 			IsLarge = viewModel.IsLarge,
-			Color = Colors.Red
+			Tint = Colors.Red
 		};
 
 		Switch animating = new()

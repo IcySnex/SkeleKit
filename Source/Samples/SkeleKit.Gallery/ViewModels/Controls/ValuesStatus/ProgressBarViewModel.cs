@@ -40,7 +40,7 @@ internal sealed partial class ProgressBarViewModel : ShowcaseViewModel
 			{
 				HorizontalAlignment = HorizontalAlignment.Stretch,
 				Progress = Bind(vm => vm.Progress),
-				FillColor = Colors.Red,
+				Tint = Colors.Red,
 				TrackColor = Colors.Red.WithAlpha(0.16)
 			};
 			""")

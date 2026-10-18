@@ -42,17 +42,6 @@ public class PageControl : Control
 	Binding<Color?>? dotColorBinding;
 
 	/// <summary>
-	/// The color of the filled dot, or null for the system default.
-	/// </summary>
-	public Bindable<Color?> CurrentDotColor
-	{
-		get => currentDotColor;
-		set => currentDotColorBinding = Register(currentDotColorBinding, value, value => Set(ref currentDotColor, value, ApplyColors, affectsMeasure: false));
-	}
-	Color? currentDotColor;
-	Binding<Color?>? currentDotColorBinding;
-
-	/// <summary>
 	/// Whether the control hides itself while there is only one page.
 	/// </summary>
 	public bool HidesForSinglePage
@@ -87,7 +76,7 @@ public class PageControl : Control
 	void ApplyColors()
 	{
 		Ui.PageIndicatorTintColor = dotColor?.ToUIColor();
-		Ui.CurrentPageIndicatorTintColor = (currentDotColor ?? EffectiveTint)?.ToUIColor();
+		Ui.CurrentPageIndicatorTintColor = EffectiveTint?.ToUIColor();
 	}
 
 	void ApplyBehavior()

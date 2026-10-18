@@ -66,17 +66,6 @@ public class Slider : Control
 	bool continuous = true;
 
 	/// <summary>
-	/// The color of the filled part of the track, or null for the system tint.
-	/// </summary>
-	public Bindable<Color?> TrackColor
-	{
-		get => trackColor;
-		set => trackColorBinding = Register(trackColorBinding, value, value => Set(ref trackColor, value, ApplyStyle, affectsMeasure: false));
-	}
-	Color? trackColor;
-	Binding<Color?>? trackColorBinding;
-
-	/// <summary>
 	/// The color of the unfilled part of the track, or null for the system default.
 	/// </summary>
 	public Bindable<Color?> EmptyTrackColor
@@ -148,7 +137,7 @@ public class Slider : Control
 
 	void ApplyStyle()
 	{
-		Ui.MinimumTrackTintColor = trackColor?.ToUIColor();
+		Ui.MinimumTrackTintColor = EffectiveTint?.ToUIColor();
 		Ui.MaximumTrackTintColor = emptyTrackColor?.ToUIColor();
 		Ui.ThumbTintColor = thumbColor?.ToUIColor();
 
@@ -180,5 +169,12 @@ public class Slider : Control
 		ApplyRange();
 		ApplyValue();
 		ApplyStyle();
+	}
+
+
+	internal override void TintChanged()
+	{
+		if (IsRealized)
+			ApplyStyle();
 	}
 }

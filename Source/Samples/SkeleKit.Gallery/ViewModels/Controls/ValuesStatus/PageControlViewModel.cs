@@ -55,7 +55,7 @@ internal sealed partial class PageControlViewModel : ShowcaseViewModel
 				Current = Bind(vm => vm.Current)
 					.TwoWay((vm, val) => vm.Current = val),
 				DotColor = Colors.Red.WithAlpha(0.25),
-				CurrentDotColor = Colors.Red,
+				Tint = Colors.Red,
 				HidesForSinglePage = {{Boolean(HidesForSinglePage)}},
 				AllowsScrubbing = {{Boolean(AllowsScrubbing)}}
 			};

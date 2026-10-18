@@ -62,7 +62,7 @@ internal sealed class SecureFieldView : ShowcaseView<SecureFieldViewModel>
 							{
 								HorizontalAlignment = HorizontalAlignment.Stretch,
 								Progress = Bind(vm => vm.Strength),
-								FillColor = Colors.Pink
+								Tint = Colors.Pink
 							},
 
 							Status(Bind(vm => vm.StrengthLabel), FontWeight.Medium),

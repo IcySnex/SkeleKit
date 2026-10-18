@@ -25,7 +25,9 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 			Command = Command.From(CycleAppearance)
 		};
 		UpdateAppearanceItem();
-		ToolbarItems.Add(toolbarGroup = new(appearanceItem));
+		toolbarGroup = new();
+		toolbarGroup.Items.Add(appearanceItem);
+		ToolbarItems.Add(toolbarGroup);
 
 		Sections = new()
 		{
