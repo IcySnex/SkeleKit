@@ -223,6 +223,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// <remarks>
 	/// The row appearance is defined by <see cref="ItemView{TItem}.HighlightBackground"/>. With a selection
 	/// binding a false value still shows the selection checkmark; only the background is released.
+	/// When <see cref="SelectsOnlyWhileEditing"/> is true, highlights are suppressed outside edit mode.
 	/// </remarks>
 	public bool RetainsHighlight { get; set; } = true;
 
@@ -230,9 +231,9 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// Whether taps change the selection only while editing. Defaults to false.
 	/// </summary>
 	/// <remarks>
-	/// When true, normal taps only activate: <see cref="ItemCommand"/> runs and the transient highlight
-	/// behaves as if no selection were bound. Edit mode selects with the shape of <see cref="SelectedItem"/>
-	/// or <see cref="SelectedItems"/>.
+	/// When true, normal taps only activate: <see cref="ItemCommand"/> runs without selecting or
+	/// highlighting the row. Edit mode selects with the shape of <see cref="SelectedItem"/> or
+	/// <see cref="SelectedItems"/>.
 	/// </remarks>
 	public bool SelectsOnlyWhileEditing { get; set; }
 
@@ -419,10 +420,18 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// Invoked after a drag-to-reorder with an <see cref="ItemMove{TItem}"/>.
 	/// </summary>
 	/// <remarks>
-	/// Setting it enables a long-press drag, unless a context menu owns that gesture; the edit-mode handle always drags.<br/>
+	/// Setting it enables a long-press drag, unless a context menu owns that gesture; the edit-mode handle always drags.
+	/// Set <see cref="ReordersOnlyWhileEditing"/> to reserve both the gesture and handle for edit mode.<br/>
 	/// The move is already applied to the source when it fires.
 	/// </remarks>
 	public ICommand? ReorderCommand { get; set; }
+
+	/// <summary>
+	/// Whether drag-to-reorder is available only while <see cref="IsEditing"/> is true. Defaults to false.
+	/// </summary>
+	public bool ReordersOnlyWhileEditing { get; set; }
+
+	internal bool ReorderAllowed => ReorderCommand is not null && (!ReordersOnlyWhileEditing || isEditing);
 
 	/// <summary>
 	/// Whether the collection is in edit mode, showing selection circles and reorder handles.
@@ -1083,7 +1092,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	internal bool CanMove(
 		int section,
 		int index) =>
-		ReorderCommand is not null && WritableIn(section) is not null && ItemAt(section, index) is not null;
+		ReorderAllowed && WritableIn(section) is not null && ItemAt(section, index) is not null;
 
 	internal void Move(
 		int fromSection,

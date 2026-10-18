@@ -18,6 +18,7 @@ internal interface ISkeleHostCell
 		ICollectionItemView item,
 		bool fixedSize,
 		bool selects,
+		bool selectsOnlyWhileEditing,
 		bool reorders,
 		bool selectionCheckmark);
 
@@ -53,6 +54,7 @@ internal sealed class SkelePlainCell(
 
 	Brush? highlight;
 	bool retainsHighlight = true;
+	bool selectsOnlyWhileEditing;
 	bool lit;
 	bool fixedSize;
 
@@ -69,6 +71,7 @@ internal sealed class SkelePlainCell(
 		ICollectionItemView item,
 		bool fixedSize,
 		bool selects,
+		bool selectsOnlyWhileEditing,
 		bool reorders,
 		bool selectionCheckmark)
 	{
@@ -76,6 +79,7 @@ internal sealed class SkelePlainCell(
 		Hosted = item.View;
 		highlight = item.HighlightBackground;
 		this.fixedSize = fixedSize;
+		this.selectsOnlyWhileEditing = selectsOnlyWhileEditing;
 		arrangementValid = false;
 
 		BackgroundConfiguration = UIBackgroundConfiguration.ClearConfiguration;
@@ -122,6 +126,9 @@ internal sealed class SkelePlainCell(
 			return;
 
 		bool wantsLit = state.Highlighted || state.Selected && (retainsHighlight || state.Editing);
+		if (selectsOnlyWhileEditing && !state.Editing)
+			wantsLit = false;
+
 		if (wantsLit == lit && Hosted is not null)
 			return;
 

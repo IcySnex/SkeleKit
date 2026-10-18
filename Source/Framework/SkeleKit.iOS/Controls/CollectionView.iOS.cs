@@ -333,7 +333,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			return;
 
 		UILongPressGestureRecognizer recognizer = null!;
-		recognizer = new(() => TrackReorder(recognizer));
+		recognizer = new(() => TrackReorder(recognizer)) { Enabled = ReorderAllowed };
 
 		reorderRecognizer = recognizer;
 		collection.AddGestureRecognizer(recognizer);
@@ -347,7 +347,8 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		switch (recognizer.State)
 		{
 			case UIGestureRecognizerState.Began:
-				if (ui.IndexPathForItemAtPoint(recognizer.LocationInView(ui)) is NSIndexPath path)
+				if (ReorderAllowed
+					&& ui.IndexPathForItemAtPoint(recognizer.LocationInView(ui)) is NSIndexPath path)
 					reordering = ui.BeginInteractiveMovementForItem(path);
 				break;
 
@@ -397,6 +398,9 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		Ui.AllowsMultipleSelectionDuringEditing = MultiSelects;
 		Ui.Editing = isEditing;
 
+		if (reorderRecognizer is UILongPressGestureRecognizer recognizer)
+			recognizer.Enabled = ReorderAllowed;
+
 		ApplySelectionCore();
 	}
 
@@ -411,8 +415,16 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (Ui.AllowsMultipleSelection != multiActive)
 			Ui.AllowsMultipleSelection = multiActive;
 
-		// selection that does not apply in this mode leaves the tapped row's transient highlight alone
-		if (!active || !SelectionConfigured)
+		if (!active)
+		{
+			// selection never applies outside edit mode, so release any native selection
+			foreach (NSIndexPath path in Ui.GetIndexPathsForSelectedItems() ?? [])
+				Ui.DeselectItem(path, false);
+
+			return;
+		}
+
+		if (!SelectionConfigured)
 			return;
 
 		if (UsesIndexedSource)
@@ -1727,6 +1739,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 				created,
 				fixedLayout is not null,
 				SelectionConfigured,
+				SelectsOnlyWhileEditing,
 				ReorderCommand is not null,
 				ShowsSelectionCheckmark && SelectsOutsideEditing);
 		}
@@ -2592,7 +2605,11 @@ internal sealed class CollectionDelegate<TItem, TSection>(
 			return;
 		}
 
-		if (!element.RetainsHighlight && !element.SelectsOutsideEditing)
+		// selection that only applies while editing is a transient tap outside edit mode,
+		// regardless of how long a bound selection keeps its highlight
+		if (element.SelectsOnlyWhileEditing)
+			collectionView.DeselectItem(indexPath, false);
+		else if (!element.RetainsHighlight && !element.SelectsOutsideEditing)
 			collectionView.DeselectItem(indexPath, true);
 
 		element.Select(indexPath.Section, indexPath.Row);
@@ -3040,12 +3057,14 @@ internal sealed class SkeleCell(
 
 	Brush? highlight;
 	bool retainsHighlight = true;
+	bool selectsOnlyWhileEditing;
 	double automaticMinimumHeight;
 
 	public void Attach(
 		ICollectionItemView item,
 		bool fixedSize,
 		bool selects,
+		bool selectsOnlyWhileEditing,
 		bool reorders,
 		bool selectionCheckmark)
 	{
@@ -3054,6 +3073,7 @@ internal sealed class SkeleCell(
 		highlight = item.HighlightBackground;
 		this.fixedSize = fixedSize;
 		this.selects = selects;
+		this.selectsOnlyWhileEditing = selectsOnlyWhileEditing;
 		this.reorders = reorders;
 		this.selectionCheckmark = selectionCheckmark;
 		selected = Selected;
@@ -3105,7 +3125,12 @@ internal sealed class SkeleCell(
 		}
 
 		if (reorders)
-			accessories.Add(new UICellAccessoryReorder());
+		{
+			accessories.Add(new UICellAccessoryReorder
+			{
+				DisplayedState = UICellAccessoryDisplayedState.WhenEditing
+			});
+		}
 
 		Accessories = [.. accessories];
 		SetNeedsLayout();
@@ -3201,6 +3226,9 @@ internal sealed class SkeleCell(
 			return;
 
 		bool wantsLit = state.Highlighted || state.Selected && (retainsHighlight || state.Editing);
+		if (selectsOnlyWhileEditing && !state.Editing)
+			wantsLit = false;
+
 		if (wantsLit == lit && Hosted is not null)
 			return;
 
