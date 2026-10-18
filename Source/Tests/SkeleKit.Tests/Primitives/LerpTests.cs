@@ -88,6 +88,19 @@ public class LerpTests
 	}
 
 	[Fact]
+	public void Brush_Lerp_RefusesMismatchedGradientUnits()
+	{
+		LinearGradient points = new()
+		{
+			Units = GradientUnits.Points,
+			Stops = [new(new(0, 0, 0), 0), new(new(1, 1, 1), 1)]
+		};
+		LinearGradient relative = LinearGradient.Vertical(new(0, 0, 0), new(1, 1, 1));
+
+		Assert.Null(Brush.Lerp(points, relative, 0.5));
+	}
+
+	[Fact]
 	public void Brush_Lerp_RefusesMismatchedShapes()
 	{
 		LinearGradient two = LinearGradient.Vertical(new(0, 0, 0), new(1, 1, 1));

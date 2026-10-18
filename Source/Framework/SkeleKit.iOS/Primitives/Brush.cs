@@ -17,7 +17,8 @@ public abstract class Brush
 			return Color.Lerp(solidA.Color, solidB.Color, t) is Color color ? new SolidBrush(color) : null;
 
 		if (a is not LinearGradient gradientA || b is not LinearGradient gradientB
-			|| gradientA.Stops.Count != gradientB.Stops.Count)
+			|| gradientA.Stops.Count != gradientB.Stops.Count
+			|| gradientA.Units != gradientB.Units)
 			return null;
 
 		Color? underlay;
@@ -53,6 +54,7 @@ public abstract class Brush
 
 		return new LinearGradient
 		{
+			Units = gradientA.Units,
 			Underlay = underlay,
 			Stops = stops,
 			Start = new(
@@ -113,7 +115,23 @@ public readonly record struct GradientStop(
 	double Offset);
 
 /// <summary>
-/// A linear gradient between two points, given in unit space: (0,0) is the top-left corner, (1,1) the bottom-right.
+/// How a gradient's <see cref="LinearGradient.Start"/> and <see cref="LinearGradient.End"/> points are interpreted.
+/// </summary>
+public enum GradientUnits
+{
+	/// <summary>
+	/// Fractions of the view's size: (0,0) is the top-left corner and (1,1) the bottom-right.
+	/// </summary>
+	Relative,
+
+	/// <summary>
+	/// UIKit points from the view's top-left origin.
+	/// </summary>
+	Points
+}
+
+/// <summary>
+/// A linear gradient between two points, interpreted according to <see cref="Units"/>.
 /// </summary>
 public sealed class LinearGradient : Brush
 {
@@ -135,12 +153,17 @@ public sealed class LinearGradient : Brush
 	public IList<GradientStop> Stops { get; init; } = [];
 
 	/// <summary>
-	/// Where the gradient starts, in unit space. Top-center by default.
+	/// How <see cref="Start"/> and <see cref="End"/> are interpreted. Stop offsets stay relative to the axis.
+	/// </summary>
+	public GradientUnits Units { get; init; } = GradientUnits.Relative;
+
+	/// <summary>
+	/// Where the gradient starts, in the units set by <see cref="Units"/>. Top-center by default.
 	/// </summary>
 	public Point Start { get; init; } = new(0.5, 0);
 
 	/// <summary>
-	/// Where the gradient ends, in unit space. Bottom-center by default.
+	/// Where the gradient ends, in the units set by <see cref="Units"/>. Bottom-center by default.
 	/// </summary>
 	public Point End { get; init; } = new(0.5, 1);
 
@@ -178,6 +201,7 @@ public sealed class LinearGradient : Brush
 	public override bool Equals(
 		object? obj) =>
 		obj is LinearGradient other
+		&& Units == other.Units
 		&& Start.Equals(other.Start)
 		&& End.Equals(other.End)
 		&& Underlay.Equals(other.Underlay)
@@ -187,6 +211,7 @@ public sealed class LinearGradient : Brush
 	{
 		HashCode hash = new();
 
+		hash.Add(Units);
 		hash.Add(Start);
 		hash.Add(End);
 		hash.Add(Underlay);

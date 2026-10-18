@@ -271,18 +271,36 @@ public abstract partial class View
 		}
 	}
 
-	void SyncGradientFrame()
+	void SyncGradientFrame(
+		LinearGradient? gradient = null)
 	{
 		if (gradientLayer is null || native is null)
+			return;
+
+		gradient ??= EffectiveBackground as LinearGradient;
+
+		if (gradient is null)
 			return;
 
 		CATransaction.Begin();
 		CATransaction.DisableActions = true;
 
 		gradientLayer.Frame = native.Bounds;
+		gradientLayer.StartPoint = ToGradientPoint(gradient, gradient.Start, native.Bounds.Size);
+		gradientLayer.EndPoint = ToGradientPoint(gradient, gradient.End, native.Bounds.Size);
 
 		CATransaction.Commit();
 	}
+
+	static CGPoint ToGradientPoint(
+		LinearGradient gradient,
+		Point point,
+		CGSize size) =>
+		gradient.Units is GradientUnits.Points
+			? new(
+				size.Width > 0 ? point.X / size.Width : 0,
+				size.Height > 0 ? point.Y / size.Height : 0)
+			: new(point.X, point.Y);
 
 	void SyncCornerGeometry()
 	{
@@ -466,10 +484,8 @@ public abstract partial class View
 
 		gradientLayer.Colors = colors;
 		gradientLayer.Locations = locations;
-		gradientLayer.StartPoint = new(gradient.Start.X, gradient.Start.Y);
-		gradientLayer.EndPoint = new(gradient.End.X, gradient.End.Y);
 
-		SyncGradientFrame();
+		SyncGradientFrame(gradient);
 	}
 
 	void ApplyMaterial(
