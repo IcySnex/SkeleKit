@@ -79,5 +79,9 @@ public class BrushTests
 		Assert.NotEqual(
 			LinearGradient.Vertical(Colors.Black, Colors.White),
 			LinearGradient.Vertical(Colors.White, Colors.Black));
+
+		Assert.NotEqual(
+			new LinearGradient { Underlay = Colors.Red },
+			new LinearGradient { Underlay = Colors.Blue });
 	}
 }

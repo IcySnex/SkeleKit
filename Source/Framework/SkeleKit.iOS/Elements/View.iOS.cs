@@ -388,7 +388,7 @@ public abstract partial class View
 				DropMaterial();
 				RequirePanel("A gradient");
 
-				native.BackgroundColor = UIColor.Clear;
+				native.BackgroundColor = gradient.Underlay?.ToUIColor() ?? UIColor.Clear;
 				ApplyGradient(gradient);
 				break;
 

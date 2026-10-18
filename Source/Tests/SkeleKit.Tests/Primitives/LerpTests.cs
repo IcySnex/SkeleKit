@@ -56,6 +56,38 @@ public class LerpTests
 	}
 
 	[Fact]
+	public void Brush_Lerp_MixesGradientUnderlays()
+	{
+		LinearGradient a = new()
+		{
+			Stops = [new(new(0, 0, 0), 0), new(new(1, 1, 1), 1)],
+			Underlay = new(0, 0, 0)
+		};
+		LinearGradient b = new()
+		{
+			Stops = [new(new(1, 1, 1), 0), new(new(0, 0, 0), 1)],
+			Underlay = new(1, 1, 1)
+		};
+
+		LinearGradient mixed = (LinearGradient)Brush.Lerp(a, b, 0.5)!;
+
+		Assert.Equal(0.5, mixed.Underlay!.Value.Red, 3);
+	}
+
+	[Fact]
+	public void Brush_Lerp_RefusesMismatchedUnderlays()
+	{
+		LinearGradient withUnderlay = new()
+		{
+			Stops = [new(new(0, 0, 0), 0), new(new(1, 1, 1), 1)],
+			Underlay = new(0, 0, 0)
+		};
+		LinearGradient withoutUnderlay = LinearGradient.Vertical(new(0, 0, 0), new(1, 1, 1));
+
+		Assert.Null(Brush.Lerp(withUnderlay, withoutUnderlay, 0.5));
+	}
+
+	[Fact]
 	public void Brush_Lerp_RefusesMismatchedShapes()
 	{
 		LinearGradient two = LinearGradient.Vertical(new(0, 0, 0), new(1, 1, 1));

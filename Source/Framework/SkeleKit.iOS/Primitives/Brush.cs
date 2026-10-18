@@ -20,6 +20,24 @@ public abstract class Brush
 			|| gradientA.Stops.Count != gradientB.Stops.Count)
 			return null;
 
+		Color? underlay;
+		if (gradientA.Underlay is Color fromUnderlay)
+		{
+			if (gradientB.Underlay is not Color toUnderlay)
+				return null;
+
+			underlay = fromUnderlay == toUnderlay
+				? fromUnderlay
+				: Color.Lerp(fromUnderlay, toUnderlay, t);
+
+			if (underlay is null)
+				return null;
+		}
+		else if (gradientB.Underlay is not null)
+			return null;
+		else
+			underlay = null;
+
 		List<GradientStop> stops = new(gradientA.Stops.Count);
 
 		for (int index = 0; index < gradientA.Stops.Count; index++)
@@ -35,6 +53,7 @@ public abstract class Brush
 
 		return new LinearGradient
 		{
+			Underlay = underlay,
 			Stops = stops,
 			Start = new(
 				gradientA.Start.X + (gradientB.Start.X - gradientA.Start.X) * t,
@@ -125,6 +144,11 @@ public sealed class LinearGradient : Brush
 	/// </summary>
 	public Point End { get; init; } = new(0.5, 1);
 
+	/// <summary>
+	/// A solid color painted beneath the gradient, visible through translucent stops.
+	/// </summary>
+	public Color? Underlay { get; init; }
+
 
 	/// <summary>
 	/// A top-to-bottom gradient through evenly spaced colors.
@@ -156,6 +180,7 @@ public sealed class LinearGradient : Brush
 		obj is LinearGradient other
 		&& Start.Equals(other.Start)
 		&& End.Equals(other.End)
+		&& Underlay.Equals(other.Underlay)
 		&& Stops.SequenceEqual(other.Stops);
 
 	public override int GetHashCode()
@@ -164,6 +189,7 @@ public sealed class LinearGradient : Brush
 
 		hash.Add(Start);
 		hash.Add(End);
+		hash.Add(Underlay);
 
 		foreach (GradientStop stop in Stops)
 			hash.Add(stop);
