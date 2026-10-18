@@ -41,6 +41,23 @@ public class ToolbarBindingTests
 	}
 
 	[Fact]
+	public void IsEnabled_Binding_TracksSourceChanges()
+	{
+		MovieViewModel source = new() { Enabled = true };
+		ToolbarButton item = new()
+		{
+			IsEnabled = BindingFactory.Bind((MovieViewModel vm) => vm.Enabled)
+		};
+		item.AttachBindings(source);
+
+		Assert.True(item.IsEnabled.Value);
+
+		source.Enabled = false;
+
+		Assert.False(item.IsEnabled.Value);
+	}
+
+	[Fact]
 	public void Tint_Binding_TracksThemeChanges()
 	{
 		Theme theme = new() { Tint = Colors.Indigo };

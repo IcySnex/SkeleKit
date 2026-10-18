@@ -213,6 +213,23 @@ public abstract class ToolbarAction : ToolbarItem
 	internal bool IsPrimaryValue => isPrimary;
 
 	/// <summary>
+	/// Whether the action can be tapped.
+	/// </summary>
+	/// <remarks>
+	/// A button with a <see cref="ToolbarButton.Command"/> is also enabled only while its
+	/// command's <c>CanExecute</c> returns true.
+	/// </remarks>
+	public Bindable<bool> IsEnabled
+	{
+		get => isEnabled;
+		set => isEnabledBinding = Register(isEnabledBinding, value, value => Set(ref isEnabled, value));
+	}
+	bool isEnabled = true;
+	Binding<bool>? isEnabledBinding;
+
+	internal bool IsEnabledValue => isEnabled;
+
+	/// <summary>
 	/// How long the item remains visible when the bar has limited space.
 	/// </summary>
 	/// <remarks>
@@ -255,7 +272,22 @@ public sealed class ToolbarButton : ToolbarAction
 	/// <summary>
 	/// Invoked when the item is tapped; its CanExecute drives the enabled state.
 	/// </summary>
-	public ICommand? Command { get; set; }
+	/// <remarks>
+	/// Changes to the command's <c>CanExecuteChanged</c> update the toolbar item live.
+	/// </remarks>
+	public ICommand? Command
+	{
+		get => command;
+		set
+		{
+			if (ReferenceEquals(command, value))
+				return;
+
+			command = value;
+			OnChanged();
+		}
+	}
+	ICommand? command;
 
 	/// <summary>
 	/// The parameter passed to <see cref="Command"/>.

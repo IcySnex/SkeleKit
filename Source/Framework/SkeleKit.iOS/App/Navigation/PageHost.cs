@@ -179,6 +179,7 @@ internal sealed class PageHost : UIViewController
 	// ReSharper disable once CollectionNeverQueried.Local
 	readonly List<UIAction> menuActions = [];
 	readonly List<ToolbarItem> observedItems = [];
+	readonly List<ICommand> observedToolbarCommands = [];
 	readonly Dictionary<UIBarButtonItem, ToolbarAction> nativeToolbarItems = [];
 	// natives persist across applies so adding or removing an item fades instead of rebuilding the bar
 	readonly Dictionary<ToolbarAction, UIBarButtonItem> toolbarNatives = [];
@@ -905,7 +906,8 @@ internal sealed class PageHost : UIViewController
 						command.Execute(item.CommandParameter);
 				}));
 
-		native.Enabled = item.Command?.CanExecute(item.CommandParameter) ?? true;
+		native.Enabled = item.IsEnabledValue
+			&& (item.Command?.CanExecute(item.CommandParameter) ?? true);
 		ApplyAction(native, item);
 
 		return native;
@@ -984,6 +986,7 @@ internal sealed class PageHost : UIViewController
 				: new(item.TextValue ?? "", menu));
 
 		native.Menu = menu;
+		native.Enabled = item.IsEnabledValue;
 		ApplyAction(native, item);
 
 		return native;
@@ -1255,6 +1258,7 @@ internal sealed class PageHost : UIViewController
 			item.Changed -= OnToolbarItemChanged;
 
 		observedItems.Clear();
+		DetachToolbarCommands();
 
 		foreach (ToolbarItem entry in page.ToolbarItems.Concat(page.BottomToolbarItems))
 			Observe(entry);
@@ -1271,6 +1275,13 @@ internal sealed class PageHost : UIViewController
 			item.Changed += OnToolbarItemChanged;
 			observedItems.Add(item);
 
+			if (item is ToolbarButton { Command: ICommand command }
+				&& !observedToolbarCommands.Contains(command))
+			{
+				observedToolbarCommands.Add(command);
+				command.CanExecuteChanged += OnToolbarCommandCanExecuteChanged;
+			}
+
 			if (item is ToolbarGroup group)
 			{
 				foreach (ToolbarAction action in group.Items)
@@ -1279,9 +1290,36 @@ internal sealed class PageHost : UIViewController
 		}
 	}
 
-	static void DetachToolbarBindings(
+	void DetachToolbarCommands()
+	{
+		foreach (ICommand command in observedToolbarCommands)
+			command.CanExecuteChanged -= OnToolbarCommandCanExecuteChanged;
+
+		observedToolbarCommands.Clear();
+	}
+
+	void OnToolbarCommandCanExecuteChanged(
+		object? sender,
+		EventArgs e) =>
+		MainThread.Post(ApplyToolbarCommandStates);
+
+	void ApplyToolbarCommandStates()
+	{
+		foreach ((UIBarButtonItem native, ToolbarAction item) in nativeToolbarItems)
+		{
+			if (item is ToolbarButton button)
+			{
+				native.Enabled = button.IsEnabledValue
+					&& (button.Command?.CanExecute(button.CommandParameter) ?? true);
+			}
+		}
+	}
+
+	void DetachToolbarBindings(
 		ContentView page)
 	{
+		DetachToolbarCommands();
+
 		foreach (ToolbarItem entry in page.ToolbarItems.Concat(page.BottomToolbarItems))
 		{
 			entry.DetachBindings();
