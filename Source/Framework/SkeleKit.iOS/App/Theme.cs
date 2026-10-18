@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 namespace SkeleKit;
 
 internal enum ThemeField
@@ -12,14 +15,24 @@ internal enum ThemeField
 /// <summary>
 /// The app-wide theme inherited by windows, chrome and pages unless a view overrides it.
 /// </summary>
-public sealed class Theme
+public sealed class Theme : INotifyPropertyChanged
 {
 	internal event Action<ThemeField>? Changed;
 
+	/// <summary>
+	/// Raised when a theme property changes, so bindings can follow live theme updates.
+	/// </summary>
+	public event PropertyChangedEventHandler? PropertyChanged;
+
 
 	/// <summary>
-	/// The app-wide tint inherited by windows, chrome and views, or null for the system default.
+	/// The app-wide tint inherited by windows, controls, and prominent bar actions, or null
+	/// for the system default.
 	/// </summary>
+	/// <remarks>
+	/// On iOS 26 and later, non-prominent bar items use the system label color unless a page
+	/// or item sets a tint.
+	/// </remarks>
 	public Color? Tint
 	{
 		get;
@@ -76,12 +89,14 @@ public sealed class Theme
 	void Set<T>(
 		ref T field,
 		T value,
-		ThemeField changed)
+		ThemeField changed,
+		[CallerMemberName] string? propertyName = null)
 	{
 		if (EqualityComparer<T>.Default.Equals(field, value))
 			return;
 
 		field = value;
 		Changed?.Invoke(changed);
+		PropertyChanged?.Invoke(this, new(propertyName));
 	}
 }

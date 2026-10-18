@@ -266,12 +266,13 @@ internal abstract class ShowcaseView<TViewModel> : TintView<TViewModel>
 	}
 
 	void UpdateAppearanceItem() =>
-		appearanceItem.Icon = SkeleApplication.Current?.Theme.Appearance switch
-		{
-			Appearance.Dark => "moon.fill",
-			Appearance.Light => "sun.max.fill",
-			_ => "circle.lefthalf.filled"
-		};
+		appearanceItem.Icon = ImageSource.Symbol(
+			SkeleApplication.Current?.Theme.Appearance switch
+			{
+				Appearance.Dark => "moon.fill",
+				Appearance.Light => "sun.max.fill",
+				_ => "circle.lefthalf.filled"
+			});
 
 	static Label SettingLabel(
 		string title) =>

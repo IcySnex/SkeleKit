@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Windows.Input;
 
 namespace SkeleKit;
@@ -24,9 +25,14 @@ public enum ToolbarSide
 /// </summary>
 /// <remarks>
 /// Use <see cref="ToolbarButton"/>, <see cref="ToolbarMenu"/>, or <see cref="ToolbarGroup"/>.
+/// Bindable presentation properties accept literal values or <c>Bind(...)</c> expressions.
 /// </remarks>
 public abstract class ToolbarItem
 {
+	readonly List<BindingBase> bindings = [];
+	object? bindingContext;
+	bool bindingsAttached;
+
 	internal ToolbarItem()
 	{
 	}
@@ -37,15 +43,15 @@ public abstract class ToolbarItem
 	/// <remarks>
 	/// Contextual actions toggle it live, like a Delete that only exists in edit mode.
 	/// </remarks>
-	public bool IsVisible
+	public Bindable<bool> IsVisible
 	{
-		get;
-		set
-		{
-			field = value;
-			OnChanged();
-		}
-	} = true;
+		get => isVisible;
+		set => isVisibleBinding = Register(isVisibleBinding, value, value => Set(ref isVisible, value));
+	}
+	bool isVisible = true;
+	Binding<bool>? isVisibleBinding;
+
+	internal bool IsVisibleValue => isVisible;
 
 	internal event Action<ToolbarItem>? Changed;
 
@@ -60,6 +66,99 @@ public abstract class ToolbarItem
 	/// <see cref="ToolbarGroup"/>.
 	/// </remarks>
 	public ToolbarSide Side { get; set; } = ToolbarSide.Trailing;
+
+
+	internal void AttachBindings(
+		object? context)
+	{
+		if (bindingsAttached && ReferenceEquals(bindingContext, context))
+			return;
+
+		bindingContext = context;
+
+		foreach (BindingBase binding in bindings)
+			binding.Attach(context);
+
+		bindingsAttached = true;
+		OnBindingsAttached();
+	}
+
+	internal void DetachBindings()
+	{
+		OnBindingsDetached();
+		bindingsAttached = false;
+		bindingContext = null;
+
+		foreach (BindingBase binding in bindings)
+			binding.Detach();
+	}
+
+	private protected virtual void OnBindingsAttached()
+	{
+	}
+
+	private protected virtual void OnBindingsDetached()
+	{
+	}
+
+	private protected Binding<T>? Register<T>(
+		Binding<T>? existing,
+		Bindable<T> value,
+		Action<T?> apply)
+	{
+		if (existing is not null)
+		{
+			existing.Detach();
+			bindings.Remove(existing);
+		}
+
+		if (value.Expression is null)
+		{
+			apply(value.Value);
+			return null;
+		}
+
+		Binding<T> binding = new(value.Expression, apply);
+		bindings.Add(binding);
+		binding.Attach(bindingContext);
+
+		return binding;
+	}
+
+	private protected Binding<IReadOnlyList<T>?>? Register<T>(
+		Binding<IReadOnlyList<T>?>? existing,
+		BindableList<T> value,
+		Action<IReadOnlyList<T>?> apply)
+	{
+		if (existing is not null)
+		{
+			existing.Detach();
+			bindings.Remove(existing);
+		}
+
+		if (value.Expression is null)
+		{
+			apply(value.Value);
+			return null;
+		}
+
+		Binding<IReadOnlyList<T>?> binding = new(value.Expression, apply);
+		bindings.Add(binding);
+		binding.Attach(bindingContext);
+
+		return binding;
+	}
+
+	private protected void Set<T>(
+		ref T field,
+		T value)
+	{
+		if (EqualityComparer<T>.Default.Equals(field, value))
+			return;
+
+		field = value;
+		OnChanged();
+	}
 }
 
 /// <summary>
@@ -74,28 +173,28 @@ public abstract class ToolbarAction : ToolbarItem
 	/// <summary>
 	/// The item's text, or null when it shows only an icon.
 	/// </summary>
-	public string? Text
+	public Bindable<string?> Text
 	{
-		get;
-		set
-		{
-			field = value;
-			OnChanged();
-		}
+		get => text;
+		set => textBinding = Register(textBinding, value, value => Set(ref text, value));
 	}
+	string? text;
+	Binding<string?>? textBinding;
+
+	internal string? TextValue => text;
 
 	/// <summary>
 	/// The local icon, or null for a text-only item.
 	/// </summary>
-	public ImageSource? Icon
+	public Bindable<ImageSource?> Icon
 	{
-		get;
-		set
-		{
-			field = value;
-			OnChanged();
-		}
+		get => icon;
+		set => iconBinding = Register(iconBinding, value, value => Set(ref icon, value));
 	}
+	ImageSource? icon;
+	Binding<ImageSource?>? iconBinding;
+
+	internal ImageSource? IconValue => icon;
 
 	/// <summary>
 	/// Whether the item is rendered as the prominent action.
@@ -103,15 +202,15 @@ public abstract class ToolbarAction : ToolbarItem
 	/// <remarks>
 	/// A prominent item does not share its Liquid Glass background with other items.
 	/// </remarks>
-	public bool IsPrimary
+	public Bindable<bool> IsPrimary
 	{
-		get;
-		set
-		{
-			field = value;
-			OnChanged();
-		}
+		get => isPrimary;
+		set => isPrimaryBinding = Register(isPrimaryBinding, value, value => Set(ref isPrimary, value));
 	}
+	bool isPrimary;
+	Binding<bool>? isPrimaryBinding;
+
+	internal bool IsPrimaryValue => isPrimary;
 
 	/// <summary>
 	/// How long the item remains visible when the bar has limited space.
@@ -130,17 +229,22 @@ public abstract class ToolbarAction : ToolbarItem
 	} = ToolbarVisibilityPriority.Standard;
 
 	/// <summary>
-	/// The item's tint, or null to follow the page or app tint.
+	/// The item's tint, or null for the automatic bar tint.
 	/// </summary>
-	public Color? Tint
+	/// <remarks>
+	/// The automatic tint uses the page's <see cref="ContentView.BarTint"/> when set.
+	/// Otherwise it uses the app tint on earlier iOS versions, or the system label color
+	/// for non-prominent items on iOS 26 and later.
+	/// </remarks>
+	public Bindable<Color?> Tint
 	{
-		get;
-		set
-		{
-			field = value;
-			OnChanged();
-		}
+		get => tint;
+		set => tintBinding = Register(tintBinding, value, value => Set(ref tint, value));
 	}
+	Color? tint;
+	Binding<Color?>? tintBinding;
+
+	internal Color? TintValue => tint;
 }
 
 /// <summary>
@@ -164,17 +268,79 @@ public sealed class ToolbarButton : ToolbarAction
 /// </summary>
 public sealed class ToolbarMenu : ToolbarAction
 {
-	readonly ObservableCollection<MenuAction> actions = [];
+	IReadOnlyList<MenuAction> actions = [];
+	Binding<IReadOnlyList<MenuAction>?>? actionsBinding;
+	bool actionsHooked;
 
 	public ToolbarMenu()
 	{
-		actions.CollectionChanged += (_, _) => OnChanged();
+	}
+
+	public ToolbarMenu(
+		params MenuAction[] actions)
+	{
+		Actions = actions;
 	}
 
 	/// <summary>
 	/// Menu entries shown on tap.
 	/// </summary>
-	public IList<MenuAction> Actions => actions;
+	/// <remarks>
+	/// Accepts a literal list, an observable collection, or a <c>Bind(...)</c> list source.
+	/// </remarks>
+	public BindableList<MenuAction> Actions
+	{
+		get => new(actions);
+		set => actionsBinding = Register(actionsBinding, value, SetActions);
+	}
+
+	internal IReadOnlyList<MenuAction> ActionsValue => actions;
+
+
+	void SetActions(
+		IReadOnlyList<MenuAction>? value)
+	{
+		IReadOnlyList<MenuAction> next = value ?? [];
+		if (ReferenceEquals(actions, next))
+			return;
+
+		if (actionsHooked && actions is INotifyCollectionChanged old)
+			old.CollectionChanged -= OnActionsChanged;
+
+		actions = next;
+
+		if (actionsHooked && actions is INotifyCollectionChanged live)
+			live.CollectionChanged += OnActionsChanged;
+
+		OnChanged();
+	}
+
+	void OnActionsChanged(
+		object? sender,
+		NotifyCollectionChangedEventArgs args) =>
+		OnChanged();
+
+	private protected override void OnBindingsAttached()
+	{
+		if (actionsHooked)
+			return;
+
+		actionsHooked = true;
+
+		if (actions is INotifyCollectionChanged live)
+			live.CollectionChanged += OnActionsChanged;
+	}
+
+	private protected override void OnBindingsDetached()
+	{
+		if (!actionsHooked)
+			return;
+
+		actionsHooked = false;
+
+		if (actions is INotifyCollectionChanged live)
+			live.CollectionChanged -= OnActionsChanged;
+	}
 }
 
 /// <summary>
@@ -191,13 +357,6 @@ public sealed class ToolbarGroup : ToolbarItem
 	public ToolbarGroup()
 	{
 		items.CollectionChanged += (_, _) => OnChanged();
-	}
-
-	public ToolbarGroup(
-		params ToolbarAction[] items) : this()
-	{
-		foreach (ToolbarAction item in items)
-			Items.Add(item);
 	}
 
 	/// <summary>

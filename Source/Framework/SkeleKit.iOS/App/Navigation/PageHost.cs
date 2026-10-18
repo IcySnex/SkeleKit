@@ -866,6 +866,7 @@ internal sealed class PageHost : UIViewController
 		if (ReferenceEquals(fresh, old))
 			return;
 
+		DetachToolbarBindings(old);
 		old.Unrealize();
 		old.Host = null;
 
@@ -895,8 +896,8 @@ internal sealed class PageHost : UIViewController
 	{
 		UIBarButtonItem native = toolbarNatives.GetValueOrDefault(item)
 			?? new(UIAction.Create(
-				item.Text ?? "",
-				item.Icon?.ResolveLocal(),
+				item.TextValue ?? "",
+				item.IconValue?.ResolveLocal(),
 				null,
 				_ =>
 				{
@@ -910,19 +911,32 @@ internal sealed class PageHost : UIViewController
 		return native;
 	}
 
-	static UIColor? EffectiveBarTint(
+	static UIColor? ResolveBarTint(
 		ContentView? page,
-		ToolbarAction? item = null) =>
-		(item?.Tint ?? page?.BarTintValue ?? SkeleApplication.Current?.Theme.Tint)?.ToUIColor();
+		ToolbarAction? item = null)
+	{
+		if (item?.TintValue is { } itemTint)
+			return itemTint.ToUIColor();
+
+		if (page?.BarTintValue is { } pageTint)
+			return pageTint.ToUIColor();
+
+		// Liquid Glass toolbars default to a monochrome label color; accent is reserved
+		// for prominent actions. Earlier versions keep the app tint.
+		if (OperatingSystem.IsIOSVersionAtLeast(26) && item?.IsPrimaryValue is not true)
+			return UIColor.Label;
+
+		return SkeleApplication.Current?.Theme.Tint?.ToUIColor();
+	}
 
 	UIMenu BuildMenu(
 		ToolbarMenu item)
 	{
-		UIAction[] entries = new UIAction[item.Actions.Count];
+		UIAction[] entries = new UIAction[item.ActionsValue.Count];
 
-		for (int index = 0; index < item.Actions.Count; index++)
+		for (int index = 0; index < item.ActionsValue.Count; index++)
 		{
-			MenuAction entry = item.Actions[index];
+			MenuAction entry = item.ActionsValue[index];
 
 			entries[index] = UIAction.Create(
 				entry.Text,
@@ -965,9 +979,9 @@ internal sealed class PageHost : UIViewController
 		UIMenu menu = BuildMenu(item);
 
 		UIBarButtonItem native = toolbarNatives.GetValueOrDefault(item)
-			?? (item.Icon is ImageSource icon
+			?? (item.IconValue is ImageSource icon
 				? new(icon.ResolveLocal(), menu)
-				: new(item.Text ?? "", menu));
+				: new(item.TextValue ?? "", menu));
 
 		native.Menu = menu;
 		ApplyAction(native, item);
@@ -979,13 +993,13 @@ internal sealed class PageHost : UIViewController
 		UIBarButtonItem native,
 		ToolbarAction item)
 	{
-		if (item.IsPrimary)
+		if (item.IsPrimaryValue)
 			native.Style = UIBarButtonItemStyle.Done;
 
 		ApplyVisibilityPriority(native, item);
 		toolbarNatives[item] = native;
 		nativeToolbarItems[native] = item;
-		native.TintColor = EffectiveBarTint(Page, item);
+		native.TintColor = ResolveBarTint(Page, item);
 	}
 
 	void ApplyChrome(
@@ -1159,7 +1173,7 @@ internal sealed class PageHost : UIViewController
 		ContentView page)
 	{
 		if (NavigationController?.NavigationBar is UINavigationBar bar)
-			bar.TintColor = EffectiveBarTint(page);
+			bar.TintColor = ResolveBarTint(page);
 	}
 
 	internal void ApplyBindableChrome(
@@ -1252,6 +1266,8 @@ internal sealed class PageHost : UIViewController
 		void Observe(
 			ToolbarItem item)
 		{
+			item.AttachBindings(page.BindingContext);
+
 			item.Changed += OnToolbarItemChanged;
 			observedItems.Add(item);
 
@@ -1259,6 +1275,21 @@ internal sealed class PageHost : UIViewController
 			{
 				foreach (ToolbarAction action in group.Items)
 					Observe(action);
+			}
+		}
+	}
+
+	static void DetachToolbarBindings(
+		ContentView page)
+	{
+		foreach (ToolbarItem entry in page.ToolbarItems.Concat(page.BottomToolbarItems))
+		{
+			entry.DetachBindings();
+
+			if (entry is ToolbarGroup group)
+			{
+				foreach (ToolbarAction action in group.Items)
+					action.DetachBindings();
 			}
 		}
 	}
@@ -1291,18 +1322,18 @@ internal sealed class PageHost : UIViewController
 	{
 		List<UIBarButtonItem> items = [];
 
-		if (!entry.IsVisible)
+		if (!entry.IsVisibleValue)
 			return items;
 
 		if (entry is ToolbarGroup group)
 		{
 			foreach (ToolbarAction action in group.Items)
 			{
-				if (action.IsVisible)
+				if (action.IsVisibleValue)
 					items.Add(Bar(action));
 			}
 		}
-		else if (entry is ToolbarAction action && action.IsVisible)
+		else if (entry is ToolbarAction action && action.IsVisibleValue)
 			items.Add(Bar(action));
 
 		return items;
@@ -1398,12 +1429,12 @@ internal sealed class PageHost : UIViewController
 		ContentView page)
 	{
 		foreach ((UIBarButtonItem native, ToolbarAction item) in nativeToolbarItems)
-			native.TintColor = EffectiveBarTint(page, item);
+			native.TintColor = ResolveBarTint(page, item);
 
 		if (NavigationController?.Toolbar is not UIToolbar toolbar)
 			return;
 
-		toolbar.TintColor = EffectiveBarTint(page);
+		toolbar.TintColor = ResolveBarTint(page);
 
 		toolbar.SetNeedsLayout();
 		toolbar.LayoutIfNeeded();
@@ -1927,6 +1958,9 @@ internal sealed class PageHost : UIViewController
 		Page?.NotifyDisappeared();
 		if (!ReferenceEquals(NavigationController?.TopViewController, this))
 			SetNavigationAccessoryActive(false);
+
+		if (Page is ContentView page)
+			DetachToolbarBindings(page);
 
 		if (IsMovingFromParentViewController)
 			Page?.Unrealize();

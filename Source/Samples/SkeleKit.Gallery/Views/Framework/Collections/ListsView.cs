@@ -15,7 +15,7 @@ internal sealed class ListsView : ShowcaseView<ListsViewModel>
 		{
 			Icon = ImageSource.Symbol("ellipsis.circle"),
 			Actions =
-			{
+			[
 				new MenuAction
 				{
 					Text = "Add item",
@@ -26,7 +26,7 @@ internal sealed class ListsView : ShowcaseView<ListsViewModel>
 					Text = "Remove first item",
 					Command = viewModel.RemoveCommand
 				}
-			}
+			]
 		});
 
 		Content = new CollectionView<ListEntry>

@@ -255,8 +255,13 @@ public abstract partial class ContentView : ContentHost
 	Binding<StatusBarStyle>? statusBarBinding;
 
 	/// <summary>
-	/// The tint for this page's bar buttons and back button, or null for the app tint.
+	/// The tint for this page's bar buttons and back button, or null for the automatic bar tint.
 	/// </summary>
+	/// <remarks>
+	/// Setting this overrides the tint for the whole bar. When it is null, non-prominent items
+	/// use the system label color on iOS 26 and later, while prominent items use the app tint.
+	/// Earlier versions use the app tint for all items.
+	/// </remarks>
 	public Bindable<Color?> BarTint
 	{
 		get => barTint;

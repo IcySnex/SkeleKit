@@ -15,6 +15,7 @@ internal sealed class NavigationSheetView : ContentView<NavigationSheetViewModel
 		ToolbarItems.Add(new ToolbarButton
 		{
 			Text = "Done",
+			IsPrimary = true,
 			Command = viewModel.DismissCommand
 		});
 

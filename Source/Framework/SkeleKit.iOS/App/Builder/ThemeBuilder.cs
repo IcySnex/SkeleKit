@@ -9,8 +9,12 @@ public sealed class ThemeBuilder
 
 
 	/// <summary>
-	/// Sets the app-wide tint inherited by windows, chrome and views.
+	/// Sets the app-wide tint inherited by windows, controls, and prominent bar actions.
 	/// </summary>
+	/// <remarks>
+	/// On iOS 26 and later, non-prominent bar items use the system label color unless a page
+	/// or item sets a tint.
+	/// </remarks>
 	/// <param name="tint">The tint color, or null for the system default.</param>
 	/// <returns>The builder instance for chaining calls.</returns>
 	public ThemeBuilder Tint(
