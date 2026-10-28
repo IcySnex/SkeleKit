@@ -69,9 +69,6 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 		? sections is IVirtualizedList<TSection>
 		: itemsSource is IVirtualizedList<TItem>;
 
-	// a source whose section type cannot expand never needs the section model for this question
-	static readonly bool SectionsCanExpand = typeof(IExpandableSection<TItem>).IsAssignableFrom(typeof(TSection));
-
 	internal bool UsesIndexedSource => indexedSourceMode ?? WantsIndexedSource;
 
 	bool? indexedSourceMode;
@@ -1007,8 +1004,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 
 	internal bool Expanded(
 		int section) =>
-		!SectionsCanExpand
-		|| SectionAt(section) is not IExpandableSection<TItem> expandable
+		SectionAt(section) is not IExpandableSection<TItem> expandable
 		|| expandable.IsExpanded;
 
 	internal void ToggleSection(
