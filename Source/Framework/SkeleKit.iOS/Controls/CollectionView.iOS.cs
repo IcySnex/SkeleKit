@@ -2314,6 +2314,11 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 	internal void SyncInsetGroupedBoundaryInsets()
 	{
+		// these insets only shape the collection-level header/footer. Recomputing them during
+		// a swipe would invalidate the layout from the translated first cell's frame.
+		if (Header is null && Footer is null)
+			return;
+
 		Thickness? header = ResolvedInsetGroupedInsets(0, insetGroupedHeaderInsets);
 		Thickness? footer = ResolvedInsetGroupedInsets(SectionCount - 1, insetGroupedFooterInsets);
 
