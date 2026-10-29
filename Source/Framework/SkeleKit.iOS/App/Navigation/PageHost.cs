@@ -1589,24 +1589,34 @@ internal sealed class PageHost : UIViewController
 		if (Page?.ConfirmLeave is null)
 		{
 			// the guard is gone: restore the back button's default pop
-			if (backAction is not null)
-			{
-				backAction = null;
-				NavigationItem.BackAction = null;
-			}
-
+			ClearBackGuard();
 			return;
 		}
 
-		// only a page with something beneath it has a back button to reroute; setting BackAction
+		// only a page that isn't the stack root has a back button to reroute; setting BackAction
 		// on a stack root makes UIKit synthesize a visible back button where none existed
-		if (backAction is not null
-			|| NavigationController is not UINavigationController leavable
-			|| leavable.ViewControllers is not { Length: > 1 })
+		if (NavigationController is not UINavigationController leavable
+			|| leavable.ViewControllers is not { Length: > 0 } controllers
+			|| Array.IndexOf(controllers, this) <= 0)
+		{
+			ClearBackGuard();
+			return;
+		}
+
+		if (backAction is not null)
 			return;
 
 		backAction = UIAction.Create("", null, null, _ => ConfirmBack());
 		NavigationItem.BackAction = backAction;
+	}
+
+	void ClearBackGuard()
+	{
+		if (backAction is null)
+			return;
+
+		backAction = null;
+		NavigationItem.BackAction = null;
 	}
 
 	void ApplySheetGuard()
