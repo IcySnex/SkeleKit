@@ -47,8 +47,8 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 
 	static readonly List<PageChromeNavigationMinimizeOption> NavigationMinimizeOptions =
 	[
-		new("Never", NavigationBarMinimize.Never, "NavigationBarMinimize.Never"),
 		new("Automatic", NavigationBarMinimize.Automatic, "NavigationBarMinimize.Automatic"),
+		new("Never", NavigationBarMinimize.Never, "NavigationBarMinimize.Never"),
 		new("On scroll down", NavigationBarMinimize.OnScrollDown, "NavigationBarMinimize.OnScrollDown"),
 		new("On scroll up", NavigationBarMinimize.OnScrollUp, "NavigationBarMinimize.OnScrollUp")
 	];
@@ -132,7 +132,7 @@ internal sealed partial class PageChromeViewModel : ShowcaseViewModel
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(PageCode))]
 	[NotifyPropertyChangedFor(nameof(AllowsNavigationMinimization))]
-	bool hasNavigationAccessory = true;
+	bool hasNavigationAccessory;
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(SearchCode))]

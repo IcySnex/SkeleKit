@@ -93,6 +93,10 @@ public abstract partial class ContentView : ContentHost
 	/// <summary>
 	/// Whether scrolling content passes under the navigation bar so the bar blurs over it.
 	/// </summary>
+	/// <remarks>
+	/// On iOS 27.1 and later, the primary scroll view's background also extends under a vertical
+	/// bar while its content remains inside the safe area.
+	/// </remarks>
 	public bool ScrollsUnderBars
 	{
 		get;
@@ -151,7 +155,8 @@ public abstract partial class ContentView : ContentHost
 	/// When the navigation bar minimizes as this page scrolls.
 	/// </summary>
 	/// <remarks>
-	/// iOS 27 and later. The default keeps the bar expanded. Ignored while <see cref="NavigationAccessory"/>
+	/// iOS 27 and later. The default follows the system, which keeps horizontal bars expanded
+	/// and lets vertical bars minimize on scroll. Ignored while <see cref="NavigationAccessory"/>
 	/// is set.
 	/// </remarks>
 	public NavigationBarMinimize NavigationBarMinimizeBehavior
@@ -165,7 +170,7 @@ public abstract partial class ContentView : ContentHost
 			field = value;
 			ApplyNavigationBarMinimizationCore();
 		}
-	} = NavigationBarMinimize.Never;
+	} = NavigationBarMinimize.Automatic;
 
 	internal NavigationBarMinimize EffectiveNavigationBarMinimizeBehavior =>
 		NavigationAccessory is null

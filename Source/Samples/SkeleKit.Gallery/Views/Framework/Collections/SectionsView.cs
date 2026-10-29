@@ -166,9 +166,7 @@ internal sealed class CollectionHeader : ItemView<CollectionSection>
 
 	protected override void OnItemChanged(
 		CollectionSection section) =>
-		container.Margin = section.Layout is CollectionLayoutKind.Carousel
-			? new(0, 8, 8, 5)
-			: new(0, 8, 0, 5);
+		container.Margin = new(0, 8, 0, 5);
 }
 
 internal sealed class CollectionFooter : ItemView<CollectionSection>

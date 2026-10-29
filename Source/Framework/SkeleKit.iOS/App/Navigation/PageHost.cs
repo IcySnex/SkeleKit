@@ -1,5 +1,6 @@
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using System.Windows.Input;
 using ObjCRuntime;
 
@@ -211,6 +212,13 @@ internal sealed class PageHost : UIViewController
 	UIScrollView? topScrollEdgeScrollView;
 	UIScrollEdgeEffectStyle? previousTopScrollEdgeStyle;
 	UIScrollEdgeEffectStyle? appliedTopScrollEdgeStyle;
+	bool topScrollEdgeHidden;
+	bool? previousTopScrollEdgeHidden;
+	bool verticalBarEdgeKnown;
+	UIVerticalBarEdge verticalBarEdge;
+	bool verticalNavigationBarKnown;
+	bool verticalNavigationBar;
+	View? barBleedView;
 	nfloat navigationAccessoryHeight;
 	nfloat navigationAccessoryBaseInset;
 	double navigationAccessoryScrollOffset;
@@ -645,15 +653,39 @@ internal sealed class PageHost : UIViewController
 		if (!OperatingSystem.IsIOSVersionAtLeast(26))
 			return;
 
+		// every edge-effect API below is iOS 26+, guarded by the return above
+#pragma warning disable CA1416
 		if (!ReferenceEquals(topScrollEdgeScrollView, scrollView))
 		{
 			RestoreTopScrollEdgeStyle();
 			topScrollEdgeScrollView = scrollView;
 			previousTopScrollEdgeStyle = scrollView?.TopEdgeEffect.Style;
+			previousTopScrollEdgeHidden = scrollView?.TopEdgeEffect.Hidden;
 		}
 
 		if (scrollView is null)
 			return;
+
+		// vertical bars deliberately have no scroll-edge effect. Forcing one leaves a blur
+		// strip that stops at the control bar instead of following the vertical chrome.
+		if (CurrentVerticalBarEdge() is not UIVerticalBarEdge.Unspecified && IsVerticalNavigationBar())
+		{
+			if (!topScrollEdgeHidden)
+			{
+				previousTopScrollEdgeHidden ??= scrollView.TopEdgeEffect.Hidden;
+				topScrollEdgeHidden = true;
+			}
+
+			scrollView.TopEdgeEffect.Hidden = true;
+			return;
+		}
+
+		if (topScrollEdgeHidden)
+		{
+			scrollView.TopEdgeEffect.Hidden = previousTopScrollEdgeHidden ?? false;
+			topScrollEdgeHidden = false;
+			previousTopScrollEdgeHidden = null;
+		}
 
 		ScrollEdgeStyle effective = page.TopScrollEdgeStyle
 			?? SkeleApplication.Current?.Theme.TopScrollEdgeStyle
@@ -670,20 +702,28 @@ internal sealed class PageHost : UIViewController
 		scrollView.TopEdgeEffect.Style = style;
 
 		ApplyNavigationAccessoryScrollEdgeInteraction(scrollView);
+#pragma warning restore CA1416
 	}
 
 	void RestoreTopScrollEdgeStyle()
 	{
 		if (OperatingSystem.IsIOSVersionAtLeast(26)
-			&& topScrollEdgeScrollView is UIScrollView scrollView
-			&& previousTopScrollEdgeStyle is UIScrollEdgeEffectStyle previous
-			&& appliedTopScrollEdgeStyle is UIScrollEdgeEffectStyle applied
-			&& scrollView.TopEdgeEffect.Style.Equals(applied))
-			scrollView.TopEdgeEffect.Style = previous;
+			&& topScrollEdgeScrollView is UIScrollView scrollView)
+		{
+			if (topScrollEdgeHidden)
+				scrollView.TopEdgeEffect.Hidden = previousTopScrollEdgeHidden ?? false;
+
+			if (previousTopScrollEdgeStyle is UIScrollEdgeEffectStyle previous
+				&& appliedTopScrollEdgeStyle is UIScrollEdgeEffectStyle applied
+				&& scrollView.TopEdgeEffect.Style.Equals(applied))
+				scrollView.TopEdgeEffect.Style = previous;
+		}
 
 		topScrollEdgeScrollView = null;
 		previousTopScrollEdgeStyle = null;
 		appliedTopScrollEdgeStyle = null;
+		topScrollEdgeHidden = false;
+		previousTopScrollEdgeHidden = null;
 	}
 
 	void ApplyNavigationAccessoryScrollEdgeInteraction(
@@ -1036,21 +1076,23 @@ internal sealed class PageHost : UIViewController
 		if (!OperatingSystem.IsIOSVersionAtLeast(27))
 			return;
 
-		// Only opt-in pages may carry a minimization configuration. Assigning one flips the bar
-		// into UIKit's minimization machinery even when it says Never, and on iOS 27 that stalls
-		// the tab sidebar morph: the title moves while the content's safe area follows a second
-		// late. Pages at their defaults must keep the system state they were born with.
-		if (page.NavigationAccessory is not null
-			|| (page.NavigationBarMinimizeBehavior is NavigationBarMinimize.Never
-				&& page.NavigationBarMinimizeSafeAreaAdjustment is NavigationBarMinimizeSafeArea.Automatic
-				&& page.NavigationBarMinimizeRestorationBehavior is NavigationBarMinimizeRestore.Automatic))
+		bool accessory = page.NavigationAccessory is not null;
+		bool defaults = page.NavigationBarMinimizeBehavior is NavigationBarMinimize.Automatic
+			&& page.NavigationBarMinimizeSafeAreaAdjustment is NavigationBarMinimizeSafeArea.Automatic
+			&& page.NavigationBarMinimizeRestorationBehavior is NavigationBarMinimizeRestore.Automatic;
+
+		// Assigning a configuration flips the bar into UIKit's minimization machinery even when
+		// it says Never, and on iOS 27 that stalls the tab sidebar morph. Pages at their defaults
+		// keep the system state they were born with; vertical bars already default to minimizing.
+		if (defaults && !accessory)
 		{
 			if (!hasCustomNavigationBarMinimization)
 				return;
 
+			// the binding does not accept null here. reset to the system-chosen configuration.
 			NavigationItem.NavigationBarMinimization = new()
 			{
-				MinimizationBehavior = UIBarMinimizationBehavior.Never,
+				MinimizationBehavior = UIBarMinimizationBehavior.Automatic,
 				SafeAreaAdjustment = UIBarMinimizationSafeAreaAdjustment.Automatic,
 				RestorationBehavior = UIBarMinimizationRestorationBehavior.Automatic
 			};
@@ -1943,6 +1985,135 @@ internal sealed class PageHost : UIViewController
 			View?.EffectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirection.RightToLeft);
 	}
 
+	UIVerticalBarEdge CurrentVerticalBarEdge()
+	{
+#pragma warning disable CA1416 // UIVerticalBarEdge only exists in the iOS 27.1 SDK
+		if (!OperatingSystem.IsIOSVersionAtLeast(27, 1) || View is not UIView view)
+			return UIVerticalBarEdge.Unspecified;
+
+		// the vertical-bar inset lives on the window for a trailing bar, so prefer the
+		// window's traits over the controller's.
+		UITraitCollection traits = view.Window?.TraitCollection ?? view.TraitCollection;
+		UIVerticalBarEdge preferred = traits.VerticalBarEdge;
+		if (preferred is UIVerticalBarEdge.Unspecified)
+			preferred = VerticalBarEdgeFromFrames(view);
+
+		// the trait reports the system's preferred edge even when no vertical bar is visible.
+		// a visible bar always contributes a horizontal safe-area inset; without one the page
+		// is still using its horizontal bar chrome.
+		UIEdgeInsets safe = view.SafeAreaInsets;
+		return preferred is not UIVerticalBarEdge.Unspecified
+			&& (safe.Left > 0.5 || safe.Right > 0.5)
+				? preferred
+				: UIVerticalBarEdge.Unspecified;
+#pragma warning restore CA1416
+	}
+
+	UIVerticalBarEdge VerticalBarEdgeFromFrames(
+		UIView view)
+	{
+#pragma warning disable CA1416 // UIVerticalBarEdge only exists in the iOS 27.1 SDK
+		if (TabBarController?.TabBar is UITabBar tab
+			&& !tab.Hidden
+			&& tab.Bounds.Height > tab.Bounds.Width + 0.5)
+		{
+			CGRect frame = tab.ConvertRectToView(tab.Bounds, view);
+			return frame.GetMidX() > view.Bounds.Width / 2
+				? UIVerticalBarEdge.Trailing
+				: UIVerticalBarEdge.Leading;
+		}
+
+		if (NavigationController?.NavigationBar is UINavigationBar bar
+			&& !bar.Hidden
+			&& bar.Bounds.Height > bar.Bounds.Width + 0.5)
+		{
+			CGRect frame = bar.ConvertRectToView(bar.Bounds, view);
+			return frame.GetMidX() > view.Bounds.Width / 2
+				? UIVerticalBarEdge.Trailing
+				: UIVerticalBarEdge.Leading;
+		}
+
+		return UIVerticalBarEdge.Unspecified;
+#pragma warning restore CA1416
+	}
+
+	[SupportedOSPlatform("ios27.1")]
+	static SafeAreaEdges VerticalBarSafeAreaEdge(
+		UIVerticalBarEdge edge,
+		bool rightToLeft)
+	{
+#pragma warning disable CA1416 // UIVerticalBarEdge only exists in the iOS 27.1 SDK
+		return edge switch
+		{
+			UIVerticalBarEdge.Leading => rightToLeft ? SafeAreaEdges.Trailing : SafeAreaEdges.Leading,
+			UIVerticalBarEdge.Trailing => rightToLeft ? SafeAreaEdges.Leading : SafeAreaEdges.Trailing,
+			_ => SafeAreaEdges.None
+		};
+#pragma warning restore CA1416
+	}
+
+	void UpdateVerticalBarBleed(
+		UIVerticalBarEdge edge)
+	{
+		View? scrolling = Page is ContentView page ? FindScrolling(page) : null;
+		SafeAreaEdges edges = SafeAreaEdges.None;
+
+		if (scrolling is not null
+			&& Page is ContentView scrollPage
+			&& scrollPage.ScrollsUnderBars)
+		{
+			bool rightToLeft = View?.EffectiveUserInterfaceLayoutDirection
+				is UIUserInterfaceLayoutDirection.RightToLeft;
+			SafeAreaEdges barEdge = OperatingSystem.IsIOSVersionAtLeast(27, 1)
+				? VerticalBarSafeAreaEdge(edge, rightToLeft)
+				: SafeAreaEdges.None;
+
+			if (barEdge is not SafeAreaEdges.None
+				&& scrollPage.SafeAreaEdges.HasFlag(barEdge))
+				edges = barEdge;
+		}
+
+		if (!ReferenceEquals(barBleedView, scrolling))
+		{
+			barBleedView?.SetBarBleedEdges(SafeAreaEdges.None);
+			barBleedView = scrolling;
+		}
+
+		if (scrolling is not null)
+			scrolling.SetBarBleedEdges(edges);
+	}
+
+	bool IsVerticalNavigationBar()
+	{
+		if (NavigationController?.NavigationBar is not UINavigationBar bar || bar.Hidden)
+			return false;
+
+		return bar.Bounds.Height > bar.Bounds.Width;
+	}
+
+	void UpdateTopScrollEdgeForVerticalBar(
+		UIVerticalBarEdge edge)
+	{
+		bool vertical = IsVerticalNavigationBar();
+
+		if (verticalBarEdgeKnown
+			&& verticalBarEdge == edge
+			&& verticalNavigationBarKnown
+			&& verticalNavigationBar == vertical)
+			return;
+
+		verticalBarEdgeKnown = true;
+		verticalBarEdge = edge;
+		verticalNavigationBarKnown = true;
+		verticalNavigationBar = vertical;
+
+		if (Page is ContentView page)
+		{
+			ApplyNavigationBarMinimization(page);
+			ApplyTopScrollEdgeStyle(page);
+		}
+	}
+
 	public override void ViewDidLayoutSubviews()
 	{
 		base.ViewDidLayoutSubviews();
@@ -1977,6 +2148,10 @@ internal sealed class PageHost : UIViewController
 		Page.UpdatePageLayout(pageSafeArea, keyboardCover);
 
 		Page.ApplyHostFrame(new(frame.X, frame.Y, frame.Width, frame.Height));
+
+		UIVerticalBarEdge currentVerticalBarEdge = CurrentVerticalBarEdge();
+		UpdateVerticalBarBleed(currentVerticalBarEdge);
+		UpdateTopScrollEdgeForVerticalBar(currentVerticalBarEdge);
 
 		if (keyboardCover <= 0 || keyboardFocus is not UIView focused)
 			return;

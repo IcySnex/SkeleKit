@@ -49,6 +49,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	bool indexedReloadQueued;
 	bool initialScrollPending = true;
 	bool usesSystemContentInsets;
+	bool barBleedApplied;
 	bool layoutInsetsSynced;
 	Thickness layoutInsets;
 	Thickness? insetGroupedHeaderInsets;
@@ -165,7 +166,6 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		usesSystemContentInsets = true;
 		Ui.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Automatic;
-		Ui.AutomaticallyAdjustsScrollIndicatorInsets = true;
 		SyncInsets();
 		return true;
 	}
@@ -1801,9 +1801,16 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			hosted.SetItem(boundSection);
 
 		CollectionLayout sectionLayout = LayoutForSection(indexPath.Section);
-		header.SetContentInsets(sectionLayout is { Kind: CollectionLayoutKind.List, Grouped: false }
-			? () => new(ContentInsets.Left, 0, ContentInsets.Right, 0)
-			: null);
+		header.SetContentInsets(sectionLayout switch
+		{
+			// section headers align with the section content on the leading edge; the trailing
+			// label keeps the normal content margin.
+			{ Kind: CollectionLayoutKind.List, Grouped: false }
+				or { Kind: CollectionLayoutKind.Carousel } =>
+				() => new(0, 0, ContentInsets.Right, 0),
+
+			_ => null
+		});
 
 		if (!footer)
 		{
@@ -1846,6 +1853,17 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		if (grouped is Thickness horizontal)
 			insets = new(horizontal.Left, insets.Top, horizontal.Right, insets.Bottom);
+
+		// collection-level header and footer are regular foreground content too
+		if (IsBarBleedApplied)
+		{
+			Thickness bar = BledInsets;
+			insets = new(
+				insets.Left + bar.Left,
+				insets.Top,
+				insets.Right + bar.Right,
+				insets.Bottom);
+		}
 
 		return footer
 			? new(insets.Left, 0, insets.Right, insets.Bottom)
@@ -1944,21 +1962,71 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 
 		Thickness bled = BledInsets;
 		bool horizontal = Layout.Kind is CollectionLayoutKind.Carousel;
+		bool barBleed = IsBarBleedApplied;
 
-		UIEdgeInsets insets = horizontal
-			? new(0, (nfloat)bled.Left, keyboardCover, (nfloat)bled.Right)
-			: new((nfloat)bled.Top, 0, (nfloat)bled.Bottom + keyboardCover, 0);
+		UIEdgeInsets insets;
+		if (barBleed)
+		{
+			// the bar edge is reserved by the section and boundary insets below, so the
+			// collection itself only needs the vertical chrome. Never mode keeps the
+			// horizontal safe area from adding a second inset or a scroll range.
+			UIEdgeInsets safe = Ui.SafeAreaInsets;
+			insets = new(safe.Top, 0, safe.Bottom + keyboardCover, 0);
+		}
+		else
+		{
+			insets = horizontal
+				? new(0, (nfloat)bled.Left, keyboardCover, (nfloat)bled.Right)
+				: new((nfloat)bled.Top, 0, (nfloat)bled.Bottom + keyboardCover, 0);
+		}
 
-		if (Ui.ContentInset == insets)
-			return;
+		UIScrollViewContentInsetAdjustmentBehavior behavior = barBleed || !usesSystemContentInsets
+			? UIScrollViewContentInsetAdjustmentBehavior.Never
+			: UIScrollViewContentInsetAdjustmentBehavior.Automatic;
 
-		Ui.ContentInset = insets;
+		if (Ui.ContentInsetAdjustmentBehavior != behavior)
+			Ui.ContentInsetAdjustmentBehavior = behavior;
 
-		if (!usesSystemContentInsets)
+		if (Ui.ContentInset != insets)
+			Ui.ContentInset = insets;
+
+		if (barBleed != barBleedApplied)
+		{
+			barBleedApplied = barBleed;
+			Ui.CollectionViewLayout.InvalidateLayout();
+		}
+
+		bool automaticIndicators = usesSystemContentInsets && !barBleed;
+		if (Ui.AutomaticallyAdjustsScrollIndicatorInsets != automaticIndicators)
+			Ui.AutomaticallyAdjustsScrollIndicatorInsets = automaticIndicators;
+
+		if (barBleed)
+		{
+			// the collection now reaches the physical edge; keep the indicator there and
+			// only reserve the bar at the ends of the track.
+			UIEdgeInsets adjusted = Ui.AdjustedContentInset;
+			UIEdgeInsets edge = new(adjusted.Top, 0, adjusted.Bottom, 0);
+
+			Ui.VerticalScrollIndicatorInsets = edge;
+			Ui.HorizontalScrollIndicatorInsets = edge;
+		}
+		else if (!usesSystemContentInsets)
 		{
 			Ui.VerticalScrollIndicatorInsets = insets;
 			Ui.HorizontalScrollIndicatorInsets = insets;
 		}
+	}
+
+	Thickness MissingBarInset()
+	{
+		Thickness bar = BledInsets;
+		UIEdgeInsets safe = Ui.SafeAreaInsets;
+
+		return new(
+			Math.Max(0, bar.Left - (double)safe.Left),
+			0,
+			Math.Max(0, bar.Right - (double)safe.Right),
+			0);
 	}
 
 	void SyncLayoutInsets()
@@ -2289,24 +2357,74 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		int index,
 		CollectionLayout layout)
 	{
-		Thickness outer = ContentInsets;
+		// Carousels own their edge spacing through their peek/snap metrics; adding the page's
+		// system margins on top makes them sit further in than the list sections beside them.
+		Thickness outer = layout.Kind is CollectionLayoutKind.Carousel
+			? Padding
+			: ContentInsets;
 
 		// Inset-grouped lists already use UIKit's horizontal system margins. Count those as
 		// satisfying SystemInsetEdges instead of doubling them; explicit Padding stays additive.
 		if (layout is { Kind: CollectionLayoutKind.List, Grouped: true })
 			outer = new(Padding.Left, outer.Top, Padding.Right, outer.Bottom);
 
+		bool groupedList = layout is { Kind: CollectionLayoutKind.List, Grouped: true };
+		bool barBleed = IsBarBleedApplied;
+		Thickness missing = barBleed ? MissingBarInset() : Thickness.Zero;
+		Thickness bar = barBleed ? BledInsets : Thickness.Zero;
+
+		if (layout.Kind is not CollectionLayoutKind.Carousel)
+		{
+			// inset-grouped lists already apply the collection's safe area; only the missing
+			// part is added there. plain lists and grids keep their existing manual inset.
+			Thickness extra = groupedList ? missing : bar;
+			outer = new(
+				outer.Left + extra.Left,
+				outer.Top,
+				outer.Right + extra.Right,
+				outer.Bottom);
+		}
+
 		NSDirectionalEdgeInsets current = section.ContentInsets;
 		bool rightToLeft = Ui.EffectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirection.RightToLeft;
-		nfloat leading = (nfloat)(rightToLeft ? outer.Right : outer.Left);
-		nfloat trailing = (nfloat)(rightToLeft ? outer.Left : outer.Right);
+		nfloat top = current.Top + (Header is null && index == 0 ? (nfloat)outer.Top : 0);
+		nfloat bottom = current.Bottom + (Footer is null && index == SectionCount - 1 ? (nfloat)outer.Bottom : 0);
 
-		section.ContentInsetsReference = UIContentInsetsReference.None;
-		NSDirectionalEdgeInsets applied = new(
-			current.Top + (Header is null && index == 0 ? (nfloat)outer.Top : 0),
-			current.Leading + leading,
-			current.Bottom + (Footer is null && index == SectionCount - 1 ? (nfloat)outer.Bottom : 0),
-			current.Trailing + trailing);
+		bool carousel = layout.Kind is CollectionLayoutKind.Carousel;
+
+		// inset-grouped lists already apply the safe area themselves. adding the section
+		// reference on top double-insets the only direct grouped list in the gallery.
+		// carousel sections need the reference to clip their orthogonal content at the bar.
+		section.ContentInsetsReference = carousel && barBleed
+			? UIContentInsetsReference.SafeArea
+			: UIContentInsetsReference.None;
+
+		NSDirectionalEdgeInsets applied;
+		if (carousel)
+		{
+			// the safe-area reference reserves the bar. align the leading item with the list
+			// margin instead of adding the peek spacing on top of it.
+			nfloat pageLeading = (nfloat)(rightToLeft ? ContentInsets.Right : ContentInsets.Left);
+			nfloat missingLeading = (nfloat)(rightToLeft ? missing.Right : missing.Left);
+			nfloat missingTrailing = (nfloat)(rightToLeft ? missing.Left : missing.Right);
+
+			nfloat pageTrailing = (nfloat)(rightToLeft ? ContentInsets.Left : ContentInsets.Right);
+
+			applied = new(
+				top,
+				(nfloat)Math.Max(current.Leading, pageLeading) + missingLeading,
+				bottom,
+				(nfloat)Math.Max(current.Trailing, pageTrailing) + missingTrailing);
+		}
+		else
+		{
+			applied = new(
+				top,
+				current.Leading + (nfloat)(rightToLeft ? outer.Right : outer.Left),
+				bottom,
+				current.Trailing + (nfloat)(rightToLeft ? outer.Left : outer.Right));
+		}
+
 		section.ContentInsets = applied;
 
 		return section;
@@ -2387,6 +2505,24 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 				TopSeparatorVisibility = visibility,
 				BottomSeparatorVisibility = visibility
 			};
+		}
+		else if (layout is { Kind: CollectionLayoutKind.List, Grouped: false }
+			&& IsBarBleedApplied)
+		{
+			// the rows are already inset by the section's safe area. keep the default leading
+			// separator inset, but don't apply the bar a second time on the trailing edge.
+			UIListSeparatorConfiguration separators = new(appearance);
+			NSDirectionalEdgeInsets top = separators.TopSeparatorInsets;
+			NSDirectionalEdgeInsets bottom = separators.BottomSeparatorInsets;
+			UIListSeparatorVisibility visibility = ShowsSeparators
+				? UIListSeparatorVisibility.Automatic
+				: UIListSeparatorVisibility.Hidden;
+
+			separators.TopSeparatorInsets = new(top.Top, top.Leading, top.Bottom, 0);
+			separators.BottomSeparatorInsets = new(bottom.Top, bottom.Leading, bottom.Bottom, 0);
+			separators.TopSeparatorVisibility = visibility;
+			separators.BottomSeparatorVisibility = visibility;
+			configuration.SeparatorConfiguration = separators;
 		}
 
 		// native swipe actions: UIKit owns the gesture, the animation and the full-swipe
@@ -2796,6 +2932,12 @@ internal sealed class CollectionHost : UICollectionView, INavigationAccessoryScr
 			hiding: true,
 			UIKeyboard.AnimationDurationFromNotification(notification));
 
+
+	public override void SafeAreaInsetsDidChange()
+	{
+		base.SafeAreaInsetsDidChange();
+		element?.SyncInsets();
+	}
 
 	public override void LayoutSubviews()
 	{

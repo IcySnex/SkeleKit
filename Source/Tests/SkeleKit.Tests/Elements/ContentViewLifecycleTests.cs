@@ -38,7 +38,7 @@ public class ContentViewLifecycleTests
 	{
 		EmptyView view = new();
 
-		Assert.Equal(NavigationBarMinimize.Never, view.NavigationBarMinimizeBehavior);
+		Assert.Equal(NavigationBarMinimize.Automatic, view.NavigationBarMinimizeBehavior);
 		Assert.Equal(NavigationBarMinimizeSafeArea.Automatic, view.NavigationBarMinimizeSafeAreaAdjustment);
 		Assert.Equal(NavigationBarMinimizeRestore.Automatic, view.NavigationBarMinimizeRestorationBehavior);
 	}

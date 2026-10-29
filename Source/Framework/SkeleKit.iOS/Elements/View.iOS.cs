@@ -138,6 +138,7 @@ public abstract partial class View
 	CAGradientLayer? gradientLayer;
 	UIVisualEffectView? materialView;
 	Brush? backgroundOverride;
+	SafeAreaEdges barBleedEdges;
 
 	Thickness PageSafeArea
 	{
@@ -162,17 +163,55 @@ public abstract partial class View
 	{
 		get
 		{
-			if (IgnoresSafeArea is SafeAreaEdges.None)
+			SafeAreaEdges edges = IgnoresSafeArea | barBleedEdges;
+			if (edges is SafeAreaEdges.None)
 				return Thickness.Zero;
 
 			Thickness insets = PageSafeArea;
 
 			return new(
-				IgnoresSafeArea.HasFlag(SafeAreaEdges.Leading) ? insets.Left : 0,
-				IgnoresSafeArea.HasFlag(SafeAreaEdges.Top) ? insets.Top : 0,
-				IgnoresSafeArea.HasFlag(SafeAreaEdges.Trailing) ? insets.Right : 0,
-				IgnoresSafeArea.HasFlag(SafeAreaEdges.Bottom) ? insets.Bottom : 0);
+				edges.HasFlag(SafeAreaEdges.Leading) ? insets.Left : 0,
+				edges.HasFlag(SafeAreaEdges.Top) ? insets.Top : 0,
+				edges.HasFlag(SafeAreaEdges.Trailing) ? insets.Right : 0,
+				edges.HasFlag(SafeAreaEdges.Bottom) ? insets.Bottom : 0);
 		}
+	}
+
+	internal SafeAreaEdges BarBleedEdges => barBleedEdges;
+
+	internal bool IsBarBleedApplied
+	{
+		get
+		{
+			if (barBleedEdges is SafeAreaEdges.None || native is null || ArrangedBounds.Width <= 0)
+				return false;
+
+			Thickness page = PageSafeArea;
+			double ignoredWidth =
+				(IgnoresSafeArea.HasFlag(SafeAreaEdges.Leading) ? page.Left : 0)
+				+ (IgnoresSafeArea.HasFlag(SafeAreaEdges.Trailing) ? page.Right : 0);
+
+			return native.Bounds.Width > ArrangedBounds.Width + ignoredWidth + 0.5;
+		}
+	}
+
+	internal void SetBarBleedEdges(
+		SafeAreaEdges edges)
+	{
+		bool changed = barBleedEdges != edges;
+		barBleedEdges = edges;
+
+		if (native is null)
+			return;
+
+		// the page already arranged a foreground-sized frame; widen just the native frame now.
+		// refresh even when the edge is unchanged: the page safe area may have arrived after
+		// the first call, and the next arrange pass keeps the same bleed through ApplyFrame.
+		if (ArrangedBounds.Width > 0 || ArrangedBounds.Height > 0)
+			ApplyNativeFrame(Bleed(ArrangedBounds));
+
+		if (changed)
+			native.SetNeedsLayout();
 	}
 
 	internal UIView? BackgroundView => materialView;

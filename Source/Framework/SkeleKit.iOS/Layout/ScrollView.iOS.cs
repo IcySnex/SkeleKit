@@ -39,12 +39,48 @@ public partial class ScrollView : ISystemInsetScroll
 		UIScrollView host,
 		UIEdgeInsets contentInsets)
 	{
-		UIEdgeInsets insets = IndicatorInsets is Thickness custom
-			? new((nfloat)custom.Top, (nfloat)custom.Left, (nfloat)custom.Bottom, (nfloat)custom.Right)
-			: contentInsets;
+		if (IndicatorInsets is Thickness custom)
+		{
+			UIEdgeInsets insets = new(
+				(nfloat)custom.Top,
+				(nfloat)custom.Left,
+				(nfloat)custom.Bottom,
+				(nfloat)custom.Right);
 
-		host.VerticalScrollIndicatorInsets = insets;
-		host.HorizontalScrollIndicatorInsets = insets;
+			host.VerticalScrollIndicatorInsets = insets;
+			host.HorizontalScrollIndicatorInsets = insets;
+			return;
+		}
+
+		if (BarBleedEdges is not SafeAreaEdges.None)
+		{
+			// the frame now reaches the physical edge, so keep the indicator there.
+			// only the bar insets shorten or move the track.
+			UIEdgeInsets adjusted = host.AdjustedContentInset;
+			UIEdgeInsets edge = new(adjusted.Top, 0, adjusted.Bottom, 0);
+
+			host.VerticalScrollIndicatorInsets = edge;
+			host.HorizontalScrollIndicatorInsets = edge;
+			return;
+		}
+
+		host.VerticalScrollIndicatorInsets = contentInsets;
+		host.HorizontalScrollIndicatorInsets = contentInsets;
+	}
+
+	void ApplyIndicatorMode(
+		UIScrollView host,
+		UIEdgeInsets contentInsets)
+	{
+		bool automatic = usesSystemContentInsets
+			&& IndicatorInsets is null
+			&& BarBleedEdges is SafeAreaEdges.None;
+
+		if (host.AutomaticallyAdjustsScrollIndicatorInsets != automatic)
+			host.AutomaticallyAdjustsScrollIndicatorInsets = automatic;
+
+		if (!automatic)
+			ApplyIndicatorInsets(host, contentInsets);
 	}
 
 	bool ISystemInsetScroll.UseSystemContentInsets()
@@ -56,7 +92,6 @@ public partial class ScrollView : ISystemInsetScroll
 
 		UIScrollView host = (UIScrollView)Native;
 		host.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Automatic;
-		host.AutomaticallyAdjustsScrollIndicatorInsets = IndicatorInsets is null;
 		ApplyContentInsets();
 		return true;
 	}
@@ -144,32 +179,60 @@ public partial class ScrollView : ISystemInsetScroll
 
 		Thickness bled = BledInsets;
 		bool vertical = Orientation == Orientation.Vertical;
+		bool barBleed = BarBleedEdges is not SafeAreaEdges.None;
 
-		UIEdgeInsets insets = new(
-			vertical ? (nfloat)bled.Top : 0,
-			vertical ? 0 : (nfloat)bled.Left,
-			(vertical ? (nfloat)bled.Bottom : 0) + keyboardCover,
-			vertical ? 0 : (nfloat)bled.Right);
+		UIEdgeInsets insets;
+		if (barBleed)
+		{
+			// the scroll view itself reaches under the bar, so its content insets are
+			// explicit. horizontal content padding already comes from BledInsets.
+			UIEdgeInsets safe = host.SafeAreaInsets;
+			insets = vertical
+				? new(
+					safe.Top + (nfloat)bled.Top,
+					0,
+					safe.Bottom + (nfloat)bled.Bottom + keyboardCover,
+					0)
+				: new(
+					safe.Top + (nfloat)bled.Top,
+					(nfloat)bled.Left,
+					safe.Bottom + (nfloat)bled.Bottom + keyboardCover,
+					(nfloat)bled.Right);
+		}
+		else
+		{
+			insets = new(
+				vertical ? (nfloat)bled.Top : 0,
+				vertical ? 0 : (nfloat)bled.Left,
+				(vertical ? (nfloat)bled.Bottom : 0) + keyboardCover,
+				vertical ? 0 : (nfloat)bled.Right);
+		}
 
-		if (host.ContentInset == insets)
-			return;
+		UIScrollViewContentInsetAdjustmentBehavior behavior = barBleed || !usesSystemContentInsets
+			? UIScrollViewContentInsetAdjustmentBehavior.Never
+			: UIScrollViewContentInsetAdjustmentBehavior.Automatic;
 
-		UIEdgeInsets oldAdjusted = host.AdjustedContentInset;
-		bool atTop = host.ContentOffset.Y <= -oldAdjusted.Top + 1;
-		bool atBottom = Orientation == Orientation.Vertical
-			&& host.ContentOffset.Y >= MaximumOffset(host, oldAdjusted) - 1;
+		if (host.ContentInsetAdjustmentBehavior != behavior)
+			host.ContentInsetAdjustmentBehavior = behavior;
 
-		host.ContentInset = insets;
+		if (host.ContentInset != insets)
+		{
+			UIEdgeInsets oldAdjusted = host.AdjustedContentInset;
+			bool atTop = host.ContentOffset.Y <= -oldAdjusted.Top + 1;
+			bool atBottom = Orientation == Orientation.Vertical
+				&& host.ContentOffset.Y >= MaximumOffset(host, oldAdjusted) - 1;
 
-		if (!usesSystemContentInsets || IndicatorInsets is not null)
-			ApplyIndicatorInsets(host, insets);
+			host.ContentInset = insets;
 
-		UIEdgeInsets newAdjusted = host.AdjustedContentInset;
+			UIEdgeInsets newAdjusted = host.AdjustedContentInset;
 
-		if (atTop && Orientation == Orientation.Vertical)
-			host.ContentOffset = new(host.ContentOffset.X, -newAdjusted.Top);
-		else if (atBottom)
-			host.ContentOffset = new(host.ContentOffset.X, MaximumOffset(host, newAdjusted));
+			if (atTop && Orientation == Orientation.Vertical)
+				host.ContentOffset = new(host.ContentOffset.X, -newAdjusted.Top);
+			else if (atBottom)
+				host.ContentOffset = new(host.ContentOffset.X, MaximumOffset(host, newAdjusted));
+		}
+
+		ApplyIndicatorMode(host, insets);
 	}
 
 	partial void ApplyRefreshingCore()
@@ -225,10 +288,7 @@ public partial class ScrollView : ISystemInsetScroll
 			_ => UIScrollViewIndicatorStyle.Default
 		};
 
-		host.AutomaticallyAdjustsScrollIndicatorInsets = usesSystemContentInsets && IndicatorInsets is null;
-
-		if (!host.AutomaticallyAdjustsScrollIndicatorInsets)
-			ApplyIndicatorInsets(host, host.ContentInset);
+		ApplyIndicatorMode(host, host.ContentInset);
 	}
 
 	partial void ArrangeContent(
@@ -454,6 +514,12 @@ internal sealed class ScrollHost : UIScrollView, INavigationAccessoryScrollSourc
 			if (!Dragging)
 				element?.OnDragEnded();
 		}
+	}
+
+	public override void SafeAreaInsetsDidChange()
+	{
+		base.SafeAreaInsetsDidChange();
+		element?.LayoutContent(new(Bounds.Width, Bounds.Height));
 	}
 
 	public override void LayoutSubviews()
