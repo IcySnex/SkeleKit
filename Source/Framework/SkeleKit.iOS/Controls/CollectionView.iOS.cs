@@ -523,6 +523,50 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 	}
 
 	/// <summary>
+	/// Returns the realized view for <paramref name="item"/>, or null when the item is not on screen.
+	/// </summary>
+	/// <param name="item">The item whose view to return.</param>
+	/// <remarks>
+	/// Use it to anchor a popover or other UI to an item from a command that only receives the item.
+	/// </remarks>
+	public View? ItemViewFor(
+		TItem item)
+	{
+		if (!IsRealized)
+			return null;
+
+		if (UsesIndexedSource)
+		{
+			for (int section = 0; section < SectionCount; section++)
+			{
+				for (int index = 0; index < CountIn(section); index++)
+				{
+					if (!ReferenceEquals(ItemAt(section, index), item))
+						continue;
+
+					return HostedViewAt(
+						NSIndexPath.FromRowSection(index, section));
+				}
+			}
+
+			return null;
+		}
+
+		if (data is null
+			|| !keys.TryGetValue(item, out NSNumber? key)
+			|| data.GetIndexPath(key) is not NSIndexPath path)
+			return null;
+
+		return HostedViewAt(path);
+	}
+
+	View? HostedViewAt(
+		NSIndexPath path) =>
+		Ui.CellForItem(path) is ISkeleHostCell { Hosted: { } hosted }
+			? hosted
+			: null;
+
+	/// <summary>
 	/// Scrolls an indexed item into view.
 	/// </summary>
 	/// <param name="section">The zero-based section index.</param>
