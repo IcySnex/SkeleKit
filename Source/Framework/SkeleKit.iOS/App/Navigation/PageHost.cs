@@ -431,6 +431,57 @@ internal sealed class PageHost : UIViewController
 		return desired.Height + chromeHost.ChromeHeight(page);
 	}
 
+	internal Size MeasurePopover(
+		Size defaultMaximum)
+	{
+		if (Page is not ContentView page)
+			return defaultMaximum;
+
+		(double minWidth, double maxWidth) = SizeBounds(
+			page.Width,
+			page.MinWidth,
+			page.MaxWidth,
+			defaultMaximum.Width);
+		(double minHeight, double maxHeight) = SizeBounds(
+			page.Height,
+			page.MinHeight,
+			page.MaxHeight,
+			defaultMaximum.Height);
+
+		Thickness extra = page.PageExtraInsets;
+		double chrome = page.HidesNavigationBar
+			? extra.Bottom
+			: ChromeHeight(page);
+
+		Size available = new(
+			Math.Max(0, maxWidth - extra.Horizontal),
+			Math.Max(0, maxHeight - chrome));
+		Size desired = page.MeasurePageContent(available);
+
+		return new(
+			Math.Clamp(desired.Width + extra.Horizontal, minWidth, maxWidth),
+			Math.Clamp(desired.Height + chrome, minHeight, maxHeight));
+	}
+
+	static (double Min, double Max) SizeBounds(
+		double explicitLength,
+		double minimum,
+		double maximum,
+		double fallback)
+	{
+		if (double.IsNaN(minimum))
+			minimum = 0;
+
+		double resolvedMax = double.IsFinite(maximum) ? maximum : fallback;
+		double low = double.IsNaN(explicitLength) ? 0 : explicitLength;
+		double high = double.IsNaN(explicitLength) ? double.PositiveInfinity : explicitLength;
+
+		double min = Math.Max(Math.Min(low, resolvedMax), minimum);
+		double max = Math.Max(Math.Min(high, resolvedMax), minimum);
+
+		return (Math.Max(1, min), Math.Max(1, max));
+	}
+
 	double ChromeHeight(
 		ContentView page)
 	{

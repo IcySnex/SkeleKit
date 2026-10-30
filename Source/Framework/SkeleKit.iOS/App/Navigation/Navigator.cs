@@ -213,7 +213,51 @@ internal sealed class Navigator(
 			popover.PermittedArrowDirections = Directions(style.Arrows);
 
 			popover.Delegate = Stay;
+
+			if (host is not null)
+			{
+				host.LoadViewIfNeeded();
+
+				Size content = host.MeasurePopover(DefaultPopoverMaximum(anchor));
+
+				// UINavigationController adds its bar heights to the preferred content size
+				// even while hidden, so remove the chrome already included in the measurement.
+				double chrome = NavigationChrome(controller);
+				controller.PreferredContentSize = new CGSize(content.Width, Math.Max(1, content.Height - chrome));
+			}
 		}
+	}
+
+	static Size DefaultPopoverMaximum(
+		View anchor)
+	{
+		CGRect bounds = anchor.Native.Window?.Bounds ?? new CGRect(0, 0, 320, 640);
+		double width = Math.Min(320, Math.Max(1, bounds.Width - 32));
+		double height = Math.Min(bounds.Height * 0.8, Math.Max(1, bounds.Height - 80));
+
+		return new(width, Math.Max(1, height));
+	}
+
+	static double NavigationChrome(
+		UIViewController controller)
+	{
+		if (controller is not UINavigationController navigation)
+			return 0;
+
+		double height = navigation.NavigationBar.Bounds.Height;
+		if (height <= 0)
+			height = Math.Max(0, navigation.NavigationBar.IntrinsicContentSize.Height);
+
+		if (!navigation.ToolbarHidden)
+		{
+			double toolbar = navigation.Toolbar.Bounds.Height;
+			if (toolbar <= 0)
+				toolbar = Math.Max(0, navigation.Toolbar.IntrinsicContentSize.Height);
+
+			height += toolbar;
+		}
+
+		return height;
 	}
 
 	static UIModalPresentationStyle NativePresentation(

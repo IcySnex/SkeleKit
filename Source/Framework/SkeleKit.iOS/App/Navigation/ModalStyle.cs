@@ -38,6 +38,10 @@ public readonly struct ModalStyle
 	/// <summary>
 	/// A contextual floating bubble anchored to a view on large displays.
 	/// </summary>
+	/// <remarks>
+	/// The popover measures its page content and sizes itself to fit. The page's
+	/// <see cref="View.MaxWidth"/> and <see cref="View.MaxHeight"/> cap that size.
+	/// </remarks>
 	/// <param name="anchor">The view the popover points at.</param>
 	/// <param name="arrows">The directions the arrow may point.</param>
 	/// <returns>The popover presentation style.</returns>
