@@ -231,7 +231,7 @@ public partial class CollectionView<TItem, TSection> : Container, ICollectionHos
 	/// <remarks>
 	/// This rounds the sliding row, not the swipe action buttons. Normal rows are unaffected.
 	/// </remarks>
-	public double SwipeCornerRadius { get; set; } = OperatingSystem.IsIOSVersionAtLeast(26) ? SystemCornerRadius.GroupedList : 0;
+	public double SwipeCornerRadius { get; set; } = OperatingSystem.IsIOSVersionAtLeast(26) ? 26 : 0;
 
 	/// <summary>
 	/// Whether taps change the selection only while editing. Defaults to false.

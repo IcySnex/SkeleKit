@@ -17,7 +17,7 @@ internal sealed partial class BorderViewModel : ShowcaseViewModel
 	public List<ShowcaseOption<double?>> SystemCornerRadii { get; } =
 	[
 		new("None", null),
-		new("GroupedList", SystemCornerRadius.GroupedList)
+		new("Grouped list", OperatingSystem.IsIOSVersionAtLeast(26) ? 26 : 10)
 	];
 
 	public List<ShowcaseOption<CornerCurve>> CornerCurves { get; } =
@@ -86,7 +86,7 @@ internal sealed partial class BorderViewModel : ShowcaseViewModel
 
 	string CornerRadiusCode =>
 		SelectedSystemCornerRadius.Value is not null
-			? "SystemCornerRadius.GroupedList"
+			? "Grouped list radius"
 			: Number(CornerRadius);
 
 
