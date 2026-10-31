@@ -19,7 +19,7 @@ internal sealed class SplitViewService : ISplitView
 		SkeleSplit split)
 	{
 		if (ReferenceEquals(split, activeSplit()))
-			CollapsedChanged?.Invoke(split.Collapsed);
+			CollapsedChanged?.Invoke(split.EffectiveCollapsed);
 	}
 
 	SkeleSplit Active() =>
@@ -56,7 +56,7 @@ internal sealed class SplitViewService : ISplitView
 
 
 	public bool IsCollapsed =>
-		Active().Collapsed;
+		Active().EffectiveCollapsed;
 
 	public bool IsShowing(
 		SplitViewColumn column)

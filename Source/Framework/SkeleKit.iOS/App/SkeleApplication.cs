@@ -307,7 +307,7 @@ public class SkeleApplication
 		if (ActiveSplit() is not SkeleSplit split)
 			return null;
 
-		if (split.Collapsed)
+		if (split.EffectiveCollapsed)
 			return split.NavigationStack;
 
 		return split.GetViewController(SkeleSplit.Native(column)) as UINavigationController;

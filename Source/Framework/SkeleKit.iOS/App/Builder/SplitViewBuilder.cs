@@ -12,6 +12,7 @@ public sealed partial class SplitViewBuilder
 	internal SplitViewEdge PrimaryColumnEdge { get; private set; } = SplitViewEdge.Leading;
 	internal SplitViewBehavior BehaviorPreference { get; private set; } = SplitViewBehavior.Automatic;
 	internal SplitViewDisplay DisplayPreference { get; private set; } = SplitViewDisplay.Automatic;
+	internal double CollapseBelowWidth { get; private set; }
 
 
 	/// <summary>
@@ -127,6 +128,27 @@ public sealed partial class SplitViewBuilder
 		SplitViewDisplay display)
 	{
 		DisplayPreference = display;
+
+		return this;
+	}
+
+	/// <summary>
+	/// Collapses the split view to its secondary column when the available width drops below
+	/// <paramref name="width"/> points.
+	/// </summary>
+	/// <remarks>
+	/// The split view reports this narrow state as collapsed through <see cref="ISplitView"/>,
+	/// so pages present detail content modally instead of showing a compressed column.
+	/// </remarks>
+	/// <param name="width">The minimum width for a side-by-side layout, or zero to disable.</param>
+	/// <returns>The builder instance for chaining calls.</returns>
+	public SplitViewBuilder CollapseBelow(
+		double width)
+	{
+		if (!double.IsFinite(width) || width < 0)
+			throw new ArgumentOutOfRangeException(nameof(width), width, "The collapse width must be finite and zero or greater.");
+
+		CollapseBelowWidth = width;
 
 		return this;
 	}

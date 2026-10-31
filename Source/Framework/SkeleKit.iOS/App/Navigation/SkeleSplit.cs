@@ -6,20 +6,25 @@ internal sealed class SkeleSplit : UISplitViewController
 
 	readonly SplitViewColumn navigationColumn;
 	readonly SplitDelegate? splitDelegate;
+	readonly UISplitViewControllerDisplayMode expandedDisplayMode;
+	readonly double collapseBelow;
 	UINavigationController? visibleNavigationStack;
-	bool? collapsed;
+	bool? effectiveCollapsed;
+	bool narrow;
 
 
 	public SkeleSplit(
 		SplitViewBuilder builder) : base(Native(builder.SplitStyle))
 	{
 		navigationColumn = builder.NavigationTarget;
+		collapseBelow = builder.CollapseBelowWidth;
 		PrimaryEdge = Native(builder.PrimaryColumnEdge);
 		PreferredSplitBehavior = Native(builder.BehaviorPreference);
-		PreferredDisplayMode = Native(
+		expandedDisplayMode = Native(
 			builder.DisplayPreference,
 			builder.BehaviorPreference,
 			builder.SplitStyle);
+		PreferredDisplayMode = expandedDisplayMode;
 		Delegate = splitDelegate = new(this);
 	}
 
@@ -50,6 +55,9 @@ internal sealed class SkeleSplit : UISplitViewController
 			&& !OperatingSystem.IsIOSVersionAtLeast(26)
 				? UISplitViewControllerColumn.Secondary
 				: Native(navigationColumn);
+
+	internal bool EffectiveCollapsed =>
+		Collapsed || narrow;
 
 
 	sealed class SplitDelegate(
@@ -165,13 +173,43 @@ internal sealed class SkeleSplit : UISplitViewController
 		}
 	}
 
-	void NotifyCollapsedChanged()
+	void UpdateNarrowMode()
 	{
-		if (collapsed == Collapsed)
+		if (collapseBelow <= 0 || View is not UIView view || view.Bounds.Width <= 0)
 			return;
 
-		bool? wasCollapsed = collapsed;
-		collapsed = Collapsed;
+		bool shouldNarrow = view.Bounds.Width < collapseBelow;
+
+		if (shouldNarrow == narrow)
+			return;
+
+		narrow = shouldNarrow;
+		PreferredDisplayMode = narrow
+			? UISplitViewControllerDisplayMode.SecondaryOnly
+			: expandedDisplayMode;
+		PresentsWithGesture = !narrow;
+		UpdateDisplayModeButton();
+	}
+
+	void UpdateDisplayModeButton()
+	{
+		if (!OperatingSystem.IsIOSVersionAtLeast(27, 1))
+			return;
+
+#pragma warning disable CA1416 // DisplayModeButtonVisibility is only available in the iOS 27.1 SDK
+		DisplayModeButtonVisibility = narrow
+			? UISplitViewControllerDisplayModeButtonVisibility.Never
+			: UISplitViewControllerDisplayModeButtonVisibility.Automatic;
+#pragma warning restore CA1416
+	}
+
+	void NotifyCollapsedChanged()
+	{
+		if (effectiveCollapsed == EffectiveCollapsed)
+			return;
+
+		bool? wasCollapsed = effectiveCollapsed;
+		effectiveCollapsed = EffectiveCollapsed;
 
 		// the first observation only records the starting state
 		if (wasCollapsed is not null)
@@ -182,6 +220,7 @@ internal sealed class SkeleSplit : UISplitViewController
 	{
 		base.ViewDidLayoutSubviews();
 
+		UpdateNarrowMode();
 		NotifyCollapsedChanged();
 
 		if (!OperatingSystem.IsIOSVersionAtLeast(27))

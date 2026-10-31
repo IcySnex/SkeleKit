@@ -7,6 +7,7 @@ public interface ISplitView
 {
 	/// <summary>
 	/// Whether the active split view is currently collapsed to a single navigation surface.
+	/// This includes a layout that is too narrow to show columns side by side.
 	/// </summary>
 	bool IsCollapsed { get; }
 
