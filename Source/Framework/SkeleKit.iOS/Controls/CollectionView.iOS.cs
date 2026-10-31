@@ -7,6 +7,22 @@ namespace SkeleKit;
 
 public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 {
+	static UIView? FirstResponder(
+		UIView view)
+	{
+		if (view.IsFirstResponder)
+			return view;
+
+		foreach (UIView child in view.Subviews)
+		{
+			if (FirstResponder(child) is UIView found)
+				return found;
+		}
+
+		return null;
+	}
+
+
 	internal const string CellId = "SkeleCell";
 	internal const string HeaderId = "SkeleHeader";
 	internal const string FooterId = "SkeleFooter";
@@ -1495,13 +1511,24 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		}
 	}
 
+	internal double FixedGridMeasuredWidth(
+		double width)
+	{
+		if (!IsBarBleedApplied)
+			return width;
+
+		Thickness bar = BledInsets;
+		return Math.Max(0, width - bar.Left - bar.Right);
+	}
+
 	internal void BeginFixedLayoutBoundsChange(
 		double width)
 	{
-		if (fixedLayout is null || width == fixedLayoutWidth)
+		double measured = FixedGridMeasuredWidth(width);
+		if (fixedLayout is null || measured == fixedLayoutWidth)
 			return;
 
-		fixedLayoutWidth = width;
+		fixedLayoutWidth = measured;
 		pendingFixedGridAnchor = CaptureFixedGridAnchor();
 		fixedLayout.MarkGeometryDirty();
 		fixedLayout.InvalidateLayout();
@@ -1539,7 +1566,7 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			return;
 
 		double minimum = -Ui.AdjustedContentInset.Top;
-		double maximum = Math.Max(minimum, fixedLayout.ContentHeight - Ui.Bounds.Height + Ui.AdjustedContentInset.Bottom);
+		double maximum = FixedGridMaximumOffset();
 		double y = Math.Clamp(top - anchor.RelativeOffset, minimum, maximum);
 		CGPoint current = Ui.ContentOffset;
 
@@ -1547,6 +1574,18 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 			return;
 
 		Ui.SetContentOffset(new CGPoint(current.X, y), false);
+	}
+
+	double FixedGridMaximumOffset()
+	{
+		if (fixedLayout is null)
+			return 0;
+
+		double minimum = -Ui.AdjustedContentInset.Top;
+
+		return Math.Max(
+			minimum,
+			fixedLayout.ContentHeight - Ui.Bounds.Height + Ui.AdjustedContentInset.Bottom);
 	}
 
 	// a full rebuild runs when the section list changes shape; item changes re-key only their own
@@ -1898,10 +1937,15 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (grouped is Thickness horizontal)
 			insets = new(horizontal.Left, insets.Top, horizontal.Right, insets.Bottom);
 
-		// collection-level header and footer are regular foreground content too
+		// collection-level header and footer are regular foreground content too.
+		// inset-grouped lists already receive the bar through their safe area, so only add
+		// the missing part there; plain collections still need the full bar inset.
 		if (IsBarBleedApplied)
 		{
-			Thickness bar = BledInsets;
+			Thickness bar = Layout is { Kind: CollectionLayoutKind.List, Grouped: true }
+				? MissingBarInset()
+				: BledInsets;
+
 			insets = new(
 				insets.Left + bar.Left,
 				insets.Top,
@@ -2147,6 +2191,11 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		if (host.Window is null)
 			return;
 
+		// the keyboard may belong to a field in another page or split column
+		UIView? focused = FirstResponder(host);
+		if (!hiding && focused is null)
+			return;
+
 		nfloat covered = 0;
 
 		if (!hiding)
@@ -2209,6 +2258,16 @@ public partial class CollectionView<TItem, TSection> : ISystemInsetScroll
 		double width)
 	{
 		Thickness insets = ContentInsets;
+		if (IsBarBleedApplied)
+		{
+			Thickness bar = BledInsets;
+			insets = new(
+				insets.Left + bar.Left,
+				insets.Top,
+				insets.Right + bar.Right,
+				insets.Bottom);
+		}
+
 		Thickness outer = Layout.OuterSpacing ?? new Thickness(Layout.Spacing);
 		double sectionWidth = Math.Max(1, width - insets.Horizontal - outer.Horizontal);
 		double columnWidth = Math.Max(1, (width - insets.Horizontal - outer.Horizontal - Layout.Spacing * (Layout.Columns - 1)) / Layout.Columns);

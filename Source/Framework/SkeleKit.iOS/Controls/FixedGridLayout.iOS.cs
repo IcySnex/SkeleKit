@@ -57,7 +57,7 @@ internal sealed class FixedGridLayout<TItem, TSection> : UICollectionViewLayout
 
 		double width = CollectionView?.Bounds.Width ?? 0;
 
-		measuredWidth = (nfloat)width;
+		measuredWidth = (nfloat)host.FixedGridMeasuredWidth(width);
 		geometry = host.BuildFixedGridGeometry(width);
 		geometryDirty = false;
 	}
@@ -69,10 +69,11 @@ internal sealed class FixedGridLayout<TItem, TSection> : UICollectionViewLayout
 	public override bool ShouldInvalidateLayoutForBoundsChange(
 		CGRect newBounds)
 	{
-		if (newBounds.Width == measuredWidth)
+		nfloat measured = (nfloat)host.FixedGridMeasuredWidth(newBounds.Width);
+		if (measured == measuredWidth)
 			return false;
 
-		measuredWidth = newBounds.Width;
+		measuredWidth = measured;
 		geometryDirty = true;
 		return true;
 	}

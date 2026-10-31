@@ -829,6 +829,7 @@ public class SkeleApplication
 		{
 			SkeleSplit split = new(builder);
 			Dictionary<SplitViewColumn, PageHost> hosts = [];
+			Dictionary<Type, (PageHost Host, SkeleStack Stack)> shared = [];
 
 			foreach ((SplitViewColumn column, Type view) in builder.Columns)
 			{
@@ -836,10 +837,23 @@ public class SkeleApplication
 					&& !OperatingSystem.IsIOSVersionAtLeast(26))
 					continue;
 
+				// a singleton page can be listed in both the compact and an expanded column.
+				// reuse one navigation stack so the native hierarchy is moved, not duplicated.
+				if (registry.IsSingleton(view)
+					&& shared.TryGetValue(view, out (PageHost Host, SkeleStack Stack) existing))
+				{
+					split.SetViewController(existing.Stack, SkeleSplit.Native(column));
+					hosts[column] = existing.Host;
+					continue;
+				}
+
 				PageHost host = Page(view);
 				SkeleStack stack = new(host, Theme.NavigationTitleStyle is TitleStyle.Large);
 				split.SetViewController(stack, SkeleSplit.Native(column));
 				hosts[column] = host;
+
+				if (registry.IsSingleton(view))
+					shared[view] = (host, stack);
 			}
 
 			split.ApplyWeights(builder);

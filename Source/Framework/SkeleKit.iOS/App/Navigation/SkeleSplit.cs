@@ -5,6 +5,7 @@ internal sealed class SkeleSplit : UISplitViewController
 	internal static event Action<SkeleSplit>? CollapsedChanged;
 
 	readonly SplitViewColumn navigationColumn;
+	readonly SplitDelegate? splitDelegate;
 	UINavigationController? visibleNavigationStack;
 	bool? collapsed;
 
@@ -19,6 +20,7 @@ internal sealed class SkeleSplit : UISplitViewController
 			builder.DisplayPreference,
 			builder.BehaviorPreference,
 			builder.SplitStyle);
+		Delegate = splitDelegate = new(this);
 	}
 
 	public SkeleSplit(
@@ -48,6 +50,18 @@ internal sealed class SkeleSplit : UISplitViewController
 			&& !OperatingSystem.IsIOSVersionAtLeast(26)
 				? UISplitViewControllerColumn.Secondary
 				: Native(navigationColumn);
+
+
+	sealed class SplitDelegate(
+		SkeleSplit split) : UISplitViewControllerDelegate
+	{
+		public override UISplitViewControllerColumn GetTopColumnForCollapsing(
+			UISplitViewController splitViewController,
+			UISplitViewControllerColumn proposedTopColumn) =>
+			splitViewController.GetViewController(UISplitViewControllerColumn.Compact) is not null
+				? UISplitViewControllerColumn.Compact
+				: split.NavigationColumn;
+	}
 
 	internal static UISplitViewControllerColumn Native(
 		SplitViewColumn column)
@@ -139,6 +153,9 @@ internal sealed class SkeleSplit : UISplitViewController
 				case SplitViewColumn.Supplementary:
 					PreferredSupplementaryColumnWidthFraction = fraction;
 					MaximumSupplementaryColumnWidth = (nfloat)double.PositiveInfinity;
+					break;
+				case SplitViewColumn.Secondary:
+					PreferredSecondaryColumnWidthFraction = fraction;
 					break;
 				case SplitViewColumn.Inspector when OperatingSystem.IsIOSVersionAtLeast(26):
 					PreferredInspectorColumnWidthFraction = fraction;

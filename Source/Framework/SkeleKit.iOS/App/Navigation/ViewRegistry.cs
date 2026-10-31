@@ -92,6 +92,11 @@ internal sealed class ViewRegistry
 			throw new InvalidOperationException($"'{view.Name}' is not registered. Add [Page] or register it in UsePages(...).");
 	}
 
+	public bool IsSingleton(
+		Type view) =>
+		byView.TryGetValue(view, out PageRegistration? registration)
+		&& registration.Singleton;
+
 	public ContentView CreatePage(
 		Type view,
 		IServiceProvider services)
