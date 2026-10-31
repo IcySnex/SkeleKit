@@ -197,6 +197,8 @@ internal sealed class PageHost : UIViewController
 	bool hasContentDetent;
 	bool contentDetentPending;
 	bool hasAppeared;
+	bool sizesToPopover;
+	Size popoverMaximum;
 	nfloat contentWidth;
 	nfloat contentChrome;
 	UINavigationBarAppearance? savedScrollEdgeAppearance;
@@ -450,7 +452,7 @@ internal sealed class PageHost : UIViewController
 
 		Thickness extra = page.PageExtraInsets;
 		double chrome = page.HidesNavigationBar
-			? extra.Bottom
+			? extra.Vertical
 			: ChromeHeight(page);
 
 		Size available = new(
@@ -461,6 +463,60 @@ internal sealed class PageHost : UIViewController
 		return new(
 			Math.Clamp(desired.Width + extra.Horizontal, minWidth, maxWidth),
 			Math.Clamp(desired.Height + chrome, minHeight, maxHeight));
+	}
+
+	internal void ConfigurePopover(
+		Size maximum)
+	{
+		popoverMaximum = maximum;
+		sizesToPopover = true;
+	}
+
+	// The popover arrow sits in the host's safe area on iOS 18. Keep the page content
+	// clear of the arrow even when the page opted out of safe-area edges.
+	void UpdatePopoverInsets(
+		UIEdgeInsets safe)
+	{
+		if (NavigationController?.PopoverPresentationController is not UIPopoverPresentationController popover)
+		{
+			Page!.PopoverInsets = Thickness.Zero;
+			return;
+		}
+
+		SafeAreaEdges edges = Page!.SafeAreaEdges;
+		Page.PopoverInsets = popover.ArrowDirection switch
+		{
+			UIPopoverArrowDirection.Up when !edges.HasFlag(SafeAreaEdges.Top) =>
+				new Thickness(0, safe.Top, 0, 0),
+			UIPopoverArrowDirection.Down when !edges.HasFlag(SafeAreaEdges.Bottom) =>
+				new Thickness(0, 0, 0, safe.Bottom),
+			UIPopoverArrowDirection.Left when !edges.HasFlag(SafeAreaEdges.Leading) =>
+				new Thickness(safe.Left, 0, 0, 0),
+			UIPopoverArrowDirection.Right when !edges.HasFlag(SafeAreaEdges.Trailing) =>
+				new Thickness(0, 0, safe.Right, 0),
+			_ => Thickness.Zero
+		};
+	}
+
+	// UIKit adds the popover's safe area to the host after presentation, but not to the
+	// pre-presentation preferred size. Re-measure once the safe area is known so the
+	// content fills the popover on every OS version.
+	void UpdatePopoverSize()
+	{
+		if (!sizesToPopover
+			|| NavigationController is not UINavigationController navigation)
+			return;
+
+		UIEdgeInsets safe = View?.SafeAreaInsets ?? UIEdgeInsets.Zero;
+		double insets = Math.Max(0, safe.Top) + Math.Max(0, safe.Bottom);
+		Size content = MeasurePopover(popoverMaximum);
+		CGSize target = new(content.Width, Math.Max(1, content.Height - insets));
+
+		if (Math.Abs(navigation.PreferredContentSize.Width - target.Width) < 0.5
+			&& Math.Abs(navigation.PreferredContentSize.Height - target.Height) < 0.5)
+			return;
+
+		navigation.PreferredContentSize = target;
 	}
 
 	static (double Min, double Max) SizeBounds(
@@ -2180,6 +2236,8 @@ internal sealed class PageHost : UIViewController
 		SyncHostToSheet();
 
 		UIEdgeInsets safe = View!.SafeAreaInsets;
+		UpdatePopoverInsets(safe);
+
 		Thickness extra = Page.PageExtraInsets;
 		Thickness pageSafeArea = usesSystemScrollInsets
 			? new(safe.Left, 0, safe.Right, 0)
@@ -2199,6 +2257,8 @@ internal sealed class PageHost : UIViewController
 		Page.UpdatePageLayout(pageSafeArea, keyboardCover);
 
 		Page.ApplyHostFrame(new(frame.X, frame.Y, frame.Width, frame.Height));
+
+		UpdatePopoverSize();
 
 		UIVerticalBarEdge currentVerticalBarEdge = CurrentVerticalBarEdge();
 		UpdateVerticalBarBleed(currentVerticalBarEdge);

@@ -218,11 +218,13 @@ internal sealed class Navigator(
 			{
 				host.LoadViewIfNeeded();
 
-				Size content = host.MeasurePopover(DefaultPopoverMaximum(anchor));
+				Size maximum = DefaultPopoverMaximum(anchor);
+				Size content = host.MeasurePopover(maximum);
 
 				// UINavigationController adds its bar heights to the preferred content size
 				// even while hidden, so remove the chrome already included in the measurement.
 				double chrome = NavigationChrome(controller);
+				host.ConfigurePopover(maximum);
 				controller.PreferredContentSize = new CGSize(content.Width, Math.Max(1, content.Height - chrome));
 			}
 		}

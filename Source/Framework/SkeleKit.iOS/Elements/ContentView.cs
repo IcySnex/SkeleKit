@@ -680,8 +680,15 @@ public abstract partial class ContentView : ContentHost
 	}
 
 	/// <summary>
+	/// Additional inset for popover chrome such as the arrow, independent of
+	/// <see cref="SafeAreaEdges"/>.
+	/// </summary>
+	internal Thickness PopoverInsets { get; set; }
+
+	/// <summary>
 	/// What the page insets beyond its content padding: the safe area on the edges
-	/// <see cref="SafeAreaEdges"/> selects, raised to <see cref="MinimumContentInsets"/>.
+	/// <see cref="SafeAreaEdges"/> selects, raised to <see cref="MinimumContentInsets"/>;
+	/// plus any popover chrome such as the arrow.
 	/// </summary>
 	internal Thickness PageExtraInsets
 	{
@@ -690,13 +697,14 @@ public abstract partial class ContentView : ContentHost
 			Thickness content = ContentInsets;
 			Thickness safe = PageSafeArea;
 			Thickness minimum = MinimumContentInsets;
+			Thickness popover = PopoverInsets;
 			SafeAreaEdges edges = SafeAreaEdges;
 
 			return new(
-				edges.HasFlag(SafeAreaEdges.Leading) ? Math.Max(safe.Left, minimum.Left - content.Left) : 0,
-				edges.HasFlag(SafeAreaEdges.Top) ? Math.Max(safe.Top, minimum.Top - content.Top) : 0,
-				edges.HasFlag(SafeAreaEdges.Trailing) ? Math.Max(safe.Right, minimum.Right - content.Right) : 0,
-				edges.HasFlag(SafeAreaEdges.Bottom) ? Math.Max(safe.Bottom, minimum.Bottom - content.Bottom) : 0);
+				(edges.HasFlag(SafeAreaEdges.Leading) ? Math.Max(safe.Left, minimum.Left - content.Left) : 0) + popover.Left,
+				(edges.HasFlag(SafeAreaEdges.Top) ? Math.Max(safe.Top, minimum.Top - content.Top) : 0) + popover.Top,
+				(edges.HasFlag(SafeAreaEdges.Trailing) ? Math.Max(safe.Right, minimum.Right - content.Right) : 0) + popover.Right,
+				(edges.HasFlag(SafeAreaEdges.Bottom) ? Math.Max(safe.Bottom, minimum.Bottom - content.Bottom) : 0) + popover.Bottom);
 		}
 	}
 
