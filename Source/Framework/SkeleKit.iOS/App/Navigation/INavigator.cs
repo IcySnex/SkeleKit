@@ -227,6 +227,27 @@ public interface INavigator
 	Task DismissAsync();
 
 	/// <summary>
+	/// Dismisses the top-most presented page when its view model matches the given type.
+	/// </summary>
+	/// <typeparam name="TViewModel">The ViewModel type of the page to dismiss.</typeparam>
+	/// <remarks>
+	/// Returns <c>false</c> without dismissing when another modal, an alert, or nothing is on top.
+	/// </remarks>
+	/// <returns>A task containing true when that page was dismissed, or false when it wasn't on top.</returns>
+	Task<bool> TryDismissAsync<TViewModel>() where TViewModel : class;
+
+	/// <summary>
+	/// Dismisses the top-most presented page when its view model matches the given type.
+	/// </summary>
+	/// <param name="viewModel">The ViewModel type of the page to dismiss.</param>
+	/// <remarks>
+	/// Returns <c>false</c> without dismissing when another modal, an alert, or nothing is on top.
+	/// </remarks>
+	/// <returns>A task containing true when that page was dismissed, or false when it wasn't on top.</returns>
+	Task<bool> TryDismissAsync(
+		Type viewModel);
+
+	/// <summary>
 	/// Dismisses the top-most presented page when its view model is the given instance.
 	/// </summary>
 	/// <remarks>
@@ -236,6 +257,38 @@ public interface INavigator
 	/// <returns>A task containing true when that page was dismissed, or false when it wasn't on top.</returns>
 	Task<bool> TryDismissAsync(
 		object viewModel);
+
+	/// <summary>
+	/// Dismisses the top-most presented page when it is the given view type.
+	/// </summary>
+	/// <typeparam name="TView">The page type to dismiss.</typeparam>
+	/// <remarks>
+	/// Returns <c>false</c> without dismissing when another modal, an alert, or nothing is on top.
+	/// </remarks>
+	/// <returns>A task containing true when that page was dismissed, or false when it wasn't on top.</returns>
+	Task<bool> TryDismissViewAsync<TView>() where TView : ContentView;
+
+	/// <summary>
+	/// Dismisses the top-most presented page when it is the given view type.
+	/// </summary>
+	/// <param name="view">The page type to dismiss.</param>
+	/// <remarks>
+	/// Returns <c>false</c> without dismissing when another modal, an alert, or nothing is on top.
+	/// </remarks>
+	/// <returns>A task containing true when that page was dismissed, or false when it wasn't on top.</returns>
+	Task<bool> TryDismissViewAsync(
+		Type view);
+
+	/// <summary>
+	/// Dismisses the top-most presented page when it is the given page instance.
+	/// </summary>
+	/// <remarks>
+	/// Returns <c>false</c> without dismissing when another modal, an alert, or nothing is on top.
+	/// </remarks>
+	/// <param name="page">The page instance to dismiss.</param>
+	/// <returns>A task containing true when that page was dismissed, or false when it wasn't on top.</returns>
+	Task<bool> TryDismissViewAsync(
+		ContentView page);
 
 
 	/// <summary>

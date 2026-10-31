@@ -682,12 +682,49 @@ internal sealed class Navigator(
 		return completion.Task;
 	}
 
+	public Task<bool> TryDismissAsync<TViewModel>() where TViewModel : class =>
+		TryDismissAsync(typeof(TViewModel));
+
 	public Task<bool> TryDismissAsync(
-		object viewModel)
+		Type viewModel)
 	{
-		if (viewModel is null
-			|| TopPresentedHost() is not PageHost host
-			|| !ReferenceEquals(host.Page?.BindingContext, viewModel)
+		ArgumentNullException.ThrowIfNull(viewModel);
+
+		return TryDismissAsyncCore(
+			host => viewModel.IsInstanceOfType(host.Page?.BindingContext));
+	}
+
+	public Task<bool> TryDismissAsync(
+		object viewModel) =>
+		viewModel is null
+			? Task.FromResult(false)
+			: TryDismissAsyncCore(
+				host => ReferenceEquals(host.Page?.BindingContext, viewModel));
+
+	public Task<bool> TryDismissViewAsync<TView>() where TView : ContentView =>
+		TryDismissViewAsync(typeof(TView));
+
+	public Task<bool> TryDismissViewAsync(
+		Type view)
+	{
+		ArgumentNullException.ThrowIfNull(view);
+
+		return TryDismissAsyncCore(
+			host => view.IsInstanceOfType(host.Page));
+	}
+
+	public Task<bool> TryDismissViewAsync(
+		ContentView page) =>
+		page is null
+			? Task.FromResult(false)
+			: TryDismissAsyncCore(
+				host => ReferenceEquals(host.Page, page));
+
+	Task<bool> TryDismissAsyncCore(
+		Func<PageHost, bool> matches)
+	{
+		if (TopPresentedHost() is not PageHost host
+			|| !matches(host)
 			|| host.NavigationController is not UINavigationController wrapper)
 			return Task.FromResult(false);
 
