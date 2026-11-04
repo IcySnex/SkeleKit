@@ -20,7 +20,8 @@ public partial class Border
 		if (strokeDashPattern is not { Count: > 0 } pattern)
 		{
 			DropStrokeLayer();
-			Native.Layer.BorderWidth = (nfloat)thickness;
+			// CALayer draws a null borderColor as opaque black, so no stroke must mean no width
+			Native.Layer.BorderWidth = stroke is null ? 0 : (nfloat)thickness;
 			Native.Layer.BorderColor = stroke?.ToUIColor().CGColor;
 			return;
 		}

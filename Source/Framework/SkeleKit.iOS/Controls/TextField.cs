@@ -127,6 +127,16 @@ public class TextField : Control
 	Binding<ImageSource?>? trailingIconBinding;
 
 	/// <summary>
+	/// How the field draws its frame.
+	/// </summary>
+	public TextFieldStyle Kind
+	{
+		get => kind;
+		set => Set(ref kind, value, ApplyStyle);
+	}
+	TextFieldStyle kind = TextFieldStyle.Rounded;
+
+	/// <summary>
 	/// Which on-screen keyboard to show while editing.
 	/// </summary>
 	public KeyboardType Keyboard
@@ -346,6 +356,15 @@ public class TextField : Control
 		ReloadKeyboard();
 	}
 
+	void ApplyStyle() =>
+		Ui.BorderStyle = kind switch
+		{
+			TextFieldStyle.Plain => UITextBorderStyle.None,
+			TextFieldStyle.Line => UITextBorderStyle.Line,
+			TextFieldStyle.Bezel => UITextBorderStyle.Bezel,
+			_ => UITextBorderStyle.RoundedRect
+		};
+
 	void ApplyTraits()
 	{
 		ApplyContentType(Ui.TextContentType, contentKind, type => Ui.TextContentType = type);
@@ -494,6 +513,7 @@ public class TextField : Control
 	{
 		ApplyText();
 		ApplyPlaceholder();
+		ApplyStyle();
 		ApplyLeading();
 		ApplyTrailing();
 		ApplyFont();
