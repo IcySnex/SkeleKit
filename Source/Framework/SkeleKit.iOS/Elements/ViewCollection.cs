@@ -52,6 +52,22 @@ public sealed class ViewCollection : IEnumerable<View>
 	}
 
 	/// <summary>
+	/// Add multiple children to the panel.
+	/// </summary>
+	/// <param name="views">The children to add.</param>
+	public void Add(
+		IEnumerable<View> views)
+	{
+		foreach (View view in views)
+		{
+			items.Add(view);
+			view.SetParent(owner);
+		}
+
+		changed?.Invoke();
+	}
+
+	/// <summary>
 	/// Removes a child from the panel.
 	/// </summary>
 	/// <param name="view">The child to remove.</param>
